@@ -27,6 +27,8 @@ import com.raoulvdberge.refinedstorage.tile.config.IType;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataManager;
 import com.raoulvdberge.refinedstorage.tile.grid.TileGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -34,6 +36,7 @@ import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -536,7 +539,13 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     public static void onCraftedShift(IGridNetworkAware grid, EntityPlayer player) {
         INetwork network = grid.getNetwork();
         InventoryCrafting matrix = grid.getCraftingMatrix();
-        if (matrix == null || network == null)
+        //won't work anyway without all of these
+        if (matrix == null || network == null || grid.getCraftingResult() == null ||
+                grid.getStorageCache() == null || grid.getStorageCache().getList() == null)
+            return;
+
+        IRecipe recipeUsed = CraftingManager.findMatchingRecipe(matrix, player.getEntityWorld());
+        if (recipeUsed == null)
             return;
 
         ItemStack result = grid.getCraftingResult().getStackInSlot(0);
@@ -544,43 +553,114 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
         //Calculate smallest stack size of all inputs
         int smallestInputStackSize = result.getMaxStackSize();
-        for (int i = 0; i < matrix.getSizeInventory(); i++) {
-            ItemStack slot = matrix.getStackInSlot(i);
-            if (slot.isEmpty())
-                continue;
-            if (slot.getMaxStackSize() < smallestInputStackSize)
-                smallestInputStackSize = slot.getMaxStackSize();
-        }
-
         //Calculate smallest amount in network of all inputs
         int smallestInputNetworkCount = Integer.MAX_VALUE;
         //contains the amount that is in the network for each input item
-        List<Integer> networkCounts = new ArrayList<>(matrix.getSizeInventory());
+        List<Integer> networkCounts = new IntArrayList(matrix.getSizeInventory());
         for (int i = 0; i < matrix.getSizeInventory(); i++) {
             ItemStack slot = matrix.getStackInSlot(i);
             if (slot.isEmpty()) {
                 networkCounts.add(0);
                 continue;
             }
-            int itemCountInNetwork = ((ItemStack) grid.getStorageCache().getList().get(slot)).getCount();
+            //stack size
+            if (slot.getCount() < smallestInputStackSize)
+                smallestInputStackSize = slot.getCount();
+
+            //network count
+            ItemStack networkItem = (ItemStack) grid.getStorageCache().getList().get(slot);
+            int itemCountInNetwork = networkItem == null ? 0 : networkItem.getCount();
             networkCounts.add(itemCountInNetwork);
             if (itemCountInNetwork < smallestInputNetworkCount)
                 smallestInputNetworkCount = itemCountInNetwork;
         }
 
         //the amount that can be crafted is limited by the stack sizes of the output and all inputs
-        int toCraft =
-                Math.min(Math.min(result.getMaxStackSize(), smallestInputStackSize), smallestInputNetworkCount);
+        int toCraft = Math.min(result.getMaxStackSize() / result.getCount(),
+                Math.max(smallestInputStackSize, smallestInputNetworkCount));
 
-        //actually craft
+        //this code handles the case when there aren't enough items left in the network. it ensures that the existing
+        // amount is split up evenly and the maximum amount possible is crafted
+        //contains already visited slots
+        Set<Integer> seenSlots = new IntArraySet();
+        for (Ingredient ingredient : recipeUsed.getIngredients()) {
+            for (ItemStack matchingStack : ingredient.getMatchingStacks()) {
+                for (int i = 0; i < matrix.getSizeInventory(); i++) {
+                    //ignore visited
+                    if (seenSlots.contains(i))
+                        continue;
+                    ItemStack slot = matrix.getStackInSlot(i);
+                    //check if the current slot matches the ingredient
+                    if (slot.isEmpty() || !API.instance().getComparer().isEqualNoQuantity(slot, matchingStack))
+                        continue;
+                    //add slot to seen slots
+                    seenSlots.add(i);
+                    //get all slots that contain this ingredient
+                    Set<ItemStack> correspondingSlots = new HashSet<>(matrix.getSizeInventory());
+                    correspondingSlots.add(slot.copy());
+                    for (int j = 0; j < matrix.getSizeInventory(); j++) {
+                        //ignore the already added slot and seen slots
+                        if (j == i || seenSlots.contains(j))
+                            continue;
+                        //if the current slot matches the ingredient then mark it as seen and save the index to
+                        // correspondingSlots
+                        ItemStack slot2 = matrix.getStackInSlot(j);
+                        if (!slot2.isEmpty() && API.instance().getComparer().isEqualNoQuantity(slot, slot2)) {
+                            correspondingSlots.add(slot2.copy());
+                            seenSlots.add(j);
+                        }
+                    }
+
+                    int toSplitUp = networkCounts.get(i);
+                    //calculate the amount of items that are missing
+                    int missingCount = 0;
+                    for (ItemStack correspondingSlot : correspondingSlots)
+                        missingCount += correspondingSlot.getMaxStackSize() - correspondingSlot.getCount();
+                    //if there's only one slot with this ingredient or there are enough items in the network or the max
+                    // stack size is 1, ignore it
+                    if (correspondingSlots.size() < 2 || toSplitUp == 0 || missingCount <= toSplitUp ||
+                            slot.getMaxStackSize() == 1)
+                        continue;
+
+                    //the smallest stack
+                    ItemStack minCountStack = null;
+                    for (ItemStack correspondingSlot : correspondingSlots) {
+                        if (minCountStack == null)
+                            minCountStack = correspondingSlot;
+                        else
+                            minCountStack =
+                                    correspondingSlot.getCount() < minCountStack.getCount() ? correspondingSlot :
+                                            minCountStack;
+                    }
+
+                    //original min amount
+                    int oldMinCount = minCountStack.getCount();
+
+                    //split up items evenly between all slots
+                    while (toSplitUp > 0) {
+                        minCountStack.grow(1);
+                        toSplitUp--;
+                        //recalculate smallest stack
+                        for (ItemStack correspondingSlot : correspondingSlots)
+                            minCountStack =
+                                    correspondingSlot.getCount() < minCountStack.getCount() ? correspondingSlot :
+                                            minCountStack;
+                    }
+
+                    //limit max crafted amount to the amount that the smallest stack grew
+                    toCraft = Math.min(toCraft, minCountStack.getCount());
+                }
+            }
+        }
+
+        //remove used items in craft
         for (int i = 0; i < matrix.getSizeInventory(); i++) {
             ItemStack slot = matrix.getStackInSlot(i);
             if (slot.isEmpty())
                 continue;
 
-            int itemCountInNetwork = networkCounts.get(i);
             //get the amount for each input that is missing
-            int toExtract = Math.min(itemCountInNetwork, Math.max(0, toCraft - slot.getCount()));
+            int toExtract = Math.max(0, toCraft - slot.getCount());
 
             //remove used items from system
             if (toExtract > 0) {
@@ -589,12 +669,18 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                 if (!extractedItem.isEmpty())
                     network.getItemStorageTracker().changed(player, extractedItem.copy());
             }
+        }
+        //re-fill and add remainder
+        for (int i = 0; i < matrix.getSizeInventory(); i++) {
+            ItemStack slot = matrix.getStackInSlot(i);
+            if (slot.isEmpty())
+                continue;
 
             //add remainder items
             ItemStack remainderItem = remainder.get(i);
-            if(i < remainder.size() && !remainderItem.isEmpty()) {
+            if (i < remainder.size() && !remainderItem.isEmpty()) {
                 //Replace item with remainder if count is 1
-                if(slot.getCount() == 1) {
+                if (slot.getCount() == 1) {
                     matrix.setInventorySlotContents(i, remainderItem);
                 } else {
                     //if count is 2 we can't replace the item -> add it to the network or player inv
@@ -627,7 +713,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
         //create and insert crafted item
         ItemStack craftedItem = result.copy();
-        craftedItem.setCount(toCraft);
+        craftedItem.setCount(toCraft * result.getCount());
         if (!player.inventory.addItemStackToInventory(craftedItem.copy())) {
             ItemStack remainingItem = network.insertItem(craftedItem, craftedItem.getCount(), Action.PERFORM);
 
