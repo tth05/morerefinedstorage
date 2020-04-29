@@ -49,6 +49,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import net.minecraftforge.items.wrapper.InvWrapper;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -578,6 +579,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
             if (slot.getCount() < smallestInputStackSize)
                 smallestInputStackSize = slot.getCount();
 
+            //TODO: Cache this to reduce 9 calls into 1
             //network count
             ItemStack networkItem = (ItemStack) grid.getStorageCache().getList().get(slot);
             int itemCountInNetwork = networkItem == null ? 0 : networkItem.getCount();
@@ -594,6 +596,21 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         // amount is split up evenly and the maximum amount possible is crafted
         //contains already visited slots
         Set<Integer> seenSlots = new IntArraySet();
+        //contains sets of slots that are of the same type and whether all of those slots can be refilled with items
+        // from the network
+        /*
+        List ->
+            Pair (
+                Set ->
+                    Pair (
+                        A copy of the slot,
+                        The slot index
+                    )
+                ),
+                A boolean that determines whether or not all slots can be re-filled
+            )
+        */
+        List<Pair<Set<Pair<ItemStack, Integer>>, Boolean>> commonSlots = new ArrayList<>();
         for (Ingredient ingredient : recipeUsed.getIngredients()) {
             for (ItemStack matchingStack : ingredient.getMatchingStacks()) {
                 for (int i = 0; i < matrix.getSizeInventory(); i++) {
@@ -606,9 +623,10 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                         continue;
                     //add slot to seen slots
                     seenSlots.add(i);
-                    //get all slots that contain this ingredient
-                    Set<ItemStack> correspondingSlots = new HashSet<>(matrix.getSizeInventory());
-                    correspondingSlots.add(slot.copy());
+                    //get all slots that contain this ingredient, this stores pairs of copies and the real slot index.
+                    // The real slot indexes are needed later because these slots are not stored in any order
+                    Set<Pair<ItemStack, Integer>> correspondingSlots = new HashSet<>(matrix.getSizeInventory());
+                    correspondingSlots.add(Pair.of(slot.copy(), i));
                     for (int j = 0; j < matrix.getSizeInventory(); j++) {
                         //ignore the already added slot and seen slots
                         if (j == i || seenSlots.contains(j))
@@ -617,7 +635,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                         // correspondingSlots
                         ItemStack slot2 = matrix.getStackInSlot(j);
                         if (!slot2.isEmpty() && API.instance().getComparer().isEqualNoQuantity(slot, slot2)) {
-                            correspondingSlots.add(slot2.copy());
+                            correspondingSlots.add(Pair.of(slot2.copy(), j));
                             seenSlots.add(j);
                         }
                     }
@@ -627,18 +645,20 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                     int missingCount = 0;
                     //get the initial smallest stack
                     ItemStack minCountStack = null;
-                    for (ItemStack correspondingSlot : correspondingSlots) {
+                    for (Pair<ItemStack, Integer> correspondingSlot : correspondingSlots) {
                         //missing count
-                        missingCount += correspondingSlot.getMaxStackSize() - correspondingSlot.getCount();
+                        missingCount +=
+                                correspondingSlot.getLeft().getMaxStackSize() - correspondingSlot.getLeft().getCount();
 
                         //smallest stack
                         if (minCountStack == null)
-                            minCountStack = correspondingSlot;
+                            minCountStack = correspondingSlot.getLeft();
                         else
-                            minCountStack =
-                                    correspondingSlot.getCount() < minCountStack.getCount() ? correspondingSlot :
-                                            minCountStack;
+                            minCountStack = correspondingSlot.getLeft().getCount() < minCountStack.getCount() ?
+                                    correspondingSlot.getLeft() : minCountStack;
                     }
+
+                    commonSlots.add(Pair.of(correspondingSlots, missingCount + correspondingSlots.size() <= toSplitUp));
 
                     //if there's only one slot with this ingredient or there are enough items in the network or the max
                     // stack size is 1, ignore it
@@ -651,9 +671,9 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                         minCountStack.grow(1);
                         toSplitUp--;
                         //recalculate smallest stack
-                        for (ItemStack correspondingSlot : correspondingSlots)
-                            minCountStack = correspondingSlot.getCount() < minCountStack.getCount() ?
-                                    correspondingSlot : minCountStack;
+                        for (Pair<ItemStack, Integer> correspondingSlot : correspondingSlots)
+                            minCountStack = correspondingSlot.getLeft().getCount() < minCountStack.getCount() ?
+                                    correspondingSlot.getLeft() : minCountStack;
                     }
 
                     //limit max crafted amount to the amount of the smallest stack
@@ -662,25 +682,26 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
             }
         }
 
-        //TODO: Reduce extractItem calls even more by extracting all of the same type at the same time and also extracting
-        // the refilled items with it.
-        //remove used items in craft
-        for (int i = 0; i < matrix.getSizeInventory(); i++) {
-            ItemStack slot = matrix.getStackInSlot(i);
-            if (slot.isEmpty())
-                continue;
+        //remove items used in craft
+        for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> slots : commonSlots) {
+            int toExtract = 0;
+            for (Pair<ItemStack, Integer> slot : slots.getLeft()) {
+                int realStackCount = matrix.getStackInSlot(slot.getRight()).getCount();
+                //add 1 if this slot should be re-filled and gets emptied after crafting
+                toExtract += Math.max(0, toCraft - realStackCount) +
+                        ((slots.getRight() && (realStackCount - toCraft) < 1) ? 1 : 0);
+            }
 
-            //get the amount for each input that is missing
-            int toExtract = Math.max(0, toCraft - slot.getCount());
-
-            //remove used items from system
+            //remove used item from system
             if (toExtract > 0) {
                 ItemStack extractedItem =
-                        StackUtils.nullToEmpty(network.extractItem(slot, toExtract, Action.PERFORM));
+                        StackUtils.nullToEmpty(network.extractItem(slots.getLeft().iterator().next().getLeft(),
+                                toExtract, Action.PERFORM));
                 if (!extractedItem.isEmpty())
                     network.getItemStorageTracker().changed(player, extractedItem.copy());
             }
         }
+
         //re-fill and add remainder
         for (int i = 0; i < matrix.getSizeInventory(); i++) {
             ItemStack slot = matrix.getStackInSlot(i);
@@ -711,12 +732,26 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                     //shrink slot by 1
                     matrix.decrStackSize(i, 1);
                 }
-            } else if (slot.getCount() - toCraft < 1) { ////refill from system if possible
-                ItemStack refill = StackUtils.nullToEmpty(network.extractItem(slot, 1, Action.PERFORM));
-                matrix.setInventorySlotContents(i, refill);
-
-                if (!refill.isEmpty())
-                    network.getItemStorageTracker().changed(player, refill.copy());
+            } else if (slot.getCount() - toCraft < 1) { //refill from system if possible
+                boolean shouldExtractRefill = true;
+                outer:
+                for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> slots : commonSlots) {
+                    for (Pair<ItemStack, Integer> entry : slots.getLeft()) {
+                        //if all slots can be re-filled, then the needed items already have been extracted.
+                        if (entry.getRight() == i && slots.getRight()) {
+                            shouldExtractRefill = false;
+                            break outer;
+                        }
+                    }
+                }
+                if (shouldExtractRefill) {
+                    ItemStack refill = StackUtils.nullToEmpty(network.extractItem(slot, 1, Action.PERFORM));
+                    matrix.setInventorySlotContents(i, refill);
+                    if (!refill.isEmpty())
+                        network.getItemStorageTracker().changed(player, refill.copy());
+                } else {
+                    matrix.decrStackSize(i, slot.getCount() - 1);
+                }
             } else { //decrease slot by crafted amount if everything else is false
                 matrix.decrStackSize(i, toCraft);
             }
