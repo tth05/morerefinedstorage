@@ -537,6 +537,17 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     }
 
     public static void onCraftedShift(IGridNetworkAware grid, EntityPlayer player) {
+        /*
+        This code aims the reduce the INetwork#extractItem calls by as much as possible because this is the main
+        performance impact when having big systems.
+        Example (Crafting coal blocks)
+        Old code : 9*64 extract calls + 9 refill calls = 585 extract calls
+        New code : 1 extract call (+9 checks to get the amount in the network for each input)
+
+        Of course the new code has lots more other code and more loops around it all, but none of that is a big
+        performance impact.
+        */
+
         INetwork network = grid.getNetwork();
         InventoryCrafting matrix = grid.getCraftingMatrix();
         //won't work anyway without all of these
@@ -614,17 +625,13 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                     int toSplitUp = networkCounts.get(i);
                     //calculate the amount of items that are missing
                     int missingCount = 0;
-                    for (ItemStack correspondingSlot : correspondingSlots)
-                        missingCount += correspondingSlot.getMaxStackSize() - correspondingSlot.getCount();
-                    //if there's only one slot with this ingredient or there are enough items in the network or the max
-                    // stack size is 1, ignore it
-                    if (correspondingSlots.size() < 2 || toSplitUp == 0 || missingCount <= toSplitUp ||
-                            slot.getMaxStackSize() == 1)
-                        continue;
-
-                    //the smallest stack
+                    //get the initial smallest stack
                     ItemStack minCountStack = null;
                     for (ItemStack correspondingSlot : correspondingSlots) {
+                        //missing count
+                        missingCount += correspondingSlot.getMaxStackSize() - correspondingSlot.getCount();
+
+                        //smallest stack
                         if (minCountStack == null)
                             minCountStack = correspondingSlot;
                         else
@@ -633,8 +640,11 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                                             minCountStack;
                     }
 
-                    //original min amount
-                    int oldMinCount = minCountStack.getCount();
+                    //if there's only one slot with this ingredient or there are enough items in the network or the max
+                    // stack size is 1, ignore it
+                    if (correspondingSlots.size() < 2 || toSplitUp == 0 || missingCount <= toSplitUp ||
+                            slot.getMaxStackSize() == 1)
+                        continue;
 
                     //split up items evenly between all slots
                     while (toSplitUp > 0) {
@@ -642,17 +652,18 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                         toSplitUp--;
                         //recalculate smallest stack
                         for (ItemStack correspondingSlot : correspondingSlots)
-                            minCountStack =
-                                    correspondingSlot.getCount() < minCountStack.getCount() ? correspondingSlot :
-                                            minCountStack;
+                            minCountStack = correspondingSlot.getCount() < minCountStack.getCount() ?
+                                    correspondingSlot : minCountStack;
                     }
 
-                    //limit max crafted amount to the amount that the smallest stack grew
+                    //limit max crafted amount to the amount of the smallest stack
                     toCraft = Math.min(toCraft, minCountStack.getCount());
                 }
             }
         }
 
+        //TODO: Reduce extractItem calls even more by extracting all of the same type at the same time and also extracting
+        // the refilled items with it.
         //remove used items in craft
         for (int i = 0; i < matrix.getSizeInventory(); i++) {
             ItemStack slot = matrix.getStackInSlot(i);
