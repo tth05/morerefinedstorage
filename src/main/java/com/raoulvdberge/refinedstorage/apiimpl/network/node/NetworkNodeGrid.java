@@ -36,7 +36,6 @@ import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -583,7 +582,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
             //check if item is cached
             Pair<ItemStack, Integer> cachedPair = null;
             for (Pair<ItemStack, Integer> cachedCount : networkCountCache) {
-                if(API.instance().getComparer().isEqualNoQuantity(cachedCount.getLeft(), slot)) {
+                if (API.instance().getComparer().isEqualNoQuantity(cachedCount.getLeft(), slot)) {
                     cachedPair = cachedCount;
                     break;
                 }
@@ -591,7 +590,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
             //cache network count which would result in a single request on the storage if all slots are equal
             int itemCountInNetwork;
-            if(cachedPair != null) {
+            if (cachedPair != null) {
                 itemCountInNetwork = cachedPair.getRight();
             } else {
                 ItemStack networkItem = (ItemStack) grid.getStorageCache().getList().get(slot);
@@ -611,7 +610,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         //contains already visited slots
         Set<Integer> seenSlots = new IntArraySet();
 
-        //contains sets of slots that are of the same type and whether all of those slots can be refilled with items
+        //contains sets of slots that are of the same type
         // from the network
         /*
         List ->
@@ -629,76 +628,70 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
         //this code handles the case when there aren't enough items left in the network. it ensures that the existing
         // amount is split up evenly and the maximum amount possible is crafted
-        for (Ingredient ingredient : recipeUsed.getIngredients()) {
-            for (ItemStack matchingStack : ingredient.getMatchingStacks()) {
-                for (int i = 0; i < matrix.getSizeInventory(); i++) {
-                    //ignore visited
-                    if (seenSlots.contains(i))
-                        continue;
-                    ItemStack slot = matrix.getStackInSlot(i);
-                    //check if the current slot matches the ingredient
-                    if (slot.isEmpty() || !API.instance().getComparer().isEqualNoQuantity(slot, matchingStack))
-                        continue;
-                    seenSlots.add(i);
+        for (int i = 0; i < matrix.getSizeInventory(); i++) {
+            if(seenSlots.contains(i))
+                continue;
+            ItemStack slot = matrix.getStackInSlot(i);
+            if (slot.isEmpty())
+                continue;
+            seenSlots.add(i);
 
-                    //this stores a copy of all slots containing the same ingredient and their respective slot index in
-                    // the matrix
-                    Set<Pair<ItemStack, Integer>> correspondingSlots = new HashSet<>(matrix.getSizeInventory());
+            //this stores a copy of all slots containing the same ingredient and their respective slot index in
+            // the matrix
+            Set<Pair<ItemStack, Integer>> correspondingSlots = new HashSet<>(matrix.getSizeInventory());
 
-                    //get the initial smallest stack
-                    ItemStack minCountStack = slot.copy();
-                    //calculate the amount of items that are missing to get all stacks to max size
-                    int missingCount = minCountStack.getMaxStackSize() - minCountStack.getCount();
-                    //add the origin slot at the start
-                    correspondingSlots.add(Pair.of(minCountStack, i));
+            //get the initial smallest stack
+            ItemStack minCountStack = slot.copy();
+            //calculate the amount of items that are missing to get all stacks to max size
+            int missingCount = minCountStack.getMaxStackSize() - minCountStack.getCount();
+            //add the origin slot at the start
+            correspondingSlots.add(Pair.of(minCountStack, i));
 
-                    for (int j = 0; j < matrix.getSizeInventory(); j++) {
-                        //ignore the already added slot and seen slots
-                        if (j == i || seenSlots.contains(j))
-                            continue;
-                        //if the current slot matches the ingredient then mark it as seen and save the index to
-                        // correspondingSlots
-                        ItemStack slot2 = matrix.getStackInSlot(j);
-                        if (!slot2.isEmpty() && API.instance().getComparer().isEqualNoQuantity(slot, slot2)) {
-                            //this code is basically a loop over all corresponding slots
-                            ItemStack correspondingSlot = slot2.copy();
-                            correspondingSlots.add(Pair.of(correspondingSlot, j));
-                            seenSlots.add(j);
+            for (int j = 0; j < matrix.getSizeInventory(); j++) {
+                //ignore the already added slot and seen slots
+                if (j == i || seenSlots.contains(j))
+                    continue;
+                //if the current slot matches the ingredient then mark it as seen and save the index to
+                // correspondingSlots
+                ItemStack slot2 = matrix.getStackInSlot(j);
+                if (!slot2.isEmpty() && API.instance().getComparer().isEqualNoQuantity(slot, slot2)) {
+                    //this code is basically a loop over all corresponding slots
+                    ItemStack correspondingSlot = slot2.copy();
+                    correspondingSlots.add(Pair.of(correspondingSlot, j));
+                    seenSlots.add(j);
 
-                            //missing count
-                            missingCount +=
-                                    correspondingSlot.getMaxStackSize() - correspondingSlot.getCount();
+                    //missing count
+                    missingCount +=
+                            correspondingSlot.getMaxStackSize() - correspondingSlot.getCount();
 
-                            //smallest stack
-                            minCountStack = correspondingSlot.getCount() < minCountStack.getCount() ?
-                                    correspondingSlot : minCountStack;
-                        }
-                    }
-
-                    int toSplitUp = networkCounts.get(i);
-
-                    commonSlots.add(Pair.of(correspondingSlots, missingCount + correspondingSlots.size() <= toSplitUp));
-
-                    //if there's only one slot with this ingredient or there are enough items in the network or the max
-                    // stack size is 1, ignore it
-                    if (correspondingSlots.size() < 2 || toSplitUp == 0 || missingCount <= toSplitUp ||
-                            slot.getMaxStackSize() == 1)
-                        continue;
-
-                    //split up items evenly between all slots
-                    while (toSplitUp > 0) {
-                        minCountStack.grow(1);
-                        toSplitUp--;
-                        //recalculate smallest stack
-                        for (Pair<ItemStack, Integer> correspondingSlot : correspondingSlots)
-                            minCountStack = correspondingSlot.getLeft().getCount() < minCountStack.getCount() ?
-                                    correspondingSlot.getLeft() : minCountStack;
-                    }
-
-                    //limit max crafted amount to the amount of the smallest stack
-                    toCraft = Math.min(toCraft, minCountStack.getCount());
+                    //smallest stack
+                    minCountStack = correspondingSlot.getCount() < minCountStack.getCount() ?
+                            correspondingSlot : minCountStack;
                 }
             }
+
+            int toSplitUp = networkCounts.get(i);
+
+            commonSlots.add(Pair.of(correspondingSlots, missingCount + correspondingSlots.size() <= toSplitUp));
+
+            //if there's only one slot with this ingredient or there are enough items in the network or the max
+            // stack size is 1, ignore it
+            if (correspondingSlots.size() < 2 || toSplitUp == 0 || missingCount <= toSplitUp ||
+                    slot.getMaxStackSize() == 1)
+                continue;
+
+            //split up items evenly between all slots
+            while (toSplitUp > 0) {
+                minCountStack.grow(1);
+                toSplitUp--;
+                //recalculate smallest stack
+                for (Pair<ItemStack, Integer> correspondingSlot : correspondingSlots)
+                    minCountStack = correspondingSlot.getLeft().getCount() < minCountStack.getCount() ?
+                            correspondingSlot.getLeft() : minCountStack;
+            }
+
+            //limit max crafted amount to the amount of the smallest stack
+            toCraft = Math.min(toCraft, minCountStack.getCount());
         }
 
         //remove items used in craft
