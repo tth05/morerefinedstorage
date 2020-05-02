@@ -562,10 +562,6 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         ItemStack result = grid.getCraftingResult().getStackInSlot(0);
         NonNullList<ItemStack> remainder = CraftingManager.getRemainingItems(matrix, network.world());
 
-        //Calculate smallest stack size of all inputs
-        int smallestInputStackSize = result.getMaxStackSize();
-        //Calculate smallest amount in network of all inputs
-        int smallestInputNetworkCount = Integer.MAX_VALUE;
         //contains the amount that is in the network for each input item
         List<Integer> networkCounts = new IntArrayList(matrix.getSizeInventory());
         List<Pair<ItemStack, Integer>> networkCountCache = new ArrayList<>(matrix.getSizeInventory());
@@ -575,9 +571,6 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                 networkCounts.add(0);
                 continue;
             }
-            //stack size
-            if (slot.getCount() < smallestInputStackSize)
-                smallestInputStackSize = slot.getCount();
 
             //check if item is cached
             Pair<ItemStack, Integer> cachedPair = null;
@@ -599,13 +592,10 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
             }
 
             networkCounts.add(itemCountInNetwork);
-            if (itemCountInNetwork < smallestInputNetworkCount)
-                smallestInputNetworkCount = itemCountInNetwork;
         }
 
-        //the amount that can be crafted is limited by the stack sizes of the output and all inputs
-        int toCraft = Math.min(result.getMaxStackSize() / result.getCount(),
-                Math.max(smallestInputStackSize, smallestInputNetworkCount));
+        //the amount that can be crafted is limited by the stack sizes of the output at first
+        int toCraft = result.getMaxStackSize() / result.getCount();
 
         //contains already visited slots
         Set<Integer> seenSlots = new IntArraySet();
@@ -626,8 +616,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         */
         List<Pair<Set<Pair<ItemStack, Integer>>, Boolean>> commonSlots = new ArrayList<>();
 
-        //this code handles the case when there aren't enough items left in the network. it ensures that the existing
-        // amount is split up evenly and the maximum amount possible is crafted
+        //this code further ensures that the maxium amount possible is crafted by splitting up items from the network
+        // and limiting the crafted amount to the smallest stacks size
         for (int i = 0; i < matrix.getSizeInventory(); i++) {
             if(seenSlots.contains(i))
                 continue;
@@ -674,10 +664,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
             commonSlots.add(Pair.of(correspondingSlots, missingCount + correspondingSlots.size() <= toSplitUp));
 
-            //if there's only one slot with this ingredient or there are enough items in the network or the max
-            // stack size is 1, ignore it
-            if (correspondingSlots.size() < 2 || toSplitUp == 0 || missingCount <= toSplitUp ||
-                    slot.getMaxStackSize() == 1)
+            //if there's only one slot with this ingredient or the max stack size is 1, ignore it
+            if (missingCount <= toSplitUp || slot.getMaxStackSize() == 1)
                 continue;
 
             //split up items evenly between all slots
