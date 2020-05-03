@@ -739,6 +739,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
             toCraft = Math.min(toCraft, minCountStack.getCount());
         }
 
+        NonNullList<ItemStack> finalRemainder;
         //if there is any remainder, then simulate the max iterations that can be done
         if (remainder.stream().anyMatch(item -> !item.isEmpty())) {
             //create new matrix made up of the common slots
@@ -756,11 +757,18 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                     simulateRemainder(toCraft, matrixClone, result, grid.getNetwork().world());
             toCraft = Math.min(toCraft, simulationResult.getLeft());
             //set remainder to the final remainder
-            remainder = simulationResult.getRight();
+            finalRemainder = simulationResult.getRight();
+        } else {
+            finalRemainder = remainder;
         }
 
+        //TODO: Items that are not used up still get re-filled
+
         //remove items used in craft
+        pairsLoop:
         for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> commonSlotsPair : commonSlots) {
+            int refillAmount = 0;
+
             int toExtract = 0;
             int networkCount = -1;
             //get total extraction amount
@@ -770,21 +778,24 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
                 int realStackCount = matrix.getStackInSlot(commonSlotEntry.getRight()).getCount();
                 toExtract += Math.max(0, toCraft - realStackCount);
-            }
 
-            //find all slots that need a remainder and check if network can supply it
-            int remainderAmount = 0;
-            for (Pair<ItemStack, Integer> commonSlotEntry : commonSlotsPair.getLeft()) {
-                int realStackCount = matrix.getStackInSlot(commonSlotEntry.getRight()).getCount();
-                //if stack would be emtpy, then try to extract remainder
+                //find all slots that need a re-fill and check if network can supply it
+                //if stack would be emtpy
                 if (realStackCount - toCraft < 1)
-                    remainderAmount++;
+                    refillAmount++;
+                //this means that the remainder gets placed into the slot and therefore the slot should not be
+                // re-filled, nor should anything be extracted
+                ItemStack correspondingRemainder = remainder.get(commonSlotEntry.getRight());
+                ItemStack correspondingFinalRemainder = finalRemainder.get(commonSlotEntry.getRight());
+                if (realStackCount == 1 && correspondingRemainder.getCount() <= 1 && !correspondingRemainder.isEmpty() &&
+                        correspondingFinalRemainder.getCount() <= 1)
+                    break pairsLoop;
             }
 
             //all found slots can be re-filled
-            if (networkCount - toExtract - remainderAmount >= 0) {
+            if (networkCount - toExtract - refillAmount >= 0) {
                 commonSlotsPair.setValue(true);
-                toExtract += remainderAmount;
+                toExtract += refillAmount;
             }
 
             //remove used item from system
@@ -804,8 +815,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                 continue;
 
             //add remainder items
-            ItemStack remainderItem = remainder.get(i);
-            if (i < remainder.size() && !remainderItem.isEmpty()) {
+            ItemStack remainderItem = finalRemainder.get(i);
+            if (i < finalRemainder.size() && !remainderItem.isEmpty()) {
                 //Replace item with remainder if count is 1
                 if (slot.getCount() == 1 && remainderItem.getCount() == 1) {
                     matrix.setInventorySlotContents(i, remainderItem);
