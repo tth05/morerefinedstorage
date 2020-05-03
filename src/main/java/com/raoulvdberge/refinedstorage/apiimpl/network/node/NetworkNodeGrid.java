@@ -48,6 +48,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import net.minecraftforge.items.wrapper.InvWrapper;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
@@ -550,26 +551,16 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         //one iteration has already been done
         int iterations = 0;
 
-        //create clone of matrix
-        InventoryCrafting matrixCopy = new InventoryCrafting(new Container() {
-            @Override
-            public boolean canInteractWith(EntityPlayer playerIn) {
-                return false;
-            }
-        }, matrix.getWidth(), matrix.getHeight());
-        for (int i = 0; i < matrix.getSizeInventory(); i++)
-            matrixCopy.setInventorySlotContents(i, matrix.getStackInSlot(i).copy());
-
         NonNullList<ItemStack> finalRemainder = NonNullList.withSize(matrix.getSizeInventory(), ItemStack.EMPTY);
         Set<Integer> shouldGrowSlot = new IntArraySet(matrix.getSizeInventory());
 
         //loop until result changes
         do {
             iterations++;
-            NonNullList<ItemStack> remainder = CraftingManager.getRemainingItems(matrixCopy, world);
+            NonNullList<ItemStack> remainder = CraftingManager.getRemainingItems(matrix, world);
             for (int i = 0; i < remainder.size(); i++) {
                 ItemStack itemStack = remainder.get(i);
-                ItemStack stackInSlot = matrixCopy.getStackInSlot(i);
+                ItemStack stackInSlot = matrix.getStackInSlot(i);
                 if (!itemStack.isEmpty()) {
                     //if the item that has remainder is stacked, then remember that remainder item
                     if (!stackInSlot.isEmpty() && (stackInSlot.getCount() > 1 || shouldGrowSlot.contains(i))) {
@@ -582,15 +573,14 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                         }
                         stackInSlot.shrink(1);
                     } else {
-                        matrixCopy.setInventorySlotContents(i, itemStack);
+                        matrix.setInventorySlotContents(i, itemStack);
                         finalRemainder.set(i, itemStack);
                     }
                 } else if (!stackInSlot.isEmpty()) {
                     stackInSlot.shrink(1);
                 }
             }
-            System.out.println(matrixCopy);
-        } while (API.instance().getComparer().isEqual(result, CraftingManager.findMatchingResult(matrixCopy, world)) &&
+        } while (API.instance().getComparer().isEqual(result, CraftingManager.findMatchingResult(matrix, world)) &&
                 iterations < maxIterations);
 
         return Pair.of(iterations, finalRemainder);
@@ -622,7 +612,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         ItemStack result = grid.getCraftingResult().getStackInSlot(0);
         NonNullList<ItemStack> remainder = CraftingManager.getRemainingItems(matrix, network.world());
 
-        //the amount that can be crafted is limited by the stack sizes of the output at first
+        //the amount that can be crafted is limited by the stack size of the output at first
         int toCraft = result.getMaxStackSize() / result.getCount();
 
         //contains the amount that is in the network for each input item
@@ -722,11 +712,18 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
             int toSplitUp = networkCounts.get(i);
 
-            commonSlots.add(Pair.of(correspondingSlots, missingCount + correspondingSlots.size() <= toSplitUp));
+            //the second param is calculated later
+            commonSlots.add(MutablePair.of(correspondingSlots, false));
 
             //if there's only one slot with this ingredient or the max stack size is 1, ignore it
-            if (missingCount <= toSplitUp || slot.getMaxStackSize() == 1)
+            if (slot.getMaxStackSize() == 1)
                 continue;
+            if (missingCount <= toSplitUp) {
+                //fill up slot copies to maximum amount, otherwise the remainder simulation won't work
+                for (Pair<ItemStack, Integer> correspondingSlot : correspondingSlots)
+                    correspondingSlot.getLeft().setCount(correspondingSlot.getLeft().getMaxStackSize());
+                continue;
+            }
 
             //split up items evenly between all slots
             while (toSplitUp > 0) {
@@ -744,9 +741,19 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
         //if there is any remainder, then simulate the max iterations that can be done
         if (remainder.stream().anyMatch(item -> !item.isEmpty())) {
-            //TODO: Simulation doesn't know about network counts, create a crafting matrix out of common slots and supply it that
+            //create new matrix made up of the common slots
+            InventoryCrafting matrixClone = new InventoryCrafting(new Container() {
+                @Override
+                public boolean canInteractWith(EntityPlayer playerIn) {
+                    return false;
+                }
+            }, matrix.getWidth(), matrix.getHeight());
+            for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> commonSlotsPair : commonSlots) {
+                for (Pair<ItemStack, Integer> commonSlotEntry : commonSlotsPair.getLeft())
+                    matrixClone.setInventorySlotContents(commonSlotEntry.getRight(), commonSlotEntry.getLeft().copy());
+            }
             Pair<Integer, NonNullList<ItemStack>> simulationResult =
-                    simulateRemainder(toCraft, matrix, result, grid.getNetwork().world());
+                    simulateRemainder(toCraft, matrixClone, result, grid.getNetwork().world());
             toCraft = Math.min(toCraft, simulationResult.getLeft());
             //set remainder to the final remainder
             remainder = simulationResult.getRight();
@@ -755,15 +762,29 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         //remove items used in craft
         for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> commonSlotsPair : commonSlots) {
             int toExtract = 0;
-            //this removes the amount for all slots with the same ingredient and their re-fill at once
+            int networkCount = -1;
+            //get total extraction amount
+            for (Pair<ItemStack, Integer> commonSlotEntry : commonSlotsPair.getLeft()) {
+                if (networkCount == -1)
+                    networkCount = networkCounts.get(commonSlotEntry.getRight());
+
+                int realStackCount = matrix.getStackInSlot(commonSlotEntry.getRight()).getCount();
+                toExtract += Math.max(0, toCraft - realStackCount);
+            }
+
+            //find all slots that need a remainder and check if network can supply it
+            int remainderAmount = 0;
             for (Pair<ItemStack, Integer> commonSlotEntry : commonSlotsPair.getLeft()) {
                 int realStackCount = matrix.getStackInSlot(commonSlotEntry.getRight()).getCount();
-                //add 1 if this slot should be re-filled and gets emptied after crafting and also doesn't have a
-                // remainder
-                //TODO: improve remainder check (potato example where it could still re-fill (if input and remainder are stacked))
-                toExtract += Math.max(0, toCraft - realStackCount) +
-                        ((remainder.get(commonSlotEntry.getRight()).isEmpty() && commonSlotsPair.getRight() &&
-                                (realStackCount - toCraft) < 1) ? 1 : 0);
+                //if stack would be emtpy, then try to extract remainder
+                if (realStackCount - toCraft < 1)
+                    remainderAmount++;
+            }
+
+            //all found slots can be re-filled
+            if (networkCount - toExtract - remainderAmount >= 0) {
+                commonSlotsPair.setValue(true);
+                toExtract += remainderAmount;
             }
 
             //remove used item from system
@@ -789,6 +810,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                 if (slot.getCount() == 1 && remainderItem.getCount() == 1) {
                     matrix.setInventorySlotContents(i, remainderItem);
                 } else {
+                    //split up remainder that shouldn't be stacked
                     do {
                         ItemStack newRemainderItem = remainderItem.splitStack(remainderItem.getMaxStackSize());
                         //if count is 2 we can't replace the item -> add it to the network or player inv
@@ -805,33 +827,34 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                             }
                         }
                     } while (remainderItem.getCount() > 0);
-
-                    //shrink slot by 1
-                    matrix.decrStackSize(i, toCraft);
                 }
-            } else if (slot.getCount() - toCraft < 1) { //refill from system if possible
-                boolean hasRefilledAllSlots = true;
-                outer:
-                for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> commonSlotsPair : commonSlots) {
-                    for (Pair<ItemStack, Integer> commonSlotEntry : commonSlotsPair.getLeft()) {
-                        //if all slots can be re-filled, then the needed items already have been extracted.
-                        if (commonSlotEntry.getRight() == i) {
-                            hasRefilledAllSlots = commonSlotsPair.getRight();
-                            break outer;
+            }
+            //only do this if remainder didn't replace item
+            if (slot.getCount() != 1 || remainderItem.getCount() != 1) {
+                if (slot.getCount() - toCraft < 1) { //refill from system if possible
+                    boolean hasRefilledAllSlots = true;
+                    outer:
+                    for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> commonSlotsPair : commonSlots) {
+                        for (Pair<ItemStack, Integer> commonSlotEntry : commonSlotsPair.getLeft()) {
+                            //if all slots can be re-filled, then the needed items already have been extracted.
+                            if (commonSlotEntry.getRight() == i) {
+                                hasRefilledAllSlots = commonSlotsPair.getRight();
+                                break outer;
+                            }
                         }
                     }
-                }
 
-                if (!hasRefilledAllSlots) {
-                    ItemStack refill = StackUtils.nullToEmpty(network.extractItem(slot, 1, Action.PERFORM));
-                    matrix.setInventorySlotContents(i, refill);
-                    if (!refill.isEmpty())
-                        network.getItemStorageTracker().changed(player, refill.copy());
-                } else {
-                    matrix.decrStackSize(i, slot.getCount() - 1);
+                    if (!hasRefilledAllSlots) {
+                        ItemStack refill = StackUtils.nullToEmpty(network.extractItem(slot, 1, Action.PERFORM));
+                        matrix.setInventorySlotContents(i, refill);
+                        if (!refill.isEmpty())
+                            network.getItemStorageTracker().changed(player, refill.copy());
+                    } else {
+                        matrix.decrStackSize(i, slot.getCount() - 1);
+                    }
+                } else { //decrease slot by crafted amount if everything else is false
+                    matrix.decrStackSize(i, toCraft);
                 }
-            } else { //decrease slot by crafted amount if everything else is false
-                matrix.decrStackSize(i, toCraft);
             }
         }
 
