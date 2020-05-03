@@ -762,8 +762,6 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
             finalRemainder = remainder;
         }
 
-        //TODO: Items that are not used up still get re-filled
-
         //remove items used in craft
         pairsLoop:
         for (Pair<Set<Pair<ItemStack, Integer>>, Boolean> commonSlotsPair : commonSlots) {
