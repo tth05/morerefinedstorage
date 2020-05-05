@@ -184,12 +184,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
             // Only if we are a crafting grid. Pattern grids can just be emptied.
             if (!slot.isEmpty() && grid.getGridType() == GridType.CRAFTING) {
-                // If we are connected, try to insert into network. If it fails, stop.
-                ItemStack remainder = network.insertItem(slot, slot.getCount(), Action.PERFORM);
-                network.getItemStorageTracker().changed(player, slot.copy());
-                if (remainder != null)
-                    giveToPlayerOrNetwork(remainder, player, null);
-
+                // try to insert into network.
+                giveToPlayerOrNetwork(slot, player, network);
                 grid.getCraftingMatrix().setInventorySlotContents(i, ItemStack.EMPTY);
             }
         }
@@ -543,7 +539,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                     } else {
                         matrix.decrStackSize(i, slot.getCount() - 1);
                     }
-                } else { //decrease slot by crafted amount if everything else is false
+                } else { //decrease slot by crafted amount
                     matrix.decrStackSize(i, toCraft);
                 }
             }
@@ -626,6 +622,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
             if (remainingItem != null) {
                 InventoryHelper.spawnItemStack(player.getEntityWorld(), player.getPosition().getX(),
                         player.getPosition().getY(), player.getPosition().getZ(), remainingItem);
+            } else {
+                network.getItemStorageTracker().changed(player, itemStack);
             }
         }
     }
