@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
@@ -252,7 +253,7 @@ public class CraftingPattern implements ICraftingPattern {
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return CraftingTaskFactory.ID;
     }
 

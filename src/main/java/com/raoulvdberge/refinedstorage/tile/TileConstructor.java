@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.tile.config.IComparable;
 import com.raoulvdberge.refinedstorage.tile.config.IType;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -31,7 +32,7 @@ public class TileConstructor extends TileNode<NetworkNodeConstructor> {
     }
 
     @Override
-    public String getNodeId() {
+    public ResourceLocation getNodeId() {
         return NetworkNodeConstructor.ID;
     }
 }

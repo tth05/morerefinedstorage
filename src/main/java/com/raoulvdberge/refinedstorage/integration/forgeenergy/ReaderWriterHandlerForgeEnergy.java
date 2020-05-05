@@ -7,6 +7,7 @@ import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterHan
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IWriter;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.capabilities.Capability;
@@ -19,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ReaderWriterHandlerForgeEnergy implements IReaderWriterHandler {
-    public static final String ID = "forgeenergy";
+    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "forgeenergy");
 
     private static final IEnergyStorage NULL_CAP = new IEnergyStorage() {
         @Override
@@ -135,7 +136,7 @@ public class ReaderWriterHandlerForgeEnergy implements IReaderWriterHandler {
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return ID;
     }
 

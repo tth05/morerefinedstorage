@@ -8,6 +8,7 @@ import com.raoulvdberge.refinedstorage.tile.config.IType;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -59,7 +60,7 @@ public class TileDetector extends TileNode<NetworkNodeDetector> {
     }
 
     @Override
-    public String getNodeId() {
+    public ResourceLocation getNodeId() {
         return NetworkNodeDetector.ID;
     }
 }

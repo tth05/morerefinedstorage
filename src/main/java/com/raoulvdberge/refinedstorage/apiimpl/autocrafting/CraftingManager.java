@@ -18,6 +18,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -130,7 +131,7 @@ public class CraftingManager implements ICraftingManager {
                 for (int i = 0; i < tasksToRead.tagCount(); ++i) {
                     NBTTagCompound taskTag = tasksToRead.getCompoundTagAt(i);
 
-                    String taskType = taskTag.getString(NBT_TASK_TYPE);
+                    ResourceLocation taskType = new ResourceLocation(taskTag.getString(NBT_TASK_TYPE));
                     NBTTagCompound taskData = taskTag.getCompoundTag(NBT_TASK_DATA);
 
                     ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(taskType);
@@ -198,7 +199,7 @@ public class CraftingManager implements ICraftingManager {
         for (ICraftingTask task : tasks.values()) {
             NBTTagCompound taskTag = new NBTTagCompound();
 
-            taskTag.setString(NBT_TASK_TYPE, task.getPattern().getId());
+            taskTag.setString(NBT_TASK_TYPE, task.getPattern().getId().toString());
             taskTag.setTag(NBT_TASK_DATA, task.writeToNbt(new NBTTagCompound()));
 
             list.appendTag(taskTag);

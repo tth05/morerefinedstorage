@@ -7,6 +7,7 @@ import com.raoulvdberge.refinedstorage.tile.config.*;
 import com.raoulvdberge.refinedstorage.tile.data.RSSerializers;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
@@ -63,7 +64,7 @@ public class TileExternalStorage extends TileNode<NetworkNodeExternalStorage> {
     }
 
     @Override
-    public String getNodeId() {
+    public ResourceLocation getNodeId() {
         return NetworkNodeExternalStorage.ID;
     }
 }

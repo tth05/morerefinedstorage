@@ -54,6 +54,7 @@ import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -257,7 +258,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return null;
     }
 

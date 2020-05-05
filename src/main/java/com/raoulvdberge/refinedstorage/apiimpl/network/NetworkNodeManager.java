@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.network.node.INetworkNodeManager;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
@@ -49,7 +50,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
             for (int i = 0; i < nodesTag.tagCount(); ++i) {
                 NBTTagCompound nodeTag = nodesTag.getCompoundTagAt(i);
 
-                String id = nodeTag.getString(NBT_NODE_ID);
+                ResourceLocation id = new ResourceLocation(nodeTag.getString(NBT_NODE_ID));
                 NBTTagCompound data = nodeTag.getCompoundTag(NBT_NODE_DATA);
                 BlockPos pos = BlockPos.fromLong(nodeTag.getLong(NBT_NODE_POS));
 
@@ -80,7 +81,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
             try {
                 NBTTagCompound nodeTag = new NBTTagCompound();
 
-                nodeTag.setString(NBT_NODE_ID, node.getId());
+                nodeTag.setString(NBT_NODE_ID, node.getId().toString());
                 nodeTag.setLong(NBT_NODE_POS, node.getPos().toLong());
                 nodeTag.setTag(NBT_NODE_DATA, node.write(new NBTTagCompound()));
 

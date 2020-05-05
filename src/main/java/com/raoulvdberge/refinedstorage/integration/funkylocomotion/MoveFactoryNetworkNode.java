@@ -35,7 +35,7 @@ public class MoveFactoryNetworkNode implements IMoveFactory {
 
         tag.setInteger(NBT_DIRECTION, tile.getDirection().ordinal());
         tag.setTag(NBT_NODE, node.write(new NBTTagCompound()));
-        tag.setString(NBT_NODE_ID, node.getId());
+        tag.setString(NBT_NODE_ID, node.getId().toString());
 
         // Funky Locomotion requires this
         IBlockState state = world.getBlockState(pos);
@@ -52,7 +52,7 @@ public class MoveFactoryNetworkNode implements IMoveFactory {
     @Override
     @SuppressWarnings("deprecation")
     public boolean recreateBlock(World world, BlockPos pos, NBTTagCompound tag) {
-        NetworkNode node = (NetworkNode) API.instance().getNetworkNodeRegistry().get(tag.getString(NBT_NODE_ID)).create(tag.getCompoundTag(NBT_NODE), world, pos);
+        NetworkNode node = (NetworkNode) API.instance().getNetworkNodeRegistry().get(new ResourceLocation(tag.getString(NBT_NODE_ID))).create(tag.getCompoundTag(NBT_NODE), world, pos);
         node.setThrottlingDisabled();
 
         INetworkNodeManager manager = API.instance().getNetworkNodeManager(world);

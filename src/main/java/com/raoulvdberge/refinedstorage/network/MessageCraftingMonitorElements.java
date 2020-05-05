@@ -10,6 +10,7 @@ import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.GuiCraftingMonitor;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.ICraftingMonitor;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -55,7 +56,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
             int elementCount = buf.readInt();
 
             for (int j = 0; j < elementCount; ++j) {
-                Function<ByteBuf, ICraftingMonitorElement> factory = API.instance().getCraftingMonitorElementRegistry().get(ByteBufUtils.readUTF8String(buf));
+                Function<ByteBuf, ICraftingMonitorElement> factory = API.instance().getCraftingMonitorElementRegistry().get(new ResourceLocation(ByteBufUtils.readUTF8String(buf)));
 
                 if (factory != null) {
                     elements.add(factory.apply(buf));
@@ -82,7 +83,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
             buf.writeInt(elements.size());
 
             for (ICraftingMonitorElement element : elements) {
-                ByteBufUtils.writeUTF8String(buf, element.getId());
+                ByteBufUtils.writeUTF8String(buf, element.getId().toString());
 
                 element.write(buf);
             }

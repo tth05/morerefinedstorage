@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.tile.data.RSSerializers;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -154,7 +155,7 @@ public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
     }
 
     @Override
-    public String getNodeId() {
+    public ResourceLocation getNodeId() {
         return NetworkNodeDiskDrive.ID;
     }
 }

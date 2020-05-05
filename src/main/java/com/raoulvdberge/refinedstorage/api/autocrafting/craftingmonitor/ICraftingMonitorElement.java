@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor;
 
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -24,7 +25,7 @@ public interface ICraftingMonitorElement {
      *
      * @return the id
      */
-    String getId();
+    ResourceLocation getId();
 
     /**
      * @return the tooltip of this element, or null for no tooltip

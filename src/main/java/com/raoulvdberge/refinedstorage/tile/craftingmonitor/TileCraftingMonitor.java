@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeCraftingM
 import com.raoulvdberge.refinedstorage.tile.TileNode;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -40,7 +41,7 @@ public class TileCraftingMonitor extends TileNode<NetworkNodeCraftingMonitor> {
     }
 
     @Override
-    public String getNodeId() {
+    public ResourceLocation getNodeId() {
         return NetworkNodeCraftingMonitor.ID;
     }
 }

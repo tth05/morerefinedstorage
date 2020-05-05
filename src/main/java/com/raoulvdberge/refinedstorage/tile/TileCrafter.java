@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.gui.TileDataParameterClientListenerCrafte
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -31,7 +32,7 @@ public class TileCrafter extends TileNode<NetworkNodeCrafter> {
     }
 
     @Override
-    public String getNodeId() {
+    public ResourceLocation getNodeId() {
         return NetworkNodeCrafter.ID;
     }
 

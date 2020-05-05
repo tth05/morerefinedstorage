@@ -33,6 +33,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntitySkull;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -53,7 +54,7 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class NetworkNodeConstructor extends NetworkNode implements IComparable, IType, ICoverable {
-    public static final String ID = "constructor";
+    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "constructor");
 
     private static final String NBT_COMPARE = "Compare";
     private static final String NBT_TYPE = "Type";
@@ -294,7 +295,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return ID;
     }
 

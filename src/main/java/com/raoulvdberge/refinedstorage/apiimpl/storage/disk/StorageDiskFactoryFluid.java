@@ -1,14 +1,16 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.disk;
 
+import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskFactory;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 
 public class StorageDiskFactoryFluid implements IStorageDiskFactory<FluidStack> {
-    public static final String ID = "normal_fluid";
+    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "normal_fluid");
 
     @Override
     public IStorageDisk<FluidStack> createFromNbt(World world, NBTTagCompound tag) {

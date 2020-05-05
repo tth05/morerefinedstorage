@@ -4,13 +4,14 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.network.MessageCrafterManagerSlotSizes;
 import com.raoulvdberge.refinedstorage.tile.TileCrafterManager;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class NetworkNodeCrafterManager extends NetworkNode {
-    public static final String ID = "crafter_manager";
+    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "crafter_manager");
 
     private static final String NBT_SIZE = "Size";
     private static final String NBT_SEARCH_BOX_MODE = "SearchBoxMode";
@@ -28,7 +29,7 @@ public class NetworkNodeCrafterManager extends NetworkNode {
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return ID;
     }
 

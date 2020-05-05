@@ -1,10 +1,12 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter;
 
+import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReader;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterChannel;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterHandler;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IWriter;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.capabilities.Capability;
@@ -13,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ReaderWriterHandlerRedstone implements IReaderWriterHandler {
-    public static final String ID = "redstone";
+    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "redstone");
 
     @Override
     public void update(IReaderWriterChannel channel) {
@@ -70,7 +72,7 @@ public class ReaderWriterHandlerRedstone implements IReaderWriterHandler {
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return ID;
     }
 
@@ -91,6 +93,7 @@ public class ReaderWriterHandlerRedstone implements IReaderWriterHandler {
             return Collections.emptyList();
         }
 
-        return Collections.singletonList(new TextComponentTranslation("misc.refinedstorage:reader_writer.redstone", strength));
+        return Collections
+                .singletonList(new TextComponentTranslation("misc.refinedstorage:reader_writer.redstone", strength));
     }
 }

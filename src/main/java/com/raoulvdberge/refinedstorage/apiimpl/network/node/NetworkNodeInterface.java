@@ -17,13 +17,14 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
 public class NetworkNodeInterface extends NetworkNode implements IComparable {
-    public static final String ID = "interface";
+    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "interface");
 
     private static final String NBT_COMPARE = "Compare";
 
@@ -171,7 +172,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return ID;
     }
 

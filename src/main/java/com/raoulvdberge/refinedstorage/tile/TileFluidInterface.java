@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeFluidInte
 import com.raoulvdberge.refinedstorage.tile.data.RSSerializers;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -46,7 +47,7 @@ public class TileFluidInterface extends TileNode<NetworkNodeFluidInterface> {
     }
 
     @Override
-    public String getNodeId() {
+    public ResourceLocation getNodeId() {
         return NetworkNodeFluidInterface.ID;
     }
 }

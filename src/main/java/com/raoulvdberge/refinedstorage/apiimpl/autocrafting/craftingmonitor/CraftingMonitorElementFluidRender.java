@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor;
 
+import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
@@ -8,6 +9,7 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -20,7 +22,7 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
     private static final int COLOR_SCHEDULED = 0xFFE8E5CA;
     private static final int COLOR_CRAFTING = 0xFFADDBC6;
 
-    public static final String ID = "fluid_render";
+    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "fluid_render");
 
     private FluidStack stack;
     private int stored;
@@ -92,7 +94,7 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return ID;
     }
 

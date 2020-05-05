@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.api.network.readerwriter;
 
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.common.capabilities.Capability;
 
@@ -69,7 +70,7 @@ public interface IReaderWriterHandler {
     /**
      * @return the id of this writer, as assigned to the {@link IReaderWriterHandlerRegistry}
      */
-    String getId();
+    ResourceLocation getId();
 
     /**
      * @param reader  the reader

@@ -7,6 +7,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
@@ -93,7 +94,7 @@ public class StorageDiskFluidPortable implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public String getId() {
+    public ResourceLocation getId() {
         return parent.getId();
     }
 }

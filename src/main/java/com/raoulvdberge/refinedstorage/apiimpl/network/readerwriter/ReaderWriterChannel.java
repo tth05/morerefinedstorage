@@ -47,7 +47,7 @@ public class ReaderWriterChannel implements IReaderWriterChannel {
     @Override
     public NBTTagCompound writeToNbt(NBTTagCompound tag) {
         for (IReaderWriterHandler handler : handlers) {
-            tag.setTag(String.format(NBT_HANDLER, handler.getId()), handler.writeToNbt(new NBTTagCompound()));
+            tag.setTag(String.format(NBT_HANDLER, handler.getId().toString()), handler.writeToNbt(new NBTTagCompound()));
         }
 
         return tag;
@@ -56,10 +56,10 @@ public class ReaderWriterChannel implements IReaderWriterChannel {
     @Override
     public void readFromNbt(NBTTagCompound tag) {
         for (IReaderWriterHandler handler : handlers) {
-            String id = String.format(NBT_HANDLER, handler.getId());
+            String id = String.format(NBT_HANDLER, handler.getId().toString());
 
             if (tag.hasKey(id)) {
-                IReaderWriterHandlerFactory factory = API.instance().getReaderWriterHandlerRegistry().get(id);
+                IReaderWriterHandlerFactory factory = API.instance().getReaderWriterHandlerRegistry().get(handler.getId());
 
                 if (factory != null) {
                     handlers.add(factory.create(tag.getCompoundTag(id)));
