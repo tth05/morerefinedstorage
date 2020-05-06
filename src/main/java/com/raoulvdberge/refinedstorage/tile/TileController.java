@@ -622,7 +622,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
     @Override
     public int getEnergyUsage() {
-        int usage = RS.INSTANCE.config.controllerBaseUsage;
+        int usage = redstoneMode.isEnabled(world, pos) ? RS.INSTANCE.config.controllerBaseUsage : 0;
 
         for (INetworkNode node : nodeGraph.all()) {
             if (node.canUpdate()) {
