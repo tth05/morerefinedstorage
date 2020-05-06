@@ -2,29 +2,45 @@ package com.raoulvdberge.refinedstorage.gui.grid.stack;
 
 import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public class GridStackFluid implements IGridStack {
-    private int hash;
+
+    private UUID id;
+    @Nullable
+    private UUID otherId;
+
     private FluidStack stack;
     @Nullable
     private IStorageTracker.IStorageTrackerEntry entry;
     private boolean craftable;
-    private boolean displayCraftText;
     private String modId;
     private String modName;
 
-    public GridStackFluid(int hash, FluidStack stack, @Nullable IStorageTracker.IStorageTrackerEntry entry, boolean craftable, boolean displayCraftText) {
-        this.hash = hash;
+    public GridStackFluid(UUID id, @Nullable UUID otherId, FluidStack stack, @Nullable StorageTrackerEntry entry, boolean craftable) {
+        this.id = id;
+        this.otherId = otherId;
         this.stack = stack;
         this.entry = entry;
         this.craftable = craftable;
-        this.displayCraftText = displayCraftText;
+    }
+
+    @Nullable
+    @Override
+    public UUID getOtherId() {
+        return otherId;
+    }
+
+    @Override
+    public void updateOtherId(@Nullable UUID otherId) {
+        this.otherId = otherId;
     }
 
     public FluidStack getStack() {
@@ -37,18 +53,8 @@ public class GridStackFluid implements IGridStack {
     }
 
     @Override
-    public boolean doesDisplayCraftText() {
-        return displayCraftText;
-    }
-
-    @Override
-    public void setDisplayCraftText(boolean displayCraftText) {
-        this.displayCraftText = displayCraftText;
-    }
-
-    @Override
-    public int getHash() {
-        return hash;
+    public UUID getId() {
+        return id;
     }
 
     @Override
@@ -94,7 +100,7 @@ public class GridStackFluid implements IGridStack {
 
     @Override
     public int getQuantity() {
-        return stack.amount;
+        return isCraftable() ? 0 : stack.amount;
     }
 
     @Override
@@ -108,7 +114,7 @@ public class GridStackFluid implements IGridStack {
 
         String text;
 
-        if (displayCraftText) {
+        if (isCraftable()) {
             text = I18n.format("gui.refinedstorage:grid.craft");
         } else {
             text = API.instance().getQuantityFormatter().formatInBucketFormWithOnlyTrailingDigitsIfZero(getQuantity());

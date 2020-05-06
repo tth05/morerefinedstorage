@@ -68,6 +68,12 @@ public interface IStorageCache<T> {
     void removeListener(IStorageCacheListener<T> listener);
 
     /**
+     * Re-attaches all listeners.
+     * In practice this means that all listeners will get a {@link IStorageCacheListener#onAttached()} call.
+     */
+    void reAttachListeners();
+
+    /**
      * Resorts the storages in this cache according to their priority.
      * This needs to be called when the priority of a storage changes.
      */
@@ -77,6 +83,11 @@ public interface IStorageCache<T> {
      * @return the list behind this cache
      */
     IStackList<T> getList();
+
+    /**
+     * @return a list of craftables
+     */
+    IStackList<T> getCraftablesList();
 
     /**
      * @return the storages connected to this network

@@ -10,7 +10,9 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.ArrayList;
@@ -56,7 +58,7 @@ public class MessageGridProcessingTransfer extends MessageHandlerPlayerToServer<
         this.fluidInputs = new ArrayList<>(size);
 
         for (int i = 0; i < size; i++) {
-            this.fluidInputs.add(StackUtils.readFluidStack(buf));
+            this.fluidInputs.add(FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf)));
         }
 
         size = buf.readInt();
@@ -64,7 +66,7 @@ public class MessageGridProcessingTransfer extends MessageHandlerPlayerToServer<
         this.fluidOutputs = new ArrayList<>(size);
 
         for (int i = 0; i < size; i++) {
-            this.fluidOutputs.add(StackUtils.readFluidStack(buf));
+            this.fluidOutputs.add(FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf)));
         }
     }
 
@@ -85,13 +87,13 @@ public class MessageGridProcessingTransfer extends MessageHandlerPlayerToServer<
         buf.writeInt(fluidInputs.size());
 
         for (FluidStack stack : fluidInputs) {
-            StackUtils.writeFluidStack(buf, stack);
+            ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
         }
 
         buf.writeInt(fluidOutputs.size());
 
         for (FluidStack stack : fluidOutputs) {
-            StackUtils.writeFluidStack(buf, stack);
+            ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
         }
     }
 

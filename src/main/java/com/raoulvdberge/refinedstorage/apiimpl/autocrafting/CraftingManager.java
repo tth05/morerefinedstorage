@@ -37,6 +37,7 @@ public class CraftingManager implements ICraftingManager {
     private TileController network;
 
     private Map<String, List<IItemHandlerModifiable>> containerInventories = new LinkedHashMap<>();
+    private Map<ICraftingPattern, Set<ICraftingPatternContainer>> patternToContainer = new HashMap<>();
 
     private List<ICraftingPattern> patterns = new ArrayList<>();
 
@@ -354,9 +355,13 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public void rebuild() {
+    public void invalidate() {
+        this.network.getItemStorageCache().getCraftablesList().clear();
+        this.network.getFluidStorageCache().getCraftablesList().clear();
+
         this.patterns.clear();
         this.containerInventories.clear();
+        this.patternToContainer.clear();
 
         List<ICraftingPatternContainer> containers = new ArrayList<>();
 
@@ -369,13 +374,33 @@ public class CraftingManager implements ICraftingManager {
         containers.sort((a, b) -> b.getPosition().compareTo(a.getPosition()));
 
         for (ICraftingPatternContainer container : containers) {
-            this.patterns.addAll(container.getPatterns());
+            for (ICraftingPattern pattern : container.getPatterns()) {
+                this.patterns.add(pattern);
+
+                for (ItemStack output : pattern.getOutputs()) {
+                    network.getItemStorageCache().getCraftablesList().add(output);
+                }
+
+                for (FluidStack output : pattern.getFluidOutputs()) {
+                    network.getFluidStorageCache().getCraftablesList().add(output);
+                }
+
+                Set<ICraftingPatternContainer> list = this.patternToContainer.get(pattern);
+                if (list == null) {
+                    list = new LinkedHashSet<>();
+                }
+                list.add(container);
+                this.patternToContainer.put(pattern, list);
+            }
 
             IItemHandlerModifiable handler = container.getPatternInventory();
             if (handler != null) {
                 this.containerInventories.computeIfAbsent(container.getName(), k -> new ArrayList<>()).add(handler);
             }
         }
+
+        this.network.getItemStorageCache().reAttachListeners();
+        this.network.getFluidStorageCache().reAttachListeners();
     }
 
     @Nullable

@@ -17,6 +17,7 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public class FluidGridHandlerPortable implements IFluidGridHandler {
     private IPortableGrid portableGrid;
@@ -26,8 +27,8 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
     }
 
     @Override
-    public void onExtract(EntityPlayerMP player, int hash, boolean shift) {
-        FluidStack stack = portableGrid.getFluidCache().getList().get(hash);
+    public void onExtract(EntityPlayerMP player, UUID id, boolean shift) {
+        FluidStack stack = portableGrid.getFluidCache().getList().get(id);
 
         if (stack == null || stack.amount < Fluid.BUCKET_VOLUME) {
             return;
@@ -101,12 +102,12 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
     }
 
     @Override
-    public void onCraftingPreviewRequested(EntityPlayerMP player, int hash, int quantity, boolean noPreview) {
+    public void onCraftingPreviewRequested(EntityPlayerMP player, UUID id, int quantity, boolean noPreview) {
         // NO OP
     }
 
     @Override
-    public void onCraftingRequested(EntityPlayerMP player, int hash, int quantity) {
+    public void onCraftingRequested(EntityPlayerMP player, UUID id, int quantity) {
         // NO OP
     }
 }

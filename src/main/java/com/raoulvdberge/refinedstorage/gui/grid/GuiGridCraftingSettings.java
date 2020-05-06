@@ -69,7 +69,7 @@ public class GuiGridCraftingSettings extends GuiAmountSpecifying {
         Integer quantity = Ints.tryParse(amountField.getText());
 
         if (quantity != null && quantity > 0) {
-            RS.INSTANCE.network.sendToServer(new MessageGridCraftingPreview(stack.getHash(), quantity, shiftDown, stack instanceof GridStackFluid));
+            RS.INSTANCE.network.sendToServer(new MessageGridCraftingPreview(stack.getId(), quantity, shiftDown, stack instanceof GridStackFluid));
 
             okButton.enabled = false;
         }

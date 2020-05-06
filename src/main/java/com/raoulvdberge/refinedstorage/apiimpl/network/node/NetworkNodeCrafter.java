@@ -68,7 +68,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
                 }
 
                 if (network != null) {
-                    network.getCraftingManager().rebuild();
+                    network.getCraftingManager().invalidate();
                 }
             }
         }
@@ -153,7 +153,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     protected void onConnectedStateChange(INetwork network, boolean state) {
         super.onConnectedStateChange(network, state);
 
-        network.getCraftingManager().rebuild();
+        network.getCraftingManager().invalidate();
     }
 
     @Override
@@ -168,7 +168,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     @Override
     protected void onDirectionChanged() {
         if (network != null) {
-            network.getCraftingManager().rebuild();
+            network.getCraftingManager().invalidate();
         }
     }
 

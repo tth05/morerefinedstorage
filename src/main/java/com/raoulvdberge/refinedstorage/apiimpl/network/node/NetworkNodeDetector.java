@@ -14,8 +14,8 @@ import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
@@ -78,7 +78,7 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
 
                     powered = isPowered(stack == null ? null : stack.getCount());
                 } else {
-                    powered = isPowered(network.getItemStorageCache().getList().getStacks().stream().map(ItemStack::getCount).mapToInt(Number::intValue).sum());
+                    powered = isPowered(network.getItemStorageCache().getList().getStacks().stream().mapToInt(e -> e.getStack().getCount()).sum());
                 }
             } else if (type == IType.FLUIDS) {
                 FluidStack slot = fluidFilters.getFluid(0);
@@ -88,7 +88,7 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
 
                     powered = isPowered(stack == null ? null : stack.amount);
                 } else {
-                    powered = isPowered(network.getFluidStorageCache().getList().getStacks().stream().map(s -> s.amount).mapToInt(Number::intValue).sum());
+                    powered = isPowered(network.getFluidStorageCache().getList().getStacks().stream().mapToInt(e -> e.getStack().amount).sum());
                 }
             }
         }

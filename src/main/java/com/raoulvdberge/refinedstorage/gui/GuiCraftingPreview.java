@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class GuiCraftingPreview extends GuiBase {
     public class CraftingPreviewElementDrawers extends ElementDrawers {
@@ -51,7 +52,7 @@ public class GuiCraftingPreview extends GuiBase {
     private List<ICraftingPreviewElement> stacks;
     private GuiScreen parent;
 
-    private int hash;
+    private UUID id;
     private int quantity;
 
     private GuiButton startButton;
@@ -64,7 +65,7 @@ public class GuiCraftingPreview extends GuiBase {
 
     private boolean fluids;
 
-    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, int hash, int quantity, boolean fluids) {
+    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID id, int quantity, boolean fluids) {
         super(new Container() {
             @Override
             public boolean canInteractWith(EntityPlayer player) {
@@ -75,7 +76,7 @@ public class GuiCraftingPreview extends GuiBase {
         this.stacks = new ArrayList<>(stacks);
         this.parent = parent;
 
-        this.hash = hash;
+        this.id = id;
         this.quantity = quantity;
         this.fluids = fluids;
 
@@ -243,7 +244,7 @@ public class GuiCraftingPreview extends GuiBase {
     }
 
     private void startRequest() {
-        RS.INSTANCE.network.sendToServer(new MessageGridCraftingStart(hash, quantity, fluids));
+        RS.INSTANCE.network.sendToServer(new MessageGridCraftingStart(id, quantity, fluids));
 
         close();
     }

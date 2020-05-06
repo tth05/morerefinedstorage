@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import net.minecraftforge.fluids.FluidStack;
@@ -15,8 +16,9 @@ import java.util.List;
 
 public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
     private IPortableGrid portableGrid;
-    private IStackList<FluidStack> list = API.instance().createFluidStackList();
+    private final IStackList<FluidStack> list = API.instance().createFluidStackList();
     private List<IStorageCacheListener<FluidStack>> listeners = new LinkedList<>();
+
 
     public StorageCacheFluidPortable(IPortableGrid portableGrid) {
         this.portableGrid = portableGrid;
@@ -35,17 +37,18 @@ public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
 
     @Override
     public void add(@Nonnull FluidStack stack, int size, boolean rebuilding, boolean batched) {
-        list.add(stack, size);
+        StackListResult<FluidStack> result = list.add(stack, size);
 
         if (!rebuilding) {
-            listeners.forEach(l -> l.onChanged(stack, size));
+            listeners.forEach(l -> l.onChanged(result));
         }
     }
 
     @Override
     public void remove(@Nonnull FluidStack stack, int size, boolean batched) {
-        if (list.remove(stack, size)) {
-            listeners.forEach(l -> l.onChanged(stack, -size));
+        StackListResult<FluidStack> result = list.remove(stack, size);
+        if (result != null) {
+            listeners.forEach(l -> l.onChanged(result));
         }
     }
 
@@ -67,6 +70,11 @@ public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
     }
 
     @Override
+    public void reAttachListeners() {
+        listeners.forEach(IStorageCacheListener::onAttached);
+    }
+
+    @Override
     public void sort() {
         // NO OP
     }
@@ -74,6 +82,11 @@ public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
     @Override
     public IStackList<FluidStack> getList() {
         return list;
+    }
+
+    @Override
+    public IStackList<FluidStack> getCraftablesList() {
+        throw new RuntimeException("Unsupported");
     }
 
     @Override

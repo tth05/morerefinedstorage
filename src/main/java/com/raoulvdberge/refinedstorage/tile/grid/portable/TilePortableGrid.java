@@ -311,7 +311,7 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
 
     @Override
     public IStorageCacheListener createListener(EntityPlayerMP player) {
-        return getServerGridType() == GridType.FLUID ? new StorageCacheListenerGridPortableFluid(this, player) : new StorageCacheListenerGridPortable(this, player);
+        return getServerGridType() == GridType.FLUID ? new StorageCacheListenerGridPortableFluid(this, player) : new StorageCacheListenerGridPortableItem(this, player);
     }
 
     @Nullable

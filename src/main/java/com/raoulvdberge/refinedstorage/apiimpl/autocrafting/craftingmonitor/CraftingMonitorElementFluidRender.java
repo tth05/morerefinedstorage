@@ -5,12 +5,13 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftin
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -106,7 +107,7 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
 
     @Override
     public void write(ByteBuf buf) {
-        StackUtils.writeFluidStack(buf, stack);
+        ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
         buf.writeInt(stored);
         buf.writeInt(missing);
         buf.writeInt(processing);

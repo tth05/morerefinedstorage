@@ -7,6 +7,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.sorting.GridSorterDirection;
 import com.raoulvdberge.refinedstorage.gui.grid.sorting.IGridSorter;
 import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -18,7 +19,7 @@ public abstract class GridViewBase implements IGridView {
     private List<IGridSorter> sorters;
 
     private List<IGridStack> stacks = new ArrayList<>();
-    protected Map<Integer, IGridStack> map = new HashMap<>();
+    protected Map<UUID, IGridStack> map = new HashMap<>();
 
     public GridViewBase(GuiGrid gui, IGridSorter defaultSorter, List<IGridSorter> sorters) {
         this.gui = gui;
@@ -29,6 +30,12 @@ public abstract class GridViewBase implements IGridView {
     @Override
     public List<IGridStack> getStacks() {
         return stacks;
+    }
+
+    @Nullable
+    @Override
+    public IGridStack get(UUID id) {
+        return map.get(id);
     }
 
     @Override
@@ -50,6 +57,19 @@ public abstract class GridViewBase implements IGridView {
 
             while (it.hasNext()) {
                 IGridStack stack = it.next();
+
+                // If this is a crafting stack,
+                // and there is a regular matching stack in the view too,
+                // and we aren't in "view only craftables" mode,
+                // we don't want the duplicate stacks and we will remove this stack.
+                if (gui.getGrid().getViewType() != IGrid.VIEW_TYPE_CRAFTABLES &&
+                        stack.isCraftable() &&
+                        stack.getOtherId() != null &&
+                        map.containsKey(stack.getOtherId())) {
+                    it.remove();
+
+                    continue;
+                }
 
                 for (Predicate<IGridStack> filter : filters) {
                     if (!filter.test(stack)) {
