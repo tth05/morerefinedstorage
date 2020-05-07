@@ -212,6 +212,11 @@ public interface IGrid {
     void onCraftedShift(EntityPlayer player);
 
     /**
+     * Called when the clear button is pressed in the pattern grid or crafting grid.
+     */
+    void onClear(EntityPlayer player);
+
+    /**
      * Called when a JEI recipe transfer occurs.
      *
      * @param player the player

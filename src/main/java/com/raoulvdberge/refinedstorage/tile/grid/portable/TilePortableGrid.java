@@ -511,6 +511,11 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
     }
 
     @Override
+    public void onClear(EntityPlayer player) {
+        // NO OP
+    }
+
+    @Override
     public boolean isActive() {
         int stored = !world.isRemote ? energyStorage.getEnergyStored() : ENERGY_STORED.getValue();
 

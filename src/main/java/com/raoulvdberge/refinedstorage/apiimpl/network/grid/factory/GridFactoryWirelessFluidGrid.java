@@ -1,4 +1,4 @@
-package com.raoulvdberge.refinedstorage.apiimpl.network.grid;
+package com.raoulvdberge.refinedstorage.apiimpl.network.grid.factory;
 
 import com.raoulvdberge.refinedstorage.api.network.grid.GridFactoryType;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;

@@ -414,6 +414,11 @@ public class PortableGrid implements IGrid, IPortableGrid, IStorageDiskContainer
     }
 
     @Override
+    public void onClear(EntityPlayer player) {
+        // NO OP
+    }
+
+    @Override
     public void onClosed(EntityPlayer player) {
         if (!player.getEntityWorld().isRemote) {
             StackUtils.writeItems(disk, 4, stack.getTagCompound());

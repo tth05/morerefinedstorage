@@ -298,6 +298,11 @@ public class WirelessGrid implements IGridNetworkAware {
     }
 
     @Override
+    public void onClear(EntityPlayer player) {
+        // NO OP
+    }
+
+    @Override
     public boolean isActive() {
         return true;
     }
