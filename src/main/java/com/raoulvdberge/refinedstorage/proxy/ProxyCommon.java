@@ -170,6 +170,10 @@ public class ProxyCommon {
         RS.INSTANCE.network.registerMessage(MessageGridFluidDelta.class, MessageGridFluidDelta.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageGridFluidPull.class, MessageGridFluidPull.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridFluidInsertHeld.class, MessageGridFluidInsertHeld.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridFluidDelta.class, MessagePortableGridFluidDelta.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridFluidUpdate.class, MessagePortableGridFluidUpdate.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridItemDelta.class, MessagePortableGridItemDelta.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridItemUpdate.class, MessagePortableGridItemUpdate.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageFilterUpdate.class, MessageFilterUpdate.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridCraftingPreview.class, MessageGridCraftingPreview.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridCraftingPreviewResponse.class, MessageGridCraftingPreviewResponse.class, id++, Side.CLIENT);

@@ -13,15 +13,16 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MessagePortableGridFluidDelta
         implements IMessage, IMessageHandler<MessagePortableGridFluidDelta, IMessage> {
 
     private IPortableGrid portableGrid;
-    private List<StackListResult<FluidStack>> deltas;
+    private List<StackListResult<FluidStack>> deltas = new ArrayList<>();
 
-    private List<Pair<IGridStack, Integer>> clientDeltas;
+    private List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
 
     public MessagePortableGridFluidDelta(IPortableGrid portableGrid, List<StackListResult<FluidStack>> deltas) {
         this.portableGrid = portableGrid;

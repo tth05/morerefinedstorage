@@ -25,11 +25,6 @@ public class MessageGridFluidUpdate implements IMessage, IMessageHandler<Message
     public MessageGridFluidUpdate() {
     }
 
-    public MessageGridFluidUpdate(boolean canCraft, List<IGridStack> stacks) {
-        this.canCraft = canCraft;
-        this.stacks = stacks;
-    }
-
     public MessageGridFluidUpdate(INetwork network, boolean canCraft) {
         this.network = network;
         this.canCraft = canCraft;
