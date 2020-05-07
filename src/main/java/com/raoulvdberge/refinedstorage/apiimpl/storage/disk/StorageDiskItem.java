@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerCon
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryItem;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -23,9 +24,9 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 public class StorageDiskItem implements IStorageDisk<ItemStack> {
-    static final String NBT_VERSION = "Version";
-    static final String NBT_CAPACITY = "Capacity";
-    static final String NBT_ITEMS = "Items";
+    public static final String NBT_VERSION = "Version";
+    public static final String NBT_CAPACITY = "Capacity";
+    public static final String NBT_ITEMS = "Items";
 
     private World world;
     private int capacity;
@@ -188,7 +189,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         return remainder == null ? size : (size - remainder.getCount());
     }
 
-    Multimap<Item, ItemStack> getRawStacks() {
+    public Multimap<Item, ItemStack> getRawStacks() {
         return stacks;
     }
 

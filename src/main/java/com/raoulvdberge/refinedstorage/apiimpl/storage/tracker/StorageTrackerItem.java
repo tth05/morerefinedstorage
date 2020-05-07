@@ -1,16 +1,15 @@
-package com.raoulvdberge.refinedstorage.apiimpl.storage;
+package com.raoulvdberge.refinedstorage.apiimpl.storage.tracker;
 
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
-import gnu.trove.map.hash.TCustomHashMap;
-import gnu.trove.strategy.HashingStrategy;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.server.MinecraftServer;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class StorageTrackerItem implements IStorageTracker<ItemStack> {
@@ -18,17 +17,7 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
     private static final String NBT_NAME = "Name";
     private static final String NBT_TIME = "Time";
 
-    private Map<ItemStack, IStorageTrackerEntry> changes = new TCustomHashMap<>(new HashingStrategy<ItemStack>() {
-        @Override
-        public int computeHashCode(ItemStack stack) {
-            return API.instance().getItemStackHashCode(stack);
-        }
-
-        @Override
-        public boolean equals(ItemStack left, ItemStack right) {
-            return API.instance().getComparer().isEqualNoQuantity(left, right);
-        }
-    });
+    private Map<Key, StorageTrackerEntry> changes = new HashMap<>();
 
     private Runnable listener;
 
@@ -38,14 +27,14 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
 
     @Override
     public void changed(EntityPlayer player, ItemStack stack) {
-        changes.put(stack, new StorageTrackerEntry(MinecraftServer.getCurrentTimeMillis(), player.getName()));
+        changes.put(new Key(stack), new StorageTrackerEntry(System.currentTimeMillis(), player.getName()));
 
         listener.run();
     }
 
     @Override
-    public IStorageTrackerEntry get(ItemStack stack) {
-        return changes.get(stack);
+    public StorageTrackerEntry get(ItemStack stack) {
+        return changes.get(new Key(stack));
     }
 
     public void readFromNbt(NBTTagList list) {
@@ -55,10 +44,7 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
             ItemStack stack = StackUtils.deserializeStackFromNbt(tag.getCompoundTag(NBT_STACK));
 
             if (!stack.isEmpty()) {
-                changes.put(
-                    stack,
-                    new StorageTrackerEntry(tag.getLong(NBT_TIME), tag.getString(NBT_NAME))
-                );
+                changes.put(new Key(stack), new StorageTrackerEntry(tag.getLong(NBT_TIME), tag.getString(NBT_NAME)));
             }
         }
     }
@@ -66,16 +52,34 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
     public NBTTagList serializeNbt() {
         NBTTagList list = new NBTTagList();
 
-        for (Map.Entry<ItemStack, IStorageTrackerEntry> entry : changes.entrySet()) {
+        for (Map.Entry<Key, StorageTrackerEntry> entry : changes.entrySet()) {
             NBTTagCompound tag = new NBTTagCompound();
 
             tag.setLong(NBT_TIME, entry.getValue().getTime());
             tag.setString(NBT_NAME, entry.getValue().getName());
-            tag.setTag(NBT_STACK, StackUtils.serializeStackToNbt(entry.getKey()));
+            tag.setTag(NBT_STACK, StackUtils.serializeStackToNbt(entry.getKey().stack));
 
             list.appendTag(tag);
         }
 
         return list;
+    }
+
+    private class Key {
+        private final ItemStack stack;
+
+        public Key(ItemStack stack) {
+            this.stack = stack;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof Key && API.instance().getComparer().isEqualNoQuantity(stack, ((Key) other).stack);
+        }
+
+        @Override
+        public int hashCode() {
+            return API.instance().getItemStackHashCode(stack);
+        }
     }
 }

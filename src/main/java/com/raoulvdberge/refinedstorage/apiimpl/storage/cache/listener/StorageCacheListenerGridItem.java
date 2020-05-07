@@ -1,9 +1,9 @@
-package com.raoulvdberge.refinedstorage.apiimpl.storage;
+package com.raoulvdberge.refinedstorage.apiimpl.storage.cache.listener;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
-import com.raoulvdberge.refinedstorage.api.storage.IStorageCacheListener;
+import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.network.MessageGridItemDelta;
 import com.raoulvdberge.refinedstorage.network.MessageGridItemUpdate;

@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.RSItems;
 import com.raoulvdberge.refinedstorage.api.storage.StorageType;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
-import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSyncData;
+import com.raoulvdberge.refinedstorage.api.storage.disk.StorageDiskSyncData;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.block.enums.ItemStorageType;
 import com.raoulvdberge.refinedstorage.item.info.ItemInfo;
@@ -105,7 +105,7 @@ public class ItemStorageDisk extends ItemBase implements IStorageDiskProvider {
 
             API.instance().getStorageDiskSync().sendRequest(id);
 
-            IStorageDiskSyncData data = API.instance().getStorageDiskSync().getData(id);
+            StorageDiskSyncData data = API.instance().getStorageDiskSync().getData(id);
             if (data != null) {
                 if (data.getCapacity() == -1) {
                     tooltip.add(I18n.format("misc.refinedstorage:storage.stored", API.instance().getQuantityFormatter().format(data.getStored())));

@@ -1,10 +1,9 @@
 package com.raoulvdberge.refinedstorage.util;
 
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.gui.grid.stack.GridStackFluid;
 import com.raoulvdberge.refinedstorage.gui.grid.stack.GridStackItem;
 import io.netty.buffer.ByteBuf;
@@ -60,7 +59,7 @@ public final class StackUtils {
         }
     }
 
-    public static void writeItemGridStack(ByteBuf buf, ItemStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable IStorageTracker.IStorageTrackerEntry entry) {
+    public static void writeItemGridStack(ByteBuf buf, ItemStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
         writeItemStack(buf, stack);
 
         buf.writeBoolean(craftable);
@@ -100,7 +99,7 @@ public final class StackUtils {
         return new GridStackItem(id, otherId, stack, craftable, entry);
     }
 
-    public static void writeFluidGridStack(ByteBuf buf, FluidStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable IStorageTracker.IStorageTrackerEntry entry) {
+    public static void writeFluidGridStack(ByteBuf buf, FluidStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
         ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
 
         buf.writeBoolean(craftable);

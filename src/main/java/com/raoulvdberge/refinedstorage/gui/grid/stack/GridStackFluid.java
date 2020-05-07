@@ -1,8 +1,7 @@
 package com.raoulvdberge.refinedstorage.gui.grid.stack;
 
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -19,7 +18,7 @@ public class GridStackFluid implements IGridStack {
 
     private FluidStack stack;
     @Nullable
-    private IStorageTracker.IStorageTrackerEntry entry;
+    private StorageTrackerEntry entry;
     private boolean craftable;
     private String modId;
     private String modName;
@@ -130,12 +129,12 @@ public class GridStackFluid implements IGridStack {
 
     @Nullable
     @Override
-    public IStorageTracker.IStorageTrackerEntry getTrackerEntry() {
+    public StorageTrackerEntry getTrackerEntry() {
         return entry;
     }
 
     @Override
-    public void setTrackerEntry(@Nullable IStorageTracker.IStorageTrackerEntry entry) {
+    public void setTrackerEntry(@Nullable StorageTrackerEntry entry) {
         this.entry = entry;
     }
 }

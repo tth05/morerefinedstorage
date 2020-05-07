@@ -1,8 +1,9 @@
-package com.raoulvdberge.refinedstorage.apiimpl.storage.disk;
+package com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskFactory;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskItem;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;

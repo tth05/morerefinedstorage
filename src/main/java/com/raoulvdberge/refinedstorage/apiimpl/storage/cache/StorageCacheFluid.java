@@ -1,11 +1,13 @@
-package com.raoulvdberge.refinedstorage.apiimpl.storage;
+package com.raoulvdberge.refinedstorage.apiimpl.storage.cache;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.storage.*;
+import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
+import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -14,18 +16,17 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
-public class StorageCacheItem implements IStorageCache<ItemStack> {
-    public static final Consumer<INetwork> INVALIDATE = network -> network.getItemStorageCache().invalidate();
+public class StorageCacheFluid implements IStorageCache<FluidStack> {
+    public static final Consumer<INetwork> INVALIDATE = n -> n.getFluidStorageCache().invalidate();
 
-    private final INetwork network;
-    private final CopyOnWriteArrayList<IStorage<ItemStack>> storages = new CopyOnWriteArrayList<>();
-    private final IStackList<ItemStack> list = API.instance().createItemStackList();
+    private INetwork network;
+    private CopyOnWriteArrayList<IStorage<FluidStack>> storages = new CopyOnWriteArrayList<>();
+    private IStackList<FluidStack> list = API.instance().createFluidStackList();
+    private final IStackList<FluidStack> craftables = API.instance().createFluidStackList();
+    private List<IStorageCacheListener<FluidStack>> listeners = new LinkedList<>();
+    private List<StackListResult<FluidStack>> batchedChanges = new ArrayList<>();
 
-    private final IStackList<ItemStack> craftables = API.instance().createItemStackList();
-    private final List<IStorageCacheListener<ItemStack>> listeners = new LinkedList<>();
-    private final List<StackListResult<ItemStack>> batchedChanges = new ArrayList<>();
-
-    public StorageCacheItem(INetwork network) {
+    public StorageCacheFluid(INetwork network) {
         this.network = network;
     }
 
@@ -35,21 +36,19 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
 
         network.getNodeGraph().all().stream()
             .filter(node -> node.canUpdate() && node instanceof IStorageProvider)
-            .forEach(node -> ((IStorageProvider) node).addItemStorages(storages));
+            .forEach(node -> ((IStorageProvider) node).addFluidStorages(storages));
 
         list.clear();
 
         sort();
 
-        for (IStorage<ItemStack> storage : storages) {
+        for (IStorage<FluidStack> storage : storages) {
             if (storage.getAccessType() == AccessType.INSERT) {
                 continue;
             }
 
-            for (ItemStack stack : storage.getStacks()) {
-                if (!stack.isEmpty()) {
-                    add(stack, stack.getCount(), true, false);
-                }
+            for (FluidStack stack : storage.getStacks()) {
+                add(stack, stack.amount, true, false);
             }
         }
 
@@ -57,8 +56,8 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
     }
 
     @Override
-    public synchronized void add(@Nonnull ItemStack stack, int size, boolean rebuilding, boolean batched) {
-        StackListResult<ItemStack> result = list.add(stack, size);
+    public synchronized void add(@Nonnull FluidStack stack, int size, boolean rebuilding, boolean batched) {
+        StackListResult<FluidStack> result = list.add(stack, size);
 
         if (!rebuilding) {
             if (!batched) {
@@ -70,8 +69,8 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
     }
 
     @Override
-    public synchronized void remove(@Nonnull ItemStack stack, int size, boolean batched) {
-        StackListResult<ItemStack> result = list.remove(stack, size);
+    public synchronized void remove(@Nonnull FluidStack stack, int size, boolean batched) {
+        StackListResult<FluidStack> result = list.remove(stack, size);
 
         if (result != null) {
             if (!batched) {
@@ -96,14 +95,14 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
     }
 
     @Override
-    public void addListener(IStorageCacheListener<ItemStack> listener) {
+    public void addListener(IStorageCacheListener<FluidStack> listener) {
         listeners.add(listener);
 
         listener.onAttached();
     }
 
     @Override
-    public void removeListener(IStorageCacheListener<ItemStack> listener) {
+    public void removeListener(IStorageCacheListener<FluidStack> listener) {
         listeners.remove(listener);
     }
 
@@ -118,17 +117,17 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
     }
 
     @Override
-    public IStackList<ItemStack> getList() {
+    public IStackList<FluidStack> getList() {
         return list;
     }
 
     @Override
-    public IStackList<ItemStack> getCraftablesList() {
+    public IStackList<FluidStack> getCraftablesList() {
         return craftables;
     }
 
     @Override
-    public List<IStorage<ItemStack>> getStorages() {
+    public List<IStorage<FluidStack>> getStorages() {
         return storages;
     }
 }
