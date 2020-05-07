@@ -100,6 +100,7 @@ misc.refinedstorage:storage.full=%d%% full
 misc.refinedstorage:network_item.tooltip=Linked to %d, %d, %d.
 misc.refinedstorage:network_item.out_of_range=There is no Wireless Transmitter in range.
 misc.refinedstorage:network_item.not_found=Controller not found.
+misc.refinedstorage:network_item.out_of_energy=The %s is out of energy.
 
 misc.refinedstorage:network_card.tooltip=Linked to %d, %d, %d.
 

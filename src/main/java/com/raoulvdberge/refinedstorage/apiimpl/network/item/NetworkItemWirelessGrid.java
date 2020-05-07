@@ -12,6 +12,7 @@ import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 
@@ -35,7 +36,10 @@ public class NetworkItemWirelessGrid implements INetworkItem {
 
     @Override
     public boolean onOpen(INetwork network) {
-        if (RS.INSTANCE.config.wirelessGridUsesEnergy && stack.getItemDamage() != ItemWirelessGrid.TYPE_CREATIVE && stack.getCapability(CapabilityEnergy.ENERGY, null).getEnergyStored() <= RS.INSTANCE.config.wirelessGridOpenUsage) {
+        if (RS.INSTANCE.config.wirelessGridUsesEnergy && stack.getItemDamage() != ItemWirelessGrid.TYPE_CREATIVE &&
+                stack.getCapability(CapabilityEnergy.ENERGY, null).getEnergyStored() <=
+                        RS.INSTANCE.config.wirelessGridOpenUsage) {
+            sendOutOfEnergyMessage();
             return false;
         }
 
@@ -56,14 +60,20 @@ public class NetworkItemWirelessGrid implements INetworkItem {
     public void drainEnergy(int energy) {
         if (RS.INSTANCE.config.wirelessGridUsesEnergy && stack.getItemDamage() != ItemWirelessGrid.TYPE_CREATIVE) {
             IEnergyStorage energyStorage = stack.getCapability(CapabilityEnergy.ENERGY, null);
-
             energyStorage.extractEnergy(energy, false);
 
             if (energyStorage.getEnergyStored() <= 0) {
                 handler.close(player);
 
                 player.closeScreen();
+
+                sendOutOfEnergyMessage();
             }
         }
+    }
+
+    public void sendOutOfEnergyMessage() {
+        player.sendMessage(new TextComponentTranslation("misc.refinedstorage:network_item.out_of_energy",
+                new TextComponentTranslation(stack.getItem().getTranslationKey() + ".0.name")));
     }
 }
