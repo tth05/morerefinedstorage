@@ -5,11 +5,22 @@ import com.raoulvdberge.refinedstorage.container.ContainerExporter;
 import com.raoulvdberge.refinedstorage.gui.control.SideButtonCompare;
 import com.raoulvdberge.refinedstorage.gui.control.SideButtonRedstoneMode;
 import com.raoulvdberge.refinedstorage.gui.control.SideButtonType;
+import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
+import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.TileExporter;
 
 public class GuiExporter extends GuiBase {
+
+    private boolean hasRegulatorMode;
+
     public GuiExporter(ContainerExporter container) {
         super(container, 211, 137);
+        this.hasRegulatorMode = hasRegulatorMode();
+    }
+
+    private boolean hasRegulatorMode() {
+        return ((ItemHandlerUpgrade) ((TileExporter) ((ContainerExporter) this.inventorySlots).getTile()).getNode()
+                .getUpgrades()).hasUpgrade(ItemUpgrade.TYPE_REGULATOR);
     }
 
     @Override
@@ -24,6 +35,12 @@ public class GuiExporter extends GuiBase {
 
     @Override
     public void update(int x, int y) {
+        boolean updatedHasRegulatorMode = hasRegulatorMode();
+        if (hasRegulatorMode != updatedHasRegulatorMode) {
+            hasRegulatorMode = updatedHasRegulatorMode;
+
+            ((ContainerExporter) this.inventorySlots).initSlots();
+        }
     }
 
     @Override
