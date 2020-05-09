@@ -8,7 +8,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.storage.NetworkNodeStorage;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.block.BlockStorage;
-import com.raoulvdberge.refinedstorage.item.ItemProcessor;
 import com.raoulvdberge.refinedstorage.item.ItemStorageDisk;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -73,12 +72,6 @@ public class ItemBlockStorage extends ItemBlockBase {
 
                 if (!player.inventory.addItemStackToInventory(storagePart.copy())) {
                     InventoryHelper.spawnItemStack(world, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), storagePart);
-                }
-
-                ItemStack processor = new ItemStack(RSItems.PROCESSOR, storageStack.getCount(), ItemProcessor.TYPE_BASIC);
-
-                if (!player.inventory.addItemStackToInventory(processor.copy())) {
-                    InventoryHelper.spawnItemStack(world, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), processor);
                 }
 
                 if (disk != null) {
