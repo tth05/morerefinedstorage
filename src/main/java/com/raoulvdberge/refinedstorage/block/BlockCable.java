@@ -300,7 +300,6 @@ public class BlockCable extends BlockNode {
     public boolean isOpaqueCube(IBlockState state) {
         return false;
     }
-
     @Override
     @SuppressWarnings("deprecation")
     public boolean isFullCube(IBlockState state) {

@@ -1,4 +1,4 @@
-package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry;
+package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
@@ -6,7 +6,6 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadExc
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.CraftingTask;
 import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nonnull;
