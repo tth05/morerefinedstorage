@@ -8,7 +8,6 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
@@ -82,7 +81,7 @@ public class StorageDiskItemStorageWrapper implements IStorageDisk<ItemStack> {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return parent.getId();
     }
 }

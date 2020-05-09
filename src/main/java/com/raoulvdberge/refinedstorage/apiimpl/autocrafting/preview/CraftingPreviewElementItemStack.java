@@ -1,6 +1,5 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview;
 
-import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
@@ -10,14 +9,13 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<ItemStack> {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "item_renderer");
+    public static final String ID = "item_renderer";
 
     private ItemStack stack;
     private int available;
@@ -85,19 +83,14 @@ public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<
         GlStateManager.scale(scale, scale, 1);
 
         if (getToCraft() > 0) {
-            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" :
-                    "gui.refinedstorage:crafting_preview.to_craft";
-            drawers.getStringDrawer()
-                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
-                            GuiBase.t(format, getToCraft()));
+            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" : "gui.refinedstorage:crafting_preview.to_craft";
+            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t(format, getToCraft()));
 
             y += 7;
         }
 
         if (getAvailable() > 0) {
-            drawers.getStringDrawer()
-                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
-                            GuiBase.t("gui.refinedstorage:crafting_preview.available", getAvailable()));
+            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t("gui.refinedstorage:crafting_preview.available", getAvailable()));
         }
 
         GlStateManager.popMatrix();
@@ -131,7 +124,7 @@ public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 }

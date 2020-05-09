@@ -20,7 +20,6 @@ import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -35,7 +34,7 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import javax.annotation.Nullable;
 
 public class NetworkNodeImporter extends NetworkNode implements IComparable, IFilterable, IType, ICoverable {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "importer");
+    public static final String ID = "importer";
 
     private static final String NBT_COMPARE = "Compare";
     private static final String NBT_MODE = "Mode";
@@ -166,7 +165,7 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

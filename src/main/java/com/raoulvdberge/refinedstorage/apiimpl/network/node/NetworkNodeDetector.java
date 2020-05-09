@@ -23,7 +23,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 public class NetworkNodeDetector extends NetworkNode implements IComparable, IType {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "detector");
+    public static final String ID = "detector";
 
     private static final int SPEED = 5;
 
@@ -95,7 +95,7 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

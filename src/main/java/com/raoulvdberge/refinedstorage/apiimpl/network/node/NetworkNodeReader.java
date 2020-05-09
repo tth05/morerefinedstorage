@@ -5,7 +5,6 @@ import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReader;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.tile.TileReader;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -15,7 +14,7 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nullable;
 
 public class NetworkNodeReader extends NetworkNode implements IReader, IGuiReaderWriter, ICoverable {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "reader");
+    public static final String ID = "reader";
 
     private static final String NBT_CHANNEL = "Channel";
     private static final String NBT_COVERS = "Covers";
@@ -82,7 +81,7 @@ public class NetworkNodeReader extends NetworkNode implements IReader, IGuiReade
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

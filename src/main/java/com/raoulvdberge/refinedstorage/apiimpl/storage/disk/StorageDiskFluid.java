@@ -13,7 +13,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskF
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -184,7 +183,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return StorageDiskFactoryFluid.ID;
     }
 

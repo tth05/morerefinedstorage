@@ -1,6 +1,5 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory;
 
-import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskItem;
@@ -8,11 +7,10 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class StorageDiskFactoryItem implements IStorageDiskFactory<ItemStack> {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "normal_item");
+    public static final String ID = "normal_item";
 
     @Override
     public IStorageDisk<ItemStack> createFromNbt(World world, NBTTagCompound tag) {

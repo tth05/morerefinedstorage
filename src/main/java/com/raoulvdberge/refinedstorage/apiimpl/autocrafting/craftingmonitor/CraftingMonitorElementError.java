@@ -1,18 +1,16 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor;
 
-import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 
 import javax.annotation.Nullable;
 
 public class CraftingMonitorElementError implements ICraftingMonitorElement {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "error");
+    public static final String ID = "error";
 
     private ICraftingMonitorElement base;
     private String message;
@@ -37,13 +35,13 @@ public class CraftingMonitorElementError implements ICraftingMonitorElement {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 
     @Override
     public void write(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, base.getId().toString());
+        ByteBufUtils.writeUTF8String(buf, base.getId());
         ByteBufUtils.writeUTF8String(buf, message);
 
         base.write(buf);

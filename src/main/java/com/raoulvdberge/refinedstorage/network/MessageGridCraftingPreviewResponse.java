@@ -7,7 +7,6 @@ import com.raoulvdberge.refinedstorage.gui.grid.GuiGridCraftingSettings;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -47,7 +46,7 @@ public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHan
         int size = buf.readInt();
 
         for (int i = 0; i < size; i++) {
-            this.stacks.add(API.instance().getCraftingPreviewElementRegistry().get(new ResourceLocation(ByteBufUtils.readUTF8String(buf))).apply(buf));
+            this.stacks.add(API.instance().getCraftingPreviewElementRegistry().get(ByteBufUtils.readUTF8String(buf)).apply(buf));
         }
     }
 
@@ -60,7 +59,7 @@ public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHan
         buf.writeInt(stacks.size());
 
         for (ICraftingPreviewElement stack : stacks) {
-            ByteBufUtils.writeUTF8String(buf, stack.getId().toString());
+            ByteBufUtils.writeUTF8String(buf, stack.getId());
             stack.writeToByteBuf(buf);
         }
     }

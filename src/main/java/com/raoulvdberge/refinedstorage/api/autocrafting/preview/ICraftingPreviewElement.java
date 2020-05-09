@@ -2,7 +2,6 @@ package com.raoulvdberge.refinedstorage.api.autocrafting.preview;
 
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -50,5 +49,5 @@ public interface ICraftingPreviewElement<T> {
      *
      * @return the id
      */
-    ResourceLocation getId();
+    String getId();
 }

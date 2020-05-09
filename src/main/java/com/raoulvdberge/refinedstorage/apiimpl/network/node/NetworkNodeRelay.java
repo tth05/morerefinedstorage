@@ -2,7 +2,6 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -10,7 +9,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 
 public class NetworkNodeRelay extends NetworkNode {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "relay");
+    public static final String ID = "relay";
 
     public NetworkNodeRelay(World world, BlockPos pos) {
         super(world, pos);
@@ -34,7 +33,7 @@ public class NetworkNodeRelay extends NetworkNode {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

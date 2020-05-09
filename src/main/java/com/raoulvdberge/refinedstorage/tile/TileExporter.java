@@ -4,7 +4,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeExporter;
 import com.raoulvdberge.refinedstorage.tile.config.IComparable;
 import com.raoulvdberge.refinedstorage.tile.config.IType;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -26,7 +25,7 @@ public class TileExporter extends TileNode<NetworkNodeExporter> {
     }
 
     @Override
-    public ResourceLocation getNodeId() {
+    public String getNodeId() {
         return NetworkNodeExporter.ID;
     }
 }

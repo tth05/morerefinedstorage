@@ -12,7 +12,6 @@ import com.raoulvdberge.refinedstorage.gui.GuiReaderWriter;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -103,7 +102,7 @@ public class TileReader extends TileNode<NetworkNodeReader> {
     }
 
     @Override
-    public ResourceLocation getNodeId() {
+    public String getNodeId() {
         return NetworkNodeReader.ID;
     }
 }

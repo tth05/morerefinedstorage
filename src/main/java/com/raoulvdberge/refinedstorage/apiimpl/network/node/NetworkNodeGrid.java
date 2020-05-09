@@ -36,7 +36,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.Set;
 
 public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, IType {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "grid");
+    public static final String ID = "grid";
     public static int FACTORY_ID = 0;
 
     public static final String NBT_VIEW_TYPE = "ViewType";
@@ -662,7 +662,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

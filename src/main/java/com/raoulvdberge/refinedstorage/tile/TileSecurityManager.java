@@ -1,7 +1,6 @@
 package com.raoulvdberge.refinedstorage.tile;
 
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeSecurityManager;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -15,7 +14,7 @@ public class TileSecurityManager extends TileNode<NetworkNodeSecurityManager> {
     }
 
     @Override
-    public ResourceLocation getNodeId() {
+    public String getNodeId() {
         return NetworkNodeSecurityManager.ID;
     }
 }

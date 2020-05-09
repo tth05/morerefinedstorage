@@ -7,7 +7,6 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -17,7 +16,7 @@ import net.minecraftforge.items.IItemHandler;
 import javax.annotation.Nullable;
 
 public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWirelessTransmitter {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "wireless_transmitter");
+    public static final String ID = "wireless_transmitter";
 
     private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_RANGE);
 
@@ -38,7 +37,7 @@ public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWire
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

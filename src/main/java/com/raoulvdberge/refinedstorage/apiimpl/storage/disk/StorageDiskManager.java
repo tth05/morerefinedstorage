@@ -8,7 +8,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
@@ -110,7 +109,7 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
 
                 UUID id = diskTag.getUniqueId(NBT_DISK_ID);
                 NBTTagCompound data = diskTag.getCompoundTag(NBT_DISK_DATA);
-                ResourceLocation type = new ResourceLocation(diskTag.getString(NBT_DISK_TYPE));
+                String type = diskTag.getString(NBT_DISK_TYPE);
 
                 IStorageDiskFactory factory = API.instance().getStorageDiskRegistry().get(type);
                 if (factory != null) {
@@ -129,7 +128,7 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
 
             diskTag.setUniqueId(NBT_DISK_ID, entry.getKey());
             diskTag.setTag(NBT_DISK_DATA, entry.getValue().writeToNbt());
-            diskTag.setString(NBT_DISK_TYPE, entry.getValue().getId().toString());
+            diskTag.setString(NBT_DISK_TYPE, entry.getValue().getId());
 
             disks.appendTag(diskTag);
         }

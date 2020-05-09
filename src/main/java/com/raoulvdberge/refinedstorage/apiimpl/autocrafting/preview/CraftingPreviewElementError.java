@@ -1,6 +1,5 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview;
 
-import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
@@ -8,11 +7,10 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 
 public class CraftingPreviewElementError implements ICraftingPreviewElement<ItemStack> {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID,  "error");
+    public static final String ID = "error";
 
     private CraftingTaskErrorType type;
     private ItemStack stack;
@@ -74,7 +72,7 @@ public class CraftingPreviewElementError implements ICraftingPreviewElement<Item
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 }

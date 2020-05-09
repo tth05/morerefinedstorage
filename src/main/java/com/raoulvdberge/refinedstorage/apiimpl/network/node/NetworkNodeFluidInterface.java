@@ -18,7 +18,6 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
@@ -29,7 +28,7 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class NetworkNodeFluidInterface extends NetworkNode {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "fluid_interface");
+    public static final String ID = "fluid_interface";
 
     public static final int TANK_CAPACITY = 16_000;
 
@@ -212,7 +211,7 @@ public class NetworkNodeFluidInterface extends NetworkNode {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

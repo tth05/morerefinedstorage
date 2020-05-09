@@ -17,7 +17,6 @@ import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -32,7 +31,7 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import javax.annotation.Nullable;
 
 public class NetworkNodeExporter extends NetworkNode implements IComparable, IType, ICoverable {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "exporter");
+    public static final String ID = "exporter";
 
     private static final String NBT_COMPARE = "Compare";
     private static final String NBT_TYPE = "Type";
@@ -171,7 +170,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
 
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 
