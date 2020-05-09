@@ -11,6 +11,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,6 +73,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
         }
     }
 
+    @Nonnull
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         NBTTagList list = new NBTTagList();

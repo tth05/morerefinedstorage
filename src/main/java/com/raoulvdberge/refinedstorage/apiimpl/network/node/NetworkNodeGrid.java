@@ -36,7 +36,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
@@ -99,9 +98,9 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
                     ItemStack pattern = getStackInSlot(slot);
                     if (slot == 1 && !pattern.isEmpty()) {
-                        boolean isPatternProcessing = ItemPattern.isProcessing(pattern);
+                        boolean isProcessing = ItemPattern.isProcessing(pattern);
 
-                        if (isPatternProcessing && isProcessingPattern()) {
+                        if (isProcessing) {
                             for (int i = 0; i < 9; ++i) {
                                 processingMatrix.setStackInSlot(i,
                                         StackUtils.nullToEmpty(ItemPattern.getInputSlot(pattern, i)));
@@ -113,12 +112,16 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                                         StackUtils.nullToEmpty(ItemPattern.getOutputSlot(pattern, i)));
                                 processingMatrixFluids.setFluid(9 + i, ItemPattern.getFluidOutputSlot(pattern, i));
                             }
-                        } else if (!isPatternProcessing && !isProcessingPattern()) {
+                        } else {
                             for (int i = 0; i < 9; ++i) {
                                 matrix.setInventorySlotContents(i,
                                         StackUtils.nullToEmpty(ItemPattern.getInputSlot(pattern, i)));
                             }
                         }
+                        
+                        setOredictPattern(ItemPattern.isOredict(pattern));
+                        setProcessingPattern(isProcessing);
+                        markDirty();
                     }
                 }
 

@@ -114,6 +114,9 @@ public class MessageGridProcessingTransfer extends MessageHandlerPlayerToServer<
 
                 setFluidInputs(handlerFluid, message.fluidInputs);
                 setFluidOutputs(handlerFluid, message.fluidOutputs);
+
+                ((NetworkNodeGrid) grid).setProcessingPattern(true);
+                ((NetworkNodeGrid) grid).markDirty();
             }
         }
     }

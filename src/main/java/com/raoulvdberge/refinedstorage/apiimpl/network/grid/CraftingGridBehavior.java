@@ -8,6 +8,7 @@ import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
@@ -95,8 +96,13 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 }
             } else if (grid.getGridType() == GridType.PATTERN) {
                 // If we are a pattern grid we can just set the slot
-                grid.getCraftingMatrix().setInventorySlotContents(i, possibilities[0]);
+                grid.getCraftingMatrix().setInventorySlotContents(i, possibilities.length == 0 ? ItemStack.EMPTY : possibilities[0]);
             }
+        }
+
+        if (grid.getGridType() == GridType.PATTERN) {
+            ((NetworkNodeGrid) grid).setProcessingPattern(false);
+            ((NetworkNodeGrid) grid).markDirty();
         }
     }
 
