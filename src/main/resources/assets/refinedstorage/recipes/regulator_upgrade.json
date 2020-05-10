@@ -16,7 +16,8 @@
       "item": "minecraft:comparator"
     },
     "U": {
-      "item": "refinedstorage:upgrade"
+      "item": "refinedstorage:upgrade",
+      "data": 0
     }
   },
   "result": {

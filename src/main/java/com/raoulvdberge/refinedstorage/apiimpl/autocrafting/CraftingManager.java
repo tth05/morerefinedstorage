@@ -354,7 +354,7 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public void invalidate() {
+    public void rebuild() {
         this.network.getItemStorageCache().getCraftablesList().clear();
         this.network.getFluidStorageCache().getCraftablesList().clear();
 

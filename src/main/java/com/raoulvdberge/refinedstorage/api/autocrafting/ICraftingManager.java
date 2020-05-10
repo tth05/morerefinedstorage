@@ -138,7 +138,7 @@ public interface ICraftingManager {
     /**
      * Rebuilds the pattern list.
      */
-    void invalidate();
+    void rebuild();
 
     /**
      * Return a crafting pattern from an item stack.
