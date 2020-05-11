@@ -1,7 +1,5 @@
 package com.raoulvdberge.refinedstorage.api.autocrafting.registry;
 
-import net.minecraft.util.ResourceLocation;
-
 import javax.annotation.Nullable;
 
 /**
@@ -16,7 +14,7 @@ public interface ICraftingTaskRegistry {
      * @param id      the id of the factory
      * @param factory the factory
      */
-    void add(ResourceLocation id, ICraftingTaskFactory factory);
+    void add(String id, ICraftingTaskFactory factory);
 
     /**
      * Returns the crafting task factory by factory id.
@@ -25,5 +23,5 @@ public interface ICraftingTaskRegistry {
      * @return the factory, or null if there is no factory
      */
     @Nullable
-    ICraftingTaskFactory get(ResourceLocation id);
+    ICraftingTaskFactory get(String id);
 }

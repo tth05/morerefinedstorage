@@ -5,32 +5,35 @@ import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
+import java.util.UUID;
+
 public class MessageGridCraftingStart extends MessageHandlerPlayerToServer<MessageGridCraftingStart> implements IMessage {
-    private int hash;
+    private UUID id;
     private int quantity;
     private boolean fluids;
 
     public MessageGridCraftingStart() {
     }
 
-    public MessageGridCraftingStart(int hash, int quantity, boolean fluids) {
-        this.hash = hash;
+    public MessageGridCraftingStart(UUID id, int quantity, boolean fluids) {
+        this.id = id;
         this.quantity = quantity;
         this.fluids = fluids;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        hash = buf.readInt();
+        id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         quantity = buf.readInt();
         fluids = buf.readBoolean();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(hash);
+        ByteBufUtils.writeUTF8String(buf, id.toString());
         buf.writeInt(quantity);
         buf.writeBoolean(fluids);
     }
@@ -44,11 +47,11 @@ public class MessageGridCraftingStart extends MessageHandlerPlayerToServer<Messa
 
             if (message.fluids) {
                 if (grid.getFluidHandler() != null) {
-                    grid.getFluidHandler().onCraftingRequested(player, message.hash, message.quantity);
+                    grid.getFluidHandler().onCraftingRequested(player, message.id, message.quantity);
                 }
             } else {
                 if (grid.getItemHandler() != null) {
-                    grid.getItemHandler().onCraftingRequested(player, message.hash, message.quantity);
+                    grid.getItemHandler().onCraftingRequested(player, message.id, message.quantity);
                 }
             }
         }

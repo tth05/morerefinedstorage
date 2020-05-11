@@ -2,7 +2,6 @@ package com.raoulvdberge.refinedstorage.api.storage.disk;
 
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
 
@@ -34,5 +33,5 @@ public interface IStorageDisk<T> extends IStorage<T> {
     /**
      * @return the factory id as registered in {@link IStorageDiskRegistry}
      */
-    ResourceLocation getId();
+    String getId();
 }

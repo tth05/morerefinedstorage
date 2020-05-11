@@ -1,14 +1,12 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
-import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingPreviewResponse;
@@ -33,8 +31,8 @@ public class ItemGridHandler implements IItemGridHandler {
     }
 
     @Override
-    public void onExtract(EntityPlayerMP player, int hash, int flags) {
-        ItemStack item = network.getItemStorageCache().getList().get(hash);
+    public void onExtract(EntityPlayerMP player, UUID id, int flags) {
+        ItemStack item = network.getItemStorageCache().getList().get(id);
 
         if (item == null || !network.getSecurityManager().hasPermission(Permission.EXTRACT, player)) {
             return;
@@ -161,20 +159,12 @@ public class ItemGridHandler implements IItemGridHandler {
     }
 
     @Override
-    public void onCraftingPreviewRequested(EntityPlayerMP player, int hash, int quantity, boolean noPreview) {
+    public void onCraftingPreviewRequested(EntityPlayerMP player, UUID id, int quantity, boolean noPreview) {
         if (!network.getSecurityManager().hasPermission(Permission.AUTOCRAFTING, player)) {
             return;
         }
 
-        IStackList<ItemStack> cache = API.instance().createItemStackList();
-
-        for (ICraftingPattern pattern : network.getCraftingManager().getPatterns()) {
-            for (ItemStack output : pattern.getOutputs()) {
-                cache.add(output);
-            }
-        }
-
-        ItemStack stack = cache.get(hash);
+        ItemStack stack = network.getItemStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
             Thread calculationThread = new Thread(() -> {
@@ -186,13 +176,13 @@ public class ItemGridHandler implements IItemGridHandler {
                 ICraftingTaskError error = task.calculate();
 
                 if (error != null) {
-                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(new CraftingPreviewElementError(error.getType(), error.getRecursedPattern() == null ? ItemStack.EMPTY : error.getRecursedPattern().getStack())), hash, quantity, false), player);
+                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(new CraftingPreviewElementError(error.getType(), error.getRecursedPattern() == null ? ItemStack.EMPTY : error.getRecursedPattern().getStack())), id, quantity, false), player);
                 } else if (noPreview && !task.hasMissing()) {
                     network.getCraftingManager().add(task);
 
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingStartResponse(), player);
                 } else {
-                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), hash, quantity, false), player);
+                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), id, quantity, false), player);
                 }
             }, "RS crafting preview calculation");
 
@@ -201,26 +191,12 @@ public class ItemGridHandler implements IItemGridHandler {
     }
 
     @Override
-    public void onCraftingRequested(EntityPlayerMP player, int hash, int quantity) {
+    public void onCraftingRequested(EntityPlayerMP player, UUID id, int quantity) {
         if (quantity <= 0 || !network.getSecurityManager().hasPermission(Permission.AUTOCRAFTING, player)) {
             return;
         }
 
-        ItemStack stack = null;
-
-        for (ICraftingPattern pattern : network.getCraftingManager().getPatterns()) {
-            for (ItemStack output : pattern.getOutputs()) {
-                if (API.instance().getItemStackHashCode(output) == hash) {
-                    stack = output;
-
-                    break;
-                }
-            }
-
-            if (stack != null) {
-                break;
-            }
-        }
+        ItemStack stack = network.getItemStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
             ICraftingTask task = network.getCraftingManager().create(stack, quantity);

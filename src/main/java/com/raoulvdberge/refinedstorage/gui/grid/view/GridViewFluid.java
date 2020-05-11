@@ -18,11 +18,11 @@ public class GridViewFluid extends GridViewBase {
 
         for (IGridStack stack : stacks) {
             // Don't let a craftable stack override a normal stack
-            if (stack.doesDisplayCraftText() && map.containsKey(stack.getHash())) {
-                continue;
-            }
+//            if (stack.doesDisplayCraftText() && map.containsKey(stack.getId())) {
+//                continue;
+//            }
 
-            map.put(stack.getHash(), stack);
+            map.put(stack.getId(), stack);
         }
     }
 
@@ -32,27 +32,27 @@ public class GridViewFluid extends GridViewBase {
             return;
         }
 
-        GridStackFluid existing = (GridStackFluid) map.get(stack.getHash());
+        // Update the other id reference if needed.
+        // Taking a stack out - and then re-inserting it - gives the new stack a new ID
+        // With that new id, the reference for the crafting stack would be outdated.
+        if (!stack.isCraftable() &&
+                stack.getOtherId() != null) {
+            map.get(stack.getOtherId()).updateOtherId(stack.getId());
+        }
+
+        GridStackFluid existing = (GridStackFluid) map.get(stack.getId());
 
         if (existing == null) {
             ((GridStackFluid) stack).getStack().amount = delta;
 
-            map.put(stack.getHash(), stack);
+            map.put(stack.getId(), stack);
         } else {
             if (existing.getStack().amount + delta <= 0) {
-                if (existing.isCraftable()) {
-                    existing.setDisplayCraftText(true);
-                } else {
-                    map.remove(existing.getHash());
-                }
-            } else {
-                if (existing.doesDisplayCraftText()) {
-                    existing.setDisplayCraftText(false);
+                existing.getStack().amount += delta;
 
-                    existing.getStack().amount = delta;
-                } else {
-                    existing.getStack().amount += delta;
-                }
+                map.remove(existing.getId());
+            } else {
+                existing.getStack().amount += delta;
             }
 
             existing.setTrackerEntry(stack.getTrackerEntry());

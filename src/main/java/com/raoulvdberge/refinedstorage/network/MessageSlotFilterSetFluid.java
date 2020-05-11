@@ -1,12 +1,13 @@
 package com.raoulvdberge.refinedstorage.network;
 
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class MessageSlotFilterSetFluid extends MessageHandlerPlayerToServer<MessageSlotFilterSetFluid> implements IMessage {
@@ -40,12 +41,12 @@ public class MessageSlotFilterSetFluid extends MessageHandlerPlayerToServer<Mess
     @Override
     public void fromBytes(ByteBuf buf) {
         containerSlot = buf.readInt();
-        stack = StackUtils.readFluidStack(buf);
+        stack = FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf));
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeInt(containerSlot);
-        StackUtils.writeFluidStack(buf, stack);
+        ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
     }
 }

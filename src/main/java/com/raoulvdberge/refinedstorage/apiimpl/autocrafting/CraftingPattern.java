@@ -1,10 +1,11 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
+import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.item.ItemPattern;
 import net.minecraft.creativetab.CreativeTabs;
@@ -15,7 +16,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
@@ -253,8 +253,9 @@ public class CraftingPattern implements ICraftingPattern {
     }
 
     @Override
-    public ResourceLocation getId() {
-        return CraftingTaskFactory.ID;
+    public String getId() {
+        return RS.INSTANCE.config.useExperimentalAutocrafting ? com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.CraftingTaskFactory.ID :
+            com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory.ID;
     }
 
     @Override
@@ -348,6 +349,19 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         return result;
+    }
+
+    @Override
+    public int hashCode() {
+        return getChainHashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof CraftingPattern) {
+            return canBeInChainWith((CraftingPattern) obj);
+        }
+        return false;
     }
 
     private class InventoryCraftingDummy extends InventoryCrafting {

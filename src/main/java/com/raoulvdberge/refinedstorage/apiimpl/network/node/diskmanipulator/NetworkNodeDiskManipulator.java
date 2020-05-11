@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.diskdrive.NetworkNodeDiskDrive;
@@ -23,7 +24,6 @@ import com.raoulvdberge.refinedstorage.tile.config.IType;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -37,9 +37,10 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class NetworkNodeDiskManipulator extends NetworkNode implements IComparable, IFilterable, IType, IStorageDiskContainerContext {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "disk_manipulator");
+    public static final String ID = "disk_manipulator";
 
     public static final int IO_MODE_INSERT = 0;
     public static final int IO_MODE_EXTRACT = 1;
@@ -58,60 +59,63 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     private IStorageDisk<ItemStack>[] itemDisks = new IStorageDisk[6];
     private IStorageDisk<FluidStack>[] fluidDisks = new IStorageDisk[6];
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK) {
-        @Override
-        public int getItemInteractCount() {
-            int count = super.getItemInteractCount();
+    private ItemHandlerUpgrade upgrades =
+            new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK) {
+                @Override
+                public int getItemInteractCount() {
+                    int count = super.getItemInteractCount();
 
-            if (type == IType.FLUIDS) {
-                count *= Fluid.BUCKET_VOLUME;
-            }
+                    if (type == IType.FLUIDS) {
+                        count *= Fluid.BUCKET_VOLUME;
+                    }
 
-            return count;
-        }
-    };
+                    return count;
+                }
+            };
 
-    private ItemHandlerBase inputDisks = new ItemHandlerBase(3, new ListenerNetworkNode(this), NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            super.onContentsChanged(slot);
+    private ItemHandlerBase inputDisks =
+            new ItemHandlerBase(3, new ListenerNetworkNode(this), NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
+                @Override
+                protected void onContentsChanged(int slot) {
+                    super.onContentsChanged(slot);
 
-            if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
-                StackUtils.createStorages(
-                    world,
-                    getStackInSlot(slot),
-                    slot,
-                    itemDisks,
-                    fluidDisks,
-                    s -> new StorageDiskItemManipulatorWrapper(NetworkNodeDiskManipulator.this, s),
-                    s -> new StorageDiskFluidManipulatorWrapper(NetworkNodeDiskManipulator.this, s)
-                );
+                    if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
+                        StackUtils.createStorages(
+                                world,
+                                getStackInSlot(slot),
+                                slot,
+                                itemDisks,
+                                fluidDisks,
+                                s -> new StorageDiskItemManipulatorWrapper(NetworkNodeDiskManipulator.this, s),
+                                s -> new StorageDiskFluidManipulatorWrapper(NetworkNodeDiskManipulator.this, s)
+                        );
 
-                WorldUtils.updateBlock(world, pos);
-            }
-        }
-    };
+                        WorldUtils.updateBlock(world, pos);
+                    }
+                }
+            };
 
-    private ItemHandlerBase outputDisks = new ItemHandlerBase(3, new ListenerNetworkNode(this), NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            super.onContentsChanged(slot);
+    private ItemHandlerBase outputDisks =
+            new ItemHandlerBase(3, new ListenerNetworkNode(this), NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
+                @Override
+                protected void onContentsChanged(int slot) {
+                    super.onContentsChanged(slot);
 
-            if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
-                StackUtils.createStorages(
-                    world,
-                    getStackInSlot(slot),
-                    3 + slot,
-                    itemDisks,
-                    fluidDisks,
-                    s -> new StorageDiskItemManipulatorWrapper(NetworkNodeDiskManipulator.this, s),
-                    s -> new StorageDiskFluidManipulatorWrapper(NetworkNodeDiskManipulator.this, s)
-                );
+                    if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
+                        StackUtils.createStorages(
+                                world,
+                                getStackInSlot(slot),
+                                3 + slot,
+                                itemDisks,
+                                fluidDisks,
+                                s -> new StorageDiskItemManipulatorWrapper(NetworkNodeDiskManipulator.this, s),
+                                s -> new StorageDiskFluidManipulatorWrapper(NetworkNodeDiskManipulator.this, s)
+                        );
 
-                WorldUtils.updateBlock(world, pos);
-            }
-        }
-    };
+                        WorldUtils.updateBlock(world, pos);
+                    }
+                }
+            };
 
     private ItemHandlerProxy disks = new ItemHandlerProxy(inputDisks, outputDisks);
 
@@ -192,7 +196,8 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
             }
 
             // We need to check if the stack was inserted
-            storage.insert(((extracted == remainder) ? remainder.copy() : remainder), remainder.getCount(), Action.PERFORM);
+            storage.insert(((extracted == remainder) ? remainder.copy() : remainder), remainder.getCount(),
+                    Action.PERFORM);
         }
     }
 
@@ -235,7 +240,8 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
 
         if (itemFilters.isEmpty()) {
             ItemStack toExtract = null;
-            ArrayList<ItemStack> networkItems = new ArrayList<>(network.getItemStorageCache().getList().getStacks());
+            List<ItemStack> networkItems = network.getItemStorageCache().getList().getStacks().stream().map(
+                    StackListEntry::getStack).collect(Collectors.toList());
 
             int j = 0;
 
@@ -255,7 +261,8 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 }
 
                 if (!filterStack.isEmpty()) {
-                    extracted = network.extractItem(filterStack, upgrades.getItemInteractCount(), compare, Action.PERFORM);
+                    extracted =
+                            network.extractItem(filterStack, upgrades.getItemInteractCount(), compare, Action.PERFORM);
                 }
             }
         }
@@ -334,7 +341,9 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
 
         if (fluidFilters.isEmpty()) {
             FluidStack toExtract = null;
-            ArrayList<FluidStack> networkFluids = new ArrayList<>(network.getFluidStorageCache().getList().getStacks());
+            List<FluidStack> networkFluids =
+                    network.getFluidStorageCache().getList().getStacks().stream().map(StackListEntry::getStack)
+                            .collect(Collectors.toList());
 
             int j = 0;
 
@@ -354,7 +363,8 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 }
 
                 if (filterStack != null) {
-                    extracted = network.extractFluid(filterStack, upgrades.getItemInteractCount(), compare, Action.PERFORM);
+                    extracted =
+                            network.extractFluid(filterStack, upgrades.getItemInteractCount(), compare, Action.PERFORM);
                 }
             }
         }
@@ -478,7 +488,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

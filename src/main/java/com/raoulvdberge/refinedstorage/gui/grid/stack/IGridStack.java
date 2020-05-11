@@ -1,12 +1,19 @@
 package com.raoulvdberge.refinedstorage.gui.grid.stack;
 
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public interface IGridStack {
-    int getHash();
+
+    UUID getId();
+
+    @Nullable
+    UUID getOtherId();
+
+    void updateOtherId(@Nullable UUID otherId);
 
     String getName();
 
@@ -27,13 +34,9 @@ public interface IGridStack {
     Object getIngredient();
 
     @Nullable
-    IStorageTracker.IStorageTrackerEntry getTrackerEntry();
+    StorageTrackerEntry getTrackerEntry();
 
-    void setTrackerEntry(@Nullable IStorageTracker.IStorageTrackerEntry entry);
+    void setTrackerEntry(@Nullable StorageTrackerEntry entry);
 
     boolean isCraftable();
-
-    boolean doesDisplayCraftText();
-
-    void setDisplayCraftText(boolean displayCraftText);
 }

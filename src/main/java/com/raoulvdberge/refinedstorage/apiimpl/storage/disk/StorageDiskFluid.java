@@ -9,10 +9,10 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerCon
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryFluid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -22,9 +22,9 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 public class StorageDiskFluid implements IStorageDisk<FluidStack> {
-    static final String NBT_VERSION = "Version";
-    static final String NBT_CAPACITY = "Capacity";
-    static final String NBT_FLUIDS = "Fluids";
+    public static final String NBT_VERSION = "Version";
+    public static final String NBT_CAPACITY = "Capacity";
+    public static final String NBT_FLUIDS = "Fluids";
 
     private World world;
     private int capacity;
@@ -183,11 +183,11 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return StorageDiskFactoryFluid.ID;
     }
 
-    Multimap<Fluid, FluidStack> getRawStacks() {
+    public Multimap<Fluid, FluidStack> getRawStacks() {
         return stacks;
     }
 

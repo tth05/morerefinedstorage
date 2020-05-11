@@ -5,29 +5,32 @@ import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
+import java.util.UUID;
+
 public class MessageGridItemPull extends MessageHandlerPlayerToServer<MessageGridItemPull> implements IMessage {
-    private int hash;
+    private UUID id;
     private int flags;
 
     public MessageGridItemPull() {
     }
 
-    public MessageGridItemPull(int hash, int flags) {
-        this.hash = hash;
+    public MessageGridItemPull(UUID id, int flags) {
+        this.id = id;
         this.flags = flags;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        hash = buf.readInt();
+        id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         flags = buf.readInt();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(hash);
+        ByteBufUtils.writeUTF8String(buf, id.toString());
         buf.writeInt(flags);
     }
 
@@ -39,7 +42,7 @@ public class MessageGridItemPull extends MessageHandlerPlayerToServer<MessageGri
             IGrid grid = ((ContainerGrid) container).getGrid();
 
             if (grid.getItemHandler() != null) {
-                grid.getItemHandler().onExtract(player, message.hash, message.flags);
+                grid.getItemHandler().onExtract(player, message.id, message.flags);
             }
         }
     }

@@ -2,10 +2,11 @@ package com.raoulvdberge.refinedstorage.network;
 
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.inventory.Slot;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -28,7 +29,7 @@ public class MessageSlotFilterFluidUpdate implements IMessage, IMessageHandler<M
         containerSlot = buf.readInt();
 
         if (buf.readBoolean()) {
-            stack = StackUtils.readFluidStack(buf);
+            stack = FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf));
         }
     }
 
@@ -41,7 +42,7 @@ public class MessageSlotFilterFluidUpdate implements IMessage, IMessageHandler<M
         } else {
             buf.writeBoolean(true);
 
-            StackUtils.writeFluidStack(buf, stack);
+            ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
         }
     }
 

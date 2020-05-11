@@ -26,6 +26,7 @@ public class ItemUpgrade extends ItemBase {
     public static final int TYPE_FORTUNE_1 = 7;
     public static final int TYPE_FORTUNE_2 = 8;
     public static final int TYPE_FORTUNE_3 = 9;
+    public static final int TYPE_REGULATOR = 10;
 
     public ItemUpgrade() {
         super(new ItemInfo(RS.ID, "upgrade"));
@@ -44,7 +45,8 @@ public class ItemUpgrade extends ItemBase {
             new ResourceLocation(RS.ID, "speed_upgrade"),
             new ResourceLocation(RS.ID, "stack_upgrade"),
             new ResourceLocation(RS.ID, "silk_touch_upgrade"),
-            new ResourceLocation(RS.ID, "fortune_upgrade")
+            new ResourceLocation(RS.ID, "fortune_upgrade"),
+            new ResourceLocation(RS.ID, "regulator_upgrade")
         );
 
         modelRegistration.setModel(this, 0, new ModelResourceLocation(RS.ID + ":upgrade", "inventory"));
@@ -56,6 +58,7 @@ public class ItemUpgrade extends ItemBase {
         modelRegistration.setModel(this, TYPE_FORTUNE_1, new ModelResourceLocation(RS.ID + ":fortune_upgrade", "inventory"));
         modelRegistration.setModel(this, TYPE_FORTUNE_2, new ModelResourceLocation(RS.ID + ":fortune_upgrade", "inventory"));
         modelRegistration.setModel(this, TYPE_FORTUNE_3, new ModelResourceLocation(RS.ID + ":fortune_upgrade", "inventory"));
+        modelRegistration.setModel(this, TYPE_REGULATOR, new ModelResourceLocation(RS.ID + ":regulator_upgrade", "inventory"));
     }
 
     @Override
@@ -78,7 +81,7 @@ public class ItemUpgrade extends ItemBase {
             return;
         }
 
-        for (int i = 0; i <= 9; ++i) {
+        for (int i = 0; i <= 10; ++i) {
             if (i != 5) { // Removal of interdimensional upgrade
                 items.add(new ItemStack(this, 1, i));
             }
@@ -115,6 +118,8 @@ public class ItemUpgrade extends ItemBase {
             case TYPE_FORTUNE_2:
             case TYPE_FORTUNE_3:
                 return RS.INSTANCE.config.fortuneUpgradeUsagePerFortune * getFortuneLevel(stack);
+            case TYPE_REGULATOR:
+                return RS.INSTANCE.config.regulatorUpgradeUsage;
             default:
                 return 0;
         }

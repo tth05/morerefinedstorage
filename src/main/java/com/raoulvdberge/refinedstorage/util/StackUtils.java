@@ -1,9 +1,11 @@
 package com.raoulvdberge.refinedstorage.util;
 
-import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.gui.grid.stack.GridStackFluid;
+import com.raoulvdberge.refinedstorage.gui.grid.stack.GridStackItem;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
@@ -26,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.UUID;
 import java.util.function.Function;
 
 public final class StackUtils {
@@ -34,51 +37,105 @@ public final class StackUtils {
     private static final String NBT_INVENTORY = "Inventory_%d";
     private static final String NBT_SLOT = "Slot";
 
-    public static void writeItemStack(ByteBuf buf, ItemStack stack) {
-        buf.writeInt(Item.getIdFromItem(stack.getItem()));
-        buf.writeInt(stack.getCount());
-        buf.writeShort(stack.getItemDamage());
-        ByteBufUtils.writeTag(buf, stack.getItem().getNBTShareTag(stack));
-    }
-
-    public static ItemStack readItemStack(ByteBuf buf) {
-        ItemStack stack = new ItemStack(Item.getItemById(buf.readInt()), buf.readInt(), buf.readShort());
-        stack.setTagCompound(ByteBufUtils.readTag(buf));
-        return stack;
-    }
-
-    public static void writeItemStack(ByteBuf buf, ItemStack stack, @Nullable INetwork network, boolean displayCraftText) {
-        writeItemStack(buf, stack);
-
-        buf.writeInt(API.instance().getItemStackHashCode(stack));
-
-        if (network != null) {
-            buf.writeBoolean(network.getCraftingManager().getPattern(stack) != null);
-            buf.writeBoolean(displayCraftText);
+    public static void writeItemStack(ByteBuf buf, @Nonnull ItemStack stack) {
+        if (stack.isEmpty()) {
+            buf.writeBoolean(false);
         } else {
-            buf.writeBoolean(false);
-            buf.writeBoolean(false);
+            buf.writeBoolean(true);
+            buf.writeInt(Item.getIdFromItem(stack.getItem()));
+            buf.writeInt(stack.getCount());
+            buf.writeShort(stack.getItemDamage());
+            ByteBufUtils.writeTag(buf, stack.getItem().getNBTShareTag(stack));
         }
     }
 
-    public static void writeFluidStackAndHash(ByteBuf buf, FluidStack stack) {
-        buf.writeInt(API.instance().getFluidStackHashCode(stack));
-
-        writeFluidStack(buf, stack);
+    public static ItemStack readItemStack(ByteBuf buf) {
+        if (!buf.readBoolean()) {
+            return ItemStack.EMPTY;
+        } else {
+            ItemStack stack = new ItemStack(Item.getItemById(buf.readInt()), buf.readInt(), buf.readShort());
+            stack.setTagCompound(ByteBufUtils.readTag(buf));
+            return stack;
+        }
     }
 
-    public static void writeFluidStack(ByteBuf buf, FluidStack stack) {
-        ByteBufUtils.writeUTF8String(buf, FluidRegistry.getFluidName(stack.getFluid()));
-        buf.writeInt(stack.amount);
-        ByteBufUtils.writeTag(buf, stack.tag);
+    public static void writeItemGridStack(ByteBuf buf, ItemStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
+        writeItemStack(buf, stack);
+
+        buf.writeBoolean(craftable);
+        ByteBufUtils.writeUTF8String(buf, id.toString());
+
+        buf.writeBoolean(otherId != null);
+        if (otherId != null) {
+            ByteBufUtils.writeUTF8String(buf, otherId.toString());
+        }
+
+        if (entry == null) {
+            buf.writeBoolean(false);
+        } else {
+            buf.writeBoolean(true);
+
+            buf.writeLong(entry.getTime());
+            ByteBufUtils.writeUTF8String(buf, entry.getName());
+        }
     }
 
-    public static FluidStack readFluidStack(ByteBuf buf) {
-        return new FluidStack(FluidRegistry.getFluid(ByteBufUtils.readUTF8String(buf)), buf.readInt(), ByteBufUtils.readTag(buf));
+    public static GridStackItem readItemGridStack(ByteBuf buf) {
+        ItemStack stack = readItemStack(buf);
+
+        boolean craftable = buf.readBoolean();
+        UUID id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+
+        UUID otherId = null;
+        if (buf.readBoolean()) {
+            otherId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        }
+
+        StorageTrackerEntry entry = null;
+        if (buf.readBoolean()) {
+            entry = new StorageTrackerEntry(buf.readLong(), ByteBufUtils.readUTF8String(buf));
+        }
+
+        return new GridStackItem(id, otherId, stack, craftable, entry);
     }
 
-    public static Pair<Integer, FluidStack> readFluidStackAndHash(ByteBuf buf) {
-        return Pair.of(buf.readInt(), readFluidStack(buf));
+    public static void writeFluidGridStack(ByteBuf buf, FluidStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
+        ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
+
+        buf.writeBoolean(craftable);
+        ByteBufUtils.writeUTF8String(buf, id.toString());
+
+        buf.writeBoolean(otherId != null);
+        if (otherId != null) {
+            ByteBufUtils.writeUTF8String(buf, otherId.toString());
+        }
+
+        if (entry == null) {
+            buf.writeBoolean(false);
+        } else {
+            buf.writeBoolean(true);
+
+            buf.writeLong(entry.getTime());
+            ByteBufUtils.writeUTF8String(buf, entry.getName());
+        }
+    }
+
+    public static GridStackFluid readFluidGridStack(ByteBuf buf) {
+        FluidStack stack = FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf));
+        boolean craftable = buf.readBoolean();
+        UUID id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+
+        UUID otherId = null;
+        if (buf.readBoolean()) {
+            otherId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        }
+
+        StorageTrackerEntry entry = null;
+        if (buf.readBoolean()) {
+            entry = new StorageTrackerEntry(buf.readLong(), ByteBufUtils.readUTF8String(buf));
+        }
+
+        return new GridStackFluid(id, otherId, stack, entry, craftable);
     }
 
     public static ItemStack nullToEmpty(@Nullable ItemStack stack) {

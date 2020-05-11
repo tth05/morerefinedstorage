@@ -4,7 +4,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeNetworkTr
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -33,7 +32,7 @@ public class TileNetworkTransmitter extends TileNode<NetworkNodeNetworkTransmitt
     }
 
     @Override
-    public ResourceLocation getNodeId() {
+    public String getNodeId() {
         return NetworkNodeNetworkTransmitter.ID;
     }
 

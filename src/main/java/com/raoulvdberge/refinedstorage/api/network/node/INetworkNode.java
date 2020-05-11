@@ -2,7 +2,6 @@ package com.raoulvdberge.refinedstorage.api.network.node;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -86,5 +85,5 @@ public interface INetworkNode {
     /**
      * @return the id of this node as specified in {@link INetworkNodeRegistry}
      */
-    ResourceLocation getId();
+    String getId();
 }

@@ -12,8 +12,8 @@ import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.IGuiStorage;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageCacheFluid;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageCacheItem;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
@@ -26,7 +26,6 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
@@ -38,13 +37,10 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class NetworkNodeDiskDrive extends NetworkNode
-        implements IGuiStorage, IStorageProvider, IComparable, IFilterable, IPrioritizable, IType, IAccessType,
-        IStorageDiskContainerContext {
-    public static final Predicate<ItemStack> VALIDATOR_STORAGE_DISK =
-            s -> s.getItem() instanceof IStorageDiskProvider && ((IStorageDiskProvider) s.getItem()).isValid(s);
+public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IStorageProvider, IComparable, IFilterable, IPrioritizable, IType, IAccessType, IStorageDiskContainerContext {
+    public static final Predicate<ItemStack> VALIDATOR_STORAGE_DISK = s -> s.getItem() instanceof IStorageDiskProvider && ((IStorageDiskProvider) s.getItem()).isValid(s);
 
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "disk_drive");
+    public static final String ID = "disk_drive";
 
     private static final String NBT_PRIORITY = "Priority";
     private static final String NBT_COMPARE = "Compare";
@@ -64,13 +60,13 @@ public class NetworkNodeDiskDrive extends NetworkNode
 
             if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
                 StackUtils.createStorages(
-                        world,
-                        getStackInSlot(slot),
-                        slot,
-                        itemDisks,
-                        fluidDisks,
-                        s -> new StorageDiskItemDriveWrapper(NetworkNodeDiskDrive.this, s),
-                        s -> new StorageDiskFluidDriveWrapper(NetworkNodeDiskDrive.this, s)
+                    world,
+                    getStackInSlot(slot),
+                    slot,
+                    itemDisks,
+                    fluidDisks,
+                    s -> new StorageDiskItemDriveWrapper(NetworkNodeDiskDrive.this, s),
+                    s -> new StorageDiskFluidDriveWrapper(NetworkNodeDiskDrive.this, s)
                 );
 
                 if (network != null) {
@@ -187,7 +183,7 @@ public class NetworkNodeDiskDrive extends NetworkNode
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

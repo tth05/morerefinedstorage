@@ -12,6 +12,7 @@ import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 
@@ -35,7 +36,11 @@ public class NetworkItemWirelessFluidGrid implements INetworkItem {
 
     @Override
     public boolean onOpen(INetwork network) {
-        if (RS.INSTANCE.config.wirelessFluidGridUsesEnergy && stack.getItemDamage() != ItemWirelessFluidGrid.TYPE_CREATIVE && stack.getCapability(CapabilityEnergy.ENERGY, null).getEnergyStored() <= RS.INSTANCE.config.wirelessFluidGridOpenUsage) {
+        if (RS.INSTANCE.config.wirelessFluidGridUsesEnergy &&
+                stack.getItemDamage() != ItemWirelessFluidGrid.TYPE_CREATIVE &&
+                stack.getCapability(CapabilityEnergy.ENERGY, null).getEnergyStored() <=
+                        RS.INSTANCE.config.wirelessFluidGridOpenUsage) {
+            sendOutOfEnergyMessage();
             return false;
         }
 
@@ -54,7 +59,8 @@ public class NetworkItemWirelessFluidGrid implements INetworkItem {
 
     @Override
     public void drainEnergy(int energy) {
-        if (RS.INSTANCE.config.wirelessFluidGridUsesEnergy && stack.getItemDamage() != ItemWirelessFluidGrid.TYPE_CREATIVE) {
+        if (RS.INSTANCE.config.wirelessFluidGridUsesEnergy &&
+                stack.getItemDamage() != ItemWirelessFluidGrid.TYPE_CREATIVE) {
             IEnergyStorage energyStorage = stack.getCapability(CapabilityEnergy.ENERGY, null);
 
             energyStorage.extractEnergy(energy, false);
@@ -63,7 +69,13 @@ public class NetworkItemWirelessFluidGrid implements INetworkItem {
                 handler.close(player);
 
                 player.closeScreen();
+
+                sendOutOfEnergyMessage();
             }
         }
+    }
+
+    public void sendOutOfEnergyMessage() {
+        player.sendMessage(new TextComponentTranslation("misc.refinedstorage:network_item.out_of_energy", new TextComponentTranslation(stack.getItem().getTranslationKey() + ".0.name")));
     }
 }

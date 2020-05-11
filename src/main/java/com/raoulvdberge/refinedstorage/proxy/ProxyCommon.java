@@ -11,16 +11,16 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.Craf
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.network.NetworkNodeListener;
-import com.raoulvdberge.refinedstorage.apiimpl.network.grid.*;
+import com.raoulvdberge.refinedstorage.apiimpl.network.grid.factory.*;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter.ReaderWriterHandlerFluids;
 import com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter.ReaderWriterHandlerItems;
 import com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter.ReaderWriterHandlerRedstone;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskFactoryFluid;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskFactoryItem;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryItem;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage.ExternalStorageProviderFluid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage.ExternalStorageProviderItem;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
@@ -97,12 +97,15 @@ public class ProxyCommon {
         TilePortableGrid.FACTORY_ID = API.instance().getGridManager().add(new GridFactoryPortableGridBlock());
         PortableGrid.ID = API.instance().getGridManager().add(new GridFactoryPortableGrid());
 
-        API.instance().getCraftingTaskRegistry().add(CraftingTaskFactory.ID, new CraftingTaskFactory());
+        API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
+                v5.CraftingTaskFactory.ID, new CraftingTaskFactory());
+        API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
+                v6.CraftingTaskFactory.ID, new CraftingTaskFactory());
 
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID, buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
-        API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID, buf -> new CraftingMonitorElementFluidRender(StackUtils.readFluidStack(buf), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
+        API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID, buf -> new CraftingMonitorElementFluidRender(StackUtils.readFluidGridStack(buf).getStack(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementError.ID, buf -> {
-            ResourceLocation id = new ResourceLocation(ByteBufUtils.readUTF8String(buf));
+            String id = ByteBufUtils.readUTF8String(buf);
             String message = ByteBufUtils.readUTF8String(buf);
 
             return new CraftingMonitorElementError(API.instance().getCraftingMonitorElementRegistry().get(id).apply(buf), message);
@@ -170,6 +173,10 @@ public class ProxyCommon {
         RS.INSTANCE.network.registerMessage(MessageGridFluidDelta.class, MessageGridFluidDelta.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageGridFluidPull.class, MessageGridFluidPull.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridFluidInsertHeld.class, MessageGridFluidInsertHeld.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridFluidDelta.class, MessagePortableGridFluidDelta.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridFluidUpdate.class, MessagePortableGridFluidUpdate.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridItemDelta.class, MessagePortableGridItemDelta.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridItemUpdate.class, MessagePortableGridItemUpdate.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageFilterUpdate.class, MessageFilterUpdate.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridCraftingPreview.class, MessageGridCraftingPreview.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridCraftingPreviewResponse.class, MessageGridCraftingPreviewResponse.class, id++, Side.CLIENT);

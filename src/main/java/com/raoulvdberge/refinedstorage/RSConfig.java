@@ -105,6 +105,7 @@ public class RSConfig {
     public int stackUpgradeUsage;
     public int silkTouchUpgradeUsage;
     public int fortuneUpgradeUsagePerFortune;
+    public int regulatorUpgradeUsage;
     //endregion
 
     //region Readers and Writers
@@ -119,6 +120,7 @@ public class RSConfig {
 
     //region Autocrafting
     public int calculationTimeoutMs;
+    public boolean useExperimentalAutocrafting;
     //endregion
 
     //region Categories
@@ -255,6 +257,7 @@ public class RSConfig {
         stackUpgradeUsage = config.getInt("stack", UPGRADES, 12, 0, Integer.MAX_VALUE, "The additional energy used per Stack Upgrade");
         silkTouchUpgradeUsage = config.getInt("silkTouch", UPGRADES, 15, 0, Integer.MAX_VALUE, "The additional energy used by the Silk Touch Upgrade");
         fortuneUpgradeUsagePerFortune = config.getInt("fortune", UPGRADES, 10, 0, Integer.MAX_VALUE, "The additional energy used by the Fortune Upgrade, multiplied by the level of the enchantment");
+        regulatorUpgradeUsage = config.getInt("regulator", UPGRADES, 15, 0, Integer.MAX_VALUE, "The additional energy used by the Regulator Upgrade");
         //endregion
 
         //region Readers and Writers
@@ -269,6 +272,7 @@ public class RSConfig {
 
         //region Autocrafting
         calculationTimeoutMs = config.getInt("calculationTimeoutMs", AUTOCRAFTING, 5000, 5000, Integer.MAX_VALUE, "The autocrafting calculation timeout in milliseconds, tasks taking longer than this to calculate (NOT execute) are cancelled to avoid server strain");
+        useExperimentalAutocrafting = config.getBoolean("useExperimentalAutocrafting", AUTOCRAFTING, false, "Whether the new experimental autocrafting engine should be used");
         //endregion
 
         if (config.hasChanged()) {

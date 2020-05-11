@@ -14,7 +14,6 @@ import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.tile.direction.DirectionHandlerNetworkNode;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -123,7 +122,7 @@ public abstract class TileNode<N extends NetworkNode> extends TileBase implement
 
     public abstract N createNode(World world, BlockPos pos);
 
-    public abstract ResourceLocation getNodeId();
+    public abstract String getNodeId();
 
     @Override
     public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing side) {

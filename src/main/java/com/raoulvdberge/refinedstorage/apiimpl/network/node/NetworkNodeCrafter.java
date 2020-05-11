@@ -16,7 +16,6 @@ import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldNameable;
 import net.minecraft.world.World;
@@ -47,7 +46,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         }
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "crafter");
+    public static final String ID = "crafter";
 
     public static final String DEFAULT_NAME = "gui.refinedstorage:crafter";
 
@@ -213,7 +212,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

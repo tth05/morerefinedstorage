@@ -2,8 +2,8 @@ package com.raoulvdberge.refinedstorage.api.network.grid;
 
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandler;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
-import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
-import com.raoulvdberge.refinedstorage.api.storage.IStorageCacheListener;
+import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
+import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IFilter;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -210,6 +210,11 @@ public interface IGrid {
      * @param player the player that crafted the item
      */
     void onCraftedShift(EntityPlayer player);
+
+    /**
+     * Called when the clear button is pressed in the pattern grid or crafting grid.
+     */
+    void onClear(EntityPlayer player);
 
     /**
      * Called when a JEI recipe transfer occurs.

@@ -11,7 +11,6 @@ import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -21,7 +20,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 public class NetworkNodeCraftingMonitor extends NetworkNode implements ICraftingMonitor {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "crafting_monitor");
+    public static final String ID = "crafting_monitor";
 
     private static final String NBT_TAB_SELECTED = "TabSelected";
     private static final String NBT_TAB_PAGE = "TabPage";
@@ -39,7 +38,7 @@ public class NetworkNodeCraftingMonitor extends NetworkNode implements ICrafting
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

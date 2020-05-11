@@ -4,7 +4,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeInterface
 import com.raoulvdberge.refinedstorage.tile.config.IComparable;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -37,7 +36,7 @@ public class TileInterface extends TileNode<NetworkNodeInterface> {
     }
 
     @Override
-    public ResourceLocation getNodeId() {
+    public String getNodeId() {
         return NetworkNodeInterface.ID;
     }
 }

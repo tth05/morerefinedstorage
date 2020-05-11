@@ -18,8 +18,8 @@ import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterMan
 import com.raoulvdberge.refinedstorage.api.network.security.ISecurityManager;
 import com.raoulvdberge.refinedstorage.api.storage.AccessType;
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
-import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
+import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExternal;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
@@ -31,10 +31,10 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.item.NetworkItemHandler;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.ICoverable;
 import com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter.ReaderWriterManager;
 import com.raoulvdberge.refinedstorage.apiimpl.network.security.SecurityManager;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageCacheFluid;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageCacheItem;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageTrackerFluid;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageTrackerItem;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.tracker.StorageTrackerFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.tracker.StorageTrackerItem;
 import com.raoulvdberge.refinedstorage.block.BlockController;
 import com.raoulvdberge.refinedstorage.block.enums.ControllerEnergyType;
 import com.raoulvdberge.refinedstorage.block.enums.ControllerType;
@@ -54,7 +54,6 @@ import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -258,7 +257,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return null;
     }
 
@@ -622,7 +621,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
     @Override
     public int getEnergyUsage() {
-        int usage = RS.INSTANCE.config.controllerBaseUsage;
+        int usage = redstoneMode.isEnabled(world, pos) ? RS.INSTANCE.config.controllerBaseUsage : 0;
 
         for (INetworkNode node : nodeGraph.all()) {
             if (node.canUpdate()) {

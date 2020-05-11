@@ -12,7 +12,7 @@ import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.IGuiStorage;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageCacheItem;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.block.BlockStorage;
 import com.raoulvdberge.refinedstorage.block.enums.ItemStorageType;
@@ -28,7 +28,6 @@ import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -38,7 +37,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, IStorageProvider, IComparable, IFilterable, IPrioritizable, IAccessType, IStorageDiskContainerContext {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "storage");
+    public static final String ID = "storage";
 
     private static final String NBT_PRIORITY = "Priority";
     private static final String NBT_COMPARE = "Compare";
@@ -88,7 +87,7 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

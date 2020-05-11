@@ -1,6 +1,5 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter;
 
-import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReader;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterChannel;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterHandler;
@@ -8,7 +7,6 @@ import com.raoulvdberge.refinedstorage.api.network.readerwriter.IWriter;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -23,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReaderWriterHandlerItems implements IReaderWriterHandler {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "items");
+    public static final String ID = "items";
 
     private static final IItemHandler NULL_CAP = new IItemHandler() {
         @Override
@@ -119,7 +117,7 @@ public class ReaderWriterHandlerItems implements IReaderWriterHandler {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 
@@ -140,8 +138,7 @@ public class ReaderWriterHandlerItems implements IReaderWriterHandler {
             ItemStack stack = handler.getStackInSlot(i);
 
             if (!stack.isEmpty()) {
-                components.add(new TextComponentString(stack.getCount() + "x ")
-                        .appendSibling(new TextComponentTranslation(stack.getTranslationKey() + ".name")));
+                components.add(new TextComponentString(stack.getCount() + "x ").appendSibling(new TextComponentTranslation(stack.getTranslationKey() + ".name")));
             }
         }
 

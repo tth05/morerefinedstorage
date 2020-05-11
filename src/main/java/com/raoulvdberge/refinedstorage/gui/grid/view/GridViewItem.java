@@ -17,12 +17,7 @@ public class GridViewItem extends GridViewBase {
         map.clear();
 
         for (IGridStack stack : stacks) {
-            // Don't let a craftable stack override a normal stack
-            if (stack.doesDisplayCraftText() && map.containsKey(stack.getHash())) {
-                continue;
-            }
-
-            map.put(stack.getHash(), stack);
+            map.put(stack.getId(), stack);
         }
     }
 
@@ -32,27 +27,40 @@ public class GridViewItem extends GridViewBase {
             return;
         }
 
-        GridStackItem existing = (GridStackItem) map.get(stack.getHash());
+        // COMMENT 1 (about this if check in general)
+        // Update the other id reference if needed.
+        // Taking a stack out - and then re-inserting it - gives the new stack a new ID
+        // With that new id, the reference for the crafting stack would be outdated.
+
+        // COMMENT 2 (about map.containsKey(stack.getOtherId()))
+        // This check is needed or the .updateOtherId() call will crash with a NPE in high-update environments.
+        // This is because we might have scenarios where we process "old" delta packets from another session when we haven't received any initial update packet from the new session.
+        // (This is because of the executeLater system)
+        // This causes the .updateOtherId() to fail with a NPE because the map is still empty or the IDs mismatch.
+        // We could use !map.isEmpty() here too. But if we have 2 "old" delta packets, it would rightfully ignore the first one. But this method mutates the map and would put an entry.
+        // This means that on the second delta packet it would still crash because the map wouldn't be empty anymore.
+        if (!stack.isCraftable() &&
+                stack.getOtherId() != null &&
+                map.containsKey(stack.getOtherId())) {
+            IGridStack craftingStack = map.get(stack.getOtherId());
+
+            craftingStack.updateOtherId(stack.getId());
+            craftingStack.setTrackerEntry(stack.getTrackerEntry());
+        }
+
+        GridStackItem existing = (GridStackItem) map.get(stack.getId());
 
         if (existing == null) {
             ((GridStackItem) stack).getStack().setCount(delta);
 
-            map.put(stack.getHash(), stack);
+            map.put(stack.getId(), stack);
         } else {
             if (existing.getStack().getCount() + delta <= 0) {
-                if (existing.isCraftable()) {
-                    existing.setDisplayCraftText(true);
-                } else {
-                    map.remove(existing.getHash());
-                }
-            } else {
-                if (existing.doesDisplayCraftText()) {
-                    existing.setDisplayCraftText(false);
+                existing.getStack().grow(delta);
 
-                    existing.getStack().setCount(delta);
-                } else {
-                    existing.getStack().grow(delta);
-                }
+                map.remove(existing.getId());
+            } else {
+                existing.getStack().grow(delta);
             }
 
             existing.setTrackerEntry(stack.getTrackerEntry());

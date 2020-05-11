@@ -1,13 +1,11 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter;
 
-import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReader;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterChannel;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterHandler;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IWriter;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -22,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ReaderWriterHandlerFluids implements IReaderWriterHandler {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "fluids");
+    public static final String ID = "fluids";
 
     private static final IFluidHandler NULL_CAP = new IFluidHandler() {
         @Override
@@ -112,7 +110,7 @@ public class ReaderWriterHandlerFluids implements IReaderWriterHandler {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 
@@ -133,9 +131,7 @@ public class ReaderWriterHandlerFluids implements IReaderWriterHandler {
             return Collections.emptyList();
         }
 
-        return Collections.singletonList(
-                new TextComponentString(API.instance().getQuantityFormatter().format(stack.amount) + " mB ")
-                        .appendSibling(new TextComponentTranslation(stack.getUnlocalizedName())));
+        return Collections.singletonList(new TextComponentString(API.instance().getQuantityFormatter().format(stack.amount) + " mB ").appendSibling(new TextComponentTranslation(stack.getUnlocalizedName())));
     }
 
     private class FluidTankReaderWriter implements IFluidTank, IFluidHandler {
@@ -150,38 +146,38 @@ public class ReaderWriterHandlerFluids implements IReaderWriterHandler {
             this.canDrain = canDrain;
 
             this.properties = new IFluidTankProperties[]{
-                    new IFluidTankProperties() {
-                        @Nullable
-                        @Override
-                        public FluidStack getContents() {
-                            return parent.getFluid();
-                        }
-
-                        @Override
-                        public int getCapacity() {
-                            return parent.getCapacity();
-                        }
-
-                        @Override
-                        public boolean canFill() {
-                            return canFill;
-                        }
-
-                        @Override
-                        public boolean canDrain() {
-                            return canDrain;
-                        }
-
-                        @Override
-                        public boolean canFillFluidType(FluidStack fluidStack) {
-                            return canFill;
-                        }
-
-                        @Override
-                        public boolean canDrainFluidType(FluidStack fluidStack) {
-                            return canDrain;
-                        }
+                new IFluidTankProperties() {
+                    @Nullable
+                    @Override
+                    public FluidStack getContents() {
+                        return parent.getFluid();
                     }
+
+                    @Override
+                    public int getCapacity() {
+                        return parent.getCapacity();
+                    }
+
+                    @Override
+                    public boolean canFill() {
+                        return canFill;
+                    }
+
+                    @Override
+                    public boolean canDrain() {
+                        return canDrain;
+                    }
+
+                    @Override
+                    public boolean canFillFluidType(FluidStack fluidStack) {
+                        return canFill;
+                    }
+
+                    @Override
+                    public boolean canDrainFluidType(FluidStack fluidStack) {
+                        return canDrain;
+                    }
+                }
             };
         }
 

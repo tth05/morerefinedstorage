@@ -12,8 +12,8 @@ import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExter
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageCacheFluid;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageCacheItem;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
@@ -27,7 +27,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -40,7 +39,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NetworkNodeExternalStorage extends NetworkNode implements IStorageProvider, IGuiStorage, IComparable, IFilterable, IPrioritizable, IType, IAccessType, IExternalStorageContext, ICoverable {
-    public static final ResourceLocation ID = new ResourceLocation(RS.ID, "external_storage");
+    public static final String ID = "external_storage";
 
     private static final String NBT_PRIORITY = "Priority";
     private static final String NBT_COMPARE = "Compare";
@@ -111,7 +110,7 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
     }
 
     @Override
-    public ResourceLocation getId() {
+    public String getId() {
         return ID;
     }
 

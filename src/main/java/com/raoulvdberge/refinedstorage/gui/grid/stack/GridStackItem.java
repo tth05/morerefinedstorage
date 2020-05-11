@@ -1,12 +1,9 @@
 package com.raoulvdberge.refinedstorage.gui.grid.stack;
 
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Loader;
@@ -15,17 +12,20 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GridStackItem implements IGridStack {
-    private int hash;
+    private UUID id;
+    @Nullable
+    private UUID otherId;
+
     private ItemStack stack;
     private String cachedName;
     private boolean craftable;
-    private boolean displayCraftText;
     private String[] oreIds = null;
     @Nullable
-    private IStorageTracker.IStorageTrackerEntry entry;
+    private StorageTrackerEntry entry;
     private String modId;
     private String modName;
     private String tooltip;
@@ -34,16 +34,23 @@ public class GridStackItem implements IGridStack {
         this.stack = stack;
     }
 
-    public GridStackItem(ByteBuf buf) {
-        this.stack = StackUtils.readItemStack(buf);
-        this.hash = buf.readInt();
-        this.craftable = buf.readBoolean();
+    public GridStackItem(UUID id, @Nullable UUID otherId, ItemStack stack, boolean craftable, StorageTrackerEntry entry) {
+        this.id = id;
+        this.otherId = otherId;
+        this.stack = stack;
+        this.craftable = craftable;
+        this.entry = entry;
+    }
 
-        setDisplayCraftText(buf.readBoolean());
+    @Nullable
+    @Override
+    public UUID getOtherId() {
+        return otherId;
+    }
 
-        if (buf.readBoolean()) {
-            this.entry = new StorageTrackerEntry(buf);
-        }
+    @Override
+    public void updateOtherId(@Nullable UUID otherId) {
+        this.otherId = otherId;
     }
 
     @Nullable
@@ -65,23 +72,8 @@ public class GridStackItem implements IGridStack {
         return craftable;
     }
 
-    @Override
-    public boolean doesDisplayCraftText() {
-        return displayCraftText;
-    }
-
-    @Override
-    public void setDisplayCraftText(boolean displayCraftText) {
-        this.displayCraftText = displayCraftText;
-
-        if (displayCraftText) {
-            this.stack.setCount(1);
-        }
-    }
-
-    @Override
-    public int getHash() {
-        return hash;
+    public UUID getId() {
+        return id;
     }
 
     @Override
@@ -151,7 +143,7 @@ public class GridStackItem implements IGridStack {
 
     @Override
     public int getQuantity() {
-        return doesDisplayCraftText() ? 0 : stack.getCount();
+        return isCraftable() ? 0 : stack.getCount();
     }
 
     @Override
@@ -163,7 +155,7 @@ public class GridStackItem implements IGridStack {
     public void draw(GuiBase gui, int x, int y) {
         String text = null;
 
-        if (displayCraftText) {
+        if (isCraftable()) {
             text = I18n.format("gui.refinedstorage:grid.craft");
         } else if (stack.getCount() > 1) {
             text = API.instance().getQuantityFormatter().formatWithUnits(getQuantity());
@@ -179,12 +171,12 @@ public class GridStackItem implements IGridStack {
 
     @Nullable
     @Override
-    public IStorageTracker.IStorageTrackerEntry getTrackerEntry() {
+    public StorageTrackerEntry getTrackerEntry() {
         return entry;
     }
 
     @Override
-    public void setTrackerEntry(@Nullable IStorageTracker.IStorageTrackerEntry entry) {
+    public void setTrackerEntry(@Nullable StorageTrackerEntry entry) {
         this.entry = entry;
     }
 }

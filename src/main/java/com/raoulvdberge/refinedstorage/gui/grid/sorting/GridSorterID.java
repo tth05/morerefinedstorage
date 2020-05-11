@@ -13,19 +13,19 @@ public class GridSorterID implements IGridSorter {
 
     @Override
     public int compare(IGridStack left, IGridStack right, GridSorterDirection sortingDirection) {
-        int x = left.getHash();
-        int y = right.getHash();
+        int leftId = 0;
+        int rightId = 0;
 
         if (left.getIngredient() instanceof ItemStack && right.getIngredient() instanceof ItemStack) {
-            x = Item.getIdFromItem(((ItemStack) left.getIngredient()).getItem());
-            y = Item.getIdFromItem(((ItemStack) right.getIngredient()).getItem());
+            leftId = Item.getIdFromItem(((ItemStack) left.getIngredient()).getItem());
+            rightId = Item.getIdFromItem(((ItemStack) right.getIngredient()).getItem());
         }
 
-        if (x != y) {
+        if (leftId != rightId) {
             if (sortingDirection == GridSorterDirection.DESCENDING) {
-                return Integer.compare(x, y);
+                return Integer.compare(leftId, rightId);
             } else if (sortingDirection == GridSorterDirection.ASCENDING) {
-                return Integer.compare(y, x);
+                return Integer.compare(rightId, leftId);
             }
         }
 

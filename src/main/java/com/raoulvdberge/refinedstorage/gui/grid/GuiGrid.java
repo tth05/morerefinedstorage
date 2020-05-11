@@ -386,7 +386,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         List<String> textLines = Lists.newArrayList(gridStack.getTooltip().split("\n"));
         List<String> smallTextLines = Lists.newArrayList();
 
-        if (!gridStack.doesDisplayCraftText()) {
+        if (!gridStack.isCraftable()) {
             smallTextLines.add(I18n.format("misc.refinedstorage:total", gridStack.getFormattedFullQuantity()));
         }
 
@@ -452,10 +452,16 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                 IGridStack stack = view.getStacks().get(slotNumber);
 
                 if (isPulling) {
-                    if (stack.isCraftable() && view.canCraft() && (stack.doesDisplayCraftText() || (GuiScreen.isShiftKeyDown() && GuiScreen.isCtrlKeyDown()))) {
-                        FMLCommonHandler.instance().showGuiScreen(new GuiGridCraftingSettings(this, ((ContainerGrid) this.inventorySlots).getPlayer(), stack));
+                    if (stack.isCraftable() && view.canCraft()) {
+                        FMLCommonHandler.instance().showGuiScreen(
+                                new GuiGridCraftingSettings(this, ((ContainerGrid) this.inventorySlots).getPlayer(),
+                                        stack));
+                    } else if(view.canCraft() && !stack.isCraftable() && stack.getOtherId() != null && GuiScreen.isShiftKeyDown() && GuiScreen.isCtrlKeyDown()) {
+                        FMLCommonHandler.instance().showGuiScreen(
+                                new GuiGridCraftingSettings(this, ((ContainerGrid) this.inventorySlots).getPlayer(),
+                                        view.get(stack.getOtherId())));
                     } else if (grid.getGridType() == GridType.FLUID && held.isEmpty()) {
-                        RS.INSTANCE.network.sendToServer(new MessageGridFluidPull(view.getStacks().get(slotNumber).getHash(), GuiScreen.isShiftKeyDown()));
+                        RS.INSTANCE.network.sendToServer(new MessageGridFluidPull(view.getStacks().get(slotNumber).getId(), GuiScreen.isShiftKeyDown()));
                     } else if (grid.getGridType() != GridType.FLUID) {
                         int flags = 0;
 
@@ -471,7 +477,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                             flags |= IItemGridHandler.EXTRACT_SINGLE;
                         }
 
-                        RS.INSTANCE.network.sendToServer(new MessageGridItemPull(stack.getHash(), flags));
+                        RS.INSTANCE.network.sendToServer(new MessageGridItemPull(stack.getId(), flags));
                     }
                 }
             }

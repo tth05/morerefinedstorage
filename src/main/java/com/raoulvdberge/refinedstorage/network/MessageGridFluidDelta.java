@@ -1,73 +1,75 @@
 package com.raoulvdberge.refinedstorage.network;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
-import com.raoulvdberge.refinedstorage.apiimpl.storage.StorageTrackerEntry;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.grid.GuiGrid;
-import com.raoulvdberge.refinedstorage.gui.grid.stack.GridStackFluid;
+import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageGridFluidDelta, IMessage> {
     @Nullable
     private INetwork network;
-    private IStorageTracker<FluidStack> storageTracker;
-    private FluidStack stack;
-    private int delta;
 
-    private GridStackFluid gridStack;
+    private List<StackListResult<FluidStack>> deltas;
+
+    private List<Pair<IGridStack, Integer>> clientDeltas;
+
+    public MessageGridFluidDelta(INetwork network, List<StackListResult<FluidStack>> deltas) {
+        this.network = network;
+        this.deltas = deltas;
+    }
 
     public MessageGridFluidDelta() {
     }
 
-    public MessageGridFluidDelta(@Nullable INetwork network, IStorageTracker<FluidStack> storageTracker, FluidStack stack, int delta) {
-        this.network = network;
-        this.storageTracker = storageTracker;
-        this.stack = stack;
-        this.delta = delta;
-    }
-
     @Override
     public void fromBytes(ByteBuf buf) {
-        Pair<Integer, FluidStack> hashAndFluidStack = StackUtils.readFluidStackAndHash(buf);
+        int size = buf.readInt();
 
-        gridStack = new GridStackFluid(hashAndFluidStack.getLeft(), hashAndFluidStack.getRight(), buf.readBoolean() ? new StorageTrackerEntry(buf) : null, buf.readBoolean(), false);
-        delta = buf.readInt();
+        List<Pair<IGridStack, Integer>> clientDeltas = new LinkedList<>();
+
+        for (int i = 0; i < size; ++i) {
+            int delta = buf.readInt();
+
+            clientDeltas.add(Pair.of(StackUtils.readFluidGridStack(buf), delta));
+        }
+
+        this.clientDeltas = clientDeltas;
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        StackUtils.writeFluidStackAndHash(buf, stack);
+        buf.writeInt(deltas.size());
 
-        IStorageTracker.IStorageTrackerEntry entry = storageTracker.get(stack);
-        buf.writeBoolean(entry != null);
-        if (entry != null) {
-            buf.writeLong(entry.getTime());
-            ByteBufUtils.writeUTF8String(buf, entry.getName());
+        for (StackListResult<FluidStack> delta : deltas) {
+            buf.writeInt(delta.getChange());
+
+            StackListEntry<FluidStack> craftingEntry = network.getFluidStorageCache().getCraftablesList()
+                    .getEntry(delta.getStack(), IComparer.COMPARE_NBT);
+
+            StackUtils.writeFluidGridStack(buf, delta.getStack(), delta.getId(),
+                    craftingEntry != null ? craftingEntry.getId() : null, false,
+                    network.getFluidStorageTracker().get(delta.getStack()));
         }
-
-        if (network != null) {
-            buf.writeBoolean(network.getCraftingManager().getPattern(stack) != null);
-        } else {
-            buf.writeBoolean(false);
-        }
-
-        buf.writeInt(delta);
     }
 
     @Override
     public IMessage onMessage(MessageGridFluidDelta message, MessageContext ctx) {
         GuiBase.executeLater(GuiGrid.class, grid -> {
-            grid.getView().postChange(message.gridStack, message.delta);
+            message.clientDeltas.forEach(p -> grid.getView().postChange(p.getLeft(), p.getRight()));
             grid.getView().sort();
         });
 

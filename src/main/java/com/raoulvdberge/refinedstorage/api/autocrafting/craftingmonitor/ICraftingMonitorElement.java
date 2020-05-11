@@ -1,8 +1,8 @@
 package com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor;
 
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementList;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -21,11 +21,19 @@ public interface ICraftingMonitorElement {
     void draw(int x, int y, IElementDrawers drawers);
 
     /**
+     * Returns the id for the base of this element, used for sorting in the {@link CraftingMonitorElementList}
+     *
+     * @return the id
+     */
+
+    String getBaseId();
+
+    /**
      * Returns the id of this element, used for serialization and deserialization over the network.
      *
      * @return the id
      */
-    ResourceLocation getId();
+    String getId();
 
     /**
      * @return the tooltip of this element, or null for no tooltip
@@ -49,6 +57,10 @@ public interface ICraftingMonitorElement {
      * @return true if merge was successful, false otherwise
      */
     boolean merge(ICraftingMonitorElement element);
+    /**
+     * @return the hash code for the underlying base item/fluid element
+     */
+    int baseElementHashCode();
 
     /**
      * @return the hash code for the underlying element

@@ -28,12 +28,12 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
     }
 
     @Override
-    public void onExtract(EntityPlayerMP player, int hash, int flags) {
+    public void onExtract(EntityPlayerMP player, UUID id, int flags) {
         if (portableGrid.getStorage() == null || !grid.isActive()) {
             return;
         }
 
-        ItemStack item = portableGrid.getItemCache().getList().get(hash);
+        ItemStack item = portableGrid.getItemCache().getList().get(id);
 
         if (item == null) {
             return;
@@ -157,12 +157,12 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
     }
 
     @Override
-    public void onCraftingPreviewRequested(EntityPlayerMP player, int hash, int quantity, boolean noPreview) {
+    public void onCraftingPreviewRequested(EntityPlayerMP player, UUID id, int quantity, boolean noPreview) {
         // NO OP
     }
 
     @Override
-    public void onCraftingRequested(EntityPlayerMP player, int hash, int quantity) {
+    public void onCraftingRequested(EntityPlayerMP player, UUID id, int quantity) {
         // NO OP
     }
 
