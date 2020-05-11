@@ -906,7 +906,7 @@ public class CraftingTask implements ICraftingTask {
         return quantity;
     }
 
-    @Override
+
     public int getQuantityPerCraft() {
         int qty = 0;
 

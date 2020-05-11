@@ -97,7 +97,10 @@ public class ProxyCommon {
         TilePortableGrid.FACTORY_ID = API.instance().getGridManager().add(new GridFactoryPortableGridBlock());
         PortableGrid.ID = API.instance().getGridManager().add(new GridFactoryPortableGrid());
 
-        API.instance().getCraftingTaskRegistry().add(CraftingTaskFactory.ID, new CraftingTaskFactory());
+        API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
+                v5.CraftingTaskFactory.ID, new CraftingTaskFactory());
+        API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
+                v6.CraftingTaskFactory.ID, new CraftingTaskFactory());
 
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID, buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID, buf -> new CraftingMonitorElementFluidRender(StackUtils.readFluidGridStack(buf).getStack(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));

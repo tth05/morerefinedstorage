@@ -402,6 +402,11 @@ public class CraftingManager implements ICraftingManager {
         this.network.getFluidStorageCache().reAttachListeners();
     }
 
+    @Override
+    public Set<ICraftingPatternContainer> getAllContainer(ICraftingPattern pattern) {
+        return patternToContainer.getOrDefault(pattern, new LinkedHashSet<>());
+    }
+
     @Nullable
     @Override
     public ICraftingPattern getPattern(ItemStack pattern) {

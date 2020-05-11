@@ -97,6 +97,11 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
         return ID;
     }
 
+    @Override
+    public String getBaseId() {
+        return ID;
+    }
+
     @Nullable
     @Override
     public String getTooltip() {
@@ -131,5 +136,10 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
     @Override
     public int elementHashCode() {
         return API.instance().getFluidStackHashCode(stack);
+    }
+
+    @Override
+    public int baseElementHashCode() {
+        return elementHashCode();
     }
 }

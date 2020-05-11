@@ -40,6 +40,11 @@ public class CraftingMonitorElementError implements ICraftingMonitorElement {
     }
 
     @Override
+    public String getBaseId() {
+        return base.getId();
+    }
+
+    @Override
     public void write(ByteBuf buf) {
         ByteBufUtils.writeUTF8String(buf, base.getId());
         ByteBufUtils.writeUTF8String(buf, message);
@@ -52,8 +57,17 @@ public class CraftingMonitorElementError implements ICraftingMonitorElement {
         return elementHashCode() == element.elementHashCode() && base.merge(((CraftingMonitorElementError) element).base);
     }
 
+    public void mergeBases(ICraftingMonitorElement element) {
+        this.base.merge(element);
+    }
+
     @Override
     public int elementHashCode() {
         return base.elementHashCode() ^ message.hashCode();
+    }
+
+    @Override
+    public int baseElementHashCode() {
+        return base.elementHashCode();
     }
 }

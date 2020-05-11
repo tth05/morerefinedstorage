@@ -1,4 +1,4 @@
-package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5;
+package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
@@ -11,16 +11,16 @@ import net.minecraft.nbt.NBTTagCompound;
 import javax.annotation.Nonnull;
 
 public class CraftingTaskFactory implements ICraftingTaskFactory {
-    public static final String ID = "normal";
+    public static final String ID = "v6";
 
     @Nonnull
     @Override
     public ICraftingTask create(INetwork network, ICraftingRequestInfo requested, int quantity, ICraftingPattern pattern) {
-        return new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTask(network, requested, quantity, pattern);
+        return new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.CraftingTask(network, requested, quantity, pattern);
     }
 
     @Override
     public ICraftingTask createFromNbt(INetwork network, NBTTagCompound tag) throws CraftingTaskReadException {
-        return new CraftingTask(network, tag);
+        return new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.CraftingTask(network, tag);
     }
 }
