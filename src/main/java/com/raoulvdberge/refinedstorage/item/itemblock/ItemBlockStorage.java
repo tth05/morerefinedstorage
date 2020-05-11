@@ -3,7 +3,7 @@ package com.raoulvdberge.refinedstorage.item.itemblock;
 import com.raoulvdberge.refinedstorage.RSBlocks;
 import com.raoulvdberge.refinedstorage.RSItems;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
-import com.raoulvdberge.refinedstorage.api.storage.disk.StorageDiskSyncData;
+import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSyncData;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.storage.NetworkNodeStorage;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
@@ -38,7 +38,7 @@ public class ItemBlockStorage extends ItemBlockBase {
 
             API.instance().getStorageDiskSync().sendRequest(id);
 
-            StorageDiskSyncData data = API.instance().getStorageDiskSync().getData(id);
+            IStorageDiskSyncData data = API.instance().getStorageDiskSync().getData(id);
             if (data != null) {
                 if (data.getCapacity() == -1) {
                     tooltip.add(I18n.format("misc.refinedstorage:storage.stored", API.instance().getQuantityFormatter().format(data.getStored())));

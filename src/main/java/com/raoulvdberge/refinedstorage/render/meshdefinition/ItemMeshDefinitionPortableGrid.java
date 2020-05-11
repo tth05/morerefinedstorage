@@ -2,7 +2,7 @@ package com.raoulvdberge.refinedstorage.render.meshdefinition;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
-import com.raoulvdberge.refinedstorage.api.storage.disk.StorageDiskSyncData;
+import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSyncData;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.item.itemblock.ItemBlockPortableGrid;
@@ -36,7 +36,7 @@ public class ItemMeshDefinitionPortableGrid implements ItemMeshDefinition {
 
                 API.instance().getStorageDiskSync().sendRequest(diskId);
 
-                StorageDiskSyncData data = API.instance().getStorageDiskSync().getData(diskId);
+                IStorageDiskSyncData data = API.instance().getStorageDiskSync().getData(diskId);
 
                 return data == null ? 0 : data.getStored();
             }
@@ -49,7 +49,7 @@ public class ItemMeshDefinitionPortableGrid implements ItemMeshDefinition {
 
                 API.instance().getStorageDiskSync().sendRequest(diskId);
 
-                StorageDiskSyncData data = API.instance().getStorageDiskSync().getData(diskId);
+                IStorageDiskSyncData data = API.instance().getStorageDiskSync().getData(diskId);
 
                 return data == null ? 0 : data.getCapacity();
             }

@@ -1,9 +1,11 @@
-package com.raoulvdberge.refinedstorage.api.storage.disk;
+package com.raoulvdberge.refinedstorage.apiimpl.storage.disk;
+
+import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSyncData;
 
 /**
  * Contains synced info about a storage disk.
  */
-public class StorageDiskSyncData {
+public class StorageDiskSyncData implements IStorageDiskSyncData {
     private int stored;
     private int capacity;
 
