@@ -34,11 +34,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     private IStorageDiskListener listener;
     private IStorageDiskContainerContext context;
 
-    public StorageDiskFluid(World world, int capacity) {
-        if (world == null) {
-            throw new IllegalArgumentException("World cannot be null");
-        }
-
+    public StorageDiskFluid(@Nullable World world, int capacity) {
         this.world = world;
         this.capacity = capacity;
     }
@@ -192,10 +188,10 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     }
 
     private void onChanged() {
-        if (listener != null) {
+        if (listener != null)
             listener.onChanged();
-        }
 
-        API.instance().getStorageDiskManager(world).markForSaving();
+        if(world != null)
+            API.instance().getStorageDiskManager(world).markForSaving();
     }
 }

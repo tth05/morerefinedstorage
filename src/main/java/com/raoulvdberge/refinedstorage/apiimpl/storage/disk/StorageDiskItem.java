@@ -35,11 +35,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     private IStorageDiskListener listener;
     private IStorageDiskContainerContext context;
 
-    public StorageDiskItem(World world, int capacity) {
-        if (world == null) {
-            throw new IllegalArgumentException("World cannot be null");
-        }
-
+    public StorageDiskItem(@Nullable World world, int capacity) {
         this.world = world;
         this.capacity = capacity;
     }
@@ -193,10 +189,10 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     }
 
     private void onChanged() {
-        if (listener != null) {
+        if (listener != null)
             listener.onChanged();
-        }
 
-        API.instance().getStorageDiskManager(world).markForSaving();
+        if(world != null)
+            API.instance().getStorageDiskManager(world).markForSaving();
     }
 }

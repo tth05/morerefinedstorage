@@ -92,46 +92,9 @@ task apiJar(type: Jar, dependsOn: 'sourceMainJava') {
     classifier 'api'
 }
 
-task signJar(type: SignJar, dependsOn: reobfJar) {
-    onlyIf {
-        project.hasProperty('keyStore')
-    }
-
-    keyStore = project.findProperty('keyStore')
-    alias = project.findProperty('keyStoreAlias')
-    storePass = project.findProperty('keyStorePass')
-    keyPass = project.findProperty('keyStoreKeyPass')
-    inputFile = jar.archivePath
-    outputFile = jar.archivePath
-}
-
-build.dependsOn signJar
-
 artifacts {
     archives deobfJar
     archives apiJar
     archives sourceJar
     archives jar
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId = project.group
-            artifactId = project.archivesBaseName
-            version = project.version
-            artifact deobfJar
-            artifact sourceJar
-            artifact apiJar
-            artifact jar
-        }
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            url "/var/www/repo"
-        }
-    }
 }

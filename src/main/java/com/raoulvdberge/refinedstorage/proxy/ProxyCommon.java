@@ -11,7 +11,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.Craf
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.network.NetworkNodeListener;
 import com.raoulvdberge.refinedstorage.apiimpl.network.grid.factory.*;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
@@ -98,9 +97,11 @@ public class ProxyCommon {
         PortableGrid.ID = API.instance().getGridManager().add(new GridFactoryPortableGrid());
 
         API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
-                v5.CraftingTaskFactory.ID, new CraftingTaskFactory());
+                v5.CraftingTaskFactory.ID, new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
+                v5.CraftingTaskFactory());
         API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
-                v6.CraftingTaskFactory.ID, new CraftingTaskFactory());
+                v6.CraftingTaskFactory.ID, new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
+                v6.CraftingTaskFactory());
 
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID, buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID, buf -> new CraftingMonitorElementFluidRender(StackUtils.readFluidGridStack(buf).getStack(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
