@@ -8,8 +8,8 @@ This mod not only adds storage solutions, but also devices that can be used to m
 
 # More Refined Storage
 
-This fork mainly focuses on performance improvements and useful feature addition to make your life easier.
-Currently in progress is a new autocrafting engine (V8 engine) which will be the fastest and smartest that the world has ever seen.
+This fork mainly focuses on performance improvements and useful feature additions to make your life easier.
+Currently, in progress is a new autocrafting engine (V8 engine) which will be the fastest and smartest that the world has ever seen.
 
 Builds can be found in the release section on github.
 

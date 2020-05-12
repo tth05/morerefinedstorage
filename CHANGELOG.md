@@ -1,4 +1,14 @@
-# Refined Storage Changelog
+#More Refined Storage Changelog
+
+### 2.0.0
+- Added the Wireless Crafting Grid
+- Improved shift click crafting code to run about 100 times faster 
+- Fixed player inventory not updating when a remainder is added to the players inventory
+- Fixed exporter not filling up slots to max stack size
+- Fixed Controller using energy even when turned off
+- The pattern grid now automatically switches between processing and crafting when transferring from JEI or inserting an existing pattern
+- Backported the crafting engine V6
+- Backported the regulator upgrade, which keeps a specific amount of items in the connected inventory
 
 ### 1.6.16
 - Updated Russian translation (Bytegm)
