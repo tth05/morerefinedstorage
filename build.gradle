@@ -16,11 +16,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "2.0.0"
-def env = System.getenv()
-if (env.BUILD_NUMBER) {
-    version = version + "-" + "${env.BUILD_NUMBER}"
-}
+version = "v2.0.0"
 
 group = "refinedstorage"
 archivesBaseName = "refinedstorage"
