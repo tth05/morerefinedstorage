@@ -18,6 +18,10 @@ class InventoryWrapperItemHandler implements IInventoryWrapper {
         return new InsertionResult(ItemHandlerHelper.insertItem(handler, stack, false));
     }
 
+    public IItemHandler getHandler() {
+        return handler;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

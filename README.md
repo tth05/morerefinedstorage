@@ -18,7 +18,7 @@ Builds can be found in the release section on github.
 - Improved shift click crafting code to run about 100 times faster. (On a private server, crafting coal blocks took 8 seconds per stack. Now it's instant) 
 - Fixed player inventory not updating when a remainder is added to the players inventory
 - Fixed exporter not filling up slots to max stack size
-- Fixed Controller using energy even when turned off
 - The pattern grid now automatically switches between processing and crafting when tranferring from JEI or inserting an existing pattern
 - Backported the crafting engine V6 which is currently feature incomplete
 - Backported the regulator upgrade, which keeps a specific amount of items in the connected inventory
+- Shift clicking upgrades doesn't put the upgrades into the filter slots anymore

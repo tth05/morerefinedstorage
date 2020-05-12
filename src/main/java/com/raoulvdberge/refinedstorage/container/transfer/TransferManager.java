@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.container.transfer;
 
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
+import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -45,7 +46,8 @@ public class TransferManager {
         addTransfer(new InventoryWrapperInventory(from), new InventoryWrapperInventory(to));
     }
 
-    public void addFilterTransfer(IInventory from, IItemHandlerModifiable itemTo, FluidInventory fluidTo, Supplier<Integer> typeGetter) {
+    public void addFilterTransfer(IInventory from, IItemHandlerModifiable itemTo, FluidInventory fluidTo,
+                                  Supplier<Integer> typeGetter) {
         addTransfer(new InventoryWrapperInventory(from), new InventoryWrapperFilter(itemTo, fluidTo, typeGetter));
     }
 
@@ -93,6 +95,13 @@ public class TransferManager {
                 InsertionResult result = to.insert(remainder);
 
                 if (result.getType() == InsertionResultType.STOP) {
+                    break;
+                } else if (initial.getCount() != result.getValue().getCount() &&
+                        to instanceof InventoryWrapperItemHandler &&
+                        ((InventoryWrapperItemHandler) to).getHandler() instanceof ItemHandlerUpgrade) {
+                    //if the inserted inventory is an upgrade inventory, then stop. Prevents upgrades from going into
+                    // the filter slot
+                    remainder = result.getValue();
                     break;
                 } else if (result.getType() == InsertionResultType.CONTINUE_IF_POSSIBLE) {
                     remainder = result.getValue();
