@@ -74,6 +74,12 @@ public class RSConfig {
     public int wirelessGridInsertUsage;
     //endregion
 
+    //region Wireless Crafting Grid
+    public boolean wirelessCraftingGridUsesEnergy;
+    public int wirelessCraftingGridCraftUsage;
+    public int wirelessCraftingGridOpenUsage;
+    //endregion
+
     //region Portable Grid
     public boolean portableGridUsesEnergy;
     public int portableGridCapacity;
@@ -129,6 +135,7 @@ public class RSConfig {
     private static final String GRID = "grid";
     private static final String WIRELESS_TRANSMITTER = "wirelessTransmitter";
     private static final String WIRELESS_GRID = "wirelessGrid";
+    private static final String WIRELESS_CRAFTING_GRID = "wirelessCraftingGrid";
     private static final String PORTABLE_GRID = "portableGrid";
     private static final String WIRELESS_FLUID_GRID = "wirelessFluidGrid";
     private static final String WIRELESS_CRAFTING_MONITOR = "wirelessCraftingMonitor";
@@ -224,6 +231,12 @@ public class RSConfig {
         wirelessGridOpenUsage = config.getInt("open", WIRELESS_GRID, 30, 0, Integer.MAX_VALUE, "The energy used by the Wireless Grid to open");
         wirelessGridInsertUsage = config.getInt("insert", WIRELESS_GRID, 3, 0, Integer.MAX_VALUE, "The energy used by the Wireless Grid to insert items");
         wirelessGridExtractUsage = config.getInt("extract", WIRELESS_GRID, 3, 0, Integer.MAX_VALUE, "The energy used by the Wireless Grid to extract items");
+        //endregion
+
+        //region Wireless Crafting Grid
+        wirelessCraftingGridUsesEnergy = config.getBoolean("usesEnergy", WIRELESS_CRAFTING_GRID, true, "Whether the Wireless Crafting Grid uses energy");
+        wirelessCraftingGridCraftUsage = config.getInt("craft", WIRELESS_CRAFTING_GRID, 1, 0, Integer.MAX_VALUE, "The energy used by the Wireless Crafting Grid when crafting");
+        wirelessCraftingGridOpenUsage = config.getInt("open", WIRELESS_CRAFTING_GRID, 30, 0, Integer.MAX_VALUE, "The energy used by the Wireless Crafting Grid to open");
         //endregion
 
         //region Portable Grid

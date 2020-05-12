@@ -26,6 +26,8 @@ public class KeyInputListener {
             findAndOpen(inv, Item.getItemFromBlock(RSBlocks.PORTABLE_GRID));
         } else if (RSKeyBindings.OPEN_WIRELESS_CRAFTING_MONITOR.isKeyDown()) {
             findAndOpen(inv, RSItems.WIRELESS_CRAFTING_MONITOR);
+        } else if(RSKeyBindings.OPEN_WIRELESS_CRAFTING_GRID.isKeyDown()) {
+            findAndOpen(inv, RSItems.WIRELESS_CRAFTING_GRID);
         }
     }
 

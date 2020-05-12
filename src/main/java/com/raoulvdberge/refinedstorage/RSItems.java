@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.item.*;
 public final class RSItems {
     public static final ItemStorageDisk STORAGE_DISK = new ItemStorageDisk();
     public static final ItemWirelessGrid WIRELESS_GRID = new ItemWirelessGrid();
+    public static final ItemWirelessGrid WIRELESS_CRAFTING_GRID = new ItemWirelessCraftingGrid();
     public static final ItemWirelessFluidGrid WIRELESS_FLUID_GRID = new ItemWirelessFluidGrid();
     public static final ItemWirelessCraftingMonitor WIRELESS_CRAFTING_MONITOR = new ItemWirelessCraftingMonitor();
     public static final ItemQuartzEnrichedIron QUARTZ_ENRICHED_IRON = new ItemQuartzEnrichedIron();
