@@ -381,7 +381,7 @@ public class CraftingTask implements ICraftingTask {
         combineCommonStacks(recipe, ingredients, pattern);
         Craft craft = crafts.get(pattern);
         if (craft == null) {
-            craft = pattern.isProcessing() ? new Processing(pattern, root) : new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting(pattern, root, recipe);
+            craft = pattern.isProcessing() ? new Processing(pattern, root) : new Crafting(pattern, root, recipe);
             crafts.put(pattern, craft);
         }
         craft.addQuantity(qty);
@@ -477,7 +477,7 @@ public class CraftingTask implements ICraftingTask {
             }
         }
 
-        if (craft instanceof com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting) {
+        if (craft instanceof Crafting) {
 
             ItemStack output = pattern.getOutput(recipe);
             results.add(output, output.getCount() * qty);
@@ -662,7 +662,7 @@ public class CraftingTask implements ICraftingTask {
         }
     }
 
-    private void updateCrafting(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting c) {
+    private void updateCrafting(Crafting c) {
 
         for (ICraftingPatternContainer container : network.getCraftingManager().getAllContainer(c.getPattern())) {
 
@@ -949,8 +949,8 @@ public class CraftingTask implements ICraftingTask {
             return internalStorage.getStacks().isEmpty() && internalFluidStorage.getStacks().isEmpty();
         } else {
             for (Craft craft : crafts.values()) {
-                if (craft instanceof com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting) {
-                    updateCrafting((com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting) craft);
+                if (craft instanceof Crafting) {
+                    updateCrafting((Crafting) craft);
                 } else {
                     updateProcessing((Processing) craft);
                 }
@@ -1104,7 +1104,7 @@ public class CraftingTask implements ICraftingTask {
         INetworkNode node = API.instance().getNetworkNodeManager(world).getNode(containerPos);
 
         if (node instanceof ICraftingPatternContainer) {
-            ItemStack stack = StackUtils.deserializeStackFromNbt(tag.getCompoundTag(NBT_PATTERN_STACK));
+            ItemStack stack = new ItemStack(tag.getCompoundTag(NBT_PATTERN_STACK));
 
             if (stack.getItem() instanceof ICraftingPatternProvider) {
                 return ((ICraftingPatternProvider) stack.getItem()).create(world, stack, (ICraftingPatternContainer) node);
@@ -1121,9 +1121,9 @@ public class CraftingTask implements ICraftingTask {
         ICraftingMonitorElementList elements = API.instance().createCraftingMonitorElementList();
 
         for (Craft craft : this.crafts.values()) {
-            if (craft instanceof com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting ) {
+            if (craft instanceof Crafting ) {
                 if(craft.getQuantity() > 0) {
-                    com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting c = (com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.Crafting) craft;
+                    Crafting c = (Crafting) craft;
                     for (ItemStack receive : c.getPattern().getOutputs()) {
                         elements.add(new CraftingMonitorElementItemRender(receive, 0, 0, 0, 0, receive.getCount() * c.getQuantity()), false);
                     }

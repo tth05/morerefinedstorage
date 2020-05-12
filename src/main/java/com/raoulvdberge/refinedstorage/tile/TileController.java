@@ -300,6 +300,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         return readerWriterManager;
     }
 
+    @Nonnull
     @Override
     public ItemStack insertItem(@Nonnull ItemStack stack, int size, Action action) {
         if (stack.isEmpty() || itemStorage.getStorages().isEmpty()) {
@@ -349,9 +350,10 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             itemStorage.add(stack, inserted - insertedExternally, false, false);
         }
 
-        return remainder;
+        return remainder == null ? ItemStack.EMPTY : remainder;
     }
 
+    @Nonnull
     @Override
     public ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action, Predicate<IStorage<ItemStack>> filter) {
         int requested = size;
@@ -394,7 +396,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             itemStorage.remove(newStack, newStack.getCount() - extractedExternally, false);
         }
 
-        return newStack;
+        return newStack == null ? ItemStack.EMPTY : newStack;
     }
 
 

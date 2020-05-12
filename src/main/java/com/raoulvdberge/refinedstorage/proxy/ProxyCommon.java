@@ -11,6 +11,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.Craf
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.network.NetworkNodeListener;
 import com.raoulvdberge.refinedstorage.apiimpl.network.grid.factory.*;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
@@ -98,12 +99,8 @@ public class ProxyCommon {
         PortableGrid.ID = API.instance().getGridManager().add(new GridFactoryPortableGrid());
         WirelessCraftingGrid.ID = API.instance().getGridManager().add(new GridFactoryWirelessCraftingGrid());
 
-        API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
-                v5.CraftingTaskFactory.ID, new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
-                v5.CraftingTaskFactory());
-        API.instance().getCraftingTaskRegistry().add(com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
-                v6.CraftingTaskFactory.ID, new com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.
-                v6.CraftingTaskFactory());
+        API.instance().getCraftingTaskRegistry().add(CraftingTaskFactory.ID, new CraftingTaskFactory());
+        RS.registerFactoryV6();
 
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID,
                 buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readInt(), buf.readInt(),
