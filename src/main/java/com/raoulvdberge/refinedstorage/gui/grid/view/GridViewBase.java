@@ -48,15 +48,13 @@ public abstract class GridViewBase implements IGridView {
             IGrid grid = gui.getGrid();
 
             List<Predicate<IGridStack>> filters = GridFilterParser.getFilters(
-                grid,
-                gui.getSearchField() != null ? gui.getSearchField().getText() : "",
-                (grid.getTabSelected() >= 0 && grid.getTabSelected() < grid.getTabs().size()) ? grid.getTabs().get(grid.getTabSelected()).getFilters() : grid.getFilters()
+                    grid,
+                    gui.getSearchField() != null ? gui.getSearchField().getText() : "",
+                    (grid.getTabSelected() >= 0 && grid.getTabSelected() < grid.getTabs().size()) ?
+                            grid.getTabs().get(grid.getTabSelected()).getFilters() : grid.getFilters()
             );
 
-            Iterator<IGridStack> it = stacks.iterator();
-
-            while (it.hasNext()) {
-                IGridStack stack = it.next();
+            stacks.removeIf(stack -> {
 
                 // If this is a crafting stack,
                 // and there is a regular matching stack in the view too,
@@ -66,21 +64,20 @@ public abstract class GridViewBase implements IGridView {
                         stack.isCraftable() &&
                         stack.getOtherId() != null &&
                         map.containsKey(stack.getOtherId())) {
-                    it.remove();
-
-                    continue;
+                    return true;
                 }
 
                 for (Predicate<IGridStack> filter : filters) {
                     if (!filter.test(stack)) {
-                        it.remove();
-
-                        break;
+                        return true;
                     }
                 }
-            }
+                return false;
+            });
 
-            GridSorterDirection sortingDirection = grid.getSortingDirection() == IGrid.SORTING_DIRECTION_DESCENDING ? GridSorterDirection.DESCENDING : GridSorterDirection.ASCENDING;
+            GridSorterDirection sortingDirection =
+                    grid.getSortingDirection() == IGrid.SORTING_DIRECTION_DESCENDING ? GridSorterDirection.DESCENDING :
+                            GridSorterDirection.ASCENDING;
 
             stacks.sort((left, right) -> defaultSorter.compare(left, right, sortingDirection));
 

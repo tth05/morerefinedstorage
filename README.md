@@ -15,7 +15,8 @@ Builds can be found in the release section on github.
 
 ### New things in this version
 - Added the Wireless Crafting Grid (refinedstorageaddons isn't needed anymore)
-- Improved shift click crafting code to run about 100 times faster. (On a private server, crafting coal blocks took 8 seconds per stack. Now it's instant) 
+- Improved shift click crafting code to run about 100 times faster. (On a private server, crafting coal blocks took 8 seconds per stack. Now it's instant)
+- Improved grid sorting performance 
 - Fixed player inventory not updating when a remainder is added to the players inventory
 - Fixed exporter not filling up slots to max stack size
 - The pattern grid now automatically switches between processing and crafting when tranferring from JEI or inserting an existing pattern

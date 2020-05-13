@@ -113,7 +113,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
                                     network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize), compare,
                                             Action.SIMULATE);
 
-                            if (took == null) {
+                            if (took.isEmpty()) {
                                 if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
                                     network.getCraftingManager()
                                             .request(new SlottedCraftingRequest(this, filterSlot), slot, stackSize);
