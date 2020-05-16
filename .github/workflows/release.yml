@@ -35,7 +35,10 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Initial version
+          - Shift clicking upgrades doesn't put the upgrades into the filter slots anymore
+          - Improved grid sorting performance
+          - Added scrolling support to grid (supports different combinations of Shift and Ctrl
+          - Added Baubles integration for wireless items
         draft: false
         prerelease: false
     - name: Upload jars to release
