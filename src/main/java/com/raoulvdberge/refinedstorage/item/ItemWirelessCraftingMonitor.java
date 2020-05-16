@@ -1,5 +1,7 @@
 package com.raoulvdberge.refinedstorage.item;
 
+import baubles.api.BaubleType;
+import baubles.api.IBauble;
 import com.google.common.base.Optional;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.item.INetworkItem;
@@ -17,7 +19,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class ItemWirelessCraftingMonitor extends ItemNetworkItem {
+public class ItemWirelessCraftingMonitor extends ItemNetworkItem implements IBauble {
     public static final String NBT_TAB_SELECTED = "TabSelected";
     public static final String NBT_TAB_PAGE = "TabPage";
 
@@ -72,5 +74,10 @@ public class ItemWirelessCraftingMonitor extends ItemNetworkItem {
         }
 
         stack.getTagCompound().setInteger(NBT_TAB_PAGE, tabPage);
+    }
+
+    @Override
+    public BaubleType getBaubleType(ItemStack itemstack) {
+        return BaubleType.AMULET;
     }
 }

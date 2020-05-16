@@ -1,5 +1,7 @@
 package com.raoulvdberge.refinedstorage.item;
 
+import baubles.api.BaubleType;
+import baubles.api.IBauble;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.api.network.item.INetworkItem;
@@ -16,7 +18,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 
-public class ItemWirelessFluidGrid extends ItemNetworkItem {
+public class ItemWirelessFluidGrid extends ItemNetworkItem implements IBauble {
     public ItemWirelessFluidGrid() {
         super(new ItemInfo(RS.ID, "wireless_fluid_grid"), RS.INSTANCE.config.wirelessFluidGridCapacity);
     }
@@ -55,5 +57,10 @@ public class ItemWirelessFluidGrid extends ItemNetworkItem {
 
     public static int getSize(ItemStack stack) {
         return (stack.hasTagCompound() && stack.getTagCompound().hasKey(NetworkNodeGrid.NBT_SIZE)) ? stack.getTagCompound().getInteger(NetworkNodeGrid.NBT_SIZE) : IGrid.SIZE_STRETCH;
+    }
+
+    @Override
+    public BaubleType getBaubleType(ItemStack itemstack) {
+        return BaubleType.AMULET;
     }
 }

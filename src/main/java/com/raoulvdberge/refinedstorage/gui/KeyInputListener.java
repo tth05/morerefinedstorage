@@ -1,5 +1,8 @@
 package com.raoulvdberge.refinedstorage.gui;
 
+import baubles.api.BaublesApi;
+import baubles.api.IBauble;
+import baubles.api.cap.IBaublesItemHandler;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.RSBlocks;
 import com.raoulvdberge.refinedstorage.RSItems;
@@ -26,7 +29,7 @@ public class KeyInputListener {
             findAndOpen(inv, Item.getItemFromBlock(RSBlocks.PORTABLE_GRID));
         } else if (RSKeyBindings.OPEN_WIRELESS_CRAFTING_MONITOR.isKeyDown()) {
             findAndOpen(inv, RSItems.WIRELESS_CRAFTING_MONITOR);
-        } else if(RSKeyBindings.OPEN_WIRELESS_CRAFTING_GRID.isKeyDown()) {
+        } else if (RSKeyBindings.OPEN_WIRELESS_CRAFTING_GRID.isKeyDown()) {
             findAndOpen(inv, RSItems.WIRELESS_CRAFTING_GRID);
         }
     }
@@ -36,10 +39,24 @@ public class KeyInputListener {
             ItemStack slot = inv.getStackInSlot(i);
 
             if (slot.getItem() == search) {
-                RS.INSTANCE.network.sendToServer(new MessageNetworkItemOpen(i));
+                RS.INSTANCE.network.sendToServer(new MessageNetworkItemOpen(i, false));
 
                 return;
             }
         }
+
+        if(!(search instanceof IBauble))
+            return;
+
+        IBaublesItemHandler baublesItemHandler = BaublesApi.getBaublesHandler(Minecraft.getMinecraft().player);
+        if (baublesItemHandler == null)
+            return;
+
+        ItemStack slot = baublesItemHandler.getStackInSlot(0);
+        //does not support multiple valid slots
+        int slotId = ((IBauble) search).getBaubleType(null).getValidSlots()[0];
+
+        if (slot.getItem() == search)
+            RS.INSTANCE.network.sendToServer(new MessageNetworkItemOpen(slotId, true));
     }
 }
