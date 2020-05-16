@@ -13,7 +13,6 @@ import net.minecraftforge.oredict.OreDictionary;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class GridStackItem implements IGridStack {
     private UUID id;
@@ -132,7 +131,7 @@ public class GridStackItem implements IGridStack {
     public String getTooltip() {
         if (tooltip == null) {
             try {
-                tooltip = RenderUtils.getItemTooltip(stack).stream().collect(Collectors.joining("\n"));
+                tooltip = String.join("\n", RenderUtils.getItemTooltip(stack));
             } catch (Throwable t) {
                 tooltip = "";
             }

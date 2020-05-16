@@ -292,7 +292,7 @@ public abstract class GuiBase extends GuiContainer {
 
         int d = Mouse.getEventDWheel();
 
-        if (scrollbar != null && d != 0) {
+        if (scrollbar != null && d != 0 && !(isShiftKeyDown() || isCtrlKeyDown())) {
             scrollbar.wheel(d);
         }
     }

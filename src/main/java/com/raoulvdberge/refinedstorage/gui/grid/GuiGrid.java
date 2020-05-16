@@ -29,19 +29,25 @@ import com.raoulvdberge.refinedstorage.util.TimeUtils;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import org.lwjgl.input.Mouse;
+import yalter.mousetweaks.api.MouseTweaksDisableWheelTweak;
 
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
+@MouseTweaksDisableWheelTweak
 public class GuiGrid extends GuiBase implements IResizableDisplay {
     private IGridView view;
 
@@ -156,6 +162,38 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         }
 
         tabs.update();
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int delta = Mouse.getEventDWheel();
+        ScaledResolution scaledResolution = new ScaledResolution(mc);
+        int width = scaledResolution.getScaledWidth();
+        int height = scaledResolution.getScaledHeight();
+        int mouseX = Mouse.getX() * width / mc.displayWidth;
+        int mouseY = height - Mouse.getY() * height / mc.displayHeight - 1;
+
+        Slot hoveredSlot = this.getSlotUnderMouse();
+
+        if (delta != 0 && (isShiftKeyDown() || isCtrlKeyDown())) {
+            if (isOverInventory(mouseX - guiLeft, mouseY - guiTop)) {
+                if (grid.getGridType() != GridType.FLUID && hoveredSlot != null) {
+                    RS.INSTANCE.network.sendToServer(
+                            new MessageGridItemInventoryScroll(hoveredSlot.getSlotIndex(), isShiftKeyDown(), delta > 0));
+                }
+            } else if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop)) {
+                if (grid.getGridType() != GridType.FLUID) {
+                    RS.INSTANCE.network.sendToServer(new MessageGridItemScroll(
+                            isOverSlotWithStack() ? view.getStacks().get(slotNumber).getId() : new UUID(0, 0),
+                            isShiftKeyDown(), isCtrlKeyDown(), delta > 0));
+                }
+            }
+        }
+    }
+
+    private boolean isOverInventory(int x, int y) {
+        return inBounds(8, getYPlayerInventory(), 9 * 18 - 2, 4 * 18 + 2, x, y);
     }
 
     @Override

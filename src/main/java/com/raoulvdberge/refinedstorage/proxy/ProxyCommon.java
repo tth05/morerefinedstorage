@@ -175,6 +175,8 @@ public class ProxyCommon {
         RS.INSTANCE.network
                 .registerMessage(MessageGridItemInsertHeld.class, MessageGridItemInsertHeld.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridItemPull.class, MessageGridItemPull.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridItemScroll.class, MessageGridItemScroll.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridItemInventoryScroll.class, MessageGridItemInventoryScroll.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridClear.class, MessageGridClear.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridTransfer.class, MessageGridTransfer.class, id++, Side.SERVER);
         RS.INSTANCE.network

@@ -350,7 +350,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             itemStorage.add(stack, inserted - insertedExternally, false, false);
         }
 
-        return remainder == null ? ItemStack.EMPTY : remainder;
+        return StackUtils.nullToEmpty(remainder);
     }
 
     @Nonnull
@@ -396,7 +396,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             itemStorage.remove(newStack, newStack.getCount() - extractedExternally, false);
         }
 
-        return newStack == null ? ItemStack.EMPTY : newStack;
+        return StackUtils.nullToEmpty(newStack);
     }
 
 

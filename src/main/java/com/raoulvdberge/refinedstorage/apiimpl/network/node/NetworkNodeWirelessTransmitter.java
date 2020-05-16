@@ -76,7 +76,7 @@ public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWire
 
     @Override
     public boolean canConduct(@Nullable EnumFacing direction) {
-        return direction != null && EnumFacing.DOWN.equals(direction);
+        return EnumFacing.DOWN.equals(direction);
     }
 
     @Override

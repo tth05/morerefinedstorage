@@ -15,6 +15,7 @@ Builds can be found in the release section on github.
 
 ### New things in this version
 - Added the Wireless Crafting Grid (refinedstorageaddons isn't needed anymore)
+- Added scrolling support to grid (supports different combinations of Shift and Ctrl
 - Improved shift click crafting code to run about 100 times faster. (On a private server, crafting coal blocks took 8 seconds per stack. Now it's instant)
 - Improved grid sorting performance 
 - Fixed player inventory not updating when a remainder is added to the players inventory

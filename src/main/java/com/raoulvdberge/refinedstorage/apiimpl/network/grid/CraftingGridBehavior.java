@@ -71,7 +71,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                                     (possibility.getItem().isDamageable() ? 0 : IComparer.COMPARE_DAMAGE),
                             Action.PERFORM);
 
-                    if (took != null) {
+                    if (!took.isEmpty()) {
                         grid.getCraftingMatrix().setInventorySlotContents(i, StackUtils.nullToEmpty(took));
                         network.getItemStorageTracker().changed(player, took.copy());
                         continue matrixLoop;
@@ -488,7 +488,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     network == null ? itemStack : network.insertItem(itemStack, itemStack.getCount(), Action.PERFORM);
 
             //if the network doesn't accept it, drop it into the world
-            if (remainingItem != null) {
+            if (!remainingItem.isEmpty()) {
                 InventoryHelper.spawnItemStack(player.getEntityWorld(), player.getPosition().getX(),
                         player.getPosition().getY(), player.getPosition().getZ(), remainingItem);
             } else {
