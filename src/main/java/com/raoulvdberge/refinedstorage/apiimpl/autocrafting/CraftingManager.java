@@ -1,17 +1,14 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternChainList;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
 import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.tile.TileController;
 import net.minecraft.item.ItemStack;
@@ -26,7 +23,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class CraftingManager implements ICraftingManager {
+//TODO: re-add interface
+public class CraftingManager /*implements ICraftingManager*/ {
     private static final int THROTTLE_DELAY_MS = 3000;
 
     private static final String NBT_TASKS = "Tasks";
@@ -40,8 +38,8 @@ public class CraftingManager implements ICraftingManager {
 
     private List<ICraftingPattern> patterns = new ArrayList<>();
 
-    private Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
-    private List<ICraftingTask> tasksToAdd = new ArrayList<>();
+    private Map<UUID, MasterCraftingTask> tasks = new LinkedHashMap<>();
+    private List<MasterCraftingTask> tasksToAdd = new ArrayList<>();
     private List<UUID> tasksToCancel = new ArrayList<>();
     private NBTTagList tasksToRead;
 
@@ -53,30 +51,30 @@ public class CraftingManager implements ICraftingManager {
         this.network = network;
     }
 
-    @Override
-    public Collection<ICraftingTask> getTasks() {
+    //@Override
+    public Collection<MasterCraftingTask> getTasks() {
         return tasks.values();
     }
 
-    @Override
+    //@Override
     @Nullable
-    public ICraftingTask getTask(UUID id) {
+    public MasterCraftingTask getTask(UUID id) {
         return tasks.get(id);
     }
 
-    @Override
+    //@Override
     public Map<String, List<IItemHandlerModifiable>> getNamedContainers() {
         return containerInventories;
     }
 
-    @Override
-    public void add(@Nonnull ICraftingTask task) {
+    //@Override
+    public void add(@Nonnull MasterCraftingTask task) {
         tasksToAdd.add(task);
 
         network.markDirty();
     }
 
-    @Override
+    //@Override
     public void cancel(@Nullable UUID id) {
         if (id == null) {
             tasksToCancel.addAll(tasks.keySet());
@@ -87,9 +85,9 @@ public class CraftingManager implements ICraftingManager {
         network.markDirty();
     }
 
-    @Override
+    //@Override
     @Nullable
-    public ICraftingTask create(ItemStack stack, int quantity) {
+    public MasterCraftingTask create(ItemStack stack, int quantity) {
         ICraftingPattern pattern = getPattern(stack);
         if (pattern == null) {
             return null;
@@ -104,8 +102,8 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Nullable
-    @Override
-    public ICraftingTask create(FluidStack stack, int quantity) {
+    //@Override
+    public MasterCraftingTask create(FluidStack stack, int quantity) {
         ICraftingPattern pattern = getPattern(stack);
         if (pattern == null) {
             return null;
@@ -119,15 +117,11 @@ public class CraftingManager implements ICraftingManager {
         return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
     }
 
-    @Override
-    public ICraftingPatternChainList createPatternChainList() {
-        return new CraftingPatternChainList(patterns);
-    }
-
-    @Override
+    //@Override
     public void update() {
         if (network.canRun()) {
-            if (tasksToRead != null) {
+
+            /*if (tasksToRead != null) {
                 for (int i = 0; i < tasksToRead.tagCount(); ++i) {
                     NBTTagCompound taskTag = tasksToRead.getCompoundTagAt(i);
 
@@ -137,7 +131,7 @@ public class CraftingManager implements ICraftingManager {
                     ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(taskType);
                     if (factory != null) {
                         try {
-                            ICraftingTask task = factory.createFromNbt(network, taskData);
+                            MasterCraftingTask task = factory.createFromNbt(network, taskData);
 
                             tasks.put(task.getId(), task);
                         } catch (CraftingTaskReadException e) {
@@ -183,20 +177,21 @@ public class CraftingManager implements ICraftingManager {
 
             if (!tasks.isEmpty()) {
                 network.markDirty();
-            }
+            }*/
         }
     }
 
-    @Override
+    //@Override
     public void readFromNbt(NBTTagCompound tag) {
         this.tasksToRead = tag.getTagList(NBT_TASKS, Constants.NBT.TAG_COMPOUND);
     }
 
-    @Override
+    //@Override
     public NBTTagCompound writeToNbt(NBTTagCompound tag) {
-        NBTTagList list = new NBTTagList();
+        //TODO: nbt saving and writing
+        /*NBTTagList list = new NBTTagList();
 
-        for (ICraftingTask task : tasks.values()) {
+        for (MasterCraftingTask task : tasks.values()) {
             NBTTagCompound taskTag = new NBTTagCompound();
 
             taskTag.setString(NBT_TASK_TYPE, task.getPattern().getId());
@@ -205,36 +200,37 @@ public class CraftingManager implements ICraftingManager {
             list.appendTag(taskTag);
         }
 
-        tag.setTag(NBT_TASKS, list);
+        tag.setTag(NBT_TASKS, list);*/
 
         return tag;
     }
 
-    @Override
+    //@Override
     public void addListener(ICraftingMonitorListener listener) {
         listeners.add(listener);
 
         listener.onAttached();
     }
 
-    @Override
+    //@Override
     public void removeListener(ICraftingMonitorListener listener) {
         listeners.remove(listener);
     }
 
-    @Override
+    //@Override
     public void onTaskChanged() {
         listeners.forEach(ICraftingMonitorListener::onChanged);
     }
 
-    @Override
+    //@Override
     @Nullable
     public ICraftingTask request(Object source, ItemStack stack, int amount) {
         if (isThrottled(source)) {
             return null;
         }
 
-        for (ICraftingTask task : getTasks()) {
+        //TODO
+        /*for (ICraftingTask task : getTasks()) {
             if (task.getRequested().getItem() != null) {
                 if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack)) {
                     amount -= task.getQuantity();
@@ -243,7 +239,7 @@ public class CraftingManager implements ICraftingManager {
         }
 
         if (amount > 0) {
-            ICraftingTask task = create(stack, amount);
+            MasterCraftingTask task = create(stack, amount);
 
             if (task != null) {
                 ICraftingTaskError error = task.calculate();
@@ -258,19 +254,20 @@ public class CraftingManager implements ICraftingManager {
             } else {
                 throttle(source);
             }
-        }
+        }*/
 
         return null;
     }
 
     @Nullable
-    @Override
+    //@Override
     public ICraftingTask request(Object source, FluidStack stack, int amount) {
         if (isThrottled(source)) {
             return null;
         }
 
-        for (ICraftingTask task : getTasks()) {
+        //TODO
+        /*for (ICraftingTask task : getTasks()) {
             if (task.getRequested().getFluid() != null) {
                 if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
                     amount -= task.getQuantity();
@@ -279,7 +276,7 @@ public class CraftingManager implements ICraftingManager {
         }
 
         if (amount > 0) {
-            ICraftingTask task = create(stack, amount);
+            MasterCraftingTask task = create(stack, amount);
 
             if (task != null) {
                 ICraftingTaskError error = task.calculate();
@@ -294,7 +291,7 @@ public class CraftingManager implements ICraftingManager {
             } else {
                 throttle(source);
             }
-        }
+        }*/
 
         return null;
     }
@@ -322,38 +319,40 @@ public class CraftingManager implements ICraftingManager {
         return MinecraftServer.getCurrentTimeMillis() - throttledSince < THROTTLE_DELAY_MS;
     }
 
-    @Override
+    //@Override
     public int track(ItemStack stack, int size) {
-        for (ICraftingTask task : tasks.values()) {
+        //TODO: Processing tasks
+        /*for (ICraftingTask task : tasks.values()) {
             size = task.onTrackedInsert(stack, size);
 
             if (size == 0) {
                 return 0;
             }
-        }
+        }*/
 
         return size;
     }
 
-    @Override
+    //@Override
     public int track(FluidStack stack, int size) {
-        for (ICraftingTask task : tasks.values()) {
+        //TODO: Processing tasks
+        /*for (ICraftingTask task : tasks.values()) {
             size = task.onTrackedInsert(stack, size);
 
             if (size == 0) {
                 return 0;
             }
-        }
+        }*/
 
         return size;
     }
 
-    @Override
+    //@Override
     public List<ICraftingPattern> getPatterns() {
         return patterns;
     }
 
-    @Override
+    //@Override
     public void rebuild() {
         this.network.getItemStorageCache().getCraftablesList().clear();
         this.network.getFluidStorageCache().getCraftablesList().clear();
@@ -402,14 +401,15 @@ public class CraftingManager implements ICraftingManager {
         this.network.getFluidStorageCache().reAttachListeners();
     }
 
-    @Override
+    //@Override
     public Set<ICraftingPatternContainer> getAllContainer(ICraftingPattern pattern) {
         return patternToContainer.getOrDefault(pattern, new LinkedHashSet<>());
     }
 
     @Nullable
-    @Override
+    //@Override
     public ICraftingPattern getPattern(ItemStack pattern) {
+        //TODO: maybe better algo to find pattern
         for (ICraftingPattern patternInList : patterns) {
             for (ItemStack output : patternInList.getOutputs()) {
                 if (API.instance().getComparer().isEqualNoQuantity(output, pattern)) {
@@ -422,7 +422,7 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Nullable
-    @Override
+    //@Override
     public ICraftingPattern getPattern(FluidStack pattern) {
         for (ICraftingPattern patternInList : patterns) {
             for (FluidStack output : patternInList.getFluidOutputs()) {

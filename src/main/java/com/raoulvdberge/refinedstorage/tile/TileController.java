@@ -129,7 +129,8 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
     private INetworkNodeGraph nodeGraph = new NetworkNodeGraph(this);
 
-    private ICraftingManager craftingManager = new CraftingManager(this);
+    //TODO: change back to interface
+    private CraftingManager craftingManager = new CraftingManager(this);
 
     private ISecurityManager securityManager = new SecurityManager(this);
 
@@ -199,8 +200,9 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         return securityManager;
     }
 
+    //TODO: Change back to interface
     @Override
-    public ICraftingManager getCraftingManager() {
+    public CraftingManager getCraftingManager() {
         return craftingManager;
     }
 

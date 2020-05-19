@@ -7,7 +7,7 @@
 ### 2.0.1
 - Shift clicking upgrades doesn't put the upgrades into the filter slots anymore
 - Improved grid sorting performance
-- Added scrolling support to grid (supports different combinations of Shift and Ctrl
+- Added scrolling support to grid (supports different combinations of Shift and Ctrl)
 - Added Baubles integration for wireless items
 
 ### 2.0.0

@@ -1,11 +1,10 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
-import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.item.ItemPattern;
 import net.minecraft.creativetab.CreativeTabs;
@@ -231,15 +230,9 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         NonNullList<ItemStack> remainingItems = recipe.getRemainingItems(inv);
-        NonNullList<ItemStack> sanitized = NonNullList.create();
+        remainingItems.removeIf(ItemStack::isEmpty);
 
-        for (ItemStack item : remainingItems) {
-            if (!item.isEmpty()) {
-                sanitized.add(item);
-            }
-        }
-
-        return sanitized;
+        return remainingItems;
     }
 
     @Override
@@ -254,8 +247,7 @@ public class CraftingPattern implements ICraftingPattern {
 
     @Override
     public String getId() {
-        return RS.INSTANCE.config.useExperimentalAutocrafting ? com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.CraftingTaskFactory.ID :
-            com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory.ID;
+        return CraftingTaskFactory.ID;
     }
 
     @Override

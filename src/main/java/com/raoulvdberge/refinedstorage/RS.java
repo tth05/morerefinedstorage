@@ -1,7 +1,5 @@
 package com.raoulvdberge.refinedstorage;
 
-import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v6.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.command.CommandCreateDisk;
 import com.raoulvdberge.refinedstorage.item.ItemCover;
 import com.raoulvdberge.refinedstorage.proxy.ProxyCommon;
@@ -77,10 +75,5 @@ public final class RS {
     @EventHandler
     public void onServerStarting(FMLServerStartingEvent e) {
         e.registerServerCommand(new CommandCreateDisk());
-    }
-
-    //bad fix because mcp doesn't like inline imports, that's why the V6 engine is registered from this class
-    public static void registerFactoryV6() {
-        API.instance().getCraftingTaskRegistry().add(CraftingTaskFactory.ID, new CraftingTaskFactory());
     }
 }
