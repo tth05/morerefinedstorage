@@ -1,4 +1,4 @@
-package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task;
+package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine;
 
 enum ProcessingState {
     READY,
