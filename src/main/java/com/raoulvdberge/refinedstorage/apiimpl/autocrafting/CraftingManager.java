@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
+import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
@@ -23,8 +24,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
-//TODO: re-add interface
-public class CraftingManager /*implements ICraftingManager*/ {
+public class CraftingManager implements ICraftingManager {
     private static final int THROTTLE_DELAY_MS = 3000;
 
     private static final String NBT_TASKS = "Tasks";
@@ -51,30 +51,30 @@ public class CraftingManager /*implements ICraftingManager*/ {
         this.network = network;
     }
 
-    //@Override
+    @Override
     public Collection<MasterCraftingTask> getTasks() {
         return tasks.values();
     }
 
-    //@Override
+    @Override
     @Nullable
     public MasterCraftingTask getTask(UUID id) {
         return tasks.get(id);
     }
 
-    //@Override
+    @Override
     public Map<String, List<IItemHandlerModifiable>> getNamedContainers() {
         return containerInventories;
     }
 
-    //@Override
+    @Override
     public void add(@Nonnull MasterCraftingTask task) {
         tasksToAdd.add(task);
 
         network.markDirty();
     }
 
-    //@Override
+    @Override
     public void cancel(@Nullable UUID id) {
         if (id == null) {
             tasksToCancel.addAll(tasks.keySet());
@@ -85,7 +85,7 @@ public class CraftingManager /*implements ICraftingManager*/ {
         network.markDirty();
     }
 
-    //@Override
+    @Override
     @Nullable
     public MasterCraftingTask create(ItemStack stack, int quantity) {
         ICraftingPattern pattern = getPattern(stack);
@@ -102,7 +102,7 @@ public class CraftingManager /*implements ICraftingManager*/ {
     }
 
     @Nullable
-    //@Override
+    @Override
     public MasterCraftingTask create(FluidStack stack, int quantity) {
         ICraftingPattern pattern = getPattern(stack);
         if (pattern == null) {
@@ -117,9 +117,24 @@ public class CraftingManager /*implements ICraftingManager*/ {
         return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
     }
 
-    //@Override
+    @Override
     public void update() {
         if (network.canRun()) {
+
+            for (UUID idToCancel : tasksToCancel) {
+                if (this.tasks.containsKey(idToCancel)) {
+                    //TODO: add on cancelled
+//                    this.tasks.get(idToCancel).onCancelled();
+                    this.tasks.remove(idToCancel);
+                }
+            }
+            this.tasksToCancel.clear();
+
+            for (MasterCraftingTask task : this.tasksToAdd) {
+                this.tasks.put(task.getId(), task);
+            }
+
+            tasksToAdd.clear();
 
             /*if (tasksToRead != null) {
                 for (int i = 0; i < tasksToRead.tagCount(); ++i) {
@@ -181,12 +196,12 @@ public class CraftingManager /*implements ICraftingManager*/ {
         }
     }
 
-    //@Override
+    @Override
     public void readFromNbt(NBTTagCompound tag) {
         this.tasksToRead = tag.getTagList(NBT_TASKS, Constants.NBT.TAG_COMPOUND);
     }
 
-    //@Override
+    @Override
     public NBTTagCompound writeToNbt(NBTTagCompound tag) {
         //TODO: nbt saving and writing
         /*NBTTagList list = new NBTTagList();
@@ -205,24 +220,24 @@ public class CraftingManager /*implements ICraftingManager*/ {
         return tag;
     }
 
-    //@Override
+    @Override
     public void addListener(ICraftingMonitorListener listener) {
         listeners.add(listener);
 
         listener.onAttached();
     }
 
-    //@Override
+    @Override
     public void removeListener(ICraftingMonitorListener listener) {
         listeners.remove(listener);
     }
 
-    //@Override
+    @Override
     public void onTaskChanged() {
         listeners.forEach(ICraftingMonitorListener::onChanged);
     }
 
-    //@Override
+    @Override
     @Nullable
     public ICraftingTask request(Object source, ItemStack stack, int amount) {
         if (isThrottled(source)) {
@@ -319,7 +334,7 @@ public class CraftingManager /*implements ICraftingManager*/ {
         return MinecraftServer.getCurrentTimeMillis() - throttledSince < THROTTLE_DELAY_MS;
     }
 
-    //@Override
+    @Override
     public int track(ItemStack stack, int size) {
         //TODO: Processing tasks
         /*for (ICraftingTask task : tasks.values()) {
@@ -333,7 +348,7 @@ public class CraftingManager /*implements ICraftingManager*/ {
         return size;
     }
 
-    //@Override
+    @Override
     public int track(FluidStack stack, int size) {
         //TODO: Processing tasks
         /*for (ICraftingTask task : tasks.values()) {
@@ -347,12 +362,12 @@ public class CraftingManager /*implements ICraftingManager*/ {
         return size;
     }
 
-    //@Override
+    @Override
     public List<ICraftingPattern> getPatterns() {
         return patterns;
     }
 
-    //@Override
+    @Override
     public void rebuild() {
         this.network.getItemStorageCache().getCraftablesList().clear();
         this.network.getFluidStorageCache().getCraftablesList().clear();
@@ -401,13 +416,13 @@ public class CraftingManager /*implements ICraftingManager*/ {
         this.network.getFluidStorageCache().reAttachListeners();
     }
 
-    //@Override
+    @Override
     public Set<ICraftingPatternContainer> getAllContainer(ICraftingPattern pattern) {
         return patternToContainer.getOrDefault(pattern, new LinkedHashSet<>());
     }
 
     @Nullable
-    //@Override
+    @Override
     public ICraftingPattern getPattern(ItemStack pattern) {
         //TODO: maybe better algo to find pattern
         for (ICraftingPattern patternInList : patterns) {
@@ -422,7 +437,7 @@ public class CraftingManager /*implements ICraftingManager*/ {
     }
 
     @Nullable
-    //@Override
+    @Override
     public ICraftingPattern getPattern(FluidStack pattern) {
         for (ICraftingPattern patternInList : patterns) {
             for (FluidStack output : patternInList.getFluidOutputs()) {

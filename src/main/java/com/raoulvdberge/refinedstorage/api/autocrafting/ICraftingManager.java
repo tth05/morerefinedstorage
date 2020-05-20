@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.api.autocrafting;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -18,7 +19,7 @@ public interface ICraftingManager {
     /**
      * @return the crafting tasks in this network, do NOT modify this
      */
-    Collection<ICraftingTask> getTasks();
+    Collection<MasterCraftingTask> getTasks();
 
     /**
      * Returns a crafting task by id.
@@ -27,7 +28,7 @@ public interface ICraftingManager {
      * @return the task, or null if no task was found for the given id
      */
     @Nullable
-    ICraftingTask getTask(UUID id);
+    MasterCraftingTask getTask(UUID id);
 
     /**
      * @return named crafting pattern containers
@@ -39,7 +40,7 @@ public interface ICraftingManager {
      *
      * @param task the task to add
      */
-    void add(@Nonnull ICraftingTask task);
+    void add(@Nonnull MasterCraftingTask task);
 
     /**
      * Cancels a crafting task.
@@ -56,7 +57,7 @@ public interface ICraftingManager {
      * @return the crafting task, or null if no pattern was found for the given stack
      */
     @Nullable
-    ICraftingTask create(ItemStack stack, int quantity);
+    MasterCraftingTask create(ItemStack stack, int quantity);
 
     /**
      * Creates a crafting task for a given stack, but doesn't add it to the list.
@@ -66,12 +67,7 @@ public interface ICraftingManager {
      * @return the crafting task, or null if no pattern was found for the given stack
      */
     @Nullable
-    ICraftingTask create(FluidStack stack, int quantity);
-
-    /**
-     * @return a new pattern chain list
-     */
-    ICraftingPatternChainList createPatternChainList();
+    MasterCraftingTask create(FluidStack stack, int quantity);
 
     /**
      * @deprecated Use {@link #request(Object, ItemStack, int)}

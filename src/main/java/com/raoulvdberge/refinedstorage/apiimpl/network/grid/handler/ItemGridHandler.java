@@ -1,7 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
@@ -10,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingPreviewResponse;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingStartResponse;
@@ -199,7 +199,7 @@ public class ItemGridHandler implements IItemGridHandler {
 
         if (stack != null) {
             Thread calculationThread = new Thread(() -> {
-                ICraftingTask task = network.getCraftingManager().create(stack, quantity);
+                MasterCraftingTask task = network.getCraftingManager().create(stack, quantity);
                 if (task == null) {
                     return;
                 }
@@ -235,7 +235,7 @@ public class ItemGridHandler implements IItemGridHandler {
         ItemStack stack = network.getItemStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            ICraftingTask task = network.getCraftingManager().create(stack, quantity);
+            MasterCraftingTask task = network.getCraftingManager().create(stack, quantity);
             if (task == null) {
                 return;
             }

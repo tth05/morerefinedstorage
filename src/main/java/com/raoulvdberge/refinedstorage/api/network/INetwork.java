@@ -12,7 +12,6 @@ import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -54,8 +53,7 @@ public interface INetwork {
     /**
      * @return the {@link ICraftingManager} of this network
      */
-    //TODO: change back to interface
-    CraftingManager getCraftingManager();
+    ICraftingManager getCraftingManager();
 
     /**
      * @return the {@link IEnergy} of this network

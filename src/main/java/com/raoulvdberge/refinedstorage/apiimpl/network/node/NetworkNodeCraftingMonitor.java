@@ -3,7 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 import com.google.common.base.Optional;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.ICraftingMonitor;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.TileCraftingMonitor;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataManager;
@@ -65,7 +65,7 @@ public class NetworkNodeCraftingMonitor extends NetworkNode implements ICrafting
     }
 
     @Override
-    public Collection<ICraftingTask> getTasks() {
+    public Collection<MasterCraftingTask> getTasks() {
         return network != null ? network.getCraftingManager().getTasks() : Collections.emptyList();
     }
 

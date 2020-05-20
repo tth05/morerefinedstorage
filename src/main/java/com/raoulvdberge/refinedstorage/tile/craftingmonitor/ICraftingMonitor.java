@@ -2,7 +2,7 @@ package com.raoulvdberge.refinedstorage.tile.craftingmonitor;
 
 import com.google.common.base.Optional;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -20,7 +20,7 @@ public interface ICraftingMonitor {
 
     TileDataParameter<Integer, ?> getRedstoneModeParameter();
 
-    Collection<ICraftingTask> getTasks();
+    Collection<MasterCraftingTask> getTasks();
 
     @Nullable
     ICraftingManager getCraftingManager();
