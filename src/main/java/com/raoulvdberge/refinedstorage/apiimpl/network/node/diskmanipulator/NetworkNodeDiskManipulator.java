@@ -69,7 +69,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                         count *= Fluid.BUCKET_VOLUME;
                     }
 
-                    return count;
+                    return count * 25;
                 }
             };
 
