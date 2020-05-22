@@ -1,5 +1,9 @@
 #More Refined Storage Changelog
 
+### 2.0.2
+- Increased Disk Manipulator speed by 25x
+- Fixed disks being inserted into themselfs when the inventory is full in Portable Grid
+
 ### 2.0.1
 - Shift clicking upgrades doesn't put the upgrades into the filter slots anymore
 - Improved grid sorting performance
