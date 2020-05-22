@@ -7,6 +7,7 @@ import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandle
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
+import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
@@ -88,9 +89,11 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                         } else {
                             IItemGridHandler itemHandler = grid.getItemHandler();
 
-                            if (itemHandler != null) {
+                            //make sure stack is not a disk, otherwise it gets inserted into itself
+                            if (itemHandler != null && !(stack.getItem() instanceof IStorageDiskProvider)) {
                                 slot.putStack(itemHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
-                            } else if (slot instanceof SlotGridCrafting && mergeItemStack(stack, 14, 14 + (9 * 4), false)) {
+                            } else if (slot instanceof SlotGridCrafting &&
+                                    mergeItemStack(stack, 14, 14 + (9 * 4), false)) {
                                 slot.onSlotChanged();
 
                                 // This is needed because when a grid is disconnected,
@@ -148,7 +151,8 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             }
         }
 
-        addSlotToContainer(craftingResultSlot = new SlotGridCraftingResult(this, getPlayer(), grid, 0, 130 + 4, headerAndSlots + 22));
+        addSlotToContainer(craftingResultSlot =
+                new SlotGridCraftingResult(this, getPlayer(), grid, 0, 130 + 4, headerAndSlots + 22));
     }
 
     private void addPatternSlots() {
@@ -165,8 +169,14 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
         int y = headerAndSlots + 4;
 
         for (int i = 0; i < 9 * 2; ++i) {
-            addSlotToContainer(new SlotFilter(((NetworkNodeGrid) grid).getProcessingMatrix(), i, x, y, SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(() -> ((NetworkNodeGrid) grid).isProcessingPattern() && ((NetworkNodeGrid) grid).getType() == IType.ITEMS));
-            addSlotToContainer(new SlotFilterFluid(((NetworkNodeGrid) grid).getProcessingMatrixFluids(), i, x, y, SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(() -> ((NetworkNodeGrid) grid).isProcessingPattern() && ((NetworkNodeGrid) grid).getType() == IType.FLUIDS));
+            addSlotToContainer(new SlotFilter(((NetworkNodeGrid) grid).getProcessingMatrix(), i, x, y,
+                    SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(
+                    () -> ((NetworkNodeGrid) grid).isProcessingPattern() &&
+                            ((NetworkNodeGrid) grid).getType() == IType.ITEMS));
+            addSlotToContainer(new SlotFilterFluid(((NetworkNodeGrid) grid).getProcessingMatrixFluids(), i, x, y,
+                    SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(
+                    () -> ((NetworkNodeGrid) grid).isProcessingPattern() &&
+                            ((NetworkNodeGrid) grid).getType() == IType.FLUIDS));
 
             x += 18;
 
@@ -187,7 +197,8 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
         y = headerAndSlots + 4;
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotLegacyFilter(grid.getCraftingMatrix(), i, x, y).setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern()));
+            addSlotToContainer(new SlotLegacyFilter(grid.getCraftingMatrix(), i, x, y)
+                    .setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern()));
 
             x += 18;
 
@@ -197,7 +208,9 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             }
         }
 
-        addSlotToContainer(patternResultSlot = (new SlotLegacyDisabled(grid.getCraftingResult(), 0, 134, headerAndSlots + 22).setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern())));
+        addSlotToContainer(patternResultSlot =
+                (new SlotLegacyDisabled(grid.getCraftingResult(), 0, 134, headerAndSlots + 22)
+                        .setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern())));
     }
 
     public IGrid getGrid() {
@@ -213,7 +226,8 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                 for (IContainerListener listener : listeners) {
                     // @Volatile: We can't use IContainerListener#sendSlotContents since EntityPlayerMP blocks SlotCrafting changes...
                     if (listener instanceof EntityPlayerMP) {
-                        ((EntityPlayerMP) listener).connection.sendPacket(new SPacketSetSlot(windowId, i, slot.getStack()));
+                        ((EntityPlayerMP) listener).connection
+                                .sendPacket(new SPacketSetSlot(windowId, i, slot.getStack()));
                     }
                 }
             }
