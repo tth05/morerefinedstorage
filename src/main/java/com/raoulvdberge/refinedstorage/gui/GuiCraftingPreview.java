@@ -11,6 +11,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPrev
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
 import com.raoulvdberge.refinedstorage.gui.control.Scrollbar;
 import com.raoulvdberge.refinedstorage.item.ItemPattern;
+import com.raoulvdberge.refinedstorage.network.MessageCraftingCancel;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingStart;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -254,6 +255,7 @@ public class GuiCraftingPreview extends GuiBase {
     }
 
     private void close() {
+        RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(id));
         FMLClientHandler.instance().showGuiScreen(parent);
     }
 }

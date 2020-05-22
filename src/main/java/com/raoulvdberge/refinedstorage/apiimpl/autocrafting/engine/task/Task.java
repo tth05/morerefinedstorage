@@ -95,9 +95,15 @@ public abstract class Task {
         private long totalInputAmount;
         /**
          * The current input counts for all possibilities of this Input. Only contains multiple entries if oredict is
-         * used, because each oredict possibility can have a different amount.
+         * used, because each oredict possibility can have a different amount. This information is needed, so that the
+         * correct items can be later inserted back into the network (if the task gets cancelled).
          */
         private final List<Long> currentInputCounts = new LongArrayList(9);
+
+        /**
+         * The amount that will be crafted
+         */
+        private long toCraftAmount;
 
         /**
          * The total amount that is needed of this Input
@@ -180,6 +186,14 @@ public abstract class Task {
         }
 
         /**
+         * Increases the amount that is expected to be crafted for this input by the given {@code amount}
+         * @param amount the amount to add
+         */
+        public void increaseToCraftAmount(long amount) {
+            this.toCraftAmount += amount;
+        }
+
+        /**
          * Merges two Inputs. Assumes both inputs are equal
          * @param input the input that should be merged
          */
@@ -221,8 +235,16 @@ public abstract class Task {
             return totalInputAmount;
         }
 
+        public long getToCraftAmount() {
+            return toCraftAmount;
+        }
+
         public long getAmountMissing() {
-            return Math.max(amountNeeded - totalInputAmount, 0);
+            return Math.max(amountNeeded - totalInputAmount - toCraftAmount, 0);
+        }
+
+        public List<Long> getCurrentInputCounts() {
+            return currentInputCounts;
         }
 
         public FluidStack getFluidStack() {

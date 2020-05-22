@@ -23,6 +23,8 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CraftingManager implements ICraftingManager {
     private static final int THROTTLE_DELAY_MS = 3000;
@@ -30,6 +32,8 @@ public class CraftingManager implements ICraftingManager {
     private static final String NBT_TASKS = "Tasks";
     private static final String NBT_TASK_TYPE = "Type";
     private static final String NBT_TASK_DATA = "Task";
+
+    public static final ExecutorService THREAD_POOL = Executors.newFixedThreadPool(4);
 
     private TileController network;
 
@@ -121,20 +125,22 @@ public class CraftingManager implements ICraftingManager {
     public void update() {
         if (network.canRun()) {
 
-            for (UUID idToCancel : tasksToCancel) {
-                if (this.tasks.containsKey(idToCancel)) {
-                    //TODO: add on cancelled
-//                    this.tasks.get(idToCancel).onCancelled();
-                    this.tasks.remove(idToCancel);
-                }
-            }
-            this.tasksToCancel.clear();
-
             for (MasterCraftingTask task : this.tasksToAdd) {
                 this.tasks.put(task.getId(), task);
             }
 
             tasksToAdd.clear();
+
+            for (UUID idToCancel : tasksToCancel) {
+                if (this.tasks.containsKey(idToCancel)) {
+                    this.tasks.get(idToCancel).onCancelled();
+                    this.tasks.remove(idToCancel);
+                }
+            }
+            this.tasksToCancel.clear();
+
+            //TODO: update code
+//            if(getTask().canUpdate())
 
             /*if (tasksToRead != null) {
                 for (int i = 0; i < tasksToRead.tagCount(); ++i) {
@@ -424,7 +430,6 @@ public class CraftingManager implements ICraftingManager {
     @Nullable
     @Override
     public ICraftingPattern getPattern(ItemStack pattern) {
-        //TODO: maybe better algo to find pattern
         for (ICraftingPattern patternInList : patterns) {
             for (ItemStack output : patternInList.getOutputs()) {
                 if (API.instance().getComparer().isEqualNoQuantity(output, pattern)) {

@@ -33,7 +33,7 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
         if (portableGrid.getStorage() == null || !grid.isActive())
             return;
 
-        StackListEntry<ItemStack> entry = portableGrid.getItemCache().getList().getEntry(stack, IComparer.COMPARE_NBT);
+        StackListEntry<ItemStack> entry = portableGrid.getItemCache().getList().getEntry(stack, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
         if (entry != null)
             onExtract(player, entry.getId(), preferredSlot, flags);
     }
@@ -103,7 +103,7 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
                         ItemStack remainder = playerInventory.insertItem(preferredSlot, took, true);
                         if (remainder.getCount() != took.getCount()) {
                             ItemStack inserted = portableGrid.getItemStorage()
-                                    .extract(item, size - remainder.getCount(), IComparer.COMPARE_NBT, Action.PERFORM);
+                                    .extract(item, size - remainder.getCount(), IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT, Action.PERFORM);
                             playerInventory
                                     .insertItem(preferredSlot, StackUtils.nullToEmpty(inserted), false);
                             took.setCount(remainder.getCount());
@@ -112,7 +112,7 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
                     if (!took.isEmpty()) {
                         if (ItemHandlerHelper.insertItemStacked(playerInventory, took, true).isEmpty()) {
                             took = portableGrid.getItemStorage()
-                                    .extract(item, size, IComparer.COMPARE_NBT, Action.PERFORM);
+                                    .extract(item, size,IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT, Action.PERFORM);
 
                             ItemHandlerHelper.insertItemStacked(playerInventory, took, false);
                         }

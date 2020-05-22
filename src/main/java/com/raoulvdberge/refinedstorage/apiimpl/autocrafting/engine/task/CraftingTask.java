@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
@@ -32,6 +33,7 @@ public class CraftingTask extends Task {
 
         pattern.getFluidOutputs().forEach(o -> this.outputs.add(new Output(o, o.amount)));
 
+        //TODO: Is this even necessary
         //merge all pattern inputs
         for (NonNullList<ItemStack> itemStacks : pattern.getInputs()) {
             if(itemStacks.isEmpty())
@@ -106,11 +108,13 @@ public class CraftingTask extends Task {
                         throw new UnsupportedOperationException();
 
                     CraftingTask newTask = new CraftingTask(pattern, input.getAmountMissing());
+                    newTask.addParent(this);
                     CalculationResult newTaskResult = newTask.calculate(network);
 
-                    long max = newTask.getMaxCraftableAmount();
-                    input.increaseAmount(first, max);
+                    //make sure nothing is missing for this input, missing stuff is handled by the child task
+                    input.increaseToCraftAmount(input.getAmountMissing());
 
+                    result.addNewTask(newTask);
                     result.merge(newTaskResult);
                 }
             }
@@ -119,21 +123,35 @@ public class CraftingTask extends Task {
             if(input.getAmountMissing() > 0) {
                 ItemStack missing = input.getItemStacks().get(0);
                 missing.setCount((int) input.getAmountMissing());
-                result.addMissingItemStack(missing);
+                result.getMissingItemStacks().add(missing);
             }
         }
 
         return result;
     }
 
-    //TODO: move to Task class
-    public long getMaxCraftableAmount() {
+    //TODO: move to Task class and add fluid version or remove
+    public long getMaxCraftableAmount(ItemStack stack) {
+        //max iterations
         long min = Long.MAX_VALUE;
         for (Input input : this.inputs) {
             min = Math.min(min, input.getTotalInputAmount());
         }
 
-        return min;
+        //output quantity
+        long outputQuantity = 1;
+
+        outer:
+        for(Output output : this.outputs) {
+            for (ItemStack itemStack : output.getItemStacks()) {
+                if(API.instance().getComparer().isEqualNoQuantity(itemStack, stack)) {
+                    outputQuantity = output.getQuantityPerCraft();
+                    break outer;
+                }
+            }
+        }
+
+        return min * outputQuantity;
     }
 
 }

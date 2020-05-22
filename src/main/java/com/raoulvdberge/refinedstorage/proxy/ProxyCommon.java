@@ -185,7 +185,7 @@ public class ProxyCommon {
         RS.INSTANCE.network
                 .registerMessage(MessageGridPatternCreate.class, MessageGridPatternCreate.class, id++, Side.SERVER);
         RS.INSTANCE.network
-                .registerMessage(MessageCraftingMonitorCancel.class, MessageCraftingMonitorCancel.class, id++,
+                .registerMessage(MessageCraftingCancel.class, MessageCraftingCancel.class, id++,
                         Side.SERVER);
         RS.INSTANCE.network
                 .registerMessage(MessageCraftingMonitorElements.class, MessageCraftingMonitorElements.class, id++,

@@ -53,7 +53,7 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
             buf.writeInt(delta.getChange());
 
             StackListEntry<ItemStack> craftingEntry =
-                    network.getItemStorageCache().getCraftablesList().getEntry(delta.getStack(), IComparer.COMPARE_NBT);
+                    network.getItemStorageCache().getCraftablesList().getEntry(delta.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
 
             StackUtils.writeItemGridStack(buf, delta.getStack(), delta.getId(),
                     craftingEntry != null ? craftingEntry.getId() : null, false,

@@ -27,10 +27,8 @@ public interface ICraftingTask {
     /**
      * Updates this task.
      * {@link ICraftingTask#calculate()} must be run before this!
-     *
-     * @return true if this crafting task is finished and can be deleted from the list, false otherwise
      */
-    boolean update();
+    void update();
 
     /**
      * Called when this task is cancelled.
@@ -116,6 +114,13 @@ public interface ICraftingTask {
     default boolean hasMissing() {
         return !getMissing().isEmpty() || !getMissingFluids().isEmpty();
     }
+
+    void setCanUpdate(boolean canUpdate);
+
+    /**
+     * @return whether or not this task is allowed to be updated
+     */
+    boolean canUpdate();
 
     /**
      * @return the id of this task

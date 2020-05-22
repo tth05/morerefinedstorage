@@ -31,12 +31,12 @@ public class CraftingPreviewElementError implements ICraftingPreviewElement<Item
     }
 
     @Override
-    public int getAvailable() {
+    public long getAvailable() {
         return 0;
     }
 
     @Override
-    public int getToCraft() {
+    public long getToCraft() {
         return 0;
     }
 

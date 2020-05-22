@@ -14,7 +14,7 @@ import com.raoulvdberge.refinedstorage.container.ContainerCraftingMonitor;
 import com.raoulvdberge.refinedstorage.gui.control.Scrollbar;
 import com.raoulvdberge.refinedstorage.gui.control.SideButtonRedstoneMode;
 import com.raoulvdberge.refinedstorage.gui.control.TabList;
-import com.raoulvdberge.refinedstorage.network.MessageCraftingMonitorCancel;
+import com.raoulvdberge.refinedstorage.network.MessageCraftingCancel;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.ICraftingMonitor;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
 import net.minecraft.client.gui.FontRenderer;
@@ -309,9 +309,9 @@ public class GuiCraftingMonitor extends GuiBase {
         tabs.actionPerformed(button);
 
         if (button == cancelButton && hasValidTabSelected()) {
-            RS.INSTANCE.network.sendToServer(new MessageCraftingMonitorCancel(((CraftingMonitorTask) getCurrentTab()).id));
+            RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(((CraftingMonitorTask) getCurrentTab()).id));
         } else if (button == cancelAllButton && tasks.size() > 0) {
-            RS.INSTANCE.network.sendToServer(new MessageCraftingMonitorCancel(null));
+            RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(null));
         }
     }
 

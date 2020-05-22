@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
@@ -9,6 +10,7 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingPreviewResponse;
@@ -35,7 +37,7 @@ public class ItemGridHandler implements IItemGridHandler {
     @Override
     public void onExtract(EntityPlayerMP player, ItemStack stack, int preferredSlot, int flags) {
         StackListEntry<ItemStack> entry =
-                network.getItemStorageCache().getList().getEntry(stack, IComparer.COMPARE_NBT);
+                network.getItemStorageCache().getList().getEntry(stack, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
         if (entry != null)
             onExtract(player, entry.getId(), preferredSlot, flags);
     }
@@ -198,7 +200,7 @@ public class ItemGridHandler implements IItemGridHandler {
         ItemStack stack = network.getItemStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            Thread calculationThread = new Thread(() -> {
+            CraftingManager.THREAD_POOL.submit(() -> {
                 MasterCraftingTask task = network.getCraftingManager().create(stack, quantity);
                 if (task == null) {
                     return;
@@ -206,23 +208,22 @@ public class ItemGridHandler implements IItemGridHandler {
 
                 ICraftingTaskError error = task.calculate();
 
+                network.getCraftingManager().add(task);
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(
                             new CraftingPreviewElementError(error.getType(),
                                     error.getRecursedPattern() == null ? ItemStack.EMPTY :
-                                            error.getRecursedPattern().getStack())), id, quantity, false), player);
+                                            error.getRecursedPattern().getStack())), task.getId(), quantity, false), player);
                 } else if (noPreview && !task.hasMissing()) {
-                    network.getCraftingManager().add(task);
+                    task.setCanUpdate(true);
 
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingStartResponse(), player);
                 } else {
                     RS.INSTANCE.network
-                            .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), id, quantity,
+                            .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(), quantity,
                                     false), player);
                 }
             }, "RS crafting preview calculation");
-
-            calculationThread.start();
         }
     }
 
@@ -232,9 +233,11 @@ public class ItemGridHandler implements IItemGridHandler {
             return;
         }
 
-        ItemStack stack = network.getItemStorageCache().getCraftablesList().get(id);
+        ICraftingTask task = network.getCraftingManager().getTask(id);
+        if(task != null)
+            task.setCanUpdate(true);
 
-        if (stack != null) {
+        /*if (stack != null) {
             MasterCraftingTask task = network.getCraftingManager().create(stack, quantity);
             if (task == null) {
                 return;
@@ -244,7 +247,7 @@ public class ItemGridHandler implements IItemGridHandler {
             if (error == null && !task.hasMissing()) {
                 network.getCraftingManager().add(task);
             }
-        }
+        }*/
     }
 
     @Override

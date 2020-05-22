@@ -1,11 +1,16 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
@@ -19,11 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MasterCraftingTask {
+public class MasterCraftingTask implements ICraftingTask {
 
     private final List<Task> tasks = new ObjectArrayList<>();
-    private final List<ItemStack> missingItemStacks = NonNullList.create();
-    private final List<FluidStack> missingFluidStacks = NonNullList.create();
+    private IStackList<ItemStack> missingItemStacks = API.instance().createItemStackList();
+    private IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();
 
     private final List<ItemStack> totalRemainder = NonNullList.withSize(20, ItemStack.EMPTY);
 
@@ -33,10 +38,15 @@ public class MasterCraftingTask {
 
     private final UUID id = UUID.randomUUID();
 
+    private final int quantity;
+    private long executionStarted = 0;
+    private boolean canUpdate;
+
     public MasterCraftingTask(INetwork network, ICraftingRequestInfo requested, int quantity,
                               ICraftingPattern pattern) {
         this.network = network;
         this.info = requested;
+        this.quantity = quantity;
 
         if (pattern.isProcessing())
             throw new UnsupportedOperationException();
@@ -52,50 +62,58 @@ public class MasterCraftingTask {
         throw new CraftingTaskReadException("yeet");
     }
 
+    @Override
     public void update() {
+        if (executionStarted == 0)
+            executionStarted = System.currentTimeMillis();
+
         for (int i = tasks.size() - 1; i >= 0; i--) {
             tasks.get(i).update();
         }
     }
 
+    @Override
     public ICraftingTaskError calculate() {
         Task rootTask = tasks.get(0);
         CalculationResult result = rootTask.calculate(network);
         this.tasks.addAll(result.getNewTasks());
 
-        this.missingItemStacks.addAll(result.getMissingItemStacks());
-        this.missingFluidStacks.addAll(result.getMissingFluidStacks());
+        this.missingItemStacks = result.getMissingItemStacks();
+        this.missingFluidStacks = result.getMissingFluidStacks();
 
         return null;
     }
 
-    public boolean hasMissing() {
-        return !missingItemStacks.isEmpty() || !missingFluidStacks.isEmpty();
-    }
-
-    ////TODO:--------------------------------------------------------------------
-    //TODO: Preview screen should start the task the preview was requested for and not create a new one!!!!!!!!
-    ////TODO:--------------------------------------------------------------------
-
-
+    @Override
     public List<ICraftingPreviewElement> getPreviewStacks() {
-        //Missing
         List<ICraftingPreviewElement> elements = new ArrayList<>(50);
-        missingItemStacks.forEach(itemStack -> {
+
+        //Output
+        if (this.info.getItem() != null)
+            elements.add(new CraftingPreviewElementItemStack(this.info.getItem(), 0, false, this.quantity));
+        else if (this.info.getFluid() != null)
+            elements.add(new CraftingPreviewElementFluidStack(this.info.getFluid(), 0, false, this.quantity));
+
+        //Missing
+        for (StackListEntry<ItemStack> entry : this.missingItemStacks.getStacks()) {
+            ItemStack itemStack = entry.getStack();
+
             CraftingPreviewElementItemStack element = new CraftingPreviewElementItemStack(itemStack);
             element.setMissing(true);
             //craft means missing...
             element.addToCraft(itemStack.getCount());
             elements.add(element);
-        });
+        }
 
-        missingFluidStacks.forEach(fluidStack -> {
+        for (StackListEntry<FluidStack> entry : this.missingFluidStacks.getStacks()) {
+            FluidStack fluidStack = entry.getStack();
+
             CraftingPreviewElementFluidStack element = new CraftingPreviewElementFluidStack(fluidStack);
             element.setMissing(true);
             //craft means missing...
             element.addToCraft(fluidStack.amount);
             elements.add(element);
-        });
+        }
 
         //Available
         for (Task task : tasks) {
@@ -104,30 +122,34 @@ public class MasterCraftingTask {
 
                 for (ICraftingPreviewElement<?> element : elements) {
                     if (input.isFluid() && element instanceof CraftingPreviewElementFluidStack) {
-                        if (FluidStack.areFluidStackTagsEqual(input.getFluidStack(),
-                                ((CraftingPreviewElementFluidStack) element).getElement())) {
-                            ((CraftingPreviewElementFluidStack) element)
-                                    .addAvailable((int) input.getTotalInputAmount());
+                        CraftingPreviewElementFluidStack previewElement = ((CraftingPreviewElementFluidStack) element);
+
+                        if (FluidStack.areFluidStackTagsEqual(input.getFluidStack(), previewElement.getElement())) {
+                            previewElement.addAvailable(input.getTotalInputAmount());
+                            previewElement.addToCraft(input.getToCraftAmount());
                             merged = true;
                             break;
                         }
                     } else if (!input.isFluid() && element instanceof CraftingPreviewElementItemStack) {
+                        CraftingPreviewElementItemStack previewElement = ((CraftingPreviewElementItemStack) element);
+
                         if (API.instance().getComparer().isEqualNoQuantity(input.getItemStacks().get(0),
-                                ((CraftingPreviewElementItemStack) element).getElement())) {
-                            ((CraftingPreviewElementItemStack) element).addAvailable((int) input.getTotalInputAmount());
+                                previewElement.getElement())) {
+                            previewElement.addAvailable(input.getTotalInputAmount());
+                            previewElement.addToCraft(input.getToCraftAmount());
                             merged = true;
                             break;
                         }
                     }
                 }
 
-                if(!merged) {
-                    if(input.isFluid()) {
+                if (!merged) {
+                    if (input.isFluid()) {
                         elements.add(new CraftingPreviewElementFluidStack(input.getFluidStack(),
-                                (int) input.getTotalInputAmount(), false, 0));
+                                input.getTotalInputAmount(), false, input.getToCraftAmount()));
                     } else {
                         elements.add(new CraftingPreviewElementItemStack(input.getItemStacks().get(0),
-                                (int) input.getTotalInputAmount(), false, 0));
+                                input.getTotalInputAmount(), false, input.getToCraftAmount()));
                     }
                 }
             }
@@ -136,15 +158,90 @@ public class MasterCraftingTask {
         return elements;
     }
 
-    public ICraftingRequestInfo getRequested() {
-        return info;
+    @Override
+    public void onCancelled() {
+        //just insert all stored items back into network
+        for (Task task : this.tasks) {
+            for (Task.Input input : task.getInputs()) {
+                List<ItemStack> itemStacks = input.getItemStacks();
+                //TODO: handle remainder if network is full
+                for (int i = 0; i < itemStacks.size(); i++) {
+                    ItemStack itemStack = itemStacks.get(i);
+                    network.insertItem(itemStack, input.getCurrentInputCounts().get(i).intValue(), Action.PERFORM);
+                }
+
+                if (input.isFluid())
+                    network.insertFluid(input.getFluidStack(), input.getCurrentInputCounts().get(0).intValue(),
+                            Action.PERFORM);
+            }
+        }
     }
 
+    @Override
+    public int onTrackedInsert(ItemStack stack, int size) {
+        //TODO: processing tasks
+        return size;
+    }
+
+    @Override
+    public int onTrackedInsert(FluidStack stack, int size) {
+        //TODO: processing tasks
+        return size;
+    }
+
+    @Override
+    public NBTTagCompound writeToNbt(NBTTagCompound tag) {
+        //TODO: nbt
+        return null;
+    }
+
+    @Override
+    public void setCanUpdate(boolean canUpdate) {
+        this.canUpdate = canUpdate;
+    }
+
+    @Override
+    public boolean canUpdate() {
+        return this.canUpdate;
+    }
+
+    @Override
+    public List<ICraftingMonitorElement> getCraftingMonitorElements() {
+        //TODO:
+        return null;
+    }
+
+    @Override
     public UUID getId() {
         return this.id;
     }
 
+    public ICraftingRequestInfo getRequested() {
+        return info;
+    }
+
+    @Override
     public ICraftingPattern getPattern() {
         return this.tasks.get(0).getPattern();
+    }
+
+    @Override
+    public long getExecutionStarted() {
+        return this.executionStarted;
+    }
+
+    @Override
+    public IStackList<ItemStack> getMissing() {
+        return this.missingItemStacks;
+    }
+
+    @Override
+    public IStackList<FluidStack> getMissingFluids() {
+        return this.missingFluidStacks;
+    }
+
+    @Override
+    public int getQuantity() {
+        return this.quantity;
     }
 }
