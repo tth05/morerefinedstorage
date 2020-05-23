@@ -1,10 +1,11 @@
 package com.raoulvdberge.refinedstorage.network;
 
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridTab;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.GuiCraftingMonitor;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.ICraftingMonitor;
@@ -17,6 +18,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class MessageCraftingMonitorElements implements IMessage, IMessageHandler<MessageCraftingMonitorElements, IMessage> {
     private ICraftingMonitor craftingMonitor;
@@ -44,24 +46,23 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
                 e.printStackTrace();
             }
 
-            //TODO: read from NBT
-//            int qty = buf.readInt();
-//            long executionStarted = buf.readLong();
-//            int percentage = buf.readInt();
-//
-//            List<ICraftingMonitorElement> elements = new ArrayList<>();
-//
-//            int elementCount = buf.readInt();
-//
-//            for (int j = 0; j < elementCount; ++j) {
-//                Function<ByteBuf, ICraftingMonitorElement> factory = API.instance().getCraftingMonitorElementRegistry().get(ByteBufUtils.readUTF8String(buf));
-//
-//                if (factory != null) {
-//                    elements.add(factory.apply(buf));
-//                }
-//            }
-//
-//            tasks.add(new GuiCraftingMonitor.CraftingMonitorTask(id, requested, qty, executionStarted, percentage, elements));
+            int qty = buf.readInt();
+            long executionStarted = buf.readLong();
+            int percentage = buf.readInt();
+
+            List<ICraftingMonitorElement> elements = new ArrayList<>();
+
+            int elementCount = buf.readInt();
+
+            for (int j = 0; j < elementCount; ++j) {
+                Function<ByteBuf, ICraftingMonitorElement> factory = API.instance().getCraftingMonitorElementRegistry().get(ByteBufUtils.readUTF8String(buf));
+
+                if (factory != null) {
+                    elements.add(factory.apply(buf));
+                }
+            }
+
+            tasks.add(new GuiCraftingMonitor.CraftingMonitorTask(id, requested, qty, executionStarted, percentage, elements));
         }
     }
 
@@ -69,24 +70,23 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
     public void toBytes(ByteBuf buf) {
         buf.writeInt(craftingMonitor.getTasks().size());
 
-        for (MasterCraftingTask task : craftingMonitor.getTasks()) {
+        for (ICraftingTask task : craftingMonitor.getTasks()) {
             ByteBufUtils.writeUTF8String(buf, task.getId().toString());
             ByteBufUtils.writeTag(buf, task.getRequested().writeToNbt());
 
-            //TODO: write NBT
-//            buf.writeInt(task.getQuantity());
-//            buf.writeLong(task.getExecutionStarted());
-//            buf.writeInt(task.getCompletionPercentage());
+            buf.writeInt(task.getQuantity());
+            buf.writeLong(task.getExecutionStarted());
+            buf.writeInt(task.getCompletionPercentage());
 
-//            List<ICraftingMonitorElement> elements = task.getCraftingMonitorElements();
+            List<ICraftingMonitorElement> elements = task.getCraftingMonitorElements();
 
-//            buf.writeInt(elements.size());
+            buf.writeInt(elements.size());
 
-//            for (ICraftingMonitorElement element : elements) {
-//                ByteBufUtils.writeUTF8String(buf, element.getId());
-//
-//                element.write(buf);
-//            }
+            for (ICraftingMonitorElement element : elements) {
+                ByteBufUtils.writeUTF8String(buf, element.getId());
+
+                element.write(buf);
+            }
         }
     }
 

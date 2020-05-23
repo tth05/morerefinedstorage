@@ -118,6 +118,9 @@ public interface ICraftingTask {
     void setCanUpdate(boolean canUpdate);
 
     /**
+     * This is only false if a task hasn't actually been started. When a player requests a preview but hasn't started
+     * the task yet, then this will return false.
+     *
      * @return whether or not this task is allowed to be updated
      */
     boolean canUpdate();

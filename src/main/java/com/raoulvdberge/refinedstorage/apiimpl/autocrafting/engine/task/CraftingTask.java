@@ -74,7 +74,7 @@ public class CraftingTask extends Task {
 
     @Override
     public void update() {
-
+        //TODO: update code
     }
 
     @Override
@@ -99,6 +99,7 @@ public class CraftingTask extends Task {
 
             //if input is not satisfied
             if(input.getAmountMissing() > 0) {
+                //TODO: add possibility for oredict components to be crafted
                 ItemStack first = input.getItemStacks().get(0);
 
                 ICraftingPattern pattern = network.getCraftingManager().getPattern(first);
@@ -121,8 +122,11 @@ public class CraftingTask extends Task {
 
             //if input cannot be satisfied
             if(input.getAmountMissing() > 0) {
-                ItemStack missing = input.getItemStacks().get(0);
-                missing.setCount((int) input.getAmountMissing());
+                ItemStack missing = input.getItemStacks().get(0).copy();
+                if(input.getAmountMissing() > Integer.MAX_VALUE)
+                    missing.setCount(Integer.MAX_VALUE);
+                else
+                    missing.setCount((int) input.getAmountMissing());
                 result.getMissingItemStacks().add(missing);
             }
         }

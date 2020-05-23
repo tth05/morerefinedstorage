@@ -6,10 +6,10 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContaine
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
 import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.tile.TileController;
 import net.minecraft.item.ItemStack;
@@ -42,8 +42,8 @@ public class CraftingManager implements ICraftingManager {
 
     private List<ICraftingPattern> patterns = new ArrayList<>();
 
-    private Map<UUID, MasterCraftingTask> tasks = new LinkedHashMap<>();
-    private List<MasterCraftingTask> tasksToAdd = new ArrayList<>();
+    private Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
+    private List<ICraftingTask> tasksToAdd = new ArrayList<>();
     private List<UUID> tasksToCancel = new ArrayList<>();
     private NBTTagList tasksToRead;
 
@@ -56,13 +56,13 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public Collection<MasterCraftingTask> getTasks() {
+    public Collection<ICraftingTask> getTasks() {
         return tasks.values();
     }
 
     @Override
     @Nullable
-    public MasterCraftingTask getTask(UUID id) {
+    public ICraftingTask getTask(UUID id) {
         return tasks.get(id);
     }
 
@@ -72,7 +72,7 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public void add(@Nonnull MasterCraftingTask task) {
+    public void add(@Nonnull ICraftingTask task) {
         tasksToAdd.add(task);
 
         network.markDirty();
@@ -91,7 +91,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     @Nullable
-    public MasterCraftingTask create(ItemStack stack, int quantity) {
+    public ICraftingTask create(ItemStack stack, int quantity) {
         ICraftingPattern pattern = getPattern(stack);
         if (pattern == null) {
             return null;
@@ -107,7 +107,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Nullable
     @Override
-    public MasterCraftingTask create(FluidStack stack, int quantity) {
+    public ICraftingTask create(FluidStack stack, int quantity) {
         ICraftingPattern pattern = getPattern(stack);
         if (pattern == null) {
             return null;
@@ -125,15 +125,16 @@ public class CraftingManager implements ICraftingManager {
     public void update() {
         if (network.canRun()) {
 
-            for (MasterCraftingTask task : this.tasksToAdd) {
+            for (ICraftingTask task : this.tasksToAdd) {
                 this.tasks.put(task.getId(), task);
             }
 
             tasksToAdd.clear();
 
             for (UUID idToCancel : tasksToCancel) {
-                if (this.tasks.containsKey(idToCancel)) {
-                    this.tasks.get(idToCancel).onCancelled();
+                ICraftingTask task = this.tasks.get(idToCancel);
+                if (task != null) {
+                    task.onCancelled();
                     this.tasks.remove(idToCancel);
                 }
             }
@@ -209,7 +210,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public NBTTagCompound writeToNbt(NBTTagCompound tag) {
-        //TODO: nbt saving and writing
+        //TODO: nbt writing of tasks
         /*NBTTagList list = new NBTTagList();
 
         for (MasterCraftingTask task : tasks.values()) {
@@ -250,8 +251,7 @@ public class CraftingManager implements ICraftingManager {
             return null;
         }
 
-        //TODO
-        /*for (ICraftingTask task : getTasks()) {
+        for (ICraftingTask task : getTasks()) {
             if (task.getRequested().getItem() != null) {
                 if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack)) {
                     amount -= task.getQuantity();
@@ -260,7 +260,7 @@ public class CraftingManager implements ICraftingManager {
         }
 
         if (amount > 0) {
-            MasterCraftingTask task = create(stack, amount);
+            ICraftingTask task = create(stack, amount);
 
             if (task != null) {
                 ICraftingTaskError error = task.calculate();
@@ -275,20 +275,19 @@ public class CraftingManager implements ICraftingManager {
             } else {
                 throttle(source);
             }
-        }*/
+        }
 
         return null;
     }
 
     @Nullable
-    //@Override
+    @Override
     public ICraftingTask request(Object source, FluidStack stack, int amount) {
         if (isThrottled(source)) {
             return null;
         }
 
-        //TODO
-        /*for (ICraftingTask task : getTasks()) {
+        for (ICraftingTask task : getTasks()) {
             if (task.getRequested().getFluid() != null) {
                 if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
                     amount -= task.getQuantity();
@@ -297,7 +296,7 @@ public class CraftingManager implements ICraftingManager {
         }
 
         if (amount > 0) {
-            MasterCraftingTask task = create(stack, amount);
+            ICraftingTask task = create(stack, amount);
 
             if (task != null) {
                 ICraftingTaskError error = task.calculate();
@@ -312,7 +311,7 @@ public class CraftingManager implements ICraftingManager {
             } else {
                 throttle(source);
             }
-        }*/
+        }
 
         return null;
     }

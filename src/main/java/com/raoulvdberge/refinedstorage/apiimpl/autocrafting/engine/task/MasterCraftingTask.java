@@ -17,7 +17,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPrev
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
 
 import java.util.ArrayList;
@@ -30,7 +29,8 @@ public class MasterCraftingTask implements ICraftingTask {
     private IStackList<ItemStack> missingItemStacks = API.instance().createItemStackList();
     private IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();
 
-    private final List<ItemStack> totalRemainder = NonNullList.withSize(20, ItemStack.EMPTY);
+    //TODO: remainder
+    private final IStackList<ItemStack> totalRemainder = API.instance().createItemStackList();
 
     private final INetwork network;
 
@@ -39,7 +39,7 @@ public class MasterCraftingTask implements ICraftingTask {
     private final UUID id = UUID.randomUUID();
 
     private final int quantity;
-    private long executionStarted = 0;
+    private long executionStarted = -1;
     private boolean canUpdate;
 
     public MasterCraftingTask(INetwork network, ICraftingRequestInfo requested, int quantity,
@@ -52,8 +52,6 @@ public class MasterCraftingTask implements ICraftingTask {
             throw new UnsupportedOperationException();
         else
             tasks.add(new CraftingTask(pattern, quantity));
-
-        //TODO: handle byproducts
     }
 
     public MasterCraftingTask(INetwork network, NBTTagCompound tag) throws CraftingTaskReadException {
@@ -64,10 +62,11 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public void update() {
-        if (executionStarted == 0)
+        if (executionStarted == -1)
             executionStarted = System.currentTimeMillis();
 
         for (int i = tasks.size() - 1; i >= 0; i--) {
+            //TODO: only update if dirty
             tasks.get(i).update();
         }
     }
@@ -98,20 +97,16 @@ public class MasterCraftingTask implements ICraftingTask {
         for (StackListEntry<ItemStack> entry : this.missingItemStacks.getStacks()) {
             ItemStack itemStack = entry.getStack();
 
-            CraftingPreviewElementItemStack element = new CraftingPreviewElementItemStack(itemStack);
-            element.setMissing(true);
-            //craft means missing...
-            element.addToCraft(itemStack.getCount());
+            CraftingPreviewElementItemStack element =
+                    new CraftingPreviewElementItemStack(itemStack, 0, true, itemStack.getCount());
             elements.add(element);
         }
 
         for (StackListEntry<FluidStack> entry : this.missingFluidStacks.getStacks()) {
             FluidStack fluidStack = entry.getStack();
 
-            CraftingPreviewElementFluidStack element = new CraftingPreviewElementFluidStack(fluidStack);
-            element.setMissing(true);
-            //craft means missing...
-            element.addToCraft(fluidStack.amount);
+            CraftingPreviewElementFluidStack element =
+                    new CraftingPreviewElementFluidStack(fluidStack, 0, true, fluidStack.amount);
             elements.add(element);
         }
 

@@ -9,7 +9,6 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -148,7 +147,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         ItemStack stack = args.checkItemStack(0);
         int amount = args.optInteger(1, 1);
 
-        MasterCraftingTask task = node.getNetwork().getCraftingManager().create(stack, amount);
+        ICraftingTask task = node.getNetwork().getCraftingManager().create(stack, amount);
         if (task == null) {
             throw new IllegalArgumentException("Could not create crafting task");
         }
@@ -170,7 +169,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         FluidStack stack = checkFluid(args.checkTable(0), args.optInteger(1, Fluid.BUCKET_VOLUME));
 
-        MasterCraftingTask task = node.getNetwork().getCraftingManager().create(stack, stack.amount);
+        ICraftingTask task = node.getNetwork().getCraftingManager().create(stack, stack.amount);
         if (task == null) {
             throw new IllegalArgumentException("Could not create crafting task");
         }
@@ -193,7 +192,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         ItemStack stack = args.checkItemStack(0);
 
         int count = 0;
-        for (MasterCraftingTask task : node.getNetwork().getCraftingManager().getTasks()) {
+        for (ICraftingTask task : node.getNetwork().getCraftingManager().getTasks()) {
             if (task.getRequested().getItem() != null) {
                 if (API.instance().getComparer().isEqual(task.getRequested().getItem(), stack, COMPARE_NBT | COMPARE_DAMAGE)) {
                     node.getNetwork().getCraftingManager().cancel(task.getId());
@@ -215,7 +214,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         FluidStack stack = checkFluid(args.checkTable(0), 1000);
 
         int count = 0;
-        for (MasterCraftingTask task : node.getNetwork().getCraftingManager().getTasks()) {
+        for (ICraftingTask task : node.getNetwork().getCraftingManager().getTasks()) {
             if (task.getRequested().getFluid() != null) {
                 if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, COMPARE_NBT)) {
                     node.getNetwork().getCraftingManager().cancel(task.getId());

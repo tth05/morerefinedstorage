@@ -5,7 +5,6 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.item.ItemWirelessCraftingMonitor;
 import com.raoulvdberge.refinedstorage.network.MessageWirelessCraftingMonitorSettings;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
@@ -60,7 +59,7 @@ public class WirelessCraftingMonitor implements ICraftingMonitor {
     }
 
     @Override
-    public Collection<MasterCraftingTask> getTasks() {
+    public Collection<ICraftingTask> getTasks() {
         INetwork network = getNetwork();
 
         if (network != null) {

@@ -82,7 +82,7 @@ public abstract class Task {
         /**
          * The possible ItemStacks that are allowed for this input. Only contains multiple entries when using oredict.
          */
-        private List<ItemStack> itemStacks;
+        private List<ItemStack> itemStacks = NonNullList.create();
         /**
          * The FluidStack used for this input, if this Input is a fluid
          */
@@ -126,7 +126,7 @@ public abstract class Task {
 
         public Input(@Nonnull NonNullList<ItemStack> itemStacks, long amountNeeded, boolean oredict) {
             this(amountNeeded, oredict);
-            this.itemStacks = itemStacks;
+            itemStacks.forEach(i -> this.itemStacks.add(i.copy()));
             this.quantityPerCraft = itemStacks.get(0).getCount();
 
             this.itemStacks.forEach(i -> currentInputCounts.add(0L));
@@ -134,7 +134,7 @@ public abstract class Task {
 
         public Input(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
             this(amountNeeded, oredict);
-            this.fluidStack = fluidStack;
+            this.fluidStack = fluidStack.copy();
             this.quantityPerCraft = fluidStack.amount;
 
             this.currentInputCounts.add(0L);
@@ -213,7 +213,6 @@ public abstract class Task {
                 long oldQuantity = this.quantityPerCraft;
 
                 this.quantityPerCraft += input.getQuantityPerCraft();
-                this.itemStacks.forEach(i -> i.setCount(this.quantityPerCraft));
                 //recalculate new needed amount for this input
                 this.amountNeeded = this.amountNeeded / oldQuantity * this.quantityPerCraft;
             }

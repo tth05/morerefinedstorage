@@ -9,7 +9,6 @@ import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingPreviewResponse;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingStartResponse;
@@ -131,7 +130,7 @@ public class FluidGridHandler implements IFluidGridHandler {
 
         if (stack != null) {
             CraftingManager.THREAD_POOL.submit(() -> {
-                MasterCraftingTask task = network.getCraftingManager().create(stack, quantity);
+                ICraftingTask task = network.getCraftingManager().create(stack, quantity);
                 if (task == null) {
                     return;
                 }
