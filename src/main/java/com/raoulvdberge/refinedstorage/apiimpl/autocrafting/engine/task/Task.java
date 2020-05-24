@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -21,17 +22,148 @@ public abstract class Task {
     protected final ICraftingPattern pattern;
     protected final long amountNeeded;
 
-    public Task(ICraftingPattern pattern, long amountNeeded) {
+    public Task(@Nonnull ICraftingPattern pattern, long amountNeeded, boolean isFluidRequested) {
+        //merge all pattern inputs
+        for (NonNullList<ItemStack> itemStacks : pattern.getInputs()) {
+            if (itemStacks.isEmpty())
+                continue;
+
+            Input newInput = new Input(itemStacks, amountNeeded, pattern.isOredict());
+
+            mergeIntoList(newInput, this.inputs);
+        }
+
+        //merge all pattern fluid inputs
+        for (FluidStack i : pattern.getFluidInputs()) {
+            Input newInput = new Input(i, amountNeeded, pattern.isOredict());
+
+            mergeIntoList(newInput, this.inputs);
+        }
+
+        //merge all pattern outputs
+        for (ItemStack itemStack : pattern.getOutputs()) {
+            Output newOutput = new Output(itemStack, itemStack.getCount());
+
+            //lovely cast
+            mergeIntoList(newOutput, (List<Input>)(List<?>)this.outputs);
+        }
+
+        //merge all pattern fluid outputs
+        for (FluidStack fluidStack : pattern.getFluidOutputs()) {
+            Output newOutput = new Output(fluidStack, fluidStack.amount);
+
+            mergeIntoList(newOutput, (List<Input>)(List<?>)this.outputs);
+        }
+
+        //find smallest output counts
+        int smallestOutputStackSize = Integer.MAX_VALUE;
+        int smallestOutputFluidStackSize = Integer.MAX_VALUE;
+
+        for(Output output : this.outputs) {
+            if(!output.isFluid()) {
+                smallestOutputStackSize = Math.min(smallestOutputStackSize, output.getQuantityPerCraft());
+            } else {
+                smallestOutputFluidStackSize = Math.min(smallestOutputFluidStackSize, output.getQuantityPerCraft());
+            }
+        }
+
+        //calculate actual needed amount, basically the amount of iterations that have to be run
+        amountNeeded = (long) Math.ceil((double) amountNeeded / (double) (isFluidRequested ?
+                smallestOutputFluidStackSize : smallestOutputStackSize));
+
+        //set correct amount for all inputs
+        for (Input input : this.inputs) {
+            input.setAmountNeeded(amountNeeded * input.getQuantityPerCraft());
+        }
+
         this.pattern = pattern;
+        this.valid = true;
         this.amountNeeded = amountNeeded;
     }
 
+    private void mergeIntoList(Input input, List<Input> list) {
+        boolean merged = false;
+        for (Input output : list) {
+            if (input.equals(output)) {
+                output.merge(input);
+                merged = true;
+            }
+        }
+
+        if (!merged)
+            list.add(input);
+    }
+
+    @Nonnull
+    public CalculationResult calculate(@Nonnull INetwork network) {
+        CalculationResult result = new CalculationResult();
+
+        inputLoop:
+        for (Input input : this.inputs) {
+            //TODO: fluid support
+            //first search for missing amount in network
+            for (ItemStack ingredient : input.getItemStacks()) {
+                //TODO: support extracting of more than Integer.MAX_VALUE xd
+                ItemStack extracted = network.extractItem(ingredient,
+                        input.getAmountMissing() > Integer.MAX_VALUE ? Integer.MAX_VALUE :
+                                (int) input.getAmountMissing(), Action.PERFORM);
+                if (extracted.isEmpty())
+                    continue;
+
+                long remainder = input.increaseAmount(extracted, extracted.getCount());
+                //if it extracted too much, insert it back
+                if (remainder != -1) {
+                    if (remainder != 0)
+                        network.insertItem(ingredient, (int) remainder, Action.PERFORM);
+                    continue inputLoop;
+                }
+            }
+
+            //if input is not satisfied
+            if (input.getAmountMissing() > 0) {
+                //TODO: add possibility for oredict components to be crafted
+                ItemStack first = input.getItemStacks().get(0);
+
+                //find pattern to craft more
+                ICraftingPattern pattern = network.getCraftingManager().getPattern(first);
+                if (pattern != null) {
+                    Task newTask;
+                    if (pattern.isProcessing())
+                        newTask = new ProcessingTask(pattern, input.getAmountMissing(), false);
+                    else
+                        newTask = new CraftingTask(pattern, input.getAmountMissing());
+                    newTask.addParent(this);
+                    CalculationResult newTaskResult = newTask.calculate(network);
+
+                    //make sure nothing is missing for this input, missing stuff is handled by the child task
+                    input.increaseToCraftAmount(input.getAmountMissing());
+
+                    result.addNewTask(newTask);
+                    //merge the calculation results
+                    result.merge(newTaskResult);
+                }
+            }
+
+            //if input cannot be satisfied -> add to missing
+            if (input.getAmountMissing() > 0) {
+                ItemStack missing = input.getItemStacks().get(0).copy();
+                //avoid int overflow
+                //TODO: add support for real ItemStack counts
+                if (input.getAmountMissing() > Integer.MAX_VALUE)
+                    missing.setCount(Integer.MAX_VALUE);
+                else
+                    missing.setCount((int) input.getAmountMissing());
+                result.getMissingItemStacks().add(missing);
+            }
+        }
+
+        return result;
+    }
+
+    //TODO: is this needed?
     protected boolean valid;
 
     public abstract void update();
-
-    @Nonnull
-    public abstract CalculationResult calculate(@Nonnull INetwork network);
 
     public void addParent(Task task) {
         this.parents.add(task);
@@ -142,6 +274,7 @@ public abstract class Task {
 
         /**
          * Increases the given {@code amount} for the given {@code stack}
+         *
          * @param amount
          * @return the remaining amount; or {@code -1} if the given {@code amount} does not satisfy this input
          */
@@ -152,9 +285,9 @@ public abstract class Task {
             this.totalInputAmount = returns < 0 ? this.totalInputAmount + amount : amountNeeded;
 
             for (int i = 0; i < this.itemStacks.size(); i++) {
-                if(API.instance().getComparer().isEqualNoQuantity(stack, this.itemStacks.get(i))) {
+                if (API.instance().getComparer().isEqualNoQuantity(stack, this.itemStacks.get(i))) {
                     long currentCount = 0;
-                    if(i < this.currentInputCounts.size()) {
+                    if (i < this.currentInputCounts.size()) {
                         currentCount = this.currentInputCounts.get(i);
                     }
 
@@ -168,12 +301,13 @@ public abstract class Task {
 
         /**
          * Increases the given {@code amount} for the current FluidStack
+         *
          * @param amount
          * @return the remaining amount; or {@code -1} if the given {@code amount} does not satisfy this input
          */
         public long increaseFluidStackAmount(long amount) {
             long needed = amountNeeded - totalInputAmount;
-            if(amount <= needed) {
+            if (amount <= needed) {
                 this.totalInputAmount += amount;
                 this.currentInputCounts.set(0, totalInputAmount);
                 return -1;
@@ -187,6 +321,7 @@ public abstract class Task {
 
         /**
          * Increases the amount that is expected to be crafted for this input by the given {@code amount}
+         *
          * @param amount the amount to add
          */
         public void increaseToCraftAmount(long amount) {
@@ -194,28 +329,26 @@ public abstract class Task {
         }
 
         /**
-         * Merges two Inputs. Assumes both inputs are equal
+         * Merges two Inputs. Assumes both inputs are equal.
+         * Does not merge the amount needed of both Inputs.
+         *
          * @param input the input that should be merged
          */
         public void merge(Input input) {
-            if(input.isFluid()) {
-                if(!this.isFluid())
+            if (input.isFluid()) {
+                if (!this.isFluid())
                     this.fluidStack = input.getFluidStack();
                 else
                     this.fluidStack.amount += input.getFluidStack().amount;
 
-                long oldQuantity = this.quantityPerCraft;
-
                 this.quantityPerCraft = this.fluidStack.amount;
-                //recalculate new needed amount for this input
-                this.amountNeeded = this.amountNeeded / oldQuantity * quantityPerCraft;
             } else {
-                long oldQuantity = this.quantityPerCraft;
-
                 this.quantityPerCraft += input.getQuantityPerCraft();
-                //recalculate new needed amount for this input
-                this.amountNeeded = this.amountNeeded / oldQuantity * this.quantityPerCraft;
             }
+        }
+
+        public void setAmountNeeded(long amountNeeded) {
+            this.amountNeeded = amountNeeded;
         }
 
         public boolean isFluid() {
@@ -271,7 +404,8 @@ public abstract class Task {
                 return false;
 
             for (int i = 0; i < itemStacks.size(); i++) {
-                if(!API.instance().getComparer().isEqualNoQuantity(this.itemStacks.get(i), input.getItemStacks().get(i)))
+                if (!API.instance().getComparer()
+                        .isEqualNoQuantity(this.itemStacks.get(i), input.getItemStacks().get(i)))
                     return false;
             }
 

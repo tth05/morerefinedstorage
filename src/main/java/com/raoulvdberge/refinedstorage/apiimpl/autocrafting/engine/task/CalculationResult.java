@@ -38,7 +38,7 @@ public class CalculationResult {
      *
      * @param other the result that should merged into the current one
      */
-    public void merge(CalculationResult other) {
+    public void merge(@Nonnull CalculationResult other) {
         for (StackListEntry<FluidStack> entry : other.missingFluidStacks.getStacks())
             this.missingFluidStacks.add(entry.getStack());
 

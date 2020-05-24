@@ -125,6 +125,8 @@ public class CraftingManager implements ICraftingManager {
     public void update() {
         if (network.canRun()) {
 
+            boolean changed = !tasksToCancel.isEmpty() || !tasksToAdd.isEmpty();
+
             for (ICraftingTask task : this.tasksToAdd) {
                 this.tasks.put(task.getId(), task);
             }
@@ -139,6 +141,14 @@ public class CraftingManager implements ICraftingManager {
                 }
             }
             this.tasksToCancel.clear();
+
+            if (changed /*|| anyFinished*/) {
+                onTaskChanged();
+            }
+
+            if (!tasks.isEmpty()) {
+                network.markDirty();
+            }
 
             //TODO: update code
 //            if(getTask().canUpdate())
@@ -423,7 +433,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public Set<ICraftingPatternContainer> getAllContainer(ICraftingPattern pattern) {
-        return patternToContainer.getOrDefault(pattern, new LinkedHashSet<>());
+        return patternToContainer.getOrDefault(pattern, Collections.emptySet());
     }
 
     @Nullable

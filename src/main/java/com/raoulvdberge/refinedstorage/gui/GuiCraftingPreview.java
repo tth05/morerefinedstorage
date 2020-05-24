@@ -247,7 +247,7 @@ public class GuiCraftingPreview extends GuiBase {
     private void startRequest() {
         RS.INSTANCE.network.sendToServer(new MessageGridCraftingStart(id, quantity, fluids));
 
-        close();
+        FMLClientHandler.instance().showGuiScreen(parent);
     }
 
     private int getRows() {

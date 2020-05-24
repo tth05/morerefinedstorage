@@ -235,18 +235,6 @@ public class ItemGridHandler implements IItemGridHandler {
         ICraftingTask task = network.getCraftingManager().getTask(id);
         if(task != null)
             task.setCanUpdate(true);
-
-        /*if (stack != null) {
-            MasterCraftingTask task = network.getCraftingManager().create(stack, quantity);
-            if (task == null) {
-                return;
-            }
-
-            ICraftingTaskError error = task.calculate();
-            if (error == null && !task.hasMissing()) {
-                network.getCraftingManager().add(task);
-            }
-        }*/
     }
 
     @Override

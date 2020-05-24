@@ -86,6 +86,7 @@ public class GuiCraftingMonitor extends GuiBase {
             List<String> textLines = Lists.newArrayList(requested.getItem() != null ? requested.getItem().getDisplayName() : requested.getFluid().getLocalizedName());
             List<String> smallTextLines = Lists.newArrayList();
 
+            //TODO: add support when execution started is -1
             int totalSecs = (int) (System.currentTimeMillis() - executionStarted) / 1000;
             int minutes = (totalSecs % 3600) / 60;
             int seconds = totalSecs % 60;

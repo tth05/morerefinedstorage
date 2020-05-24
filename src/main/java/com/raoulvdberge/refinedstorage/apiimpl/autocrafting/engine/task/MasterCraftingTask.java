@@ -19,7 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,19 +44,19 @@ public class MasterCraftingTask implements ICraftingTask {
     private long executionStarted = -1;
     private boolean canUpdate;
 
-    public MasterCraftingTask(INetwork network, ICraftingRequestInfo requested, int quantity,
-                              ICraftingPattern pattern) {
+    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, int quantity,
+                              @Nonnull ICraftingPattern pattern) {
         this.network = network;
         this.info = requested;
         this.quantity = quantity;
 
         if (pattern.isProcessing())
-            throw new UnsupportedOperationException();
+            tasks.add(new ProcessingTask(pattern, quantity, requested.getFluid() != null));
         else
             tasks.add(new CraftingTask(pattern, quantity));
     }
 
-    public MasterCraftingTask(INetwork network, NBTTagCompound tag) throws CraftingTaskReadException {
+    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound tag) throws CraftingTaskReadException {
         this.network = network;
 
         throw new CraftingTaskReadException("yeet");
@@ -160,6 +162,7 @@ public class MasterCraftingTask implements ICraftingTask {
             for (Task.Input input : task.getInputs()) {
                 List<ItemStack> itemStacks = input.getItemStacks();
                 //TODO: handle remainder if network is full
+                //TODO: Insert remainder
                 for (int i = 0; i < itemStacks.size(); i++) {
                     ItemStack itemStack = itemStacks.get(i);
                     network.insertItem(itemStack, input.getCurrentInputCounts().get(i).intValue(), Action.PERFORM);
@@ -186,7 +189,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public NBTTagCompound writeToNbt(NBTTagCompound tag) {
-        //TODO: nbt
+        //TODO: nbt writing of tasks
         return null;
     }
 
@@ -202,8 +205,8 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
-        //TODO:
-        return null;
+        //TODO: update code live elements, each task will have their own monitor element
+        return Collections.emptyList();
     }
 
     @Override
