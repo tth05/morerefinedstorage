@@ -103,10 +103,10 @@ public class ProxyCommon {
 
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID,
                 buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readInt(), buf.readInt(),
-                        buf.readInt(), buf.readInt(), buf.readInt()));
+                        buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID,
                 buf -> new CraftingMonitorElementFluidRender(StackUtils.readFluidGridStack(buf).getStack(),
-                        buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
+                        buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementError.ID, buf -> {
             String id = ByteBufUtils.readUTF8String(buf);
             String message = ByteBufUtils.readUTF8String(buf);

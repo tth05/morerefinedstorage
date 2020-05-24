@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 public class CraftingMonitorElementItemRender implements ICraftingMonitorElement {
     private static final int COLOR_PROCESSING = 0xFFD9EDF7;
-    private static final int COLOR_MISSING = 0xFFF2DEDE;
     private static final int COLOR_SCHEDULED = 0xFFE8E5CA;
     private static final int COLOR_CRAFTING = 0xFFADDBC6;
 
@@ -25,15 +24,13 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
 
     private ItemStack stack;
     private int stored;
-    private int missing;
     private int processing;
     private int scheduled;
     private int crafting;
 
-    public CraftingMonitorElementItemRender(ItemStack stack, int stored, int missing, int processing, int scheduled, int crafting) {
+    public CraftingMonitorElementItemRender(ItemStack stack, int stored, int processing, int scheduled, int crafting) {
         this.stack = stack;
         this.stored = stored;
-        this.missing = missing;
         this.processing = processing;
         this.scheduled = scheduled;
         this.crafting = crafting;
@@ -42,9 +39,7 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
     @Override
     @SideOnly(Side.CLIENT)
     public void draw(int x, int y, IElementDrawers drawers) {
-        if (missing > 0) {
-            drawers.getOverlayDrawer().draw(x, y, COLOR_MISSING);
-        } else if (processing > 0) {
+        if (processing > 0) {
             drawers.getOverlayDrawer().draw(x, y, COLOR_PROCESSING);
         } else if (scheduled > 0) {
             drawers.getOverlayDrawer().draw(x, y, COLOR_SCHEDULED);
@@ -63,12 +58,6 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
 
         if (stored > 0) {
             drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 25, scale), RenderUtils.getOffsetOnScale(yy, scale), I18n.format("gui.refinedstorage:crafting_monitor.stored", stored));
-
-            yy += 7;
-        }
-
-        if (missing > 0) {
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 25, scale), RenderUtils.getOffsetOnScale(yy, scale), I18n.format("gui.refinedstorage:crafting_monitor.missing", missing));
 
             yy += 7;
         }
@@ -112,7 +101,6 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
     public void write(ByteBuf buf) {
         StackUtils.writeItemStack(buf, stack);
         buf.writeInt(stored);
-        buf.writeInt(missing);
         buf.writeInt(processing);
         buf.writeInt(scheduled);
         buf.writeInt(crafting);
@@ -122,7 +110,6 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
     public boolean merge(ICraftingMonitorElement element) {
         if (element.getId().equals(getId()) && elementHashCode() == element.elementHashCode()) {
             this.stored += ((CraftingMonitorElementItemRender) element).stored;
-            this.missing += ((CraftingMonitorElementItemRender) element).missing;
             this.processing += ((CraftingMonitorElementItemRender) element).processing;
             this.scheduled += ((CraftingMonitorElementItemRender) element).scheduled;
             this.crafting += ((CraftingMonitorElementItemRender) element).crafting;
