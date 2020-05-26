@@ -68,10 +68,19 @@ public class DurabilityInput extends Input {
         return missing < 0 ? 0 : missing;
     }
 
+    public long getTotalItemInputAmount() {
+        //divide by durability for durability inputs otherwise the count is wrong
+        return (long) Math.ceil(this.totalInputAmount / (double)this.maxDurability);
+    }
+
     @Override
     @Nonnull
     public ItemStack getCompareableItemStack() {
         return compareableItemStack;
+    }
+
+    public int getMaxDurability() {
+        return maxDurability;
     }
 
     @Override

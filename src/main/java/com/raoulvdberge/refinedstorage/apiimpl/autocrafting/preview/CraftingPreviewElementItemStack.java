@@ -83,14 +83,19 @@ public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<
         GlStateManager.scale(scale, scale, 1);
 
         if (getToCraft() > 0) {
-            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" : "gui.refinedstorage:crafting_preview.to_craft";
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t(format, getToCraft()));
+            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" :
+                    "gui.refinedstorage:crafting_preview.to_craft";
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t(format, getToCraft()));
 
             y += 7;
         }
 
         if (getAvailable() > 0) {
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t("gui.refinedstorage:crafting_preview.available", getAvailable()));
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t("gui.refinedstorage:crafting_preview.available", getAvailable()));
         }
 
         GlStateManager.popMatrix();

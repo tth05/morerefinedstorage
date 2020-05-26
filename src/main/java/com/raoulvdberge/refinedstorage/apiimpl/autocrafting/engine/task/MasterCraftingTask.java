@@ -13,6 +13,7 @@ import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
@@ -134,10 +135,14 @@ public class MasterCraftingTask implements ICraftingTask {
                         }
                     } else if (!input.isFluid() && element instanceof CraftingPreviewElementItemStack) {
                         CraftingPreviewElementItemStack previewElement = ((CraftingPreviewElementItemStack) element);
+                        boolean isDurabilityInput = input instanceof DurabilityInput;
 
                         if (API.instance().getComparer().isEqualNoQuantity(input.getCompareableItemStack(),
                                 previewElement.getElement())) {
-                            previewElement.addAvailable(input.getTotalInputAmount());
+
+                            previewElement.addAvailable(
+                                    (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
+                                            input.getTotalInputAmount()));
                             previewElement.addToCraft(input.getToCraftAmount());
                             merged = true;
                             break;
@@ -147,11 +152,18 @@ public class MasterCraftingTask implements ICraftingTask {
 
                 if (!merged) {
                     if (input.isFluid()) {
-                        elements.add(new CraftingPreviewElementFluidStack(input.getFluidStack(),
-                                input.getTotalInputAmount(), false, input.getToCraftAmount()));
+                        elements.add(new CraftingPreviewElementFluidStack(
+                                input.getFluidStack(),
+                                input.getTotalInputAmount(), false,
+                                input.getToCraftAmount()));
                     } else {
-                        elements.add(new CraftingPreviewElementItemStack(input.getCompareableItemStack(),
-                                input.getTotalInputAmount(), false, input.getToCraftAmount()));
+                        boolean isDurabilityInput = input instanceof DurabilityInput;
+
+                        elements.add(new CraftingPreviewElementItemStack(
+                                input.getCompareableItemStack(),
+                                (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
+                                        input.getTotalInputAmount()), false,
+                                input.getToCraftAmount()));
                     }
                 }
             }
@@ -165,21 +177,23 @@ public class MasterCraftingTask implements ICraftingTask {
         //just insert all stored items back into network
         for (Task task : this.tasks) {
             for (Input input : task.getInputs()) {
+                boolean isDurabilityInput = input instanceof DurabilityInput;
+
                 List<ItemStack> itemStacks = input.getItemStacks();
                 //TODO: handle remainder if network is full
                 //TODO: Insert remainder
                 for (int i = 0; i < itemStacks.size(); i++) {
                     ItemStack itemStack = itemStacks.get(i);
                     //TODO: real stack counts
-                    int amount = input.getCurrentInputCounts().get(i).intValue();
-                    if(amount > 0)
+                    int amount = isDurabilityInput ? 1 : input.getCurrentInputCounts().get(i).intValue();
+                    if (amount > 0)
                         network.insertItem(itemStack, amount, Action.PERFORM);
                 }
 
                 if (input.isFluid()) {
                     //TODO: real stack amounts
                     int amount = input.getCurrentInputCounts().get(0).intValue();
-                    if(amount > 0)
+                    if (amount > 0)
                         network.insertFluid(input.getFluidStack(), amount, Action.PERFORM);
                 }
             }

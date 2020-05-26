@@ -64,6 +64,11 @@ public class QuantityFormatter implements IQuantityFormatter {
     }
 
     @Override
+    public String formatInBucketForm(long qty) {
+        return bucketFormatter.format((double) qty / (double) Fluid.BUCKET_VOLUME) + " B";
+    }
+
+    @Override
     public String formatInBucketFormWithOnlyTrailingDigitsIfZero(int qty) {
         float amountRaw = ((float) qty / (float) Fluid.BUCKET_VOLUME);
         int amount = (int) amountRaw;

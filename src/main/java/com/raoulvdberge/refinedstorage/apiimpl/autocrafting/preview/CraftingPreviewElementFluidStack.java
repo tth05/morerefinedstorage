@@ -79,16 +79,20 @@ public class CraftingPreviewElementFluidStack implements ICraftingPreviewElement
         GlStateManager.scale(scale, scale, 1);
 
         if (getToCraft() > 0) {
-            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" : "gui.refinedstorage:crafting_preview.to_craft";
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t(format, API.instance().getQuantityFormatter().formatInBucketForm(
-                    (int) getToCraft())));
+            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" :
+                    "gui.refinedstorage:crafting_preview.to_craft";
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t(format, API.instance().getQuantityFormatter().formatInBucketForm(getToCraft())));
 
             y += 7;
         }
 
         if (getAvailable() > 0) {
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t("gui.refinedstorage:crafting_preview.available", API.instance().getQuantityFormatter().formatInBucketForm(
-                    (int) getAvailable())));
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t("gui.refinedstorage:crafting_preview.available",
+                                    API.instance().getQuantityFormatter().formatInBucketForm(getAvailable())));
         }
 
         GlStateManager.popMatrix();
