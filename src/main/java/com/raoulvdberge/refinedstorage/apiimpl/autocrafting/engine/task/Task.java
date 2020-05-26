@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -45,22 +46,22 @@ public abstract class Task {
             Output newOutput = new Output(itemStack, itemStack.getCount());
 
             //lovely cast
-            mergeIntoList(newOutput, (List<Input>)(List<?>)this.outputs);
+            mergeIntoList(newOutput, (List<Input>) (List<?>) this.outputs);
         }
 
         //merge all pattern fluid outputs
         for (FluidStack fluidStack : pattern.getFluidOutputs()) {
             Output newOutput = new Output(fluidStack, fluidStack.amount);
 
-            mergeIntoList(newOutput, (List<Input>)(List<?>)this.outputs);
+            mergeIntoList(newOutput, (List<Input>) (List<?>) this.outputs);
         }
 
         //find smallest output counts
         int smallestOutputStackSize = Integer.MAX_VALUE;
         int smallestOutputFluidStackSize = Integer.MAX_VALUE;
 
-        for(Output output : this.outputs) {
-            if(!output.isFluid()) {
+        for (Output output : this.outputs) {
+            if (!output.isFluid()) {
                 smallestOutputStackSize = Math.min(smallestOutputStackSize, output.getQuantityPerCraft());
             } else {
                 smallestOutputFluidStackSize = Math.min(smallestOutputFluidStackSize, output.getQuantityPerCraft());
@@ -100,36 +101,56 @@ public abstract class Task {
 
         inputLoop:
         for (Input input : this.inputs) {
-            //TODO: fluid support
             //first search for missing amount in network
-            for (ItemStack ingredient : input.getItemStacks()) {
-                //TODO: support extracting of more than Integer.MAX_VALUE xd
-                ItemStack extracted = network.extractItem(ingredient,
+            if (!input.isFluid()) { //extract items
+                for (ItemStack ingredient : input.getItemStacks()) {
+                    //TODO: support inserting and extracting of more than Integer.MAX_VALUE xd
+                    ItemStack extracted = network.extractItem(ingredient,
+                            input.getAmountMissing() > Integer.MAX_VALUE ? Integer.MAX_VALUE :
+                                    (int) input.getAmountMissing(), Action.PERFORM);
+                    if (extracted.isEmpty())
+                        continue;
+
+                    long remainder = input.increaseAmount(extracted, extracted.getCount());
+                    //if it extracted too much, insert it back. Shouldn't happen
+                    if (remainder != -1) {
+                        if (remainder != 0)
+                            network.insertItem(ingredient, (int) remainder, Action.PERFORM);
+                        continue inputLoop;
+                    }
+                }
+            } else { //extract fluid
+                //TODO: support inserting and extracting of more than Integer.MAX_VALUE
+                FluidStack extracted = network.extractFluid(input.getFluidStack(),
                         input.getAmountMissing() > Integer.MAX_VALUE ? Integer.MAX_VALUE :
                                 (int) input.getAmountMissing(), Action.PERFORM);
-                if (extracted.isEmpty())
-                    continue;
-
-                long remainder = input.increaseAmount(extracted, extracted.getCount());
-                //if it extracted too much, insert it back
-                if (remainder != -1) {
-                    if (remainder != 0)
-                        network.insertItem(ingredient, (int) remainder, Action.PERFORM);
-                    continue inputLoop;
+                if (extracted != null) {
+                    long remainder = input.increaseFluidStackAmount(extracted.amount);
+                    //if it extracted too much, insert it back. Shouldn't happen
+                    if (remainder != -1) {
+                        if (remainder != 0)
+                            network.insertFluid(input.getFluidStack(), (int) remainder, Action.PERFORM);
+                        continue;
+                    }
                 }
             }
 
             //if input is not satisfied
             if (input.getAmountMissing() > 0) {
-                //TODO: add possibility for oredict components to be crafted
-                ItemStack first = input.getItemStacks().get(0);
 
                 //find pattern to craft more
-                ICraftingPattern pattern = network.getCraftingManager().getPattern(first);
+                ICraftingPattern pattern;
+                if (!input.isFluid())
+                    //TODO: add possibility for oredict components to be crafted
+                    pattern = network.getCraftingManager().getPattern(input.getItemStacks().get(0));
+                else
+                    pattern = network.getCraftingManager().getPattern(input.getFluidStack());
+
+                //add new sub task
                 if (pattern != null) {
                     Task newTask;
                     if (pattern.isProcessing())
-                        newTask = new ProcessingTask(pattern, input.getAmountMissing(), false);
+                        newTask = new ProcessingTask(pattern, input.getAmountMissing(), input.isFluid());
                     else
                         newTask = new CraftingTask(pattern, input.getAmountMissing());
                     newTask.addParent(this);
@@ -146,14 +167,27 @@ public abstract class Task {
 
             //if input cannot be satisfied -> add to missing
             if (input.getAmountMissing() > 0) {
-                ItemStack missing = input.getItemStacks().get(0).copy();
-                //avoid int overflow
-                //TODO: add support for real ItemStack counts
-                if (input.getAmountMissing() > Integer.MAX_VALUE)
-                    missing.setCount(Integer.MAX_VALUE);
-                else
-                    missing.setCount((int) input.getAmountMissing());
-                result.getMissingItemStacks().add(missing);
+
+                if (!input.isFluid()) { //missing itemstacks
+                    ItemStack missing = input.getItemStacks().get(0).copy();
+                    //avoid int overflow
+                    //TODO: add support for real ItemStack counts
+                    if (input.getAmountMissing() > Integer.MAX_VALUE)
+                        missing.setCount(Integer.MAX_VALUE);
+                    else
+                        missing.setCount((int) input.getAmountMissing());
+                    result.getMissingItemStacks().add(missing);
+                } else { //missing fluid stacks
+                    FluidStack missing = input.getFluidStack();
+
+                    //TODO: add support for real FluidStack counts
+                    //avoid overflow
+                    if (input.getAmountMissing() > Integer.MAX_VALUE)
+                        missing.amount = Integer.MAX_VALUE;
+                    else
+                        missing.amount = (int) input.getAmountMissing();
+                    result.getMissingFluidStacks().add(missing);
+                }
             }
         }
 
@@ -409,7 +443,8 @@ public abstract class Task {
                     return false;
             }
 
-            return this.fluidStack == null || FluidStack.areFluidStackTagsEqual(this.fluidStack, input.getFluidStack());
+            return this.fluidStack == null ||
+                    API.instance().getComparer().isEqual(this.fluidStack, input.getFluidStack(), IComparer.COMPARE_NBT);
         }
     }
 }

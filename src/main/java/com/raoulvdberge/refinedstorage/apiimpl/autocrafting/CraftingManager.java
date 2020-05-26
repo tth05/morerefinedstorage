@@ -33,7 +33,7 @@ public class CraftingManager implements ICraftingManager {
     private static final String NBT_TASK_TYPE = "Type";
     private static final String NBT_TASK_DATA = "Task";
 
-    public static final ExecutorService THREAD_POOL = Executors.newFixedThreadPool(4);
+    public static final ExecutorService CALCULATION_THREAD_POOL = Executors.newFixedThreadPool(4);
 
     private TileController network;
 
@@ -251,6 +251,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void onTaskChanged() {
+        //TODO: onTaskChanged(ICraftingTask task) for smaller packet sizes
         listeners.forEach(ICraftingMonitorListener::onChanged);
     }
 

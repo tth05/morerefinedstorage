@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
@@ -75,6 +76,8 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public ICraftingTaskError calculate() {
+        //TODO: add support for calculationTimeoutMs config parameter
+
         Task rootTask = tasks.get(0);
         CalculationResult result = rootTask.calculate(network);
         this.tasks.addAll(result.getNewTasks());
@@ -121,7 +124,8 @@ public class MasterCraftingTask implements ICraftingTask {
                     if (input.isFluid() && element instanceof CraftingPreviewElementFluidStack) {
                         CraftingPreviewElementFluidStack previewElement = ((CraftingPreviewElementFluidStack) element);
 
-                        if (FluidStack.areFluidStackTagsEqual(input.getFluidStack(), previewElement.getElement())) {
+                        if (API.instance().getComparer().isEqual(input.getFluidStack(), previewElement.getElement(),
+                                IComparer.COMPARE_NBT)) {
                             previewElement.addAvailable(input.getTotalInputAmount());
                             previewElement.addToCraft(input.getToCraftAmount());
                             merged = true;

@@ -129,7 +129,7 @@ public class FluidGridHandler implements IFluidGridHandler {
         FluidStack stack = network.getFluidStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            CraftingManager.THREAD_POOL.submit(() -> {
+            CraftingManager.CALCULATION_THREAD_POOL.submit(() -> {
                 ICraftingTask task = network.getCraftingManager().create(stack, quantity);
                 if (task == null) {
                     return;
