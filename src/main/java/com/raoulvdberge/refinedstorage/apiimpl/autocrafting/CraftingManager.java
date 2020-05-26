@@ -439,10 +439,10 @@ public class CraftingManager implements ICraftingManager {
 
     @Nullable
     @Override
-    public ICraftingPattern getPattern(ItemStack pattern) {
+    public ICraftingPattern getPattern(ItemStack pattern, int flags) {
         for (ICraftingPattern patternInList : patterns) {
             for (ItemStack output : patternInList.getOutputs()) {
-                if (API.instance().getComparer().isEqualNoQuantity(output, pattern)) {
+                if (API.instance().getComparer().isEqual(output, pattern, flags)) {
                     return patternInList;
                 }
             }

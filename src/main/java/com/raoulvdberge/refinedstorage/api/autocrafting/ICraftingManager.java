@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.api.autocrafting;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -139,7 +140,12 @@ public interface ICraftingManager {
      * @return the crafting pattern, or null if none is found
      */
     @Nullable
-    ICraftingPattern getPattern(ItemStack pattern);
+    ICraftingPattern getPattern(ItemStack pattern, int flags);
+
+    @Nullable
+    default ICraftingPattern getPattern(ItemStack pattern) {
+        return getPattern(pattern, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
+    }
 
     /**
      * Return a crafting pattern from a fluid stack.
