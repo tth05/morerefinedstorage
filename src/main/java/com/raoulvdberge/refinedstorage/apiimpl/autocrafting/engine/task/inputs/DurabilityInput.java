@@ -20,7 +20,7 @@ public class DurabilityInput extends Input {
     public DurabilityInput(@Nonnull ItemStack itemStack, long amountNeeded, boolean oredict) {
         super(NonNullList.from(ItemStack.EMPTY, ItemStack.EMPTY), amountNeeded, oredict);
         this.compareableItemStack = itemStack;
-        this.maxDurability = compareableItemStack.getMaxDamage();
+        this.maxDurability = compareableItemStack.getMaxDamage() + 1;
     }
 
     public DurabilityInput(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
@@ -33,7 +33,7 @@ public class DurabilityInput extends Input {
             throw new IllegalArgumentException("itemStack has to be damageable!");
 
         this.getItemStacks().add(itemStack);
-        this.getCurrentInputCounts().add((long) (itemStack.getMaxDamage() - itemStack.getItemDamage()));
+        this.getCurrentInputCounts().add((long) (itemStack.getMaxDamage() - itemStack.getItemDamage()) + 1);
         this.totalInputAmount = this.getCurrentInputCounts().stream().mapToLong(l -> l).sum();
     }
 
@@ -63,7 +63,8 @@ public class DurabilityInput extends Input {
     @Override
     public long getAmountMissing() {
         //returns the amount missing in items, not durability
-        long missing = (long) Math.ceil((getAmountNeeded() - totalInputAmount) / (double) maxDurability);
+        long missing = (long) Math.ceil((getAmountNeeded() - totalInputAmount) / (double) maxDurability) -
+                getToCraftAmount() * maxDurability;
         return missing < 0 ? 0 : missing;
     }
 
