@@ -34,12 +34,9 @@ public abstract class Task {
 
             Input newInput = null;
 
-            //detect re-useable items
-            ItemStack itemStack = itemStacks.get(0);
-
-            //damageable items won't be oredicted
-            if (!pattern.isProcessing() && itemStacks.size() < 2) {
-                //TODO: detect infinite
+            //check for infinites
+            for (ItemStack itemStack : itemStacks) {
+                //TODO: get by products for specific ore dict component
                 //check if input is exactly the same in the remainder -> then it's infinite
                 for (ItemStack remainder : pattern.getByproducts()) {
                     //find item in by products and check if one damage was used up. this means that damage = uses
@@ -49,7 +46,12 @@ public abstract class Task {
                         break;
                     }
                 }
+            }
 
+            //detect re-useable items
+            ItemStack itemStack = itemStacks.get(0);
+            //damageable items won't be oredicted (hopefully)
+            if (!pattern.isProcessing() && itemStacks.size() < 2) {
                 if (newInput == null && itemStack.isItemStackDamageable()) {
                     for (ItemStack remainder : pattern.getByproducts()) {
                         //find item in by products and check if one damage was used up. this means that damage = uses
@@ -146,7 +148,7 @@ public abstract class Task {
      * @return the {@link CalculationResult}
      */
     @Nonnull
-    public CalculationResult calculate(@Nonnull INetwork network) {
+    public CalculationResult calculate(@Nonnull INetwork network, @Nonnull List<ItemStack> infiniteInputs) {
         CalculationResult result = new CalculationResult();
 
         inputLoop:
@@ -156,19 +158,18 @@ public abstract class Task {
             if (input instanceof InfiniteInput) {
                 boolean exists = false;
 
-                for (InfiniteInput infiniteInput : result.getInfiniteInputs()) {
+                for (ItemStack infiniteInput : infiniteInputs) {
                     //input already has been handled
-                    if (API.instance().getComparer()
-                            .isEqual(infiniteInput.getCompareableItemStack(), input.getCompareableItemStack())) {
-                        //force set count because it already exists
-                        input.getCurrentInputCounts().set(0, 1L);
+                    if (API.instance().getComparer().isEqual(infiniteInput, input.getCompareableItemStack())) {
+                        //force set the count because it already exists
+                        input.increaseAmount(input.getCompareableItemStack(), 1);
                         exists = true;
                         break;
                     }
                 }
 
-                if(!exists) {
-                    result.getInfiniteInputs().add((InfiniteInput) input);
+                if (!exists) {
+                    infiniteInputs.add(input.getCompareableItemStack());
                 }
             }
 
@@ -205,6 +206,12 @@ public abstract class Task {
                             continue;
 
                         long remainder = input.increaseAmount(extracted, extracted.getCount());
+                        //special case for infinite inputs -> tell this input that it is the one that actually extracted
+                        //an item
+                        if(input instanceof InfiniteInput) {
+                            ((InfiniteInput) input).setActuallyExtracted(true);
+                        }
+
                         //if it extracted too much, insert it back. Shouldn't happen
                         if (remainder != -1) {
                             if (remainder != 0)
@@ -248,7 +255,7 @@ public abstract class Task {
                     else
                         newTask = new CraftingTask(pattern, input.getAmountMissing());
                     newTask.addParent(this);
-                    CalculationResult newTaskResult = newTask.calculate(network);
+                    CalculationResult newTaskResult = newTask.calculate(network, infiniteInputs);
 
                     //make sure nothing is missing for this input, missing stuff is handled by the child task
                     input.increaseToCraftAmount(input.getAmountMissing());

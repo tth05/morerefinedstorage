@@ -205,7 +205,13 @@ public class ItemGridHandler implements IItemGridHandler {
                     return;
                 }
 
-                ICraftingTaskError error = task.calculate();
+                ICraftingTaskError error = null;
+                try {
+                    error = task.calculate();
+                } catch (Exception e) {
+                    System.out.println("Error during calculation!");
+                    e.printStackTrace();
+                }
 
                 network.getCraftingManager().add(task);
                 if (error != null) {

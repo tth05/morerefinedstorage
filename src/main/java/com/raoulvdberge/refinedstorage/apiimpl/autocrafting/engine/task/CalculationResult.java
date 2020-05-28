@@ -4,7 +4,6 @@ import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
@@ -23,11 +22,6 @@ public class CalculationResult {
     private final IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();
 
     private final List<Task> newTasks = new ObjectArrayList<>();
-    /**
-     * A list of all infinite inputs that were found during calculation. Used to know if an infinite input already has
-     * been extracted.
-     */
-    private final List<InfiniteInput> infiniteInputs = new ObjectArrayList<>();
 
     private CraftingTaskError error;
 
@@ -74,10 +68,5 @@ public class CalculationResult {
     @Nonnull
     public IStackList<FluidStack> getMissingFluidStacks() {
         return missingFluidStacks;
-    }
-
-    @Nonnull
-    public List<InfiniteInput> getInfiniteInputs() {
-        return infiniteInputs;
     }
 }

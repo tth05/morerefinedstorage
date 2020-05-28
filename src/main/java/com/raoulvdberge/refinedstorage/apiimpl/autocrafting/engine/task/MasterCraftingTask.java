@@ -82,7 +82,7 @@ public class MasterCraftingTask implements ICraftingTask {
         //TODO: add support for calculationTimeoutMs config parameter
 
         Task rootTask = tasks.get(0);
-        CalculationResult result = rootTask.calculate(network);
+        CalculationResult result = rootTask.calculate(network, new ObjectArrayList<>());
         this.tasks.addAll(result.getNewTasks());
 
         this.missingItemStacks = result.getMissingItemStacks();
@@ -142,13 +142,13 @@ public class MasterCraftingTask implements ICraftingTask {
                         if (API.instance().getComparer().isEqualNoQuantity(input.getCompareableItemStack(),
                                 previewElement.getElement())) {
 
-                            //do not merge infinite inputs
-                            if(!(input instanceof InfiniteInput)) {
+                            //do not merge available for infinite inputs
+                            if(!(input instanceof InfiniteInput) || ((InfiniteInput) input).hasActuallyExtracted()) {
                                 previewElement.addAvailable(
                                         (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
                                                 input.getTotalInputAmount()));
-                                previewElement.addToCraft(input.getToCraftAmount());
                             }
+                            previewElement.addToCraft(input.getToCraftAmount());
                             merged = true;
                             break;
                         }
@@ -165,10 +165,16 @@ public class MasterCraftingTask implements ICraftingTask {
                     } else {
                         boolean isDurabilityInput = input instanceof DurabilityInput;
 
+                        long available = (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
+                                input.getTotalInputAmount());
+
+                        //fix available count for infinite inputs
+                        if(input instanceof InfiniteInput && !((InfiniteInput) input).hasActuallyExtracted())
+                            available = 0;
+
                         elements.add(new CraftingPreviewElementItemStack(
                                 input.getCompareableItemStack(),
-                                (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
-                                        input.getTotalInputAmount()), false,
+                                available, false,
                                 input.getToCraftAmount()));
                     }
                 }
@@ -180,23 +186,13 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public void onCancelled() {
-        List<ItemStack> infiniteItemStacks = new ObjectArrayList<>();
-
         //just insert all stored items back into network
         for (Task task : this.tasks) {
-            inputLoop:
             for (Input input : task.getInputs()) {
                 boolean isDurabilityInput = input instanceof DurabilityInput;
 
-                if(input instanceof InfiniteInput) {
-                    for (ItemStack infiniteItemStack : infiniteItemStacks) {
-                        if (API.instance().getComparer().isEqual(infiniteItemStack, input.getCompareableItemStack())) {
-                            continue inputLoop;
-                        }
-                    }
-
-                    infiniteItemStacks.add(input.getCompareableItemStack());
-                }
+                if(input instanceof InfiniteInput && !((InfiniteInput) input).hasActuallyExtracted())
+                    continue;
 
                 List<ItemStack> itemStacks = input.getItemStacks();
                 //TODO: handle remainder if network is full

@@ -12,6 +12,12 @@ import javax.annotation.Nonnull;
  * //TODO: add support for fluids (probably completely useless)
  */
 public class InfiniteInput extends Input {
+
+    /**
+     * Whether or not this infinite input actually extracted any item
+     */
+    private boolean actuallyExtracted;
+
     public InfiniteInput(@Nonnull ItemStack itemStack, boolean oredict) {
         super(NonNullList.from(ItemStack.EMPTY, itemStack), 1, oredict);
     }
@@ -24,5 +30,13 @@ public class InfiniteInput extends Input {
     @Override
     public void setAmountNeeded(long amountNeeded) {
         //NO OP
+    }
+
+    public boolean hasActuallyExtracted() {
+        return actuallyExtracted;
+    }
+
+    public void setActuallyExtracted(boolean actuallyExtracted) {
+        this.actuallyExtracted = actuallyExtracted;
     }
 }
