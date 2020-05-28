@@ -14,6 +14,7 @@ import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
@@ -87,7 +88,7 @@ public class MasterCraftingTask implements ICraftingTask {
         this.missingItemStacks = result.getMissingItemStacks();
         this.missingFluidStacks = result.getMissingFluidStacks();
 
-        return null;
+        return result.getError();
     }
 
     @Override
@@ -122,6 +123,7 @@ public class MasterCraftingTask implements ICraftingTask {
             for (Input input : task.getInputs()) {
                 boolean merged = false;
 
+                //try to merge into existing
                 for (ICraftingPreviewElement<?> element : elements) {
                     if (input.isFluid() && element instanceof CraftingPreviewElementFluidStack) {
                         CraftingPreviewElementFluidStack previewElement = ((CraftingPreviewElementFluidStack) element);
@@ -140,16 +142,20 @@ public class MasterCraftingTask implements ICraftingTask {
                         if (API.instance().getComparer().isEqualNoQuantity(input.getCompareableItemStack(),
                                 previewElement.getElement())) {
 
-                            previewElement.addAvailable(
-                                    (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
-                                            input.getTotalInputAmount()));
-                            previewElement.addToCraft(input.getToCraftAmount());
+                            //do not merge infinite inputs
+                            if(!(input instanceof InfiniteInput)) {
+                                previewElement.addAvailable(
+                                        (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
+                                                input.getTotalInputAmount()));
+                                previewElement.addToCraft(input.getToCraftAmount());
+                            }
                             merged = true;
                             break;
                         }
                     }
                 }
 
+                //if there's no existing element, create a new one
                 if (!merged) {
                     if (input.isFluid()) {
                         elements.add(new CraftingPreviewElementFluidStack(
@@ -174,10 +180,23 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public void onCancelled() {
+        List<ItemStack> infiniteItemStacks = new ObjectArrayList<>();
+
         //just insert all stored items back into network
         for (Task task : this.tasks) {
+            inputLoop:
             for (Input input : task.getInputs()) {
                 boolean isDurabilityInput = input instanceof DurabilityInput;
+
+                if(input instanceof InfiniteInput) {
+                    for (ItemStack infiniteItemStack : infiniteItemStacks) {
+                        if (API.instance().getComparer().isEqual(infiniteItemStack, input.getCompareableItemStack())) {
+                            continue inputLoop;
+                        }
+                    }
+
+                    infiniteItemStacks.add(input.getCompareableItemStack());
+                }
 
                 List<ItemStack> itemStacks = input.getItemStacks();
                 //TODO: handle remainder if network is full
@@ -239,6 +258,7 @@ public class MasterCraftingTask implements ICraftingTask {
         return this.id;
     }
 
+    @Override
     public ICraftingRequestInfo getRequested() {
         return info;
     }

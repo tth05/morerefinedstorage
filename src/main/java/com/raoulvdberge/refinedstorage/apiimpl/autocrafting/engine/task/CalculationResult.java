@@ -4,20 +4,30 @@ import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Holds information about a calculation for a task. An instance of this is modified by all sub tasks and then evaluated
+ * by a {@link MasterCraftingTask}.
+ */
 public class CalculationResult {
 
     private final IStackList<ItemStack> missingItemStacks = API.instance().createItemStackList();
     private final IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();
 
-    private final List<Task> newTasks = new ArrayList<>();
+    private final List<Task> newTasks = new ObjectArrayList<>();
+    /**
+     * A list of all infinite inputs that were found during calculation. Used to know if an infinite input already has
+     * been extracted.
+     */
+    private final List<InfiniteInput> infiniteInputs = new ObjectArrayList<>();
 
     private CraftingTaskError error;
 
@@ -26,10 +36,6 @@ public class CalculationResult {
 
     public CalculationResult(CraftingTaskError error) {
         this.error = error;
-    }
-
-    public void addNewTask(Task task) {
-        this.newTasks.add(task);
     }
 
     /**
@@ -68,5 +74,10 @@ public class CalculationResult {
     @Nonnull
     public IStackList<FluidStack> getMissingFluidStacks() {
         return missingFluidStacks;
+    }
+
+    @Nonnull
+    public List<InfiniteInput> getInfiniteInputs() {
+        return infiniteInputs;
     }
 }

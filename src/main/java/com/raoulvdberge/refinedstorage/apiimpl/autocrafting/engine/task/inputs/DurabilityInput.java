@@ -14,20 +14,31 @@ import javax.annotation.Nonnull;
  */
 public class DurabilityInput extends Input {
 
+    /**
+     * The max durability of the item that this input represents. Or in other words: the max iterations that can be done
+     * with the {@link ItemStack} that represents this input if it had no damage.
+     */
     private int maxDurability;
     private final ItemStack compareableItemStack;
 
     public DurabilityInput(@Nonnull ItemStack itemStack, long amountNeeded, boolean oredict) {
         super(NonNullList.from(ItemStack.EMPTY, ItemStack.EMPTY), amountNeeded, oredict);
+        this.getItemStacks().clear();
         this.compareableItemStack = itemStack;
         this.maxDurability = compareableItemStack.getMaxDamage() + 1;
     }
 
-    public DurabilityInput(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
+    private DurabilityInput(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
         super(fluidStack, amountNeeded, oredict);
         throw new IllegalArgumentException("FluidStacks are no supported for durability inputs");
     }
 
+    /**
+     * Adds the given {@code itemStack} to the list of {@link ItemStack}s of this input. The {@code itemStack} has to
+     * damageable and is assumed to be valid for this input. The remaining durability of the {@code itemStack} is then
+     * added to the total input count of this input.
+     * @param itemStack the {@link ItemStack} to add
+     */
     public void addDamageableItemStack(@Nonnull ItemStack itemStack) {
         if(!itemStack.isItemStackDamageable())
             throw new IllegalArgumentException("itemStack has to be damageable!");
@@ -45,6 +56,7 @@ public class DurabilityInput extends Input {
     @Override
     public void merge(Input input) {
         if (input.isFluid()) {
+            //durability inputs can't be fluids
             throw new IllegalArgumentException("Other input cannot be a fluid");
         } else {
             this.getItemStacks().addAll(input.getItemStacks());
@@ -69,18 +81,15 @@ public class DurabilityInput extends Input {
     }
 
     public long getTotalItemInputAmount() {
-        //divide by durability for durability inputs otherwise the count is wrong
+        //divide by durability to get the item count and not the count in durability
         return (long) Math.ceil(this.totalInputAmount / (double)this.maxDurability);
     }
 
     @Override
     @Nonnull
     public ItemStack getCompareableItemStack() {
+        //the ItemStack list may be empty, so we need a separate variable
         return compareableItemStack;
-    }
-
-    public int getMaxDurability() {
-        return maxDurability;
     }
 
     @Override
@@ -90,7 +99,7 @@ public class DurabilityInput extends Input {
 
         DurabilityInput input = (DurabilityInput) o;
 
-        if (input.getItemStacks().size() < 1 || input.isFluid() || input.isOredict())
+        if (input.isFluid() || input.isOredict())
             return false;
 
         return API.instance().getComparer().isEqual(this.getCompareableItemStack(), input.getCompareableItemStack(),

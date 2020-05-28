@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -31,28 +32,40 @@ public abstract class Task {
             if (itemStacks.isEmpty())
                 continue;
 
-            Input newInput;
+            Input newInput = null;
 
             //detect re-useable items
             ItemStack itemStack = itemStacks.get(0);
-            boolean isDurabilityInput = false;
 
             //damageable items won't be oredicted
-            if (!pattern.isProcessing() && itemStacks.size() < 2 && itemStack.isItemStackDamageable()) {
+            if (!pattern.isProcessing() && itemStacks.size() < 2) {
                 //TODO: detect infinite
-
+                //check if input is exactly the same in the remainder -> then it's infinite
                 for (ItemStack remainder : pattern.getByproducts()) {
                     //find item in by products and check if one damage was used up. this means that damage = uses
-                    if (API.instance().getComparer()
-                            .isEqual(itemStack, remainder, IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY) &&
-                            remainder.getItemDamage() - 1 == itemStack.getItemDamage()) {
-                        isDurabilityInput = true;
+                    if (API.instance().getComparer().isEqual(itemStack, remainder)) {
+                        //item was found in remainder staying exactly the same -> infinite input
+                        newInput = new InfiniteInput(itemStack, pattern.isOredict());
+                        break;
+                    }
+                }
+
+                if (newInput == null && itemStack.isItemStackDamageable()) {
+                    for (ItemStack remainder : pattern.getByproducts()) {
+                        //find item in by products and check if one damage was used up. this means that damage = uses
+                        if (API.instance().getComparer()
+                                .isEqual(itemStack, remainder, IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY) &&
+                                remainder.getItemDamage() - 1 == itemStack.getItemDamage()) {
+                            //item was found with one more damage in remainder, then it's a durability input
+                            newInput = new DurabilityInput(itemStack, amountNeeded, pattern.isOredict());
+                            break;
+                        }
                     }
                 }
             }
-            if (isDurabilityInput)
-                newInput = new DurabilityInput(itemStack, amountNeeded, pattern.isOredict());
-            else
+
+            //if it's not a durability or infinite input, then just use a normal input
+            if (newInput == null)
                 newInput = new Input(itemStacks, amountNeeded, pattern.isOredict());
 
             mergeIntoList(newInput, this.inputs);
@@ -106,6 +119,12 @@ public abstract class Task {
         this.amountNeeded = amountNeeded;
     }
 
+    /**
+     * Merges the given {@code input} into the given {@code list}.
+     *
+     * @param input the {@link Input} the should be merged
+     * @param list  the list in which the given {@code input} should be merged into
+     */
     private void mergeIntoList(Input input, List<Input> list) {
         boolean merged = false;
         for (Input output : list) {
@@ -119,27 +138,62 @@ public abstract class Task {
             list.add(input);
     }
 
+    /**
+     * Calculates everything about this {link Task} and creates new sub tasks if they're needed.
+     * This function operates recursively.
+     *
+     * @param network the network in which the calculation is run
+     * @return the {@link CalculationResult}
+     */
     @Nonnull
     public CalculationResult calculate(@Nonnull INetwork network) {
         CalculationResult result = new CalculationResult();
 
         inputLoop:
         for (Input input : this.inputs) {
+
+            //handle infinite inputs
+            if (input instanceof InfiniteInput) {
+                boolean exists = false;
+
+                for (InfiniteInput infiniteInput : result.getInfiniteInputs()) {
+                    //input already has been handled
+                    if (API.instance().getComparer()
+                            .isEqual(infiniteInput.getCompareableItemStack(), input.getCompareableItemStack())) {
+                        //force set count because it already exists
+                        input.getCurrentInputCounts().set(0, 1L);
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if(!exists) {
+                    result.getInfiniteInputs().add((InfiniteInput) input);
+                }
+            }
+
+            //skip the input if it's already satisfied
+            if (input.getAmountMissing() < 1)
+                continue;
+
             //first search for missing amount in network
             if (!input.isFluid()) { //extract items
-                //handle durability input
-                if(input instanceof DurabilityInput) {
+                if (input instanceof DurabilityInput) { //handle durability inputs
                     DurabilityInput durabilityInput = (DurabilityInput) input;
                     //always only extract 1 item
                     ItemStack extracted = network.extractItem(durabilityInput.getCompareableItemStack(), 1,
                             IComparer.COMPARE_NBT, Action.PERFORM);
 
                     //extract as many items as needed
-                    while(!extracted.isEmpty() && input.getAmountMissing() > 0) {
+                    while (!extracted.isEmpty()) {
                         durabilityInput.addDamageableItemStack(extracted);
 
-                        extracted = network.extractItem(durabilityInput.getCompareableItemStack(), 1,
-                                IComparer.COMPARE_NBT, Action.PERFORM);
+                        //keep extracting if input is not satisfied
+                        if (input.getAmountMissing() > 0)
+                            extracted = network.extractItem(durabilityInput.getCompareableItemStack(), 1,
+                                    IComparer.COMPARE_NBT, Action.PERFORM);
+                        else
+                            break;
                     }
                 } else { //handle normal inputs
                     for (ItemStack ingredient : input.getItemStacks()) {
@@ -186,7 +240,7 @@ public abstract class Task {
                 else
                     pattern = network.getCraftingManager().getPattern(input.getFluidStack());
 
-                //add new sub task
+                //add new sub task if pattern is valid
                 if (pattern != null && pattern.isValid()) {
                     Task newTask;
                     if (pattern.isProcessing())
@@ -199,7 +253,7 @@ public abstract class Task {
                     //make sure nothing is missing for this input, missing stuff is handled by the child task
                     input.increaseToCraftAmount(input.getAmountMissing());
 
-                    result.addNewTask(newTask);
+                    result.getNewTasks().add(newTask);
                     //merge the calculation results
                     result.merge(newTaskResult);
                 }
@@ -262,5 +316,4 @@ public abstract class Task {
     public List<Output> getOutputs() {
         return outputs;
     }
-
 }
