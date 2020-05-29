@@ -30,7 +30,7 @@ public abstract class Task {
     protected final long amountNeeded;
 
     public Task(@Nonnull ICraftingPattern pattern, long amountNeeded, boolean isFluidRequested) {
-        //merge all pattern inputs
+        //merge all pattern item inputs
         for (NonNullList<ItemStack> itemStacks : pattern.getInputs()) {
             if (itemStacks.isEmpty())
                 continue;
@@ -103,7 +103,7 @@ public abstract class Task {
             mergeIntoList(newInput, this.inputs);
         }
 
-        //merge all pattern outputs
+        //merge all pattern item outputs
         for (ItemStack itemStack : pattern.getOutputs()) {
             Output newOutput = new Output(itemStack, itemStack.getCount());
 
@@ -140,7 +140,6 @@ public abstract class Task {
         }
 
         this.pattern = pattern;
-        this.valid = true;
         this.amountNeeded = amountNeeded;
     }
 
@@ -168,6 +167,9 @@ public abstract class Task {
      * This function operates recursively.
      *
      * @param network the network in which the calculation is run
+     * @param infiniteInputs a list of already seen {@link ItemStack}s which have been detected as infinite. this is
+     *                      list is checked to make sure infinite items are not extracted multiple times
+     * @param calculationTimeStart the timestamp of when the calculation initially started
      * @return the {@link CalculationResult}
      */
     @Nonnull
@@ -325,17 +327,10 @@ public abstract class Task {
         return result;
     }
 
-    //TODO: is this needed?
-    protected boolean valid;
-
     public abstract void update();
 
     public void addParent(Task task) {
         this.parents.add(task);
-    }
-
-    public boolean isValid() {
-        return valid;
     }
 
     public ICraftingPattern getPattern() {

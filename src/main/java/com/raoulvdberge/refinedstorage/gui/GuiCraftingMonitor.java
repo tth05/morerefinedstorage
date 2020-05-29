@@ -67,7 +67,8 @@ public class GuiCraftingMonitor extends GuiBase {
         private int completionPercentage;
         private List<ICraftingMonitorElement> elements;
 
-        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, int qty, long executionStarted, int completionPercentage, List<ICraftingMonitorElement> elements) {
+        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, int qty, long executionStarted,
+                                   int completionPercentage, List<ICraftingMonitorElement> elements) {
             this.id = id;
             this.requested = requested;
             this.qty = qty;
@@ -83,23 +84,32 @@ public class GuiCraftingMonitor extends GuiBase {
 
         @Override
         public void drawTooltip(int x, int y, int screenWidth, int screenHeight, FontRenderer fontRenderer) {
-            List<String> textLines = Lists.newArrayList(requested.getItem() != null ? requested.getItem().getDisplayName() : requested.getFluid().getLocalizedName());
+            List<String> textLines = Lists.newArrayList(
+                    requested.getItem() != null ? requested.getItem().getDisplayName() :
+                            requested.getFluid().getLocalizedName());
             List<String> smallTextLines = Lists.newArrayList();
 
-            //TODO: add support when execution started is -1
             int totalSecs = (int) (System.currentTimeMillis() - executionStarted) / 1000;
             int minutes = (totalSecs % 3600) / 60;
             int seconds = totalSecs % 60;
 
-            smallTextLines.add(I18n.format("gui.refinedstorage:crafting_monitor.tooltip.requested", requested.getFluid() != null ? API.instance().getQuantityFormatter().formatInBucketForm(qty) : API.instance().getQuantityFormatter().format(qty)));
-            smallTextLines.add(String.format("%02d:%02d", minutes, seconds));
-            smallTextLines.add(String.format("%d%%", completionPercentage));
+            smallTextLines.add(I18n.format("gui.refinedstorage:crafting_monitor.tooltip.requested",
+                    requested.getFluid() != null ? API.instance().getQuantityFormatter().formatInBucketForm(qty) :
+                            API.instance().getQuantityFormatter().format(qty)));
+            if (executionStarted == -1) {
+                smallTextLines.add("Pending");
+            } else {
+                smallTextLines.add(String.format("%02d:%02d", minutes, seconds));
+                smallTextLines.add(String.format("%d%%", completionPercentage));
+            }
 
-            RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, true, ItemStack.EMPTY, x, y, screenWidth, screenHeight, fontRenderer);
+            RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, true, ItemStack.EMPTY, x, y, screenWidth,
+                    screenHeight, fontRenderer);
         }
 
         @Override
-        public void drawIcon(int x, int y, IElementDrawer<ItemStack> itemDrawer, IElementDrawer<FluidStack> fluidDrawer) {
+        public void drawIcon(int x, int y, IElementDrawer<ItemStack> itemDrawer,
+                             IElementDrawer<FluidStack> fluidDrawer) {
             if (requested.getItem() != null) {
                 RenderHelper.enableGUIStandardItemLighting();
 
@@ -132,7 +142,9 @@ public class GuiCraftingMonitor extends GuiBase {
 
         this.craftingMonitor = craftingMonitor;
 
-        this.tabs = new TabList(this, new ElementDrawers(), () -> tasks, () -> (int) Math.floor((float) Math.max(0, tasks.size() - 1) / (float) ICraftingMonitor.TABS_PER_PAGE), craftingMonitor::getTabPage, () -> {
+        this.tabs = new TabList(this, new ElementDrawers(), () -> tasks,
+                () -> (int) Math.floor((float) Math.max(0, tasks.size() - 1) / (float) ICraftingMonitor.TABS_PER_PAGE),
+                craftingMonitor::getTabPage, () -> {
             IGridTab tab = getCurrentTab();
 
             if (tab == null) {
@@ -192,7 +204,9 @@ public class GuiCraftingMonitor extends GuiBase {
         int cancelAllButtonWidth = 14 + fontRenderer.getStringWidth(cancelAll);
 
         this.cancelButton = addButton(x + 7, y + 201 - 20 - 7, cancelButtonWidth, 20, cancel, false, true);
-        this.cancelAllButton = addButton(x + 7 + cancelButtonWidth + 4, y + 201 - 20 - 7, cancelAllButtonWidth, 20, cancelAll, false, true);
+        this.cancelAllButton =
+                addButton(x + 7 + cancelButtonWidth + 4, y + 201 - 20 - 7, cancelAllButtonWidth, 20, cancelAll, false,
+                        true);
     }
 
     private void updateScrollbar() {

@@ -7,9 +7,6 @@ import javax.annotation.Nonnull;
 
 /**
  * Represents an Input that is infinite and only needs to be extracted once. Only allowed for crafting tasks currently.
- *
- * //TODO: add support for processing tasks by checking if an input can be found in the output.
- * //TODO: add support for fluids (probably completely useless)
  */
 public class InfiniteInput extends Input {
 
@@ -32,17 +29,16 @@ public class InfiniteInput extends Input {
         //NO OP
     }
 
+    @Override
+    public int getQuantityPerCraft() {
+        return 0;
+    }
+
     public boolean hasActuallyExtracted() {
         return actuallyExtracted;
     }
 
     public void setActuallyExtracted(boolean actuallyExtracted) {
         this.actuallyExtracted = actuallyExtracted;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        //make sure infinite inputs are not merged
-        return false;
     }
 }
