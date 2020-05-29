@@ -137,7 +137,9 @@ public class FluidGridHandler implements IFluidGridHandler {
 
                 ICraftingTaskError error = task.calculate();
 
-                network.getCraftingManager().add(task);
+                if(error == null)
+                    network.getCraftingManager().add(task);
+
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(
                             new CraftingPreviewElementError(error.getType(),

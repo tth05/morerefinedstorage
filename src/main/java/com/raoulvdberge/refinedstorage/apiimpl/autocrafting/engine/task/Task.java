@@ -1,10 +1,13 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
+import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
@@ -168,12 +171,16 @@ public abstract class Task {
      * @return the {@link CalculationResult}
      */
     @Nonnull
-    public CalculationResult calculate(@Nonnull INetwork network, @Nonnull List<ItemStack> infiniteInputs) {
+    public CalculationResult calculate(@Nonnull INetwork network, @Nonnull List<ItemStack> infiniteInputs,
+                                       long calculationTimeStart) {
+        //return if calculation takes too long
+        if(System.currentTimeMillis() - calculationTimeStart > RS.INSTANCE.config.calculationTimeoutMs)
+            return new CalculationResult(new CraftingTaskError(CraftingTaskErrorType.TOO_COMPLEX));
+
         CalculationResult result = new CalculationResult();
 
         inputLoop:
         for (Input input : this.inputs) {
-
             //handle infinite inputs
             if (input instanceof InfiniteInput) {
                 boolean exists = false;
@@ -275,7 +282,10 @@ public abstract class Task {
                     else
                         newTask = new CraftingTask(pattern, input.getAmountMissing());
                     newTask.addParent(this);
-                    CalculationResult newTaskResult = newTask.calculate(network, infiniteInputs);
+                    CalculationResult newTaskResult = newTask.calculate(network, infiniteInputs, calculationTimeStart);
+                    //immediately fail if calculation had any error
+                    if(newTaskResult.getError() != null)
+                        return newTaskResult;
 
                     //make sure nothing is missing for this input, missing stuff is handled by the child task
                     input.increaseToCraftAmount(input.getAmountMissing());

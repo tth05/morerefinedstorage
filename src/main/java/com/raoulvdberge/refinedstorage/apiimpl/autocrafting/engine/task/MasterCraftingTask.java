@@ -79,14 +79,18 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public ICraftingTaskError calculate() {
-        //TODO: add support for calculationTimeoutMs config parameter
-
         Task rootTask = tasks.get(0);
-        CalculationResult result = rootTask.calculate(network, new ObjectArrayList<>());
-        this.tasks.addAll(result.getNewTasks());
+        CalculationResult result = rootTask.calculate(network, new ObjectArrayList<>(), System.currentTimeMillis());
 
-        this.missingItemStacks = result.getMissingItemStacks();
-        this.missingFluidStacks = result.getMissingFluidStacks();
+        //instantly cancel if calculation had any error, saver than waiting for the player to cancel
+        if(result.getError() != null) {
+            onCancelled();
+        } else {
+            this.tasks.addAll(result.getNewTasks());
+
+            this.missingItemStacks = result.getMissingItemStacks();
+            this.missingFluidStacks = result.getMissingFluidStacks();
+        }
 
         return result.getError();
     }
