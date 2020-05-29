@@ -39,4 +39,10 @@ public class InfiniteInput extends Input {
     public void setActuallyExtracted(boolean actuallyExtracted) {
         this.actuallyExtracted = actuallyExtracted;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        //make sure infinite inputs are not merged
+        return false;
+    }
 }

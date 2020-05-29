@@ -230,9 +230,15 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         NonNullList<ItemStack> remainingItems = recipe.getRemainingItems(inv);
-        remainingItems.removeIf(ItemStack::isEmpty);
+        NonNullList<ItemStack> sanitized = NonNullList.create();
 
-        return remainingItems;
+        for (ItemStack item : remainingItems) {
+            if (!item.isEmpty()) {
+                sanitized.add(item);
+            }
+        }
+
+        return sanitized;
     }
 
     @Override

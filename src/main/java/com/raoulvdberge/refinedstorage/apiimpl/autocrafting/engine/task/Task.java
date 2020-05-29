@@ -34,29 +34,49 @@ public abstract class Task {
 
             Input newInput = null;
 
-            //check for infinites
-            for (ItemStack itemStack : itemStacks) {
-                //TODO: get by products for specific ore dict component
-                //check if input is exactly the same in the remainder -> then it's infinite
-                for (ItemStack remainder : pattern.getByproducts()) {
-                    //find item in by products and check if one damage was used up. this means that damage = uses
-                    if (API.instance().getComparer().isEqual(itemStack, remainder)) {
-                        //item was found in remainder staying exactly the same -> infinite input
-                        newInput = new InfiniteInput(itemStack, pattern.isOredict());
-                        break;
+            //only if there any by products, check for infinites and re-useables
+            if (!pattern.isProcessing() && pattern.getByproducts().stream().anyMatch(i -> !i.isEmpty())) {
+
+                //detect infinites
+                for (ItemStack itemStack : itemStacks) {
+                    //Create new matrix with oredicted component. This is needed for stuff like the infusion crystal
+                    // from MA with oredict enabled. This is because the oredicted list then contains the infusion
+                    // crystal which has durabiltiy and the master infusion crystal which is infinite. This code ensures
+                    // that the master crystal is detected and also preferred.
+                    NonNullList<ItemStack> matrix = NonNullList.create();
+                    for (NonNullList<ItemStack> input : pattern.getInputs()) {
+                        if (input.isEmpty()) {
+                            matrix.add(ItemStack.EMPTY);
+                            continue;
+                        }
+
+                        ItemStack patternInputItem = input.get(0);
+                        if (API.instance().getComparer().isEqual(patternInputItem, itemStacks.get(0)))
+                            matrix.add(itemStack);
+                        else
+                            matrix.add(patternInputItem);
+                    }
+
+                    //check if input is exactly the same in the remainder -> then it's infinite
+                    for (ItemStack remainder : pattern.getByproducts(matrix)) {
+                        //find item in by products and check if one damage was used up. this means that damage = uses
+                        if (API.instance().getComparer().isEqual(itemStack, remainder)) {
+                            //item was found in remainder staying exactly the same -> infinite input
+                            newInput = new InfiniteInput(itemStack, pattern.isOredict());
+                            break;
+                        }
                     }
                 }
-            }
 
-            //detect re-useable items
-            ItemStack itemStack = itemStacks.get(0);
-            //damageable items won't be oredicted (hopefully)
-            if (!pattern.isProcessing() && itemStacks.size() < 2) {
-                if (newInput == null && itemStack.isItemStackDamageable()) {
+                //detect re-useable items
+                ItemStack itemStack = itemStacks.get(0);
+                //damageable items won't be oredicted (hopefully)
+                if (itemStacks.size() < 2 && newInput == null && itemStack.isItemStackDamageable()) {
                     for (ItemStack remainder : pattern.getByproducts()) {
                         //find item in by products and check if one damage was used up. this means that damage = uses
                         if (API.instance().getComparer()
-                                .isEqual(itemStack, remainder, IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY) &&
+                                .isEqual(itemStack, remainder,
+                                        IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY) &&
                                 remainder.getItemDamage() - 1 == itemStack.getItemDamage()) {
                             //item was found with one more damage in remainder, then it's a durability input
                             newInput = new DurabilityInput(itemStack, amountNeeded, pattern.isOredict());
@@ -208,7 +228,7 @@ public abstract class Task {
                         long remainder = input.increaseAmount(extracted, extracted.getCount());
                         //special case for infinite inputs -> tell this input that it is the one that actually extracted
                         //an item
-                        if(input instanceof InfiniteInput) {
+                        if (input instanceof InfiniteInput) {
                             ((InfiniteInput) input).setActuallyExtracted(true);
                         }
 
