@@ -8,16 +8,15 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.*;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class Task {
@@ -37,7 +36,7 @@ public abstract class Task {
 
             Input newInput = null;
 
-            //only if there any by products, check for infinites and re-useables
+            //only if there any by-products, check for infinites and re-useables
             if (!pattern.isProcessing() && pattern.getByproducts().stream().anyMatch(i -> !i.isEmpty())) {
 
                 //detect infinites
@@ -89,6 +88,21 @@ public abstract class Task {
                 }
             }
 
+            //check for inputs that appear in the output for processing patterns
+            if (pattern.isProcessing()) {
+                //loop through all possibilities
+                for (ItemStack inputItemStack : itemStacks) {
+                    //loop through all outputs
+                    for (ItemStack output : pattern.getOutputs()) {
+                        //find the possibility that occurs in the output
+                        if (API.instance().getComparer().isEqualNoQuantity(inputItemStack, output)) {
+                            newInput = new RestockableInput(inputItemStack, inputItemStack.getCount(),
+                                    pattern.isOredict());
+                        }
+                    }
+                }
+            }
+
             //if it's not a durability or infinite input, then just use a normal input
             if (newInput == null)
                 newInput = new Input(itemStacks, amountNeeded, pattern.isOredict());
@@ -118,11 +132,48 @@ public abstract class Task {
             mergeIntoList(newOutput, (List<Input>) (List<?>) this.outputs);
         }
 
+        //decrease output amounts if restockable input exists
+        List<Input> inputsToAdd = new ObjectArrayList<>();
+        for (Input input : this.inputs) {
+            if (!(input instanceof RestockableInput))
+                continue;
+
+            for (Output output : this.outputs) {
+                if (API.instance().getComparer()
+                        .isEqualNoQuantity(output.getCompareableItemStack(), input.getCompareableItemStack())) {
+                    long remainder = output.applyRestockableInput((RestockableInput) input);
+                    //input cannot be satisfied with the output, therefore the missing items have to be normally
+                    // extracted or crafted.
+                    if (remainder != 0) {
+                        //decrease restockable input QPC to correct amount because some of that is now handled by a
+                        // different input
+                        ((RestockableInput) input).setQuantityPerCraft((int) (input.getQuantityPerCraft() - remainder));
+                        //add new input with remainder as quantity per craft. Amount needed is set later to the correct
+                        // amount
+                        inputsToAdd.add(new Input(NonNullList.from(ItemStack.EMPTY,
+                                ItemHandlerHelper.copyStackWithSize(input.getCompareableItemStack(), (int) remainder)),
+                                1,
+                                pattern.isOredict()));
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        //merge new inputs
+        for (Input input : inputsToAdd) {
+            mergeIntoList(input, this.inputs);
+        }
+
         //find smallest output counts
         int smallestOutputStackSize = Integer.MAX_VALUE;
         int smallestOutputFluidStackSize = Integer.MAX_VALUE;
 
         for (Output output : this.outputs) {
+            if(output.getQuantityPerCraft() < 1)
+                continue;
+
             if (!output.isFluid()) {
                 smallestOutputStackSize = Math.min(smallestOutputStackSize, output.getQuantityPerCraft());
             } else {
@@ -166,9 +217,9 @@ public abstract class Task {
      * Calculates everything about this {link Task} and creates new sub tasks if they're needed.
      * This function operates recursively.
      *
-     * @param network the network in which the calculation is run
-     * @param infiniteInputs a list of already seen {@link ItemStack}s which have been detected as infinite. this is
-     *                      list is checked to make sure infinite items are not extracted multiple times
+     * @param network              the network in which the calculation is run
+     * @param infiniteInputs       a list of already seen {@link ItemStack}s which have been detected as infinite. this is
+     *                             list is checked to make sure infinite items are not extracted multiple times
      * @param calculationTimeStart the timestamp of when the calculation initially started
      * @return the {@link CalculationResult}
      */
@@ -176,7 +227,7 @@ public abstract class Task {
     public CalculationResult calculate(@Nonnull INetwork network, @Nonnull List<ItemStack> infiniteInputs,
                                        long calculationTimeStart) {
         //return if calculation takes too long
-        if(System.currentTimeMillis() - calculationTimeStart > RS.INSTANCE.config.calculationTimeoutMs)
+        if (System.currentTimeMillis() - calculationTimeStart > RS.INSTANCE.config.calculationTimeoutMs)
             return new CalculationResult(new CraftingTaskError(CraftingTaskErrorType.TOO_COMPLEX));
 
         CalculationResult result = new CalculationResult();
@@ -272,7 +323,7 @@ public abstract class Task {
                 ICraftingPattern pattern;
                 if (!input.isFluid())
                     //TODO: add possibility for oredict components to be crafted
-                    pattern = network.getCraftingManager().getPattern(input.getCompareableItemStack());
+                    pattern = getPattern(network, input.getCompareableItemStack());
                 else
                     pattern = network.getCraftingManager().getPattern(input.getFluidStack());
 
@@ -286,7 +337,7 @@ public abstract class Task {
                     newTask.addParent(this);
                     CalculationResult newTaskResult = newTask.calculate(network, infiniteInputs, calculationTimeStart);
                     //immediately fail if calculation had any error
-                    if(newTaskResult.getError() != null)
+                    if (newTaskResult.getError() != null)
                         return newTaskResult;
 
                     //make sure nothing is missing for this input, missing stuff is handled by the child task
@@ -328,6 +379,28 @@ public abstract class Task {
     }
 
     public abstract void update();
+
+    /**
+     * Copy of {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager#getPattern(ItemStack)} but the
+     * pattern of this task is ignored.
+     * @param stack the stack to get a pattern for
+     * @param network the {@link INetwork} to the
+     * {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager} from.
+     * @return a corresponding pattern or null if none was found
+     */
+    @Nullable
+    private ICraftingPattern getPattern(@Nonnull INetwork network, @Nonnull ItemStack stack) {
+        for (ICraftingPattern patternInList : network.getCraftingManager().getPatterns()) {
+            for (ItemStack output : patternInList.getOutputs()) {
+                if (API.instance().getComparer().isEqualNoQuantity(output, stack) &&
+                        !patternInList.equals(this.pattern)) {
+                    return patternInList;
+                }
+            }
+        }
+
+        return null;
+    }
 
     public void addParent(Task task) {
         this.parents.add(task);
