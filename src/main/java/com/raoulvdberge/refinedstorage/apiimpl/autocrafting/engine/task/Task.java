@@ -147,7 +147,7 @@ public abstract class Task {
                     if (remainder != 0) {
                         //decrease restockable input QPC to correct amount because some of that is now handled by a
                         // different input
-                        ((RestockableInput) input).setQuantityPerCraft((int) (input.getQuantityPerCraft() - remainder));
+                        ((RestockableInput) input).fixCounts((int) (input.getQuantityPerCraft() - remainder));
                         //add new input with remainder as quantity per craft. Amount needed is set later to the correct
                         // amount
                         inputsToAdd.add(new Input(NonNullList.from(ItemStack.EMPTY,
