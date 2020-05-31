@@ -21,7 +21,7 @@ public class MessagePortableGridFluidUpdate
 
     private IPortableGrid portableGrid;
 
-    private List<IGridStack> stacks = new ArrayList<>();
+    private final List<IGridStack> stacks = new ArrayList<>();
 
     public MessagePortableGridFluidUpdate(IPortableGrid portableGrid) {
         this.portableGrid = portableGrid;

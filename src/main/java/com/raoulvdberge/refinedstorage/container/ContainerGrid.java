@@ -28,13 +28,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketSetSlot;
 import net.minecraftforge.items.SlotItemHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class ContainerGrid extends ContainerBase implements IGridCraftingListener {
-    private IGrid grid;
+    private final IGrid grid;
     private IStorageCache cache;
     private IStorageCacheListener listener;
-    private IResizableDisplay display;
+    private final IResizableDisplay display;
 
     private SlotGridCraftingResult craftingResultSlot;
     private SlotLegacyBase patternResultSlot;
@@ -75,8 +76,6 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                 if (slot.getHasStack()) {
                     if (slot == craftingResultSlot) {
                         grid.onCraftedShift(getPlayer());
-
-                        detectAndSendChanges();
                     } else {
                         ItemStack stack = slot.getStack();
 
@@ -103,8 +102,8 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                             }
                         }
 
-                        detectAndSendChanges();
                     }
+                    detectAndSendChanges();
                 }
             }
 
@@ -259,7 +258,7 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
     }
 
     @Override
-    public void onContainerClosed(EntityPlayer player) {
+    public void onContainerClosed(@Nonnull EntityPlayer player) {
         super.onContainerClosed(player);
 
         if (!player.getEntityWorld().isRemote) {
@@ -274,7 +273,7 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
     }
 
     @Override
-    public boolean canMergeSlot(ItemStack stack, Slot slot) {
+    public boolean canMergeSlot(@Nonnull ItemStack stack, @Nonnull Slot slot) {
         if (slot == craftingResultSlot || slot == patternResultSlot) {
             return false;
         }

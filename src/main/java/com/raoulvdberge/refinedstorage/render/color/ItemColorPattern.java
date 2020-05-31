@@ -7,9 +7,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
+
 public class ItemColorPattern implements IItemColor {
     @Override
-    public int colorMultiplier(ItemStack stack, int tintIndex) {
+    public int colorMultiplier(@Nonnull ItemStack stack, int tintIndex) {
         CraftingPattern pattern = ItemPattern.getPatternFromCache(Minecraft.getMinecraft().world, stack);
 
         if (BakedModelPattern.canDisplayOutput(stack, pattern)) {

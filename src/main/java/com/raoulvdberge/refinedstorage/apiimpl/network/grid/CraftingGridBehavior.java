@@ -39,7 +39,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
     public void onRecipeTransfer(IGridNetworkAware grid, EntityPlayer player, ItemStack[][] recipe) {
         INetwork network = grid.getNetwork();
 
-        if (network == null || (grid.getGridType() == GridType.CRAFTING &&
+        if (network == null || grid.getCraftingMatrix() == null || (grid.getGridType() == GridType.CRAFTING &&
                 !network.getSecurityManager().hasPermission(Permission.EXTRACT, player))) {
             return;
         }
@@ -96,7 +96,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 }
             } else if (grid.getGridType() == GridType.PATTERN) {
                 // If we are a pattern grid we can just set the slot
-                grid.getCraftingMatrix().setInventorySlotContents(i, possibilities.length == 0 ? ItemStack.EMPTY : possibilities[0]);
+                grid.getCraftingMatrix()
+                        .setInventorySlotContents(i, possibilities.length == 0 ? ItemStack.EMPTY : possibilities[0]);
             }
         }
 
@@ -111,6 +112,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
         INetwork network = grid.getNetwork();
 
         InventoryCrafting matrix = grid.getCraftingMatrix();
+        if (matrix == null)
+            return;
 
         NonNullList<ItemStack> remainder = recipe.getRemainingItems(matrix);
 
@@ -239,7 +242,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             //add the origin slot at the start
             correspondingSlots.add(Pair.of(minCountStack, i));
 
-            if(minCountStack.isItemStackDamageable())
+            if (minCountStack.isItemStackDamageable())
                 foundDamageableItemStack = true;
 
             for (int j = 0; j < matrix.getSizeInventory(); j++) {
@@ -261,7 +264,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     minCountStack = correspondingSlot.getCount() < minCountStack.getCount() ?
                             correspondingSlot : minCountStack;
 
-                    if(correspondingSlot.isItemStackDamageable())
+                    if (correspondingSlot.isItemStackDamageable())
                         foundDamageableItemStack = true;
                 }
             }
@@ -301,7 +304,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             //create new matrix made up of the common slots
             InventoryCrafting matrixClone = new InventoryCrafting(new Container() {
                 @Override
-                public boolean canInteractWith(EntityPlayer playerIn) {
+                public boolean canInteractWith(@Nonnull EntityPlayer playerIn) {
                     return false;
                 }
             }, matrix.getWidth(), matrix.getHeight());
@@ -311,7 +314,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             }
 
             Pair<Integer, NonNullList<ItemStack>> simulationResult =
-                    simulateRemainder(toCraft, matrixClone, result, grid.getNetwork().world());
+                    simulateRemainder(toCraft, matrixClone, result, network.world());
             toCraft = Math.min(toCraft, simulationResult.getLeft());
             //set remainder to the final remainder
             finalRemainder = simulationResult.getRight();
@@ -491,7 +494,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (!remainingItem.isEmpty()) {
                 InventoryHelper.spawnItemStack(player.getEntityWorld(), player.getPosition().getX(),
                         player.getPosition().getY(), player.getPosition().getZ(), remainingItem);
-            } else {
+            } else if (network != null && network.getItemStorageTracker() != null) {
                 network.getItemStorageTracker().changed(player, itemStack);
             }
         }

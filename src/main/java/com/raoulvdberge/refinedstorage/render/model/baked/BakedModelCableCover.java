@@ -19,6 +19,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import org.lwjgl.util.vector.Vector3f;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ public class BakedModelCableCover extends BakedModelDelegate {
         super(base);
     }
 
+    @Nonnull
     @Override
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         List<BakedQuad> quads = new ArrayList<>(base.getQuads(state, side, rand));

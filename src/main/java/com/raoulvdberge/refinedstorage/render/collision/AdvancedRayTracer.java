@@ -60,6 +60,6 @@ public final class AdvancedRayTracer {
         result = new RayTraceResult(RayTraceResult.Type.BLOCK, result.hitVec, result.sideHit, pos);
         result.subHit = subHit;
 
-        return new AdvancedRayTraceResult<>(group, bounds, result);
+        return new AdvancedRayTraceResult<>(group, result);
     }
 }

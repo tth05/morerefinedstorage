@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 public class ItemGridHandler implements IItemGridHandler {
-    private INetwork network;
+    private final INetwork network;
 
     public ItemGridHandler(INetwork network) {
         this.network = network;
@@ -36,7 +36,8 @@ public class ItemGridHandler implements IItemGridHandler {
     @Override
     public void onExtract(EntityPlayerMP player, ItemStack stack, int preferredSlot, int flags) {
         StackListEntry<ItemStack> entry =
-                network.getItemStorageCache().getList().getEntry(stack, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
+                network.getItemStorageCache().getList()
+                        .getEntry(stack, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
         if (entry != null)
             onExtract(player, entry.getId(), preferredSlot, flags);
     }
@@ -80,8 +81,6 @@ public class ItemGridHandler implements IItemGridHandler {
             }
         } else if (single) {
             size = 1;
-        } else if ((flags & EXTRACT_SHIFT) == EXTRACT_SHIFT) {
-            // NO OP, the quantity already set (64) is needed for shift
         }
 
         size = Math.min(size, maxItemSize);
@@ -207,21 +206,21 @@ public class ItemGridHandler implements IItemGridHandler {
 
                 ICraftingTaskError error = task.calculate();
 
-                if(error == null)
+                if (error == null)
                     network.getCraftingManager().add(task);
 
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(
-                            new CraftingPreviewElementError(error.getType(),
-                                    error.getRecursedPattern() == null ? ItemStack.EMPTY :
-                                            error.getRecursedPattern().getStack())), task.getId(), quantity, false), player);
+                            new CraftingPreviewElementError(error.getType(), ItemStack.EMPTY)), task.getId(), quantity,
+                            false), player);
                 } else if (noPreview && !task.hasMissing()) {
                     task.setCanUpdate(true);
 
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingStartResponse(), player);
                 } else {
                     RS.INSTANCE.network
-                            .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(), quantity,
+                            .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
+                                    quantity,
                                     false), player);
                 }
             }, "RS crafting preview calculation");
@@ -235,7 +234,7 @@ public class ItemGridHandler implements IItemGridHandler {
         }
 
         ICraftingTask task = network.getCraftingManager().getTask(id);
-        if(task != null)
+        if (task != null)
             task.setCanUpdate(true);
     }
 

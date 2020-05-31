@@ -11,8 +11,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class CapabilityProviderEnergy implements ICapabilityProvider {
-    private ItemStack stack;
-    private int energyCapacity;
+    private final ItemStack stack;
+    private final int energyCapacity;
 
     public CapabilityProviderEnergy(ItemStack stack, int energyCapacity) {
         this.stack = stack;

@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class StorageExternalFluid implements IStorageExternal<FluidStack> {
-    private IExternalStorageContext context;
-    private Supplier<IFluidHandler> handlerSupplier;
-    private boolean connectedToInterface;
-    private ExternalStorageCacheFluid cache = new ExternalStorageCacheFluid();
+    private final IExternalStorageContext context;
+    private final Supplier<IFluidHandler> handlerSupplier;
+    private final boolean connectedToInterface;
+    private final ExternalStorageCacheFluid cache = new ExternalStorageCacheFluid();
 
     public StorageExternalFluid(IExternalStorageContext context, Supplier<IFluidHandler> handlerSupplier, boolean connectedToInterface) {
         this.context = context;

@@ -12,7 +12,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fluids.Fluid;
 
 public class GuiGridCraftingSettings extends GuiAmountSpecifying {
-    private IGridStack stack;
+    private final IGridStack stack;
 
     public GuiGridCraftingSettings(GuiBase parent, EntityPlayer player, IGridStack stack) {
         super(parent, new ContainerCraftingSettings(player, stack), 172, 99);

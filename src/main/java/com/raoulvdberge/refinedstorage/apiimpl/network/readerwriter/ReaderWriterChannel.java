@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 public class ReaderWriterChannel implements IReaderWriterChannel {
     private static final String NBT_HANDLER = "Handler_%s";
 
-    private String name;
-    private INetwork network;
+    private final String name;
+    private final INetwork network;
 
-    private List<IReaderWriterHandler> handlers = new ArrayList<>();
+    private final List<IReaderWriterHandler> handlers = new ArrayList<>();
 
     public ReaderWriterChannel(String name, INetwork network) {
         this.name = name;

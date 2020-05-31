@@ -26,11 +26,11 @@ import java.util.function.Consumer;
 import static com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY;
 
 public class NetworkNodeGraph implements INetworkNodeGraph {
-    private INetwork network;
+    private final INetwork network;
     private Set<INetworkNode> nodes = Sets.newConcurrentHashSet();
-    private List<INetworkNodeGraphListener> listeners = new LinkedList<>();
+    private final List<INetworkNodeGraphListener> listeners = new LinkedList<>();
 
-    private Set<Consumer<INetwork>> actions = new HashSet<>();
+    private final Set<Consumer<INetwork>> actions = new HashSet<>();
 
     private boolean invalidating = false;
 
@@ -139,14 +139,14 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
     }
 
     private class Operator implements INetworkNodeVisitor.Operator {
-        private Set<INetworkNode> foundNodes = Sets.newConcurrentHashSet(); // All scanned nodes
+        private final Set<INetworkNode> foundNodes = Sets.newConcurrentHashSet(); // All scanned nodes
 
-        private Set<INetworkNode> newNodes = Sets.newConcurrentHashSet(); // All scanned new nodes, that didn't appear in the list before
-        private Set<INetworkNode> previousNodes = Sets.newConcurrentHashSet(nodes); // All unscanned nodes (nodes that were in the previous list, but not in the new list)
+        private final Set<INetworkNode> newNodes = Sets.newConcurrentHashSet(); // All scanned new nodes, that didn't appear in the list before
+        private final Set<INetworkNode> previousNodes = Sets.newConcurrentHashSet(nodes); // All unscanned nodes (nodes that were in the previous list, but not in the new list)
 
-        private Queue<Visitor> toCheck = new ArrayDeque<>();
+        private final Queue<Visitor> toCheck = new ArrayDeque<>();
 
-        private Action action;
+        private final Action action;
 
         public Operator(Action action) {
             this.action = action;
@@ -189,7 +189,7 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
         }
     }
 
-    private class Visitor implements INetworkNodeVisitor {
+    private static class Visitor implements INetworkNodeVisitor {
         private final INetworkNode node;
         private final World world;
         private final BlockPos pos;

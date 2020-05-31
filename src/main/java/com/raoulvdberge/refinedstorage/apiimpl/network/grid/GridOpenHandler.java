@@ -13,7 +13,7 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class GridOpenHandler implements Runnable {
-    private MessageGridOpen message;
+    private final MessageGridOpen message;
 
     public GridOpenHandler(MessageGridOpen message) {
         this.message = message;

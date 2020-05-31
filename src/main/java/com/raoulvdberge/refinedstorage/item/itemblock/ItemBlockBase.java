@@ -11,8 +11,10 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+
 public class ItemBlockBase extends ItemBlock {
-    private BlockBase block;
+    private final BlockBase block;
 
     public ItemBlockBase(BlockBase block, boolean subtypes) {
         super(block);
@@ -32,8 +34,9 @@ public class ItemBlockBase extends ItemBlock {
         return damage;
     }
 
+    @Nonnull
     @Override
-    public String getTranslationKey(ItemStack stack) {
+    public String getTranslationKey(@Nonnull ItemStack stack) {
         if (getHasSubtypes()) {
             return getTranslationKey() + "." + stack.getItemDamage();
         }
@@ -42,7 +45,7 @@ public class ItemBlockBase extends ItemBlock {
     }
 
     @Override
-    public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, IBlockState newState) {
+    public boolean placeBlockAt(@Nonnull ItemStack stack, @Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ, @Nonnull IBlockState newState) {
         boolean result = super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, newState);
 
         if (result && block.getDirection() != null) {

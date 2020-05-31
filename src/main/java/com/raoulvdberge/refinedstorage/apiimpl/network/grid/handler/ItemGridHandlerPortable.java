@@ -20,8 +20,8 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class ItemGridHandlerPortable implements IItemGridHandler {
-    private IPortableGrid portableGrid;
-    private IGrid grid;
+    private final IPortableGrid portableGrid;
+    private final IGrid grid;
 
     public ItemGridHandlerPortable(IPortableGrid portableGrid, IGrid grid) {
         this.portableGrid = portableGrid;
@@ -81,8 +81,6 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
             }
         } else if (single) {
             size = 1;
-        } else if ((flags & EXTRACT_SHIFT) == EXTRACT_SHIFT) {
-            // NO OP, the quantity already set (64) is needed for shift
         }
 
         size = Math.min(size, maxItemSize);
@@ -114,7 +112,8 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
                             took = portableGrid.getItemStorage()
                                     .extract(item, size,IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT, Action.PERFORM);
 
-                            ItemHandlerHelper.insertItemStacked(playerInventory, took, false);
+                            if(took != null)
+                                ItemHandlerHelper.insertItemStacked(playerInventory, took, false);
                         }
                     }
                 }
@@ -146,7 +145,7 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
 
         ItemStack remainder;
         if (single) {
-            if (portableGrid.getItemStorage().insert(stack, 1, Action.SIMULATE).isEmpty()) {
+            if (portableGrid.getItemStorage().insert(stack, 1, Action.SIMULATE) == null) {
                 portableGrid.getItemStorage().insert(stack, 1, Action.PERFORM);
                 stack.shrink(1);
             }

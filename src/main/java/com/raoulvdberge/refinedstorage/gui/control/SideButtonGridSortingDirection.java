@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import net.minecraft.util.text.TextFormatting;
 
 public class SideButtonGridSortingDirection extends SideButton {
-    private IGrid grid;
+    private final IGrid grid;
 
     public SideButtonGridSortingDirection(GuiBase gui, IGrid grid) {
         super(gui);

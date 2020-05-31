@@ -19,6 +19,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class BlockSecurityManager extends BlockNode {
@@ -41,6 +42,7 @@ public class BlockSecurityManager extends BlockNode {
         ));
     }
 
+    @Nonnull
     @Override
     public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
@@ -53,7 +55,7 @@ public class BlockSecurityManager extends BlockNode {
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         if (!world.isRemote) {
             if (player.getGameProfile().getId().equals(((TileSecurityManager) world.getTileEntity(pos)).getNode().getOwner())) {
                 player.openGui(RS.INSTANCE, RSGui.SECURITY_MANAGER, world, pos.getX(), pos.getY(), pos.getZ());

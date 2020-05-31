@@ -4,10 +4,10 @@ import com.raoulvdberge.refinedstorage.api.util.IFilter;
 import net.minecraft.item.ItemStack;
 
 public class FilterItem implements IFilter<ItemStack> {
-    private ItemStack stack;
-    private int compare;
-    private int mode;
-    private boolean modFilter;
+    private final ItemStack stack;
+    private final int compare;
+    private final int mode;
+    private final boolean modFilter;
 
     public FilterItem(ItemStack stack, int compare, int mode, boolean modFilter) {
         this.stack = stack;

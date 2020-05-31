@@ -23,7 +23,7 @@ import java.util.function.Function;
 public class MessageCraftingMonitorElements implements IMessage, IMessageHandler<MessageCraftingMonitorElements, IMessage> {
     private ICraftingMonitor craftingMonitor;
 
-    private List<IGridTab> tasks = new ArrayList<>();
+    private final List<IGridTab> tasks = new ArrayList<>();
 
     public MessageCraftingMonitorElements() {
     }

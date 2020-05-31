@@ -19,7 +19,7 @@ public class TextFieldSearch extends GuiTextField {
     private int mode;
     private int historyIndex = -1;
 
-    private List<Runnable> listeners = new LinkedList<>();
+    private final List<Runnable> listeners = new LinkedList<>();
 
     public TextFieldSearch(int componentId, FontRenderer fontRenderer, int x, int y, int width) {
         super(componentId, fontRenderer, x, y, width, fontRenderer.FONT_HEIGHT);

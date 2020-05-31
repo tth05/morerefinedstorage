@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
@@ -28,7 +29,7 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
     private boolean canReadDisks;
     private NBTTagList disksTag;
 
-    private ConcurrentHashMap<UUID, IStorageDisk> disks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, IStorageDisk> disks = new ConcurrentHashMap<>();
 
     public StorageDiskManager(String name) {
         super(name);
@@ -119,8 +120,9 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
         }
     }
 
+    @Nonnull
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+    public NBTTagCompound writeToNBT(@Nonnull NBTTagCompound tag) {
         NBTTagList disks = new NBTTagList();
 
         for (Map.Entry<UUID, IStorageDisk> entry : this.disks.entrySet()) {

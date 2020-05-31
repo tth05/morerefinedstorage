@@ -2,6 +2,8 @@ package com.raoulvdberge.refinedstorage.api.network.grid;
 
 import net.minecraft.util.IStringSerializable;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents a grid type.
  * Used in {@link IGrid} to determine grid GUI rendering.
@@ -24,14 +26,15 @@ public enum GridType implements IStringSerializable {
      */
     FLUID(3, "fluid");
 
-    private int id;
-    private String name;
+    private final int id;
+    private final String name;
 
     GridType(int id, String name) {
         this.id = id;
         this.name = name;
     }
 
+    @Nonnull
     @Override
     public String getName() {
         return name;

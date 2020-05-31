@@ -63,16 +63,16 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
 
     private static final int BASE_SPEED = 20;
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(1, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(1, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(1, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(1, new ListenerNetworkNode(this));
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING, ItemUpgrade.TYPE_STACK);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING, ItemUpgrade.TYPE_STACK);
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
     private int type = IType.ITEMS;
     private boolean drop = false;
 
-    private CoverManager coverManager = new CoverManager(this);
+    private final CoverManager coverManager = new CoverManager(this);
 
     public NetworkNodeConstructor(World world, BlockPos pos) {
         super(world, pos);
@@ -87,7 +87,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     public void update() {
         super.update();
 
-        if (canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
+        if (network != null && canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
             if (type == IType.ITEMS && !itemFilters.getStackInSlot(0).isEmpty()) {
                 ItemStack item = itemFilters.getStackInSlot(0);
 
@@ -103,7 +103,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
                     if (item.getItem() == Items.FIREWORKS && !drop) {
                         ItemStack took = network.extractItem(item, 1, Action.PERFORM);
 
-                        if (took != null) {
+                        if (!took.isEmpty()) {
                             world.spawnEntity(new EntityFireworkRocket(world, getDispensePositionX(), getDispensePositionY(), getDispensePositionZ(), took));
                         }
                     } else {
@@ -168,13 +168,15 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     }
 
     private void placeBlock() {
+        if(network == null)
+            return;
+
         BlockPos front = pos.offset(getDirection());
 
         ItemStack item = itemFilters.getStackInSlot(0);
-
         ItemStack took = network.extractItem(item, 1, compare, Action.SIMULATE);
 
-        if (took != null) {
+        if (!took.isEmpty()) {
             IBlockState state = SlotFilter.getBlockState(world, front, took);
 
             if (state != null && world.isAirBlock(front) && state.getBlock().canPlaceBlockAt(world, front)) {
@@ -186,7 +188,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
 
                 took = network.extractItem(item, 1, compare, Action.PERFORM);
 
-                if (took != null) {
+                if (!took.isEmpty()) {
                     if (item.getItem() instanceof ItemBlock) {
                         ((ItemBlock) item.getItem()).placeBlockAt(
                             took,
@@ -248,9 +250,12 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     }
 
     private void dropItem() {
+        if(network == null)
+            return;
+
         ItemStack took = network.extractItem(itemFilters.getStackInSlot(0), upgrades.getItemInteractCount(), Action.PERFORM);
 
-        if (took != null) {
+        if (!took.isEmpty()) {
             BehaviorDefaultDispenseItem.doDispense(world, took, 6, getDirection(), new PositionImpl(getDispensePositionX(), getDispensePositionY(), getDispensePositionZ()));
         } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
             ItemStack craft = itemFilters.getStackInSlot(0);

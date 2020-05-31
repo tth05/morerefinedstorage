@@ -14,9 +14,11 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.energy.CapabilityEnergy;
 
+import javax.annotation.Nonnull;
 import java.util.UUID;
 
 public class ItemMeshDefinitionPortableGrid implements ItemMeshDefinition {
+    @Nonnull
     @Override
     public ModelResourceLocation getModelLocation(ItemStack stack) {
         ItemHandlerBase disk = new ItemHandlerBase(1);
@@ -65,6 +67,6 @@ public class ItemMeshDefinitionPortableGrid implements ItemMeshDefinition {
             }
         };
 
-        return new ModelResourceLocation(RS.ID + ":portable_grid", "connected=" + Boolean.toString(renderInfo.isActive()) + ",direction=north,disk_state=" + TilePortableGrid.getDiskState(renderInfo));
+        return new ModelResourceLocation(RS.ID + ":portable_grid", "connected=" + renderInfo.isActive() + ",direction=north,disk_state=" + TilePortableGrid.getDiskState(renderInfo));
     }
 }

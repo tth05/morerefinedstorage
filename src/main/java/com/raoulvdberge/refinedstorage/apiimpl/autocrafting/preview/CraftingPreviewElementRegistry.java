@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class CraftingPreviewElementRegistry implements ICraftingPreviewElementRegistry {
-    private Map<String, Function<ByteBuf, ICraftingPreviewElement>> registry = new HashMap<>();
+    private final Map<String, Function<ByteBuf, ICraftingPreviewElement>> registry = new HashMap<>();
 
     @Override
     public void add(String id, Function<ByteBuf, ICraftingPreviewElement> factory) {

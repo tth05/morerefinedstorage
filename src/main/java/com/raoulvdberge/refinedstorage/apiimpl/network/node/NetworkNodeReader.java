@@ -21,7 +21,7 @@ public class NetworkNodeReader extends NetworkNode implements IReader, IGuiReade
 
     private String channel = "";
 
-    private CoverManager coverManager = new CoverManager(this);
+    private final CoverManager coverManager = new CoverManager(this);
 
     public NetworkNodeReader(World world, BlockPos pos) {
         super(world, pos);

@@ -12,11 +12,12 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public class GuiSecurityManager extends GuiBase {
-    private TileSecurityManager securityManager;
-    private GuiCheckBox[] permissions = new GuiCheckBox[Permission.values().length];
+    private final TileSecurityManager securityManager;
+    private final GuiCheckBox[] permissions = new GuiCheckBox[Permission.values().length];
 
     public GuiSecurityManager(ContainerSecurityManager container, TileSecurityManager securityManager) {
         super(container, 176, 234);
@@ -48,7 +49,7 @@ public class GuiSecurityManager extends GuiBase {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         for (int i = 0; i < permissions.length; ++i) {

@@ -25,7 +25,7 @@ public class TileDiskManipulator extends TileNode<NetworkNodeDiskManipulator> {
         t.getNode().markDirty();
     });
 
-    private Integer[] diskState = new Integer[6];
+    private final Integer[] diskState = new Integer[6];
 
     public TileDiskManipulator() {
         dataManager.addWatchedParameter(COMPARE);

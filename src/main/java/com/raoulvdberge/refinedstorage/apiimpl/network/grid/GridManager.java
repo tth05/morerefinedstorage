@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GridManager implements IGridManager {
-    private List<IGridFactory> factories = new ArrayList<>();
+    private final List<IGridFactory> factories = new ArrayList<>();
 
     @Override
     public int add(IGridFactory factory) {

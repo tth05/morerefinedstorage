@@ -18,7 +18,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class CraftingPreviewElementFluidStack implements ICraftingPreviewElement<FluidStack> {
     public static final String ID = "fluid_renderer";
 
-    private FluidStack stack;
+    private final FluidStack stack;
     private long available;
     private boolean missing;
     // If missing is true then toCraft is the missing amount

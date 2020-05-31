@@ -42,6 +42,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.input.Mouse;
 import yalter.mousetweaks.api.MouseTweaksDisableWheelTweak;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,8 +56,8 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     private GuiCheckBox oredictPattern;
     private GuiCheckBox processingPattern;
 
-    private IGrid grid;
-    private TabList tabs;
+    private final IGrid grid;
+    private final TabList tabs;
 
     private boolean wasConnected;
 
@@ -121,7 +122,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         addSideButton(new SideButtonGridSortingDirection(this, grid));
         addSideButton(new SideButtonGridSortingType(this, grid));
         addSideButton(new SideButtonGridSearchBoxMode(this));
-        addSideButton(new SideButtonGridSize(this, () -> grid.getSize(), size -> grid.onSizeChanged(size)));
+        addSideButton(new SideButtonGridSize(this, grid::getSize, grid::onSizeChanged));
 
         if (grid.getGridType() == GridType.PATTERN) {
             processingPattern = addCheckBox(x + 7, y + getTopHeight() + (getVisibleRows() * 18) + 60, t("misc.refinedstorage:processing"), TileGrid.PROCESSING_PATTERN.getValue());
@@ -249,8 +250,6 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                 int screenSpaceAvailable = height - getTopHeight() - getBottomHeight();
 
                 return Math.max(3, Math.min((screenSpaceAvailable / 18) - 3, RS.INSTANCE.config.maxRowsStretch));
-            case IGrid.SIZE_SMALL:
-                return 3;
             case IGrid.SIZE_MEDIUM:
                 return 5;
             case IGrid.SIZE_LARGE:
@@ -438,7 +437,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         tabs.actionPerformed(button);
@@ -528,13 +527,11 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
     @Override
     protected void keyTyped(char character, int keyCode) throws IOException {
-        if (searchField == null) {
+        if (searchField == null || checkHotbarKeys(keyCode)) {
             return;
         }
 
-        if (checkHotbarKeys(keyCode)) {
-            // NO OP
-        } else if (searchField.textboxKeyTyped(character, keyCode)) {
+        if (searchField.textboxKeyTyped(character, keyCode)) {
             keyHandled = true;
         } else if (keyCode == RSKeyBindings.CLEAR_GRID_CRAFTING_MATRIX.getKeyCode()) {
             RS.INSTANCE.network.sendToServer(new MessageGridClear());

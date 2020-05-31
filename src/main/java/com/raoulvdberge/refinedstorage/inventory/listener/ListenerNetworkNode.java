@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import java.util.function.Consumer;
 
 public class ListenerNetworkNode implements Consumer<Integer> {
-    private INetworkNode node;
+    private final INetworkNode node;
 
     public ListenerNetworkNode(INetworkNode node) {
         this.node = node;

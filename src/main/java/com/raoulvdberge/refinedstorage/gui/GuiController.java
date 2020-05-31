@@ -14,12 +14,12 @@ import java.util.List;
 public class GuiController extends GuiBase {
     private static final int VISIBLE_ROWS = 2;
 
-    private TileController controller;
+    private final TileController controller;
 
-    private int barX = 8;
-    private int barY = 20;
-    private int barWidth = 16;
-    private int barHeight = 59;
+    private final int barX = 8;
+    private final int barY = 20;
+    private final int barWidth = 16;
+    private final int barHeight = 59;
 
     public GuiController(ContainerController container, TileController controller) {
         super(container, 176, 181);

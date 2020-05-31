@@ -19,7 +19,7 @@ public class GridStackItem implements IGridStack {
     @Nullable
     private UUID otherId;
 
-    private ItemStack stack;
+    private final ItemStack stack;
     private String cachedName;
     private boolean craftable;
     private String[] oreIds = null;
@@ -33,7 +33,7 @@ public class GridStackItem implements IGridStack {
         this.stack = stack;
     }
 
-    public GridStackItem(UUID id, @Nullable UUID otherId, ItemStack stack, boolean craftable, StorageTrackerEntry entry) {
+    public GridStackItem(UUID id, @Nullable UUID otherId, ItemStack stack, boolean craftable, @Nullable StorageTrackerEntry entry) {
         this.id = id;
         this.otherId = otherId;
         this.stack = stack;

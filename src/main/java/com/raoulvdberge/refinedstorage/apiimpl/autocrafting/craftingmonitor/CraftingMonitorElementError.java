@@ -12,8 +12,8 @@ import javax.annotation.Nullable;
 public class CraftingMonitorElementError implements ICraftingMonitorElement {
     public static final String ID = "error";
 
-    private ICraftingMonitorElement base;
-    private String message;
+    private final ICraftingMonitorElement base;
+    private final String message;
 
     public CraftingMonitorElementError(ICraftingMonitorElement base, String message) {
         this.base = base;

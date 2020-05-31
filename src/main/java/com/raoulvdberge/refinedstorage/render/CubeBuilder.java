@@ -32,8 +32,8 @@ public class CubeBuilder {
     }
 
     public static class Face {
-        private EnumFacing face;
-        private TextureAtlasSprite sprite;
+        private final EnumFacing face;
+        private final TextureAtlasSprite sprite;
         private int light;
         private UvRotation uvRotation = UvRotation.CLOCKWISE_0;
 
@@ -58,7 +58,7 @@ public class CubeBuilder {
     private Vector3f from;
     private Vector3f to;
     private VertexFormat format = DefaultVertexFormats.ITEM;
-    private Map<EnumFacing, Face> faces = new HashMap<>();
+    private final Map<EnumFacing, Face> faces = new HashMap<>();
     private int color = 0xFFFFFFFF;
 
     public CubeBuilder from(float x, float y, float z) {

@@ -4,10 +4,10 @@ import com.raoulvdberge.refinedstorage.api.util.IFilter;
 import net.minecraftforge.fluids.FluidStack;
 
 public class FilterFluid implements IFilter<FluidStack> {
-    private FluidStack stack;
-    private int compare;
-    private int mode;
-    private boolean modFilter;
+    private final FluidStack stack;
+    private final int compare;
+    private final int mode;
+    private final boolean modFilter;
 
     public FilterFluid(FluidStack stack, int compare, int mode, boolean modFilter) {
         this.stack = stack;

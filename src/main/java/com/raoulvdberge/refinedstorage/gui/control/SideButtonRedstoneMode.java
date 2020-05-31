@@ -6,7 +6,7 @@ import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.util.text.TextFormatting;
 
 public class SideButtonRedstoneMode extends SideButton {
-    private TileDataParameter<Integer, ?> parameter;
+    private final TileDataParameter<Integer, ?> parameter;
 
     public SideButtonRedstoneMode(GuiBase gui, TileDataParameter<Integer, ?> parameter) {
         super(gui);

@@ -6,7 +6,7 @@ import com.raoulvdberge.refinedstorage.tile.config.IType;
 import net.minecraft.util.text.TextFormatting;
 
 public class SideButtonFilterType extends SideButton {
-    private GuiFilter gui;
+    private final GuiFilter gui;
 
     public SideButtonFilterType(GuiFilter gui) {
         super(gui);

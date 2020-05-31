@@ -17,7 +17,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<ItemStack> {
     public static final String ID = "item_renderer";
 
-    private ItemStack stack;
+    private final ItemStack stack;
     private long available;
     private boolean missing;
     // If missing is true then toCraft is the missing amount

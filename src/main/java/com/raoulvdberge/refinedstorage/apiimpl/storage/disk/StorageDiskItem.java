@@ -27,9 +27,9 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     public static final String NBT_CAPACITY = "Capacity";
     public static final String NBT_ITEMS = "Items";
 
-    private World world;
-    private int capacity;
-    private Multimap<Item, ItemStack> stacks = ArrayListMultimap.create();
+    private final World world;
+    private final int capacity;
+    private final Multimap<Item, ItemStack> stacks = ArrayListMultimap.create();
 
     @Nullable
     private IStorageDiskListener listener;

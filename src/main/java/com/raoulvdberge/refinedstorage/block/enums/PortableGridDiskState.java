@@ -2,6 +2,8 @@ package com.raoulvdberge.refinedstorage.block.enums;
 
 import net.minecraft.util.IStringSerializable;
 
+import javax.annotation.Nonnull;
+
 public enum PortableGridDiskState implements IStringSerializable {
     NORMAL(0, "normal"),
     NEAR_CAPACITY(1, "near_capacity"),
@@ -9,8 +11,8 @@ public enum PortableGridDiskState implements IStringSerializable {
     DISCONNECTED(3, "disconnected"),
     NONE(4, "none");
 
-    private int id;
-    private String type;
+    private final int id;
+    private final String type;
 
     PortableGridDiskState(int id, String type) {
         this.id = id;
@@ -21,6 +23,7 @@ public enum PortableGridDiskState implements IStringSerializable {
         return id;
     }
 
+    @Nonnull
     @Override
     public String getName() {
         return type;

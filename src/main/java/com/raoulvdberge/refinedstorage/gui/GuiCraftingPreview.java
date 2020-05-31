@@ -27,6 +27,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import org.lwjgl.input.Keyboard;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import java.util.UUID;
 
 public class GuiCraftingPreview extends GuiBase {
     public class CraftingPreviewElementDrawers extends ElementDrawers {
-        private IElementDrawer<Integer> overlayDrawer = (x, y, colour) -> {
+        private final IElementDrawer<Integer> overlayDrawer = (x, y, colour) -> {
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.disableLighting();
 
@@ -50,11 +51,11 @@ public class GuiCraftingPreview extends GuiBase {
 
     private static final int VISIBLE_ROWS = 5;
 
-    private List<ICraftingPreviewElement> stacks;
-    private GuiScreen parent;
+    private final List<ICraftingPreviewElement> stacks;
+    private final GuiScreen parent;
 
-    private UUID id;
-    private int quantity;
+    private final UUID id;
+    private final int quantity;
 
     private GuiButton startButton;
     private GuiButton cancelButton;
@@ -62,14 +63,14 @@ public class GuiCraftingPreview extends GuiBase {
     private ItemStack hoveringStack;
     private FluidStack hoveringFluid;
 
-    private IElementDrawers drawers = new CraftingPreviewElementDrawers();
+    private final IElementDrawers drawers = new CraftingPreviewElementDrawers();
 
-    private boolean fluids;
+    private final boolean fluids;
 
     public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID id, int quantity, boolean fluids) {
         super(new Container() {
             @Override
-            public boolean canInteractWith(EntityPlayer player) {
+            public boolean canInteractWith(@Nonnull EntityPlayer player) {
                 return false;
             }
         }, 254, 201);
@@ -234,7 +235,7 @@ public class GuiCraftingPreview extends GuiBase {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button.id == startButton.id) {

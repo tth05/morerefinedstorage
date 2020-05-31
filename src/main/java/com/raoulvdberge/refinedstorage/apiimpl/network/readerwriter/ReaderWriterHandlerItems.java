@@ -53,8 +53,9 @@ public class ReaderWriterHandlerItems implements IReaderWriterHandler {
         }
     };
 
-    private ItemStackHandler items;
-    private ItemHandlerReaderWriter itemsReader, itemsWriter;
+    private final ItemStackHandler items;
+    private final ItemHandlerReaderWriter itemsReader;
+    private final ItemHandlerReaderWriter itemsWriter;
 
     public ReaderWriterHandlerItems(@Nullable NBTTagCompound tag) {
         this.items = new ItemStackHandler(16);
@@ -145,9 +146,10 @@ public class ReaderWriterHandlerItems implements IReaderWriterHandler {
         return components;
     }
 
-    private class ItemHandlerReaderWriter implements IItemHandler {
-        private IItemHandler parent;
-        private boolean canInsert, canExtract;
+    private static class ItemHandlerReaderWriter implements IItemHandler {
+        private final IItemHandler parent;
+        private final boolean canInsert;
+        private final boolean canExtract;
 
         public ItemHandlerReaderWriter(IItemHandler parent, boolean canInsert, boolean canExtract) {
             this.parent = parent;

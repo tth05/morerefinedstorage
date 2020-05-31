@@ -35,21 +35,21 @@ public class CraftingManager implements ICraftingManager {
 
     public static final ExecutorService CALCULATION_THREAD_POOL = Executors.newFixedThreadPool(4);
 
-    private TileController network;
+    private final TileController network;
 
-    private Map<String, List<IItemHandlerModifiable>> containerInventories = new LinkedHashMap<>();
-    private Map<ICraftingPattern, Set<ICraftingPatternContainer>> patternToContainer = new HashMap<>();
+    private final Map<String, List<IItemHandlerModifiable>> containerInventories = new LinkedHashMap<>();
+    private final Map<ICraftingPattern, Set<ICraftingPatternContainer>> patternToContainer = new HashMap<>();
 
-    private List<ICraftingPattern> patterns = new ArrayList<>();
+    private final List<ICraftingPattern> patterns = new ArrayList<>();
 
-    private Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
-    private List<ICraftingTask> tasksToAdd = new ArrayList<>();
-    private List<UUID> tasksToCancel = new ArrayList<>();
+    private final Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
+    private final List<ICraftingTask> tasksToAdd = new ArrayList<>();
+    private final List<UUID> tasksToCancel = new ArrayList<>();
     private NBTTagList tasksToRead;
 
-    private Map<Object, Long> throttledRequesters = new HashMap<>();
+    private final Map<Object, Long> throttledRequesters = new HashMap<>();
 
-    private Set<ICraftingMonitorListener> listeners = new HashSet<>();
+    private final Set<ICraftingMonitorListener> listeners = new HashSet<>();
 
     public CraftingManager(TileController network) {
         this.network = network;

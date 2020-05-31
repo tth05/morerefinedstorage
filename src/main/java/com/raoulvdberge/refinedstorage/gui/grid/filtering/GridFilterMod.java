@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
 import java.util.function.Predicate;
 
 public class GridFilterMod implements Predicate<IGridStack> {
-    private String inputModName;
+    private final String inputModName;
 
     public GridFilterMod(String inputModName) {
         this.inputModName = standardify(inputModName);
@@ -24,9 +24,7 @@ public class GridFilterMod implements Predicate<IGridStack> {
             if (modName != null) {
                 modName = standardify(modName);
 
-                if (modName.contains(inputModName)) {
-                    return true;
-                }
+                return modName.contains(inputModName);
             }
         }
 

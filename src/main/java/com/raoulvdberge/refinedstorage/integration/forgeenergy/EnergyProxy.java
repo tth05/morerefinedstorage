@@ -9,10 +9,6 @@ public final class EnergyProxy implements IEnergyStorage {
     private final int maxExtract;
     private final IEnergy energy;
 
-    public EnergyProxy(IEnergy energy, int maxTransfer) {
-        this(energy, maxTransfer, maxTransfer);
-    }
-
     public EnergyProxy(IEnergy energy, int maxReceive, int maxExtract) {
         this.energy = energy;
         this.maxReceive = maxReceive;

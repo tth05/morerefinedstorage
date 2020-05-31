@@ -44,7 +44,7 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
     private static final String NBT_FILTERS = "Filters";
     public static final String NBT_ID = "Id";
 
-    private FluidInventory filters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final FluidInventory filters = new FluidInventory(9, new ListenerNetworkNode(this));
 
     private FluidStorageType type;
 
@@ -181,7 +181,7 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
         if (type == null && world != null) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() == RSBlocks.FLUID_STORAGE) {
-                type = (FluidStorageType) state.getValue(BlockFluidStorage.TYPE);
+                type = state.getValue(BlockFluidStorage.TYPE);
             }
         }
 

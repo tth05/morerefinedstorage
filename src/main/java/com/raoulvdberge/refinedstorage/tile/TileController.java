@@ -122,24 +122,24 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     private static final String NBT_ITEM_STORAGE_TRACKER = "ItemStorageTracker";
     private static final String NBT_FLUID_STORAGE_TRACKER = "FluidStorageTracker";
 
-    private IItemGridHandler itemGridHandler = new ItemGridHandler(this);
-    private IFluidGridHandler fluidGridHandler = new FluidGridHandler(this);
+    private final IItemGridHandler itemGridHandler = new ItemGridHandler(this);
+    private final IFluidGridHandler fluidGridHandler = new FluidGridHandler(this);
 
-    private INetworkItemHandler networkItemHandler = new NetworkItemHandler(this);
+    private final INetworkItemHandler networkItemHandler = new NetworkItemHandler(this);
 
-    private INetworkNodeGraph nodeGraph = new NetworkNodeGraph(this);
+    private final INetworkNodeGraph nodeGraph = new NetworkNodeGraph(this);
 
-    private ICraftingManager craftingManager = new CraftingManager(this);
+    private final ICraftingManager craftingManager = new CraftingManager(this);
 
-    private ISecurityManager securityManager = new SecurityManager(this);
+    private final ISecurityManager securityManager = new SecurityManager(this);
 
-    private IStorageCache<ItemStack> itemStorage = new StorageCacheItem(this);
-    private StorageTrackerItem itemStorageTracker = new StorageTrackerItem(this::markDirty);
+    private final IStorageCache<ItemStack> itemStorage = new StorageCacheItem(this);
+    private final StorageTrackerItem itemStorageTracker = new StorageTrackerItem(this::markDirty);
 
-    private IStorageCache<FluidStack> fluidStorage = new StorageCacheFluid(this);
-    private StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(this::markDirty);
+    private final IStorageCache<FluidStack> fluidStorage = new StorageCacheFluid(this);
+    private final StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(this::markDirty);
 
-    private IReaderWriterManager readerWriterManager = new ReaderWriterManager(this);
+    private final IReaderWriterManager readerWriterManager = new ReaderWriterManager(this);
 
     private final IEnergy energy = new Energy(RS.INSTANCE.config.controllerCapacity);
     private final EnergyProxy energyProxy = new EnergyProxy(this.energy, RS.INSTANCE.config.controllerMaxReceive, 0);
@@ -356,7 +356,6 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     @Nonnull
     @Override
     public ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action, Predicate<IStorage<ItemStack>> filter) {
-        int requested = size;
         int received = 0;
 
         int extractedExternally = 0;
@@ -367,7 +366,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             ItemStack took = null;
 
             if (filter.test(storage) && storage.getAccessType() != AccessType.INSERT) {
-                took = storage.extract(stack, requested - received, flags, action);
+                took = storage.extract(stack, size - received, flags, action);
             }
 
             if (took != null) {
@@ -387,7 +386,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
                 received += took.getCount();
             }
 
-            if (requested == received) {
+            if (size == received) {
                 break;
             }
         }
@@ -454,7 +453,6 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
     @Override
     public FluidStack extractFluid(@Nonnull FluidStack stack, int size, int flags, Action action, Predicate<IStorage<FluidStack>> filter) {
-        int requested = size;
         int received = 0;
 
         int extractedExternally = 0;
@@ -465,7 +463,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             FluidStack took = null;
 
             if (filter.test(storage) && storage.getAccessType() != AccessType.INSERT) {
-                took = storage.extract(stack, requested - received, flags, action);
+                took = storage.extract(stack, size - received, flags, action);
             }
 
             if (took != null) {
@@ -485,7 +483,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
                 received += took.amount;
             }
 
-            if (requested == received) {
+            if (size == received) {
                 break;
             }
         }
@@ -507,11 +505,13 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         return fluidStorageTracker;
     }
 
+    @Nonnull
     @Override
     public World world() {
         return world;
     }
 
+    @Nonnull
     @Override
     public World getWorld()
     {
@@ -668,7 +668,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         if (type == null) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() == RSBlocks.CONTROLLER) {
-                this.type = (ControllerType) state.getValue(BlockController.TYPE);
+                this.type = state.getValue(BlockController.TYPE);
             }
         }
 

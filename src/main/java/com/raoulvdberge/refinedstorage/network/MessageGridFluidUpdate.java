@@ -20,7 +20,7 @@ import java.util.List;
 public class MessageGridFluidUpdate implements IMessage, IMessageHandler<MessageGridFluidUpdate, IMessage> {
     private INetwork network;
     private boolean canCraft;
-    private List<IGridStack> stacks = new ArrayList<>();
+    private final List<IGridStack> stacks = new ArrayList<>();
 
     public MessageGridFluidUpdate() {
     }

@@ -27,7 +27,7 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
 
     private List<Pair<IGridStack, Integer>> clientDeltas;
 
-    public MessageGridFluidDelta(INetwork network, List<StackListResult<FluidStack>> deltas) {
+    public MessageGridFluidDelta(@Nullable INetwork network, List<StackListResult<FluidStack>> deltas) {
         this.network = network;
         this.deltas = deltas;
     }

@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 public class ContainerCrafterManager extends ContainerBase {
-    public class CrafterManagerListener implements IContainerListener {
-        private EntityPlayerMP base;
+    public static class CrafterManagerListener implements IContainerListener {
+        private final EntityPlayerMP base;
         private boolean receivedContainerData;
 
         public CrafterManagerListener(EntityPlayerMP base) {
@@ -43,14 +43,14 @@ public class ContainerCrafterManager extends ContainerBase {
         }
 
         @Override
-        public void sendAllContents(Container container, NonNullList<ItemStack> items) {
+        public void sendAllContents(@Nonnull Container container, @Nonnull NonNullList<ItemStack> items) {
             if (receivedContainerData) {
                 base.sendAllContents(container, items);
             }
         }
 
         @Override
-        public void sendSlotContents(Container container, int slotInd, ItemStack stack) {
+        public void sendSlotContents(@Nonnull Container container, int slotInd, @Nonnull ItemStack stack) {
             if (receivedContainerData) {
                 base.sendSlotContents(container, slotInd, stack);
             }
@@ -61,25 +61,25 @@ public class ContainerCrafterManager extends ContainerBase {
         }
 
         @Override
-        public void sendWindowProperty(Container container, int varToUpdate, int newValue) {
+        public void sendWindowProperty(@Nonnull Container container, int varToUpdate, int newValue) {
             base.sendWindowProperty(container, varToUpdate, newValue);
         }
 
         @Override
-        public void sendAllWindowProperties(Container container, IInventory inventory) {
+        public void sendAllWindowProperties(@Nonnull Container container, @Nonnull IInventory inventory) {
             base.sendAllWindowProperties(container, inventory);
         }
     }
 
-    private IResizableDisplay display;
-    private NetworkNodeCrafterManager crafterManager;
+    private final IResizableDisplay display;
+    private final NetworkNodeCrafterManager crafterManager;
     private Map<String, Integer> containerData;
-    private Map<String, IItemHandlerModifiable> dummyInventories = new HashMap<>();
-    private Map<String, Integer> headings = new HashMap<>();
+    private final Map<String, IItemHandlerModifiable> dummyInventories = new HashMap<>();
+    private final Map<String, Integer> headings = new HashMap<>();
     private int rows;
 
     @Override
-    public void addListener(IContainerListener listener) {
+    public void addListener(@Nonnull IContainerListener listener) {
         if (listener instanceof EntityPlayerMP) {
             listener = new CrafterManagerListener((EntityPlayerMP) listener);
         }
@@ -227,8 +227,9 @@ public class ContainerCrafterManager extends ContainerBase {
         return rows;
     }
 
+    @Nonnull
     @Override
-    public ItemStack transferStackInSlot(EntityPlayer player, int index) {
+    public ItemStack transferStackInSlot(@Nonnull EntityPlayer player, int index) {
         ItemStack stack = ItemStack.EMPTY;
 
         Slot slot = getSlot(index);

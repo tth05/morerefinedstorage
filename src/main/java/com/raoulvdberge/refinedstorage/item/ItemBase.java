@@ -8,6 +8,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public abstract class ItemBase extends Item {
     protected final IItemInfo info;
 
@@ -22,13 +24,15 @@ public abstract class ItemBase extends Item {
     public void registerModels(IModelRegistration modelRegistration) {
     }
 
+    @Nonnull
     @Override
     public String getTranslationKey() {
         return "item." + info.getId().toString();
     }
 
+    @Nonnull
     @Override
-    public String getTranslationKey(ItemStack stack) {
+    public String getTranslationKey(@Nonnull ItemStack stack) {
         if (getHasSubtypes()) {
             return getTranslationKey() + "." + stack.getItemDamage();
         }

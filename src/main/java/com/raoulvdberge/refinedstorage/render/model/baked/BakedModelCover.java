@@ -20,6 +20,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.model.TRSRTransformation;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.vecmath.Matrix4f;
 import java.util.ArrayList;
@@ -28,11 +29,11 @@ import java.util.List;
 import java.util.Objects;
 
 public class BakedModelCover extends BakedModelCableCover {
-    private class CacheKey {
-        private IBlockState state;
-        private ItemStack stack;
-        private EnumFacing side;
-        private CoverType type;
+    private static class CacheKey {
+        private final IBlockState state;
+        private final ItemStack stack;
+        private final EnumFacing side;
+        private final CoverType type;
 
         CacheKey(IBlockState state, ItemStack stack, EnumFacing side, CoverType type) {
             this.state = state;
@@ -69,7 +70,7 @@ public class BakedModelCover extends BakedModelCableCover {
 
     private static final LoadingCache<CacheKey, List<BakedQuad>> CACHE = CacheBuilder.newBuilder().build(new CacheLoader<CacheKey, List<BakedQuad>>() {
         @Override
-        public List<BakedQuad> load(CacheKey key) {
+        public List<BakedQuad> load(@Nonnull CacheKey key) {
             List<BakedQuad> quads = new ArrayList<>();
 
             addCover(quads, new Cover(key.stack, key.type), EnumFacing.NORTH, key.side, 0, null, false);
@@ -79,8 +80,8 @@ public class BakedModelCover extends BakedModelCableCover {
     });
 
     @Nullable
-    private ItemStack stack;
-    private CoverType type;
+    private final ItemStack stack;
+    private final CoverType type;
 
     public BakedModelCover(@Nullable ItemStack stack, CoverType type) {
         super(null);
@@ -89,6 +90,7 @@ public class BakedModelCover extends BakedModelCableCover {
         this.type = type;
     }
 
+    @Nonnull
     @Override
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         if (stack == null) {
@@ -100,6 +102,7 @@ public class BakedModelCover extends BakedModelCableCover {
         return CACHE.getUnchecked(key);
     }
 
+    @Nonnull
     @Override
     public ItemOverrideList getOverrides() {
         if (stack != null) {
@@ -107,15 +110,17 @@ public class BakedModelCover extends BakedModelCableCover {
         }
 
         return new ItemOverrideList(Collections.emptyList()) {
+            @Nonnull
             @Override
-            public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
+            public IBakedModel handleItemState(@Nonnull IBakedModel originalModel, @Nonnull ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
                 return new BakedModelCover(stack, type);
             }
         };
     }
 
+    @Nonnull
     @Override
-    public Pair<? extends IBakedModel, Matrix4f> handlePerspective(ItemCameraTransforms.TransformType cameraTransformType) {
+    public Pair<? extends IBakedModel, Matrix4f> handlePerspective(@Nonnull ItemCameraTransforms.TransformType cameraTransformType) {
         TRSRTransformation transform = RenderUtils.getDefaultBlockTransforms().get(cameraTransformType);
 
         return Pair.of(this, transform == null ? RenderUtils.EMPTY_MATRIX_TRANSFORM : transform.getMatrix());
@@ -136,16 +141,18 @@ public class BakedModelCover extends BakedModelCableCover {
         return false;
     }
 
+    @Nonnull
     @Override
     public TextureAtlasSprite getParticleTexture() {
         return null;
     }
 
     @Override
-    public boolean isAmbientOcclusion(IBlockState state) {
+    public boolean isAmbientOcclusion(@Nonnull IBlockState state) {
         return true;
     }
 
+    @Nonnull
     @Override
     @SuppressWarnings("deprecation")
     public ItemCameraTransforms getItemCameraTransforms() {

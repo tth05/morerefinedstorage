@@ -12,14 +12,14 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public abstract class GridViewBase implements IGridView {
-    private GuiGrid gui;
+    private final GuiGrid gui;
     private boolean canCraft;
 
-    private IGridSorter defaultSorter;
-    private List<IGridSorter> sorters;
+    private final IGridSorter defaultSorter;
+    private final List<IGridSorter> sorters;
 
     private List<IGridStack> stacks = new ArrayList<>();
-    protected Map<UUID, IGridStack> map = new HashMap<>();
+    protected final Map<UUID, IGridStack> map = new HashMap<>();
 
     public GridViewBase(GuiGrid gui, IGridSorter defaultSorter, List<IGridSorter> sorters) {
         this.gui = gui;

@@ -9,7 +9,10 @@ import net.minecraft.client.renderer.ItemMeshDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
+
 public class ItemMeshDefinitionController implements ItemMeshDefinition {
+    @Nonnull
     @Override
     public ModelResourceLocation getModelLocation(ItemStack stack) {
         ControllerEnergyType energyType = stack.getItemDamage() == ControllerType.CREATIVE.getId() ? ControllerEnergyType.ON : TileController.getEnergyType(ItemBlockController.getEnergyStored(stack), RS.INSTANCE.config.controllerCapacity);

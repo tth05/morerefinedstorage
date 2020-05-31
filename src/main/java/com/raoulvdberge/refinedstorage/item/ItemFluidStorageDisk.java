@@ -24,6 +24,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
@@ -65,7 +66,7 @@ public class ItemFluidStorageDisk extends ItemBase implements IStorageDiskProvid
     }
 
     @Override
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
+    public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
         if (!isInCreativeTab(tab)) {
             return;
         }
@@ -76,7 +77,7 @@ public class ItemFluidStorageDisk extends ItemBase implements IStorageDiskProvid
     }
 
     @Override
-    public void onUpdate(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+    public void onUpdate(@Nonnull ItemStack stack, @Nonnull World world, @Nonnull Entity entity, int slot, boolean selected) {
         super.onUpdate(stack, world, entity, slot, selected);
 
         if (!world.isRemote) {
@@ -96,7 +97,7 @@ public class ItemFluidStorageDisk extends ItemBase implements IStorageDiskProvid
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         if (isValid(stack)) {
@@ -119,8 +120,9 @@ public class ItemFluidStorageDisk extends ItemBase implements IStorageDiskProvid
         }
     }
 
+    @Nonnull
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack diskStack = player.getHeldItem(hand);
 
         if (!world.isRemote && player.isSneaking() && diskStack.getMetadata() != TYPE_CREATIVE) {
@@ -144,7 +146,7 @@ public class ItemFluidStorageDisk extends ItemBase implements IStorageDiskProvid
     }
 
     @Override
-    public int getEntityLifespan(ItemStack stack, World world) {
+    public int getEntityLifespan(@Nonnull ItemStack stack, @Nonnull World world) {
         return Integer.MAX_VALUE;
     }
 

@@ -22,7 +22,7 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
 
     public static final String ID = "fluid_render";
 
-    private FluidStack stack;
+    private final FluidStack stack;
     private int stored;
     private int processing;
     private int scheduled;

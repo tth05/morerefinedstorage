@@ -43,7 +43,7 @@ public abstract class GuiBase extends GuiContainer {
     public static final RenderUtils.FluidRenderer FLUID_RENDERER = new RenderUtils.FluidRenderer(-1, 16, 16);
 
     public class ElementDrawers implements IElementDrawers {
-        private IElementDrawer<FluidStack> fluidDrawer = (x, y, element) -> FLUID_RENDERER.draw(GuiBase.this.mc, x, y, element);
+        private final IElementDrawer<FluidStack> fluidDrawer = (x, y, element) -> FLUID_RENDERER.draw(GuiBase.this.mc, x, y, element);
 
         @Override
         public IElementDrawer<ItemStack> getItemDrawer() {
@@ -71,7 +71,7 @@ public abstract class GuiBase extends GuiContainer {
 
     private String hoveringFluid = null;
 
-    protected int screenWidth;
+    protected final int screenWidth;
     protected int screenHeight;
 
     protected Scrollbar scrollbar;
@@ -238,9 +238,7 @@ public abstract class GuiBase extends GuiContainer {
 
         String sideButtonTooltip = null;
 
-        for (int i = 0; i < buttonList.size(); ++i) {
-            GuiButton button = buttonList.get(i);
-
+        for (GuiButton button : buttonList) {
             if (button instanceof SideButton && ((SideButton) button).isHovered()) {
                 sideButtonTooltip = ((SideButton) button).getTooltip();
             }
@@ -254,7 +252,7 @@ public abstract class GuiBase extends GuiContainer {
     }
 
     @Override
-    protected void handleMouseClick(Slot slot, int slotId, int mouseButton, ClickType type) {
+    protected void handleMouseClick(@Nonnull Slot slot, int slotId, int mouseButton, @Nonnull ClickType type) {
         boolean valid = type != ClickType.QUICK_MOVE && Minecraft.getMinecraft().player.inventory.getItemStack().isEmpty();
 
         if (valid && slot instanceof SlotFilter && slot.isEnabled() && ((SlotFilter) slot).isSizeAllowed()) {
@@ -298,7 +296,7 @@ public abstract class GuiBase extends GuiContainer {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button instanceof SideButton) {

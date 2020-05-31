@@ -27,7 +27,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
     private boolean canReadNodes;
     private NBTTagList nodesTag;
 
-    private ConcurrentHashMap<BlockPos, INetworkNode> nodes = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockPos, INetworkNode> nodes = new ConcurrentHashMap<>();
 
     public NetworkNodeManager(String name) {
         super(name);
@@ -75,7 +75,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
 
     @Nonnull
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+    public NBTTagCompound writeToNBT(@Nonnull NBTTagCompound tag) {
         NBTTagList list = new NBTTagList();
 
         for (INetworkNode node : all()) {

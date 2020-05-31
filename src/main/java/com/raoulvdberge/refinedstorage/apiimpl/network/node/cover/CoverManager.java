@@ -30,8 +30,8 @@ public class CoverManager {
     private static final String NBT_ITEM = "Item";
     private static final String NBT_TYPE = "Type";
 
-    private Map<EnumFacing, Cover> covers = new HashMap<>();
-    private NetworkNode node;
+    private final Map<EnumFacing, Cover> covers = new HashMap<>();
+    private final NetworkNode node;
 
     public CoverManager(NetworkNode node) {
         this.node = node;
@@ -47,9 +47,7 @@ public class CoverManager {
         if (neighbor instanceof ICoverable) {
             cover = ((ICoverable) neighbor).getCoverManager().getCover(direction.getOpposite());
 
-            if (cover != null && cover.getType() != CoverType.HOLLOW) {
-                return false;
-            }
+            return cover == null || cover.getType() == CoverType.HOLLOW;
         }
 
         return true;

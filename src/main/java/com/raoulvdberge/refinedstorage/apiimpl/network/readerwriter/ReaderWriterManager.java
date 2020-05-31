@@ -17,9 +17,9 @@ public class ReaderWriterManager implements IReaderWriterManager {
     private static final String NBT_CHANNELS = "ReaderWriterChannels";
     private static final String NBT_NAME = "Name";
 
-    private INetwork network;
-    private Map<String, IReaderWriterChannel> channels = new HashMap<>();
-    private Set<IReaderWriterListener> listeners = new HashSet<>();
+    private final INetwork network;
+    private final Map<String, IReaderWriterChannel> channels = new HashMap<>();
+    private final Set<IReaderWriterListener> listeners = new HashSet<>();
 
     public ReaderWriterManager(INetwork network) {
         this.network = network;

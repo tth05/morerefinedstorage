@@ -24,9 +24,9 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
     private INetwork network;
     private List<StackListResult<ItemStack>> deltas = new ArrayList<>();
 
-    private List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
+    private final List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
 
-    public MessageGridItemDelta(INetwork network, List<StackListResult<ItemStack>> deltas) {
+    public MessageGridItemDelta(@Nullable INetwork network, List<StackListResult<ItemStack>> deltas) {
         this.network = network;
         this.deltas = deltas;
     }

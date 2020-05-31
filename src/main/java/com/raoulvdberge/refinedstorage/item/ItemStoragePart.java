@@ -11,6 +11,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public class ItemStoragePart extends ItemBase {
     public static final int TYPE_1K = 0;
     public static final int TYPE_4K = 1;
@@ -42,7 +44,7 @@ public class ItemStoragePart extends ItemBase {
     }
 
     @Override
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
+    public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
         if (!isInCreativeTab(tab)) {
             return;
         }

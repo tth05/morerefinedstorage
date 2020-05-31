@@ -16,7 +16,7 @@ public class SlotFilter extends SlotBase {
     public static final int FILTER_ALLOW_SIZE = 1;
     public static final int FILTER_ALLOW_BLOCKS = 2;
 
-    private int flags = 0;
+    private final int flags;
 
     public SlotFilter(IItemHandler handler, int inventoryIndex, int x, int y, int flags) {
         super(handler, inventoryIndex, x, y);

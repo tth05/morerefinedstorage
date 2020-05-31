@@ -6,8 +6,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 public class TileDataWatcher {
     private boolean sentInitial;
-    private EntityPlayerMP player;
-    private TileDataManager manager;
+    private final EntityPlayerMP player;
+    private final TileDataManager manager;
 
     private Object[] cache;
 
@@ -19,10 +19,6 @@ public class TileDataWatcher {
             this.manager.addWatcher(this);
             this.cache = new Object[manager.getWatchedParameters().size()];
         }
-    }
-
-    public EntityPlayerMP getPlayer() {
-        return player;
     }
 
     public void onClosed() {

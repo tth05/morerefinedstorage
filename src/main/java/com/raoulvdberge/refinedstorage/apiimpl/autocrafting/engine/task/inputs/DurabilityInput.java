@@ -18,7 +18,7 @@ public class DurabilityInput extends Input {
      * The max durability of the item that this input represents. Or in other words: the max iterations that can be done
      * with the {@link ItemStack} that represents this input if it had no damage.
      */
-    private int maxDurability;
+    private final int maxDurability;
     private final ItemStack compareableItemStack;
 
     public DurabilityInput(@Nonnull ItemStack itemStack, long amountNeeded, boolean oredict) {

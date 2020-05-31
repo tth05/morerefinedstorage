@@ -6,11 +6,11 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftin
 import java.util.*;
 
 public class CraftingMonitorElementList implements ICraftingMonitorElementList {
-    private List<ICraftingMonitorElement> elements = new LinkedList<>();
-    private Map<String, Map<Integer, ICraftingMonitorElement>> currentLists = new LinkedHashMap<>();
-    private Map<String, Map<Integer, ICraftingMonitorElement>> currentCraftingLists = new LinkedHashMap<>();
-    private Map<String, Map<Integer, ICraftingMonitorElement>> currentProcessingLists = new LinkedHashMap<>();
-    private Map<String, Map<Integer, ICraftingMonitorElement>> currentStorageLists = new LinkedHashMap<>();
+    private final List<ICraftingMonitorElement> elements = new LinkedList<>();
+    private final Map<String, Map<Integer, ICraftingMonitorElement>> currentLists = new LinkedHashMap<>();
+    private final Map<String, Map<Integer, ICraftingMonitorElement>> currentCraftingLists = new LinkedHashMap<>();
+    private final Map<String, Map<Integer, ICraftingMonitorElement>> currentProcessingLists = new LinkedHashMap<>();
+    private final Map<String, Map<Integer, ICraftingMonitorElement>> currentStorageLists = new LinkedHashMap<>();
 
 
     @Override

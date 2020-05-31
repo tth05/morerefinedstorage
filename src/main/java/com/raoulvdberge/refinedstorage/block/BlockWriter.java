@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class BlockWriter extends BlockCable {
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         if (!canAccessGui(state, world, pos, hitX, hitY, hitZ)) {
             return false;
         }
@@ -76,7 +77,7 @@ public class BlockWriter extends BlockCable {
 
     @Override
     @SuppressWarnings("deprecation")
-    public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+    public int getWeakPower(@Nonnull IBlockState state, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull EnumFacing side) {
         IWriter writer = ((TileWriter) world.getTileEntity(pos)).getNode();
 
         return side == writer.getDirection().getOpposite() ? writer.getRedstoneStrength() : 0;
@@ -84,18 +85,18 @@ public class BlockWriter extends BlockCable {
 
     @Override
     @SuppressWarnings("deprecation")
-    public int getStrongPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+    public int getStrongPower(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull EnumFacing side) {
         return getWeakPower(state, world, pos, side);
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public boolean canProvidePower(IBlockState state) {
+    public boolean canProvidePower(@Nonnull IBlockState state) {
         return true;
     }
 
     @Override
-    public boolean canConnectRedstone(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+    public boolean canConnectRedstone(@Nonnull IBlockState state, IBlockAccess world, @Nonnull BlockPos pos, EnumFacing side) {
         TileEntity tile = world.getTileEntity(pos);
 
         return tile instanceof TileWriter && side == ((TileWriter) tile).getDirection().getOpposite();

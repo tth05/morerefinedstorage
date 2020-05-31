@@ -63,12 +63,12 @@ public class PortableGrid implements IGrid, IPortableGrid, IStorageDiskContainer
     @Nullable
     private IStorageCache cache;
 
-    private ItemGridHandlerPortable itemHandler = new ItemGridHandlerPortable(this, this);
-    private FluidGridHandlerPortable fluidHandler = new FluidGridHandlerPortable(this);
+    private final ItemGridHandlerPortable itemHandler = new ItemGridHandlerPortable(this, this);
+    private final FluidGridHandlerPortable fluidHandler = new FluidGridHandlerPortable(this);
 
-    private EntityPlayer player;
+    private final EntityPlayer player;
     private ItemStack stack;
-    private int slotId;
+    private final int slotId;
 
     private int sortingType;
     private int sortingDirection;
@@ -77,12 +77,12 @@ public class PortableGrid implements IGrid, IPortableGrid, IStorageDiskContainer
     private int tabPage;
     private int size;
 
-    private StorageTrackerItem storageTracker = new StorageTrackerItem(() -> stack.getTagCompound().setTag(NBT_STORAGE_TRACKER, getItemStorageTracker().serializeNbt()));
-    private StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(() -> stack.getTagCompound().setTag(NBT_FLUID_STORAGE_TRACKER, getFluidStorageTracker().serializeNbt()));
+    private final StorageTrackerItem storageTracker = new StorageTrackerItem(() -> stack.getTagCompound().setTag(NBT_STORAGE_TRACKER, getItemStorageTracker().serializeNbt()));
+    private final StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(() -> stack.getTagCompound().setTag(NBT_FLUID_STORAGE_TRACKER, getFluidStorageTracker().serializeNbt()));
 
-    private List<IFilter> filters = new ArrayList<>();
-    private List<IGridTab> tabs = new ArrayList<>();
-    private ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, null) {
+    private final List<IFilter> filters = new ArrayList<>();
+    private final List<IGridTab> tabs = new ArrayList<>();
+    private final ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, null) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -94,7 +94,7 @@ public class PortableGrid implements IGrid, IPortableGrid, IStorageDiskContainer
             StackUtils.writeItems(this, 0, stack.getTagCompound());
         }
     };
-    private ItemHandlerBase disk = new ItemHandlerBase(1, NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
+    private final ItemHandlerBase disk = new ItemHandlerBase(1, NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -431,11 +431,7 @@ public class PortableGrid implements IGrid, IPortableGrid, IStorageDiskContainer
             return false;
         }
 
-        if (disk.getStackInSlot(0).isEmpty()) {
-            return false;
-        }
-
-        return true;
+        return !disk.getStackInSlot(0).isEmpty();
     }
 
     @Override

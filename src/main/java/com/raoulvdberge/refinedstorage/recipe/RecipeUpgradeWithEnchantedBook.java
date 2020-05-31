@@ -15,11 +15,14 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+
 // MC JSON recipes don't like comparing to NBT, that's why we need a custom recipe class.
 // We need to compare to NBT for the enchanted book.
 public class RecipeUpgradeWithEnchantedBook extends ShapedRecipes {
-    private EnchantmentData enchant;
+    private final EnchantmentData enchant;
 
+    @SuppressWarnings("ConstantConditions")
     public RecipeUpgradeWithEnchantedBook(String enchantmentId, int enchantmentLevel, int upgradeId) {
         super(RS.ID, 3, 3, NonNullList.from(Ingredient.EMPTY,
             Ingredient.fromStacks(new ItemStack(RSItems.QUARTZ_ENRICHED_IRON)),
@@ -37,7 +40,7 @@ public class RecipeUpgradeWithEnchantedBook extends ShapedRecipes {
     }
 
     @Override
-    public boolean matches(InventoryCrafting inv, World world) {
+    public boolean matches(@Nonnull InventoryCrafting inv, @Nonnull World world) {
         if (super.matches(inv, world)) {
             NBTTagList enchantments = ItemEnchantedBook.getEnchantments(inv.getStackInSlot(1));
 

@@ -7,6 +7,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 
+import javax.annotation.Nonnull;
+
 public class BaublesInventoryWrapper implements IInventory {
 	final IBaublesItemHandler handler;
 	final EntityPlayer player;
@@ -23,7 +25,8 @@ public class BaublesInventoryWrapper implements IInventory {
 		this.player = player;
 	}
 
-	@Override
+	@Nonnull
+    @Override
 	public String getName() {
 		return "BaublesInventory";
 	}
@@ -33,7 +36,8 @@ public class BaublesInventoryWrapper implements IInventory {
 		return false;
 	}
 
-	@Override
+	@Nonnull
+    @Override
 	public ITextComponent getDisplayName() {
 		return new TextComponentString(this.getName());
 	}
@@ -48,17 +52,20 @@ public class BaublesInventoryWrapper implements IInventory {
 		return false;
 	}
 
-	@Override
+	@Nonnull
+    @Override
 	public ItemStack getStackInSlot(int index) {
 		return handler.getStackInSlot(index);
 	}
 
-	@Override
+	@Nonnull
+    @Override
 	public ItemStack decrStackSize(int index, int count) {
 		return handler.extractItem(index, count, false);
 	}
 
-	@Override
+	@Nonnull
+    @Override
 	public ItemStack removeStackFromSlot(int index) {
 		ItemStack out = this.getStackInSlot(index);
 		handler.setStackInSlot(index, ItemStack.EMPTY);
@@ -66,7 +73,7 @@ public class BaublesInventoryWrapper implements IInventory {
 	}
 
 	@Override
-	public void setInventorySlotContents(int index, ItemStack stack) {
+	public void setInventorySlotContents(int index, @Nonnull ItemStack stack) {
 		handler.setStackInSlot(index, stack);
 	}
 
@@ -79,18 +86,18 @@ public class BaublesInventoryWrapper implements IInventory {
 	public void markDirty() { }
 
 	@Override
-	public boolean isUsableByPlayer(EntityPlayer player) {
+	public boolean isUsableByPlayer(@Nonnull EntityPlayer player) {
 		return true;
 	}
 
 	@Override
-	public void openInventory(EntityPlayer player) { }
+	public void openInventory(@Nonnull EntityPlayer player) { }
 
 	@Override
-	public void closeInventory(EntityPlayer player) { }
+	public void closeInventory(@Nonnull EntityPlayer player) { }
 
 	@Override
-	public boolean isItemValidForSlot(int index, ItemStack stack) {
+	public boolean isItemValidForSlot(int index, @Nonnull ItemStack stack) {
 		return handler.isItemValidForSlot(index, stack, player);
 	}
 

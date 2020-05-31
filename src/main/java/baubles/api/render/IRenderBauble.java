@@ -30,7 +30,7 @@ public interface IRenderBauble {
 	 * the RenderType passed in. Make sure to check against the type parameter for
 	 * rendering.
 	 */
-	public void onPlayerBaubleRender(ItemStack stack, EntityPlayer player, RenderType type, float partialTicks);
+    void onPlayerBaubleRender(ItemStack stack, EntityPlayer player, RenderType type, float partialTicks);
 
 	/**
 	 * A few helper methods for the render.
@@ -94,7 +94,7 @@ public interface IRenderBauble {
 		}
 	}
 
-	public enum RenderType {
+	enum RenderType {
 		/**
 		 * Render Type for the player's body, translations apply on the player's rotation.
 		 * Sneaking is not handled and should be done during the render.
@@ -107,6 +107,6 @@ public interface IRenderBauble {
 		 * Sneaking is not handled and should be done during the render.
 		 * @see Helper
 		 */
-		HEAD;
+		HEAD
 	}
 }

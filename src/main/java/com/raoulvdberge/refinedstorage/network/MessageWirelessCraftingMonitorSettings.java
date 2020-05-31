@@ -36,9 +36,8 @@ public class MessageWirelessCraftingMonitorSettings extends MessageHandlerPlayer
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeBoolean(tabSelected.isPresent());
-        if (tabSelected.isPresent()) {
+        if(tabSelected.isPresent())
             ByteBufUtils.writeUTF8String(buf, tabSelected.get().toString());
-        }
 
         buf.writeInt(tabPage);
     }

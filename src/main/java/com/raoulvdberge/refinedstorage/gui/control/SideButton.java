@@ -6,11 +6,13 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nonnull;
+
 public abstract class SideButton extends GuiButton {
     public static final int WIDTH = 18;
     public static final int HEIGHT = 18;
 
-    protected GuiBase gui;
+    protected final GuiBase gui;
 
     public SideButton(GuiBase gui) {
         super(-1, -1, -1, 18, 18, "");
@@ -23,7 +25,7 @@ public abstract class SideButton extends GuiButton {
     }
 
     @Override
-    public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+    public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableAlpha();
 

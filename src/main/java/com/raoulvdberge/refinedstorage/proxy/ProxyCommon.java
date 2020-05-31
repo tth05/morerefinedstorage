@@ -82,8 +82,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ProxyCommon {
-    protected List<Item> itemsToRegister = new LinkedList<>();
-    protected List<BlockBase> blocksToRegister = new LinkedList<>();
+    protected final List<Item> itemsToRegister = new LinkedList<>();
+    protected final List<BlockBase> blocksToRegister = new LinkedList<>();
 
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(this);

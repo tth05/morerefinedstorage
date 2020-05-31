@@ -4,7 +4,6 @@ import com.raoulvdberge.refinedstorage.RSBlocks;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.item.INetworkItemProvider;
 import com.raoulvdberge.refinedstorage.item.info.IItemInfo;
-import com.raoulvdberge.refinedstorage.render.IModelRegistration;
 import net.minecraft.block.Block;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -17,9 +16,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
@@ -36,14 +34,9 @@ public abstract class ItemNetworkItem extends ItemEnergyItem implements INetwork
         addPropertyOverride(new ResourceLocation("connected"), (stack, world, entity) -> (entity != null && isValid(stack)) ? 1.0f : 0.0f);
     }
 
+    @Nonnull
     @Override
-    @SideOnly(Side.CLIENT)
-    public void registerModels(IModelRegistration modelRegistration) {
-
-    }
-
-    @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
 
         if (!world.isRemote) {
@@ -70,7 +63,7 @@ public abstract class ItemNetworkItem extends ItemEnergyItem implements INetwork
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         if (isValid(stack)) {
@@ -78,8 +71,9 @@ public abstract class ItemNetworkItem extends ItemEnergyItem implements INetwork
         }
     }
 
+    @Nonnull
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public EnumActionResult onItemUse(EntityPlayer player, World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
         ItemStack stack = player.getHeldItem(hand);
 
         Block block = world.getBlockState(pos).getBlock();
@@ -121,7 +115,7 @@ public abstract class ItemNetworkItem extends ItemEnergyItem implements INetwork
     }
 
     @Override
-    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+    public boolean shouldCauseReequipAnimation(@Nonnull ItemStack oldStack, @Nonnull ItemStack newStack, boolean slotChanged) {
         return false;
     }
 

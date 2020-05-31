@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 public class FluidGridHandler implements IFluidGridHandler {
-    private INetwork network;
+    private final INetwork network;
 
     public FluidGridHandler(INetwork network) {
         this.network = network;
@@ -61,7 +61,7 @@ public class FluidGridHandler implements IFluidGridHandler {
                 bucket = network.extractItem(StackUtils.EMPTY_BUCKET, 1, Action.PERFORM);
             }
 
-            if (bucket != null) {
+            if (!bucket.isEmpty()) {
                 IFluidHandlerItem fluidHandler =
                         bucket.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
 
@@ -137,14 +137,13 @@ public class FluidGridHandler implements IFluidGridHandler {
 
                 ICraftingTaskError error = task.calculate();
 
-                if(error == null)
+                if (error == null)
                     network.getCraftingManager().add(task);
 
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(
-                            new CraftingPreviewElementError(error.getType(),
-                                    error.getRecursedPattern() == null ? ItemStack.EMPTY :
-                                            error.getRecursedPattern().getStack())), task.getId(), quantity, true), player);
+                            new CraftingPreviewElementError(error.getType(), ItemStack.EMPTY)), task.getId(), quantity,
+                            true), player);
                 } else if (noPreview && !task.hasMissing()) {
                     task.setCanUpdate(true);
 

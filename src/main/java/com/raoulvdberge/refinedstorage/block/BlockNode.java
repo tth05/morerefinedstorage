@@ -17,6 +17,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+
 public abstract class BlockNode extends BlockNodeProxy {
     public static final PropertyBool CONNECTED = PropertyBool.create("connected");
 
@@ -25,7 +27,7 @@ public abstract class BlockNode extends BlockNodeProxy {
     }
 
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+    public void onBlockPlacedBy(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityLivingBase placer, @Nonnull ItemStack stack) {
         super.onBlockPlacedBy(world, pos, state, placer, stack);
 
         if (!world.isRemote) {
@@ -40,7 +42,7 @@ public abstract class BlockNode extends BlockNodeProxy {
     }
 
     @Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+    public void breakBlock(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
         INetworkNodeManager manager = API.instance().getNetworkNodeManager(world);
 
         INetworkNode node = manager.getNode(pos);
@@ -68,13 +70,15 @@ public abstract class BlockNode extends BlockNodeProxy {
         return builder;
     }
 
+    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return createBlockStateBuilder().build();
     }
 
+    @Nonnull
     @Override
-    public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
+    public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         state = super.getActualState(state, world, pos);
 
         if (hasConnectedState()) {

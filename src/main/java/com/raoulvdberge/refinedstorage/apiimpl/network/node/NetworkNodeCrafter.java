@@ -56,7 +56,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     private static final String NBT_LOCKED = "Locked";
     private static final String NBT_WAS_POWERED = "WasPowered";
 
-    private ItemHandlerBase patternsInventory = new ItemHandlerBase(9, new ListenerNetworkNode(this), s -> isValidPatternInSlot(world, s)) {
+    private final ItemHandlerBase patternsInventory = new ItemHandlerBase(9, new ListenerNetworkNode(this), s -> isValidPatternInSlot(world, s)) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -82,9 +82,9 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         return stack.getItem() instanceof ICraftingPatternProvider && ((ICraftingPatternProvider) stack.getItem()).create(world, stack, null).isValid();
     }
 
-    private List<ICraftingPattern> patterns = new ArrayList<>();
+    private final List<ICraftingPattern> patterns = new ArrayList<>();
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED);
 
     // Used to prevent infinite recursion on getRootContainer() when there's e.g. two crafters facing each other.
     private boolean visited = false;
@@ -259,8 +259,6 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     @Override
     public int getMaximumSuccessfulCraftingUpdates() {
         switch (upgrades.getUpgradeCount(ItemUpgrade.TYPE_SPEED)) {
-            case 0:
-                return 1;
             case 1:
                 return 2;
             case 2:
@@ -326,7 +324,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
 
         TileEntity facing = getConnectedTile();
 
-        if (facing instanceof IWorldNameable && ((IWorldNameable) facing).getName() != null) {
+        if (facing instanceof IWorldNameable) {
             return ((IWorldNameable) facing).getName();
         }
 
@@ -337,7 +335,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         return DEFAULT_NAME;
     }
 
-    public void setDisplayName(String displayName) {
+    public void setDisplayName(@Nullable String displayName) {
         this.displayName = displayName;
     }
 
@@ -429,8 +427,6 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         }
 
         switch (mode) {
-            case IGNORE:
-                return false;
             case SIGNAL_LOCKS_AUTOCRAFTING:
                 return world.isBlockPowered(pos);
             case SIGNAL_UNLOCKS_AUTOCRAFTING:

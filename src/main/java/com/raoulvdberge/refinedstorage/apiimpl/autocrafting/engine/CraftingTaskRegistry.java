@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CraftingTaskRegistry implements ICraftingTaskRegistry {
-    private Map<String, ICraftingTaskFactory> registry = new HashMap<>();
+    private final Map<String, ICraftingTaskFactory> registry = new HashMap<>();
 
     @Override
     public void add(String id, ICraftingTaskFactory factory) {

@@ -28,7 +28,7 @@ public class MessageNetworkItemOpen extends MessageHandlerPlayerToServer<Message
     protected void handle(MessageNetworkItemOpen message, EntityPlayerMP player) {
         ItemStack stack;
         if (message.bauble)
-            stack = BaublesApi.getBaublesHandler(player).getStackInSlot(message.slotId); //should not be null
+            stack = BaublesApi.getBaublesHandler(player).getStackInSlot(message.slotId);
         else
             stack = player.inventory.getStackInSlot(message.slotId);
 

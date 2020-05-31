@@ -9,10 +9,10 @@ import java.util.List;
 public class Scrollbar {
     private static final int SCROLLER_HEIGHT = 15;
 
-    private int x;
-    private int y;
-    private int width;
-    private int height;
+    private final int x;
+    private final int y;
+    private final int width;
+    private final int height;
     private boolean enabled = false;
 
     private int offset;
@@ -21,7 +21,7 @@ public class Scrollbar {
     private boolean wasClicking = false;
     private boolean isScrolling = false;
 
-    private List<ScrollbarListener> listeners = new LinkedList<>();
+    private final List<ScrollbarListener> listeners = new LinkedList<>();
 
     public Scrollbar(int x, int y, int width, int height) {
         this.x = x;
@@ -32,14 +32,6 @@ public class Scrollbar {
 
     public void addListener(ScrollbarListener listener) {
         listeners.add(listener);
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
     }
 
     public void setEnabled(boolean enabled) {

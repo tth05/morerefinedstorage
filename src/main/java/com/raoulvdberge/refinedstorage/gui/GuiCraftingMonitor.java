@@ -25,6 +25,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collections;
@@ -33,13 +34,13 @@ import java.util.UUID;
 
 public class GuiCraftingMonitor extends GuiBase {
     public class CraftingMonitorElementDrawers extends ElementDrawers {
-        private IElementDrawer<Integer> overlayDrawer = (x, y, color) -> {
+        private final IElementDrawer<Integer> overlayDrawer = (x, y, color) -> {
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.disableLighting();
             drawRect(x, y, x + ITEM_WIDTH, y + ITEM_HEIGHT, color);
         };
 
-        private IElementDrawer errorDrawer = (x, y, nothing) -> {
+        private final IElementDrawer errorDrawer = (x, y, nothing) -> {
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.disableLighting();
 
@@ -60,12 +61,12 @@ public class GuiCraftingMonitor extends GuiBase {
     }
 
     public static class CraftingMonitorTask implements IGridTab {
-        private UUID id;
-        private ICraftingRequestInfo requested;
-        private int qty;
-        private long executionStarted;
-        private int completionPercentage;
-        private List<ICraftingMonitorElement> elements;
+        private final UUID id;
+        private final ICraftingRequestInfo requested;
+        private final int qty;
+        private final long executionStarted;
+        private final int completionPercentage;
+        private final List<ICraftingMonitorElement> elements;
 
         public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, int qty, long executionStarted,
                                    int completionPercentage, List<ICraftingMonitorElement> elements) {
@@ -130,12 +131,12 @@ public class GuiCraftingMonitor extends GuiBase {
     private GuiButton cancelButton;
     private GuiButton cancelAllButton;
 
-    private ICraftingMonitor craftingMonitor;
+    private final ICraftingMonitor craftingMonitor;
 
     private List<IGridTab> tasks = Collections.emptyList();
-    private TabList tabs;
+    private final TabList tabs;
 
-    private IElementDrawers drawers = new CraftingMonitorElementDrawers();
+    private final IElementDrawers drawers = new CraftingMonitorElementDrawers();
 
     public GuiCraftingMonitor(ContainerCraftingMonitor container, ICraftingMonitor craftingMonitor) {
         super(container, 254, 201);
@@ -318,7 +319,7 @@ public class GuiCraftingMonitor extends GuiBase {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         tabs.actionPerformed(button);

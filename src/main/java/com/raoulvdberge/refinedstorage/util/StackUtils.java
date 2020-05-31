@@ -259,10 +259,6 @@ public final class StackUtils {
         return copy;
     }
 
-    public static FluidStack copy(@Nullable FluidStack stack) {
-        return stack == null ? null : stack.copy();
-    }
-
     public static Pair<ItemStack, FluidStack> getFluid(ItemStack stack, boolean simulate) {
         // We won't have the capability on stacks with size bigger than 1.
         if (stack.getCount() > 1) {

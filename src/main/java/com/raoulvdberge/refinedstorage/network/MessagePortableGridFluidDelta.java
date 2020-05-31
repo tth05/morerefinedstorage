@@ -22,7 +22,7 @@ public class MessagePortableGridFluidDelta
     private IPortableGrid portableGrid;
     private List<StackListResult<FluidStack>> deltas = new ArrayList<>();
 
-    private List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
+    private final List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
 
     public MessagePortableGridFluidDelta(IPortableGrid portableGrid, List<StackListResult<FluidStack>> deltas) {
         this.portableGrid = portableGrid;

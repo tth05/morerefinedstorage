@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.function.Predicate;
 
 public class GridFilterOreDict implements Predicate<IGridStack> {
-    private String oreName;
+    private final String oreName;
 
     public GridFilterOreDict(String oreName) {
         this.oreName = oreName.toLowerCase();

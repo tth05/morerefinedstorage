@@ -18,7 +18,7 @@ public class StorageTrackerFluid implements IStorageTracker<FluidStack> {
     private static final String NBT_TIME = "Time";
 
     private final Map<Key, StorageTrackerEntry> changes = new HashMap<>();
-    private Runnable listener;
+    private final Runnable listener;
 
     public StorageTrackerFluid(Runnable listener) {
         this.listener = listener;
@@ -64,7 +64,7 @@ public class StorageTrackerFluid implements IStorageTracker<FluidStack> {
         return list;
     }
 
-    private class Key {
+    private static class Key {
         private final FluidStack stack;
 
         public Key(FluidStack stack) {

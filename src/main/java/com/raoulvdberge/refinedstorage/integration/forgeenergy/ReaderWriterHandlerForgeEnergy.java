@@ -55,8 +55,9 @@ public class ReaderWriterHandlerForgeEnergy implements IReaderWriterHandler {
 
     private static final String NBT_ENERGY_STORED = "EnergyStored";
 
-    private EnergyStorage storage;
-    private EnergyStorageReaderWriter storageReader, storageWriter;
+    private final EnergyStorage storage;
+    private final EnergyStorageReaderWriter storageReader;
+    private final EnergyStorageReaderWriter storageWriter;
 
     public ReaderWriterHandlerForgeEnergy(@Nullable NBTTagCompound tag) {
         this.storage = new EnergyStorage(RS.INSTANCE.config.readerWriterChannelEnergyCapacity);
@@ -157,9 +158,10 @@ public class ReaderWriterHandlerForgeEnergy implements IReaderWriterHandler {
         return Collections.singletonList(new TextComponentTranslation("misc.refinedstorage:energy_stored", storage.getEnergyStored(), storage.getMaxEnergyStored()));
     }
 
-    private class EnergyStorageReaderWriter implements IEnergyStorage {
-        private IEnergyStorage parent;
-        private boolean canExtract, canReceive;
+    private static class EnergyStorageReaderWriter implements IEnergyStorage {
+        private final IEnergyStorage parent;
+        private final boolean canExtract;
+        private final boolean canReceive;
 
         EnergyStorageReaderWriter(IEnergyStorage parent, boolean canExtract, boolean canReceive) {
             this.canExtract = canExtract;

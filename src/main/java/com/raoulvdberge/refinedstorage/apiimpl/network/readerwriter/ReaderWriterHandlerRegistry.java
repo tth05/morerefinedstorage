@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ReaderWriterHandlerRegistry implements IReaderWriterHandlerRegistry {
-    private Map<String, IReaderWriterHandlerFactory> factories = new HashMap<>();
+    private final Map<String, IReaderWriterHandlerFactory> factories = new HashMap<>();
 
     @Override
     public void add(String id, IReaderWriterHandlerFactory factory) {

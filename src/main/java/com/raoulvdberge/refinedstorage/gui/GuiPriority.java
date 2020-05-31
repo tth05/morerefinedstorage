@@ -7,13 +7,15 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nonnull;
+
 public class GuiPriority extends GuiAmountSpecifying {
-    private TileDataParameter<Integer, ?> priority;
+    private final TileDataParameter<Integer, ?> priority;
 
     public GuiPriority(GuiBase parent, TileDataParameter<Integer, ?> priority) {
         super(parent, new Container() {
             @Override
-            public boolean canInteractWith(EntityPlayer player) {
+            public boolean canInteractWith(@Nonnull EntityPlayer player) {
                 return false;
             }
         }, 164, 92);

@@ -13,15 +13,16 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.model.TRSRTransformation;
 import net.minecraftforge.common.property.IExtendedBlockState;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.vecmath.Vector3f;
 import java.util.*;
 
 public class BakedModelDiskDrive extends BakedModelDelegate {
-    private class CacheKey {
-        private IBlockState state;
-        private EnumFacing side;
-        private Integer[] diskState;
+    private static class CacheKey {
+        private final IBlockState state;
+        private final EnumFacing side;
+        private final Integer[] diskState;
 
         CacheKey(IBlockState state, @Nullable EnumFacing side, Integer[] diskState) {
             this.state = state;
@@ -61,12 +62,12 @@ public class BakedModelDiskDrive extends BakedModelDelegate {
         }
     }
 
-    private Map<EnumFacing, IBakedModel> models = new HashMap<>();
-    private Map<EnumFacing, Map<Integer, List<IBakedModel>>> disks = new HashMap<>();
+    private final Map<EnumFacing, IBakedModel> models = new HashMap<>();
+    private final Map<EnumFacing, Map<Integer, List<IBakedModel>>> disks = new HashMap<>();
 
-    private LoadingCache<CacheKey, List<BakedQuad>> cache = CacheBuilder.newBuilder().build(new CacheLoader<CacheKey, List<BakedQuad>>() {
+    private final LoadingCache<CacheKey, List<BakedQuad>> cache = CacheBuilder.newBuilder().build(new CacheLoader<CacheKey, List<BakedQuad>>() {
         @Override
-        public List<BakedQuad> load(CacheKey key) {
+        public List<BakedQuad> load(@Nonnull CacheKey key) {
             EnumFacing facing = key.state.getValue(RSBlocks.DISK_DRIVE.getDirection().getProperty());
 
             List<BakedQuad> quads = models.get(facing).getQuads(key.state, key.side, 0);
@@ -123,6 +124,7 @@ public class BakedModelDiskDrive extends BakedModelDelegate {
         }
     }
 
+    @Nonnull
     @Override
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         if (!(state instanceof IExtendedBlockState)) {

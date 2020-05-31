@@ -16,10 +16,10 @@ import net.minecraftforge.energy.IEnergyStorage;
 
 public class NetworkItemWirelessCraftingGrid extends NetworkItemWirelessGrid {
 
-    private INetworkItemHandler handler;
-    private ItemStack stack;
-    private EntityPlayer player;
-    private int slotId;
+    private final INetworkItemHandler handler;
+    private final ItemStack stack;
+    private final EntityPlayer player;
+    private final int slotId;
 
     public NetworkItemWirelessCraftingGrid(final INetworkItemHandler handler, final EntityPlayer player,
                                            final ItemStack stack, final int slotId) {

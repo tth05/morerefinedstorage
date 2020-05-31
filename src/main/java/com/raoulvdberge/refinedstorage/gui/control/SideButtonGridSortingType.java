@@ -9,7 +9,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.Loader;
 
 public class SideButtonGridSortingType extends SideButton {
-    private IGrid grid;
+    private final IGrid grid;
 
     public SideButtonGridSortingType(GuiBase gui, IGrid grid) {
         super(gui);

@@ -7,11 +7,13 @@ import com.raoulvdberge.refinedstorage.gui.grid.GuiGrid;
 import mezz.jei.api.gui.IAdvancedGuiHandler;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.List;
 
 public class AdvancedGuiHandler implements IAdvancedGuiHandler<GuiBase> {
+    @Nonnull
     @Override
     public Class<GuiBase> getGuiContainerClass() {
         return GuiBase.class;
@@ -19,7 +21,7 @@ public class AdvancedGuiHandler implements IAdvancedGuiHandler<GuiBase> {
 
     @Nullable
     @Override
-    public List<Rectangle> getGuiExtraAreas(GuiBase gui) {
+    public List<Rectangle> getGuiExtraAreas(@Nonnull GuiBase gui) {
         return null;
     }
 

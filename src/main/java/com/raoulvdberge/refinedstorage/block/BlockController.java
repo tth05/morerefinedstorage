@@ -30,14 +30,17 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public class BlockController extends BlockNodeProxy {
-    public static final PropertyEnum TYPE = PropertyEnum.create("type", ControllerType.class);
-    public static final PropertyEnum ENERGY_TYPE = PropertyEnum.create("energy_type", ControllerEnergyType.class);
+    public static final PropertyEnum<ControllerType> TYPE = PropertyEnum.create("type", ControllerType.class);
+    public static final PropertyEnum<ControllerEnergyType> ENERGY_TYPE = PropertyEnum.create("energy_type", ControllerEnergyType.class);
 
     public BlockController() {
         super(BlockInfoBuilder.forId("controller").tileEntity(TileController::new).create());
     }
 
+    @Nonnull
     @Override
     public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
@@ -59,12 +62,13 @@ public class BlockController extends BlockNodeProxy {
     }
 
     @Override
-    public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> items) {
+    public void getSubBlocks(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
         items.add(ItemBlockController.createStack(new ItemStack(this, 1, 0), 0));
         items.add(ItemBlockController.createStack(new ItemStack(this, 1, 0), RS.INSTANCE.config.controllerCapacity));
         items.add(ItemBlockController.createStack(new ItemStack(this, 1, 1), 0));
     }
 
+    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return createBlockStateBuilder()
@@ -73,29 +77,31 @@ public class BlockController extends BlockNodeProxy {
             .build();
     }
 
+    @Nonnull
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, meta == 0 ? ControllerType.NORMAL : ControllerType.CREATIVE);
     }
 
     @Override
-    public int getMetaFromState(IBlockState state) {
+    public int getMetaFromState(@Nonnull IBlockState state) {
         return state.getValue(TYPE) == ControllerType.NORMAL ? 0 : 1;
     }
 
+    @Nonnull
     @Override
-    public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
+    public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         return super.getActualState(state, world, pos)
             .withProperty(ENERGY_TYPE, ((TileController) world.getTileEntity(pos)).getEnergyType());
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         return openNetworkGui(RSGui.CONTROLLER, player, world, pos, side);
     }
 
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase player, ItemStack stack) {
+    public void onBlockPlacedBy(World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityLivingBase player, @Nonnull ItemStack stack) {
         if (!world.isRemote) {
             TileController controller = (TileController) world.getTileEntity(pos);
 
@@ -110,7 +116,7 @@ public class BlockController extends BlockNodeProxy {
     }
 
     @Override
-    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState state, int fortune) {
         ItemStack stack = new ItemStack(this, 1, getMetaFromState(state));
 
         stack.setTagCompound(new NBTTagCompound());

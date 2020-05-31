@@ -17,9 +17,9 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
     private static final String NBT_NAME = "Name";
     private static final String NBT_TIME = "Time";
 
-    private Map<Key, StorageTrackerEntry> changes = new HashMap<>();
+    private final Map<Key, StorageTrackerEntry> changes = new HashMap<>();
 
-    private Runnable listener;
+    private final Runnable listener;
 
     public StorageTrackerItem(Runnable listener) {
         this.listener = listener;
@@ -65,7 +65,7 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
         return list;
     }
 
-    private class Key {
+    private static class Key {
         private final ItemStack stack;
 
         public Key(ItemStack stack) {

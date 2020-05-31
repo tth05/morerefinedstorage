@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StorageCacheListenerGridFluid implements IStorageCacheListener<FluidStack> {
-    private EntityPlayerMP player;
-    private INetwork network;
+    private final EntityPlayerMP player;
+    private final INetwork network;
 
     public StorageCacheListenerGridFluid(EntityPlayerMP player, INetwork network) {
         this.player = player;
@@ -34,7 +34,7 @@ public class StorageCacheListenerGridFluid implements IStorageCacheListener<Flui
     }
 
     @Override
-    public void onChanged(StackListResult<FluidStack> delta) {
+    public void onChanged(@Nonnull StackListResult<FluidStack> delta) {
         List<StackListResult<FluidStack>> deltas = new ArrayList<>();
         deltas.add(delta);
 

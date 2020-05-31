@@ -19,6 +19,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,11 +30,11 @@ public class CraftingPattern implements ICraftingPattern {
     private boolean oredict;
     private boolean valid;
     private IRecipe recipe;
-    private List<NonNullList<ItemStack>> inputs = new ArrayList<>();
-    private NonNullList<ItemStack> outputs = NonNullList.create();
+    private final List<NonNullList<ItemStack>> inputs = new ArrayList<>();
+    private final NonNullList<ItemStack> outputs = NonNullList.create();
     private NonNullList<ItemStack> byproducts = NonNullList.create();
-    private NonNullList<FluidStack> fluidInputs = NonNullList.create();
-    private NonNullList<FluidStack> fluidOutputs = NonNullList.create();
+    private final NonNullList<FluidStack> fluidInputs = NonNullList.create();
+    private final NonNullList<FluidStack> fluidOutputs = NonNullList.create();
 
     public CraftingPattern(World world, ICraftingPatternContainer container, ItemStack stack) {
         if (!OneSixMigrationHelper.isValidOneSixPattern(stack)) {
@@ -362,11 +363,11 @@ public class CraftingPattern implements ICraftingPattern {
         return false;
     }
 
-    private class InventoryCraftingDummy extends InventoryCrafting {
+    private static class InventoryCraftingDummy extends InventoryCrafting {
         public InventoryCraftingDummy() {
             super(new Container() {
                 @Override
-                public boolean canInteractWith(EntityPlayer player) {
+                public boolean canInteractWith(@Nonnull EntityPlayer player) {
                     return true;
                 }
             }, 3, 3);

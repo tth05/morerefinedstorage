@@ -14,13 +14,15 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GhostIngredientHandler implements IGhostIngredientHandler<GuiBase> {
+    @Nonnull
     @Override
-    public <I> List<Target<I>> getTargets(GuiBase gui, I ingredient, boolean doStart) {
+    public <I> List<Target<I>> getTargets(GuiBase gui, @Nonnull I ingredient, boolean doStart) {
         List<Target<I>> targets = new ArrayList<>();
 
         for (Slot slot : gui.inventorySlots.inventorySlots) {
@@ -33,13 +35,14 @@ public class GhostIngredientHandler implements IGhostIngredientHandler<GuiBase> 
             if (ingredient instanceof ItemStack) {
                 if (slot instanceof SlotLegacyFilter || slot instanceof SlotFilter) {
                     targets.add(new Target<I>() {
+                        @Nonnull
                         @Override
                         public Rectangle getArea() {
                             return bounds;
                         }
 
                         @Override
-                        public void accept(I ingredient) {
+                        public void accept(@Nonnull I ingredient) {
                             slot.putStack((ItemStack) ingredient);
 
                             RS.INSTANCE.network.sendToServer(new MessageSlotFilterSet(slot.slotNumber, (ItemStack) ingredient));
@@ -49,13 +52,14 @@ public class GhostIngredientHandler implements IGhostIngredientHandler<GuiBase> 
             } else if (ingredient instanceof FluidStack) {
                 if (slot instanceof SlotFilterFluid) {
                     targets.add(new Target<I>() {
+                        @Nonnull
                         @Override
                         public Rectangle getArea() {
                             return bounds;
                         }
 
                         @Override
-                        public void accept(I ingredient) {
+                        public void accept(@Nonnull I ingredient) {
                             RS.INSTANCE.network.sendToServer(new MessageSlotFilterSetFluid(slot.slotNumber, StackUtils.copy((FluidStack) ingredient, Fluid.BUCKET_VOLUME)));
                         }
                     });

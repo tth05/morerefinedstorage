@@ -46,8 +46,9 @@ public class ReaderWriterHandlerFluids implements IReaderWriterHandler {
         }
     };
 
-    private FluidTank tank;
-    private FluidTankReaderWriter tankReader, tankWriter;
+    private final FluidTank tank;
+    private final FluidTankReaderWriter tankReader;
+    private final FluidTankReaderWriter tankWriter;
 
     public ReaderWriterHandlerFluids(@Nullable NBTTagCompound tag) {
         this.tank = new FluidTank(16 * Fluid.BUCKET_VOLUME);
@@ -134,10 +135,11 @@ public class ReaderWriterHandlerFluids implements IReaderWriterHandler {
         return Collections.singletonList(new TextComponentString(API.instance().getQuantityFormatter().format(stack.amount) + " mB ").appendSibling(new TextComponentTranslation(stack.getUnlocalizedName())));
     }
 
-    private class FluidTankReaderWriter implements IFluidTank, IFluidHandler {
-        private FluidTank parent;
-        private boolean canFill, canDrain;
-        private IFluidTankProperties[] properties;
+    private static class FluidTankReaderWriter implements IFluidTank, IFluidHandler {
+        private final FluidTank parent;
+        private final boolean canFill;
+        private final boolean canDrain;
+        private final IFluidTankProperties[] properties;
 
         public FluidTankReaderWriter(FluidTank parent, boolean canFill, boolean canDrain) {
             this.parent = parent;

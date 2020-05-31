@@ -14,6 +14,7 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public abstract class ItemBlockEnergyItem extends ItemBlockBase {
     public static final int TYPE_NORMAL = 0;
     public static final int TYPE_CREATIVE = 1;
 
-    private int energyCapacity;
+    private final int energyCapacity;
 
     public ItemBlockEnergyItem(BlockBase block, int energyCapacity) {
         super(block, true);
@@ -33,7 +34,7 @@ public abstract class ItemBlockEnergyItem extends ItemBlockBase {
     }
 
     @Override
-    public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound tag) {
+    public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, NBTTagCompound tag) {
         return new CapabilityProviderEnergy(stack, energyCapacity);
     }
 
@@ -67,12 +68,12 @@ public abstract class ItemBlockEnergyItem extends ItemBlockBase {
     }
 
     @Override
-    public void setDamage(ItemStack stack, int damage) {
+    public void setDamage(@Nonnull ItemStack stack, int damage) {
         // NO OP
     }
 
     @Override
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
+    public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
         if (!isInCreativeTab(tab)) {
             return;
         }
@@ -90,7 +91,7 @@ public abstract class ItemBlockEnergyItem extends ItemBlockBase {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         if (stack.getItemDamage() != TYPE_CREATIVE) {

@@ -14,6 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public abstract class TileBase extends TileEntity {
@@ -21,7 +22,7 @@ public abstract class TileBase extends TileEntity {
 
     private EnumFacing clientDirection = EnumFacing.NORTH;
     protected IDirectionHandler directionHandler = new DirectionHandlerTile();
-    protected TileDataManager dataManager = new TileDataManager(this);
+    protected final TileDataManager dataManager = new TileDataManager(this);
 
     public void setDirection(EnumFacing direction) {
         clientDirection = direction;
@@ -71,43 +72,45 @@ public abstract class TileBase extends TileEntity {
         return true;
     }
 
+    @Nonnull
     @Override
     public final NBTTagCompound getUpdateTag() {
         return writeUpdate(super.getUpdateTag());
     }
 
-    @Nullable
+    @Nonnull
     @Override
     public final SPacketUpdateTileEntity getUpdatePacket() {
         return new SPacketUpdateTileEntity(pos, 1, getUpdateTag());
     }
 
     @Override
-    public final void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
+    public final void onDataPacket(@Nonnull NetworkManager net, SPacketUpdateTileEntity packet) {
         readUpdate(packet.getNbtCompound());
     }
 
     @Override
-    public final void handleUpdateTag(NBTTagCompound tag) {
+    public final void handleUpdateTag(@Nonnull NBTTagCompound tag) {
         super.readFromNBT(tag);
 
         readUpdate(tag);
     }
 
     @Override
-    public final void readFromNBT(NBTTagCompound tag) {
+    public final void readFromNBT(@Nonnull NBTTagCompound tag) {
         super.readFromNBT(tag);
 
         read(tag);
     }
 
+    @Nonnull
     @Override
-    public final NBTTagCompound writeToNBT(NBTTagCompound tag) {
+    public final NBTTagCompound writeToNBT(@Nonnull NBTTagCompound tag) {
         return write(super.writeToNBT(tag));
     }
 
     @Override
-    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+    public boolean shouldRefresh(@Nonnull World world, @Nonnull BlockPos pos, IBlockState oldState, IBlockState newState) {
         return oldState.getBlock() != newState.getBlock();
     }
 

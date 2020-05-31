@@ -36,7 +36,7 @@ public class NetworkNodeFluidInterface extends NetworkNode {
     private static final String NBT_TANK_OUT = "TankOut";
     private static final String NBT_OUT = "Out";
 
-    private FluidTank tankIn = new FluidTank(TANK_CAPACITY) {
+    private final FluidTank tankIn = new FluidTank(TANK_CAPACITY) {
         @Override
         protected void onContentsChanged() {
             super.onContentsChanged();
@@ -48,14 +48,14 @@ public class NetworkNodeFluidInterface extends NetworkNode {
             markDirty();
         }
     };
-    private FluidTank tankOut = new FluidTank(TANK_CAPACITY);
+    private final FluidTank tankOut = new FluidTank(TANK_CAPACITY);
 
-    private FluidHandlerProxy tank = new FluidHandlerProxy(tankIn, tankOut);
+    private final FluidHandlerProxy tank = new FluidHandlerProxy(tankIn, tankOut);
 
-    private ItemHandlerBase in = new ItemHandlerBase(1, new ListenerNetworkNode(this), stack -> StackUtils.getFluid(stack, true).getRight() != null);
-    private FluidInventory out = new FluidInventory(1, TANK_CAPACITY, new ListenerNetworkNode(this));
+    private final ItemHandlerBase in = new ItemHandlerBase(1, new ListenerNetworkNode(this), stack -> StackUtils.getFluid(stack, true).getRight() != null);
+    private final FluidInventory out = new FluidInventory(1, TANK_CAPACITY, new ListenerNetworkNode(this));
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_CRAFTING);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_CRAFTING);
 
     public NetworkNodeFluidInterface(World world, BlockPos pos) {
         super(world, pos);
@@ -71,7 +71,7 @@ public class NetworkNodeFluidInterface extends NetworkNode {
     public void update() {
         super.update();
 
-        if (canUpdate()) {
+        if (network != null && canUpdate()) {
             ItemStack container = in.getStackInSlot(0);
 
             if (!container.isEmpty()) {
@@ -146,7 +146,7 @@ public class NetworkNodeFluidInterface extends NetworkNode {
                     if (delta > 0 && upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
                         network.getCraftingManager().request(this, wanted, delta);
                     }
-                } else if (delta < 0) {
+                } else if (delta < 0 && got != null) {
                     FluidStack remainder = network.insertFluidTracked(got, Math.abs(delta));
 
                     if (remainder == null) {

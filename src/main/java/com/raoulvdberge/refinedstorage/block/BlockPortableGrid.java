@@ -34,13 +34,14 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
 public class BlockPortableGrid extends BlockBase {
-    public static final PropertyEnum TYPE = PropertyEnum.create("type", PortableGridType.class);
-    public static final PropertyEnum DISK_STATE = PropertyEnum.create("disk_state", PortableGridDiskState.class);
+    public static final PropertyEnum<PortableGridType> TYPE = PropertyEnum.create("type", PortableGridType.class);
+    public static final PropertyEnum<PortableGridDiskState> DISK_STATE = PropertyEnum.create("disk_state", PortableGridDiskState.class);
     public static final PropertyBool CONNECTED = PropertyBool.create("connected");
 
     public BlockPortableGrid() {
@@ -77,18 +78,18 @@ public class BlockPortableGrid extends BlockBase {
 
     @Override
     @SuppressWarnings("deprecation")
-    public boolean isOpaqueCube(IBlockState state) {
+    public boolean isOpaqueCube(@Nonnull IBlockState state) {
         return false;
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public boolean isFullCube(IBlockState state) {
+    public boolean isFullCube(@Nonnull IBlockState state) {
         return false;
     }
 
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+    public void onBlockPlacedBy(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityLivingBase placer, @Nonnull ItemStack stack) {
         super.onBlockPlacedBy(world, pos, state, placer, stack);
 
         if (!world.isRemote) {
@@ -97,12 +98,13 @@ public class BlockPortableGrid extends BlockBase {
     }
 
     @Override
-    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState state, int fortune) {
         drops.add(((TilePortableGrid) world.getTileEntity(pos)).getAsItem());
     }
 
+    @Nonnull
     @Override
-    public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
+    public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         TilePortableGrid portableGrid = (TilePortableGrid) world.getTileEntity(pos);
 
         return super.getActualState(state, world, pos)
@@ -110,6 +112,7 @@ public class BlockPortableGrid extends BlockBase {
             .withProperty(CONNECTED, portableGrid.isConnected());
     }
 
+    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return createBlockStateBuilder()
@@ -119,18 +122,19 @@ public class BlockPortableGrid extends BlockBase {
             .build();
     }
 
+    @Nonnull
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, meta == 0 ? PortableGridType.NORMAL : PortableGridType.CREATIVE);
     }
 
     @Override
-    public int getMetaFromState(IBlockState state) {
+    public int getMetaFromState(@Nonnull IBlockState state) {
         return state.getValue(TYPE) == PortableGridType.NORMAL ? 0 : 1;
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         if (!world.isRemote) {
             API.instance().getGridManager().openGrid(TilePortableGrid.FACTORY_ID, (EntityPlayerMP) player, pos);
 
@@ -140,9 +144,10 @@ public class BlockPortableGrid extends BlockBase {
         return true;
     }
 
+    @Nonnull
     @Override
     @SuppressWarnings("deprecation")
-    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) {
+    public BlockFaceShape getBlockFaceShape(@Nonnull IBlockAccess worldIn, @Nonnull IBlockState state, @Nonnull BlockPos pos, @Nonnull EnumFacing face) {
         return BlockFaceShape.UNDEFINED;
     }
 }

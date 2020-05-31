@@ -20,6 +20,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class ItemBlockStorage extends ItemBlockBase {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         if (isValid(stack)) {
@@ -53,8 +54,9 @@ public class ItemBlockStorage extends ItemBlockBase {
         }
     }
 
+    @Nonnull
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack storageStack = player.getHeldItem(hand);
 
         if (!world.isRemote && player.isSneaking() && storageStack.getMetadata() != ItemStorageDisk.TYPE_CREATIVE) {
@@ -87,7 +89,7 @@ public class ItemBlockStorage extends ItemBlockBase {
     }
 
     @Override
-    public int getEntityLifespan(ItemStack stack, World world) {
+    public int getEntityLifespan(@Nonnull ItemStack stack, @Nonnull World world) {
         return Integer.MAX_VALUE;
     }
 
@@ -100,7 +102,7 @@ public class ItemBlockStorage extends ItemBlockBase {
     }
 
     @Override
-    public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected) {
+    public void onUpdate(@Nonnull ItemStack stack, @Nonnull World world, @Nonnull Entity entity, int itemSlot, boolean isSelected) {
         super.onUpdate(stack, world, entity, itemSlot, isSelected);
 
         if (!world.isRemote) {

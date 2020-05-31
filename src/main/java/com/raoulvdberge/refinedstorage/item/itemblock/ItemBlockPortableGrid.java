@@ -17,6 +17,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -25,8 +26,9 @@ public class ItemBlockPortableGrid extends ItemBlockEnergyItem {
         super(block, RS.INSTANCE.config.portableGridCapacity);
     }
 
+    @Nonnull
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
 
         if (!world.isRemote) {
@@ -37,14 +39,15 @@ public class ItemBlockPortableGrid extends ItemBlockEnergyItem {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         tooltip.add(I18n.format("block.refinedstorage:portable_grid.tooltip"));
     }
 
+    @Nonnull
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public EnumActionResult onItemUse(EntityPlayer player, @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (!player.isSneaking()) {
             return EnumActionResult.FAIL;
         }
@@ -53,7 +56,7 @@ public class ItemBlockPortableGrid extends ItemBlockEnergyItem {
     }
 
     @Override
-    public int getEntityLifespan(ItemStack stack, World world) {
+    public int getEntityLifespan(@Nonnull ItemStack stack, @Nonnull World world) {
         return Integer.MAX_VALUE;
     }
 

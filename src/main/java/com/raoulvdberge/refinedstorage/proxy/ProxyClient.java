@@ -40,8 +40,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class ProxyClient extends ProxyCommon implements IModelRegistration {
-    private Map<ResourceLocation, Function<IBakedModel, IBakedModel>> bakedModelOverrides = new HashMap<>();
-    private List<Pair<Item, IItemColor>> itemColors = new LinkedList<>();
+    private final Map<ResourceLocation, Function<IBakedModel, IBakedModel>> bakedModelOverrides = new HashMap<>();
+    private final List<Pair<Item, IItemColor>> itemColors = new LinkedList<>();
 
     @Override
     public void preInit(FMLPreInitializationEvent e) {

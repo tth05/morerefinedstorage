@@ -12,8 +12,8 @@ import javax.annotation.Nonnull;
 public class SlotFilterFluid extends SlotBase {
     public static final int FILTER_ALLOW_SIZE = 1;
 
-    private int flags;
-    private FluidInventory fluidInventory;
+    private final int flags;
+    private final FluidInventory fluidInventory;
 
     public SlotFilterFluid(FluidInventory inventory, int inventoryIndex, int x, int y, int flags) {
         super(new ItemStackHandler(inventory.getSlots()), inventoryIndex, x, y);

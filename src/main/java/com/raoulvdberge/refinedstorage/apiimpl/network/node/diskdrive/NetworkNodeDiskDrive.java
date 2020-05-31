@@ -53,7 +53,7 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
     private int ticksSinceBlockUpdateRequested;
     private boolean blockUpdateRequested;
 
-    private ItemHandlerBase disks = new ItemHandlerBase(8, new ListenerNetworkNode(this), VALIDATOR_STORAGE_DISK) {
+    private final ItemHandlerBase disks = new ItemHandlerBase(8, new ListenerNetworkNode(this), VALIDATOR_STORAGE_DISK) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -79,11 +79,11 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
         }
     };
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
-    private IStorageDisk[] itemDisks = new IStorageDisk[8];
-    private IStorageDisk[] fluidDisks = new IStorageDisk[8];
+    private final IStorageDisk[] itemDisks = new IStorageDisk[8];
+    private final IStorageDisk[] fluidDisks = new IStorageDisk[8];
 
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int priority = 0;

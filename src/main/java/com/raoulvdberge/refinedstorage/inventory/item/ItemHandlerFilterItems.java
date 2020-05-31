@@ -7,7 +7,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class ItemHandlerFilterItems extends ItemStackHandler {
-    private ItemStack stack;
+    private final ItemStack stack;
 
     public ItemHandlerFilterItems(ItemStack stack) {
         super(27);

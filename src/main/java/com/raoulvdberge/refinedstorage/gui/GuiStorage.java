@@ -9,18 +9,19 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public class GuiStorage extends GuiBase {
-    private IGuiStorage gui;
-    private String texture;
+    private final IGuiStorage gui;
+    private final String texture;
 
     private GuiButton priorityButton;
 
-    private int barX = 8;
-    private int barY = 54;
-    private int barWidth = 16;
-    private int barHeight = 70;
+    private final int barX = 8;
+    private final int barY = 54;
+    private final int barWidth = 16;
+    private final int barHeight = 70;
 
     public GuiStorage(ContainerBase container, IGuiStorage gui, String texture) {
         super(container, 176, 223);
@@ -105,7 +106,7 @@ public class GuiStorage extends GuiBase {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button == priorityButton) {

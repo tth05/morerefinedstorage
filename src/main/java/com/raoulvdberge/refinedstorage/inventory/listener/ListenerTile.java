@@ -5,7 +5,7 @@ import net.minecraft.tileentity.TileEntity;
 import java.util.function.Consumer;
 
 public class ListenerTile implements Consumer<Integer> {
-    private TileEntity tile;
+    private final TileEntity tile;
 
     public ListenerTile(TileEntity tile) {
         this.tile = tile;

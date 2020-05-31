@@ -26,9 +26,9 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     public static final String NBT_CAPACITY = "Capacity";
     public static final String NBT_FLUIDS = "Fluids";
 
-    private World world;
-    private int capacity;
-    private Multimap<Fluid, FluidStack> stacks = ArrayListMultimap.create();
+    private final World world;
+    private final int capacity;
+    private final Multimap<Fluid, FluidStack> stacks = ArrayListMultimap.create();
 
     @Nullable
     private IStorageDiskListener listener;

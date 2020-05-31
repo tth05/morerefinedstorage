@@ -19,7 +19,7 @@ import java.util.List;
 
 public class MessageGridItemUpdate implements IMessage, IMessageHandler<MessageGridItemUpdate, IMessage> {
     private boolean canCraft;
-    private List<IGridStack> stacks = new ArrayList<>();
+    private final List<IGridStack> stacks = new ArrayList<>();
     private INetwork network;
 
 

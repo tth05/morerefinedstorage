@@ -21,7 +21,7 @@ public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<M
     private IPortableGrid portableGrid;
     private List<StackListResult<ItemStack>> deltas = new ArrayList<>();
 
-    private List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
+    private final List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
 
     public MessagePortableGridItemDelta(IPortableGrid portableGrid, List<StackListResult<ItemStack>> deltas) {
         this.portableGrid = portableGrid;

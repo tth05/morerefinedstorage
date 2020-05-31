@@ -9,12 +9,13 @@ import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StorageCacheListenerGridPortableFluid implements IStorageCacheListener<FluidStack> {
-    private IPortableGrid portableGrid;
-    private EntityPlayerMP player;
+    private final IPortableGrid portableGrid;
+    private final EntityPlayerMP player;
 
     public StorageCacheListenerGridPortableFluid(IPortableGrid portableGrid, EntityPlayerMP player) {
         this.portableGrid = portableGrid;
@@ -32,7 +33,7 @@ public class StorageCacheListenerGridPortableFluid implements IStorageCacheListe
     }
 
     @Override
-    public void onChanged(StackListResult<FluidStack> delta) {
+    public void onChanged(@Nonnull StackListResult<FluidStack> delta) {
         List<StackListResult<FluidStack>> deltas = new ArrayList<>();
 
         deltas.add(delta);
@@ -41,7 +42,7 @@ public class StorageCacheListenerGridPortableFluid implements IStorageCacheListe
     }
 
     @Override
-    public void onChangedBulk(List<StackListResult<FluidStack>> storageCacheDeltas) {
+    public void onChangedBulk(@Nonnull List<StackListResult<FluidStack>> storageCacheDeltas) {
         RS.INSTANCE.network.sendTo(new MessagePortableGridFluidDelta(portableGrid, storageCacheDeltas), player);
     }
 }

@@ -20,35 +20,35 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.DimensionManager;
 
+import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Set;
 
 public class WirelessCraftingGrid extends WirelessGrid {
 
     public static int ID;
-    private int controllerDimension;
-    private Container craftingContainer;
+    private final int controllerDimension;
     private IRecipe currentRecipe;
-    private InventoryCrafting matrix;
-    private InventoryCraftResult result;
-    private Set<IGridCraftingListener> craftingListeners;
+    private final InventoryCrafting matrix;
+    private final InventoryCraftResult result;
+    private final Set<IGridCraftingListener> craftingListeners;
 
     public WirelessCraftingGrid(ItemStack stack, final boolean server, final int slotId) {
         super(stack, slotId);
-        this.craftingContainer = new Container() {
+        Container craftingContainer = new Container() {
             @Override
-            public boolean canInteractWith(EntityPlayer playerIn) {
+            public boolean canInteractWith(@Nonnull EntityPlayer playerIn) {
                 return false;
             }
 
             @Override
-            public void onCraftMatrixChanged(IInventory inventoryIn) {
-                if(server) {
+            public void onCraftMatrixChanged(@Nonnull IInventory inventoryIn) {
+                if (server) {
                     onCraftingMatrixChanged();
                 }
             }
         };
-        this.matrix = new InventoryCrafting(this.craftingContainer, 3, 3);
+        this.matrix = new InventoryCrafting(craftingContainer, 3, 3);
         this.result = new InventoryCraftResult();
         this.craftingListeners = new HashSet<>();
         this.controllerDimension = ItemWirelessCraftingGrid.getDimensionId(stack);
@@ -87,7 +87,7 @@ public class WirelessCraftingGrid extends WirelessGrid {
         if (!this.getStack().hasTagCompound()) {
             this.getStack().setTagCompound(new NBTTagCompound());
         }
-        StackUtils.writeItems((IInventory)this.matrix, 1, this.getStack().getTagCompound());
+        StackUtils.writeItems(this.matrix, 1, this.getStack().getTagCompound());
     }
 
     public void onCrafted(final EntityPlayer player) {

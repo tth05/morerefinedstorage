@@ -11,6 +11,7 @@ import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.model.IModelState;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +25,7 @@ public class ModelDiskDrive implements IModel {
     private static final ResourceLocation MODEL_DISK_FULL = new ResourceLocation(RS.ID + ":block/disks/disk_full");
     private static final ResourceLocation MODEL_DISK_DISCONNECTED = new ResourceLocation(RS.ID + ":block/disks/disk_disconnected");
 
+    @Nonnull
     @Override
     public Collection<ResourceLocation> getDependencies() {
         List<ResourceLocation> dependencies = new ArrayList<>();
@@ -37,8 +39,9 @@ public class ModelDiskDrive implements IModel {
         return dependencies;
     }
 
+    @Nonnull
     @Override
-    public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
+    public IBakedModel bake(@Nonnull IModelState state, @Nonnull VertexFormat format, @Nonnull Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
         IModel baseModel;
         IModel diskModel;
         IModel diskModelNearCapacity;

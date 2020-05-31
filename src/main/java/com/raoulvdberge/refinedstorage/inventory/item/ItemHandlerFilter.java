@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ItemHandlerFilter extends ItemHandlerBase {
-    private List<IFilter> filters;
-    private List<IGridTab> tabs;
+    private final List<IFilter> filters;
+    private final List<IGridTab> tabs;
 
     public ItemHandlerFilter(List<IFilter> filters, List<IGridTab> tabs, @Nullable Consumer<Integer> listener) {
         super(4, listener, new ItemValidatorBasic(RSItems.FILTER));

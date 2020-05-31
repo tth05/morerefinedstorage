@@ -17,8 +17,8 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidStack> {
-    private NetworkNodeDiskManipulator diskManipulator;
-    private IStorageDisk<FluidStack> parent;
+    private final NetworkNodeDiskManipulator diskManipulator;
+    private final IStorageDisk<FluidStack> parent;
     private int lastState;
 
     public StorageDiskFluidManipulatorWrapper(NetworkNodeDiskManipulator diskManipulator, IStorageDisk<FluidStack> parent) {

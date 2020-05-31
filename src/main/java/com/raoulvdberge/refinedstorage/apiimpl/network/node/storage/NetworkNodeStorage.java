@@ -44,7 +44,7 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
     private static final String NBT_MODE = "Mode";
     public static final String NBT_ID = "Id";
 
-    private ItemHandlerBase filters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase filters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
 
     private ItemStorageType type;
 
@@ -180,7 +180,7 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
         if (type == null && world != null) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() == RSBlocks.STORAGE) {
-                type = (ItemStorageType) state.getValue(BlockStorage.TYPE);
+                type = state.getValue(BlockStorage.TYPE);
             }
         }
 

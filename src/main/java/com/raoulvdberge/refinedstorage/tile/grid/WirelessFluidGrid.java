@@ -35,11 +35,11 @@ import java.util.List;
 public class WirelessFluidGrid implements IGridNetworkAware {
     public static int ID;
 
-    private ItemStack stack;
+    private final ItemStack stack;
 
-    private int networkDimension;
-    private BlockPos network;
-    private int slotId;
+    private final int networkDimension;
+    private final BlockPos network;
+    private final int slotId;
 
     private int sortingType;
     private int sortingDirection;
@@ -48,9 +48,9 @@ public class WirelessFluidGrid implements IGridNetworkAware {
     private int tabPage;
     private int size;
 
-    private List<IFilter> filters = new ArrayList<>();
-    private List<IGridTab> tabs = new ArrayList<>();
-    private ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, null) {
+    private final List<IFilter> filters = new ArrayList<>();
+    private final List<IGridTab> tabs = new ArrayList<>();
+    private final ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, null) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);

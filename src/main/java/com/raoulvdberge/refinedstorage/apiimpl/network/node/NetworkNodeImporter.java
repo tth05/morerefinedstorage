@@ -42,16 +42,16 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
     private static final String NBT_COVERS = "Covers";
     private static final String NBT_FLUID_FILTERS = "FLuidFilters";
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK);
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
     private int mode = IFilterable.BLACKLIST;
     private int type = IType.ITEMS;
 
-    private CoverManager coverManager = new CoverManager(this);
+    private final CoverManager coverManager = new CoverManager(this);
 
     private int currentSlot;
 
@@ -68,7 +68,7 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
     public void update() {
         super.update();
 
-        if (!canUpdate()) {
+        if (network == null || !canUpdate()) {
             return;
         }
 

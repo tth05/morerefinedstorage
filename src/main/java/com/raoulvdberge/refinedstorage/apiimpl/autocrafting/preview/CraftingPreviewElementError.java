@@ -12,8 +12,8 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 public class CraftingPreviewElementError implements ICraftingPreviewElement<ItemStack> {
     public static final String ID = "error";
 
-    private CraftingTaskErrorType type;
-    private ItemStack stack;
+    private final CraftingTaskErrorType type;
+    private final ItemStack stack;
 
     public CraftingPreviewElementError(CraftingTaskErrorType type, ItemStack stack) {
         this.type = type;

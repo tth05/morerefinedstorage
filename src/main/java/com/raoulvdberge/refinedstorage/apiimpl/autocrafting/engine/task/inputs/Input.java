@@ -18,7 +18,7 @@ public class Input {
     /**
      * The possible ItemStacks that are allowed for this input. Only contains multiple entries when using oredict.
      */
-    private List<ItemStack> itemStacks = NonNullList.create();
+    private final List<ItemStack> itemStacks = NonNullList.create();
     /**
      * The FluidStack used for this input, if this Input is a fluid
      */
@@ -53,7 +53,7 @@ public class Input {
     /**
      * Whether or not this Input uses oredict. //TODO: maybe remove
      */
-    private boolean oredict;
+    private final boolean oredict;
 
     private Input(long amount, boolean oredict) {
         this.amountNeeded = amount;
@@ -79,7 +79,7 @@ public class Input {
     /**
      * Increases the given {@code amount} for the given {@code stack}
      *
-     * @param amount
+     * @param amount the amount
      * @return the remaining amount; or {@code -1} if the given {@code amount} does not satisfy this input
      */
     public long increaseAmount(ItemStack stack, long amount) {
@@ -106,7 +106,7 @@ public class Input {
     /**
      * Increases the given {@code amount} for the current FluidStack
      *
-     * @param amount
+     * @param amount the amount
      * @return the remaining amount; or {@code -1} if the given {@code amount} does not satisfy this input
      */
     public long increaseFluidStackAmount(long amount) {

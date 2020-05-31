@@ -26,6 +26,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public class ItemWrench extends ItemBase {
     public ItemWrench() {
         super(new ItemInfo(RS.ID, "wrench"));
@@ -39,8 +41,9 @@ public class ItemWrench extends ItemBase {
         modelRegistration.setModel(this, 0, new ModelResourceLocation(info.getId(), "inventory"));
     }
 
+    @Nonnull
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public EnumActionResult onItemUse(EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (!player.isSneaking()) {
             return EnumActionResult.FAIL;
         }

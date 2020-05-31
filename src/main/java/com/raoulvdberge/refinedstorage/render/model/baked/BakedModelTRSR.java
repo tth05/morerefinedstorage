@@ -35,21 +35,6 @@ public class BakedModelTRSR implements IBakedModel {
     private final TRSROverride override;
     private final int faceOffset;
 
-    public BakedModelTRSR(IBakedModel original, float x, float y, float z, float scale) {
-        this(original, x, y, z, 0, 0, 0, scale, scale, scale);
-    }
-
-    public BakedModelTRSR(IBakedModel original, float x, float y, float z, float rotX, float rotY, float rotZ, float scale) {
-        this(original, x, y, z, rotX, rotY, rotZ, scale, scale, scale);
-    }
-
-    public BakedModelTRSR(IBakedModel original, float x, float y, float z, float rotX, float rotY, float rotZ, float scaleX, float scaleY, float scaleZ) {
-        this(original, new TRSRTransformation(new Vector3f(x, y, z),
-            null,
-            new Vector3f(scaleX, scaleY, scaleZ),
-            TRSRTransformation.quatFromXYZ(rotX, rotY, rotZ)));
-    }
-
     public BakedModelTRSR(IBakedModel original, TRSRTransformation transform) {
         this.original = original;
         this.transformation = TRSRTransformation.blockCenterToCorner(transform);
@@ -142,7 +127,7 @@ public class BakedModelTRSR implements IBakedModel {
 
         @Nonnull
         @Override
-        public IBakedModel handleItemState(@Nonnull IBakedModel originalModel, ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
+        public IBakedModel handleItemState(@Nonnull IBakedModel originalModel, @Nonnull ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
             IBakedModel baked = model.original.getOverrides().handleItemState(originalModel, stack, world, entity);
 
             return new BakedModelTRSR(baked, model.transformation);
@@ -150,8 +135,8 @@ public class BakedModelTRSR implements IBakedModel {
     }
 
     private static class Transformer extends VertexTransformer {
-        protected Matrix4f transformation;
-        protected Matrix3f normalTransformation;
+        protected final Matrix4f transformation;
+        protected final Matrix3f normalTransformation;
 
         public Transformer(TRSRTransformation transformation, VertexFormat format) {
             super(new UnpackedBakedQuad.Builder(format));
@@ -165,7 +150,7 @@ public class BakedModelTRSR implements IBakedModel {
         }
 
         @Override
-        public void put(int element, float... data) {
+        public void put(int element, @Nonnull float... data) {
             VertexFormatElement.EnumUsage usage = parent.getVertexFormat().getElement(element).getUsage();
 
             // transform normals and position

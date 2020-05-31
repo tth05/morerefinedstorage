@@ -6,16 +6,16 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftin
 import com.raoulvdberge.refinedstorage.network.MessageCraftingMonitorElements;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.ICraftingMonitor;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.TileCraftingMonitor;
-import com.raoulvdberge.refinedstorage.tile.craftingmonitor.WirelessCraftingMonitor;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class ContainerCraftingMonitor extends ContainerBase implements ICraftingMonitorListener {
-    private ICraftingMonitor craftingMonitor;
+    private final ICraftingMonitor craftingMonitor;
     private boolean addedListener;
 
     public ContainerCraftingMonitor(ICraftingMonitor craftingMonitor, @Nullable TileCraftingMonitor craftingMonitorTile, EntityPlayer player) {
@@ -41,7 +41,7 @@ public class ContainerCraftingMonitor extends ContainerBase implements ICrafting
     }
 
     @Override
-    public void onContainerClosed(EntityPlayer player) {
+    public void onContainerClosed(@Nonnull EntityPlayer player) {
         super.onContainerClosed(player);
 
         ICraftingManager manager = craftingMonitor.getCraftingManager();
@@ -54,8 +54,9 @@ public class ContainerCraftingMonitor extends ContainerBase implements ICrafting
         return craftingMonitor;
     }
 
+    @Nonnull
     @Override
-    public ItemStack transferStackInSlot(EntityPlayer player, int index) {
+    public ItemStack transferStackInSlot(@Nonnull EntityPlayer player, int index) {
         ItemStack stack = ItemStack.EMPTY;
 
         Slot slot = getSlot(index);

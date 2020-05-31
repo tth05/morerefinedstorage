@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class GridFilterFilter implements Predicate<IGridStack> {
-    private List<IFilter> filters;
+    private final List<IFilter> filters;
 
     public GridFilterFilter(List<IFilter> filters) {
         this.filters = filters;

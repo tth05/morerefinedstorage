@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StorageDiskRegistry implements IStorageDiskRegistry {
-    private Map<String, IStorageDiskFactory> factories = new HashMap<>();
+    private final Map<String, IStorageDiskFactory> factories = new HashMap<>();
 
     @Override
     public void add(String id, IStorageDiskFactory factory) {

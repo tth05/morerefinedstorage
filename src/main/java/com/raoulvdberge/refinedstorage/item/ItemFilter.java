@@ -52,8 +52,9 @@ public class ItemFilter extends ItemBase {
         modelRegistration.setModel(this, 0, new ModelResourceLocation(info.getId(), "inventory"));
     }
 
+    @Nonnull
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
 
         if (!world.isRemote) {
@@ -70,7 +71,7 @@ public class ItemFilter extends ItemBase {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         tooltip.add(TextFormatting.YELLOW + I18n.format("sidebutton.refinedstorage:mode." + (getMode(stack) == IFilter.MODE_WHITELIST ? "whitelist" : "blacklist")) + TextFormatting.RESET);
@@ -89,7 +90,7 @@ public class ItemFilter extends ItemBase {
     }
 
     @Override
-    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+    public boolean shouldCauseReequipAnimation(@Nonnull ItemStack oldStack, @Nonnull ItemStack newStack, boolean slotChanged) {
         return false;
     }
 

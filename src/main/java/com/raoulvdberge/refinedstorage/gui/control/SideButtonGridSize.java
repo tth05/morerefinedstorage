@@ -8,8 +8,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class SideButtonGridSize extends SideButton {
-    private Supplier<Integer> size;
-    private Consumer<Integer> handler;
+    private final Supplier<Integer> size;
+    private final Consumer<Integer> handler;
 
     public SideButtonGridSize(GuiBase gui, Supplier<Integer> size, Consumer<Integer> handler) {
         super(gui);
@@ -30,8 +30,6 @@ public class SideButtonGridSize extends SideButton {
 
         if (size == IGrid.SIZE_STRETCH) {
             tx = 48;
-        } else if (size == IGrid.SIZE_SMALL) {
-            tx = 0;
         } else if (size == IGrid.SIZE_MEDIUM) {
             tx = 16;
         } else if (size == IGrid.SIZE_LARGE) {

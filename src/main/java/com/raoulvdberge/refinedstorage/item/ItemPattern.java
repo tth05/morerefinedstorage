@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
-    private static Map<ItemStack, CraftingPattern> PATTERN_CACHE = new HashMap<>();
+    private static final Map<ItemStack, CraftingPattern> PATTERN_CACHE = new HashMap<>();
 
     private static final String NBT_VERSION = "Version";
     public static final String NBT_INPUT_SLOT = "Input_%d";
@@ -70,7 +70,7 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         if (!stack.hasTagCompound()) {
@@ -222,8 +222,9 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
         pattern.getTagCompound().setString(NBT_VERSION, RS.VERSION);
     }
 
+    @Nonnull
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    public ActionResult<ItemStack> onItemRightClick(World world, @Nonnull EntityPlayer player, @Nonnull EnumHand hand) {
         if (!world.isRemote && player.isSneaking()) {
             return new ActionResult<>(EnumActionResult.SUCCESS, new ItemStack(RSItems.PATTERN, player.getHeldItem(hand).getCount()));
         }
@@ -238,7 +239,7 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
     }
 
     @Override
-    public void onUpdate(ItemStack stack, World world, Entity entity, int slot, boolean isSelected) {
+    public void onUpdate(@Nonnull ItemStack stack, @Nonnull World world, @Nonnull Entity entity, int slot, boolean isSelected) {
         super.onUpdate(stack, world, entity, slot, isSelected);
 
         if (!world.isRemote) {

@@ -9,8 +9,8 @@ import java.util.function.Consumer;
 public class FluidInventory {
     private static final String NBT_SLOT = "Slot_%d";
 
-    private FluidStack[] fluids;
-    private int maxAmount;
+    private final FluidStack[] fluids;
+    private final int maxAmount;
     private boolean empty = true;
 
     @Nullable

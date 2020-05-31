@@ -10,12 +10,13 @@ import com.raoulvdberge.refinedstorage.network.MessageGridItemUpdate;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StorageCacheListenerGridItem implements IStorageCacheListener<ItemStack> {
-    private EntityPlayerMP player;
-    private INetwork network;
+    private final EntityPlayerMP player;
+    private final INetwork network;
 
     public StorageCacheListenerGridItem(EntityPlayerMP player, INetwork network) {
         this.player = player;
@@ -33,7 +34,7 @@ public class StorageCacheListenerGridItem implements IStorageCacheListener<ItemS
     }
 
     @Override
-    public void onChanged(StackListResult<ItemStack> delta) {
+    public void onChanged(@Nonnull StackListResult<ItemStack> delta) {
         List<StackListResult<ItemStack>> deltas = new ArrayList<>();
         deltas.add(delta);
 
@@ -41,7 +42,7 @@ public class StorageCacheListenerGridItem implements IStorageCacheListener<ItemS
     }
 
     @Override
-    public void onChangedBulk(List<StackListResult<ItemStack>> deltas) {
+    public void onChangedBulk(@Nonnull List<StackListResult<ItemStack>> deltas) {
         RS.INSTANCE.network.sendTo(new MessageGridItemDelta(network, deltas), player);
     }
 }

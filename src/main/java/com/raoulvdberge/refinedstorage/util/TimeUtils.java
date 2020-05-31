@@ -16,7 +16,7 @@ public final class TimeUtils {
         if (diff < SECOND * 10) {
             return I18n.format("misc.refinedstorage:last_modified.just_now", by);
         } else if (diff < MINUTE) {
-            return I18n.format("misc.refinedstorage:last_modified.second" + ((diff / SECOND) > 1 ? "s" : ""), diff / SECOND, by);
+            return I18n.format("misc.refinedstorage:last_modified.second" + "s", diff / SECOND, by);
         } else if (diff < HOUR) {
             return I18n.format("misc.refinedstorage:last_modified.minute" + ((diff / MINUTE) > 1 ? "s" : ""), diff / MINUTE, by);
         } else if (diff < DAY) {

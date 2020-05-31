@@ -57,7 +57,7 @@ public class ItemCover extends ItemBase {
     public void registerModels(IModelRegistration modelRegistration) {
         modelRegistration.setModel(this, 0, new ModelResourceLocation(info.getId(), "inventory"));
 
-        modelRegistration.addModelLoader(() -> new CustomModelLoaderCover()); // Don't use a method reference here, it crashes the server!
+        modelRegistration.addModelLoader(CustomModelLoaderCover::new); // Don't use a method reference here, it crashes the server!
     }
 
     public static void setItem(ItemStack cover, ItemStack item) {
@@ -78,7 +78,7 @@ public class ItemCover extends ItemBase {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
 
         ItemStack item = getItem(stack);
@@ -89,7 +89,7 @@ public class ItemCover extends ItemBase {
     }
 
     @Override
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
+    public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
         if (!isInCreativeTab(tab)) {
             return;
         }
@@ -127,8 +127,9 @@ public class ItemCover extends ItemBase {
         }
     }
 
+    @Nonnull
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public EnumActionResult onItemUse(EntityPlayer player, World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
         ItemStack stack = player.getHeldItem(hand);
 
         TileEntity tile = world.getTileEntity(pos);

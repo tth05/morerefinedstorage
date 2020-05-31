@@ -11,12 +11,13 @@ import java.util.function.Predicate;
 
 public class ItemHandlerBase extends ItemStackHandler {
     @Nullable
-    private Consumer<Integer> listener;
+    private final Consumer<Integer> listener;
 
     private boolean empty = true;
 
-    protected Predicate<ItemStack>[] validators;
+    protected final Predicate<ItemStack>[] validators;
 
+    @SafeVarargs
     public ItemHandlerBase(int size, @Nullable Consumer<Integer> listener, Predicate<ItemStack>... validators) {
         super(size);
 
@@ -24,6 +25,7 @@ public class ItemHandlerBase extends ItemStackHandler {
         this.validators = validators;
     }
 
+    @SafeVarargs
     public ItemHandlerBase(int size, Predicate<ItemStack>... validators) {
         this(size, null, validators);
     }
