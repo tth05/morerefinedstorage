@@ -53,7 +53,7 @@ public class GuiCraftingPreview extends GuiBase {
     private final List<ICraftingPreviewElement> stacks;
     private final GuiScreen parent;
 
-    private final UUID id;
+    private final UUID craftingTaskId;
     private final int quantity;
     private final long calculationTime;
 
@@ -67,7 +67,7 @@ public class GuiCraftingPreview extends GuiBase {
 
     private final boolean fluids;
 
-    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID id, long calculationTime,
+    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID craftingTaskId, long calculationTime,
                               int quantity, boolean fluids) {
         super(new Container() {
             @Override
@@ -79,7 +79,7 @@ public class GuiCraftingPreview extends GuiBase {
         this.stacks = new ArrayList<>(stacks);
         this.parent = parent;
 
-        this.id = id;
+        this.craftingTaskId = craftingTaskId;
         this.quantity = quantity;
         this.calculationTime = calculationTime;
         this.fluids = fluids;
@@ -265,7 +265,7 @@ public class GuiCraftingPreview extends GuiBase {
     }
 
     private void startRequest() {
-        RS.INSTANCE.network.sendToServer(new MessageGridCraftingStart(id, quantity, fluids));
+        RS.INSTANCE.network.sendToServer(new MessageGridCraftingStart(craftingTaskId, quantity, fluids));
 
         FMLClientHandler.instance().showGuiScreen(parent);
     }
@@ -275,7 +275,7 @@ public class GuiCraftingPreview extends GuiBase {
     }
 
     private void close() {
-        RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(id));
+        RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(craftingTaskId));
         FMLClientHandler.instance().showGuiScreen(parent);
     }
 }
