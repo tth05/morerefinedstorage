@@ -99,6 +99,11 @@ public interface ICraftingTask {
     long getExecutionStarted();
 
     /**
+     * @return the time it took for the calculation to complete in ms or -1 if the calculation failed/hasn't completed.
+     */
+    long getCalculationTime();
+
+    /**
      * @return the missing items
      */
     IStackList<ItemStack> getMissing();

@@ -210,9 +210,14 @@ public class ItemGridHandler implements IItemGridHandler {
                     network.getCraftingManager().add(task);
 
                 if (error != null) {
-                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(
-                            new CraftingPreviewElementError(error.getType(), ItemStack.EMPTY)), task.getId(), quantity,
-                            false), player);
+                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
+                                    Collections
+                                            .singletonList(new CraftingPreviewElementError(error.getType(), ItemStack.EMPTY)),
+                                    task.getId(),
+                                    task.getCalculationTime(),
+                                    quantity,
+                                    false),
+                            player);
                 } else if (noPreview && !task.hasMissing()) {
                     task.setCanUpdate(true);
 
@@ -220,8 +225,7 @@ public class ItemGridHandler implements IItemGridHandler {
                 } else {
                     RS.INSTANCE.network
                             .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
-                                    quantity,
-                                    false), player);
+                                    task.getCalculationTime(), quantity, false), player);
                 }
             }, "RS crafting preview calculation");
         }

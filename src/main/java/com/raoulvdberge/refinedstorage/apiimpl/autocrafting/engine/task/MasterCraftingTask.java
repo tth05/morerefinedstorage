@@ -46,6 +46,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
     private final int quantity;
     private long executionStarted = -1;
+    private long calculationTime = -1;
     private boolean canUpdate;
 
     public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, int quantity,
@@ -79,17 +80,33 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public ICraftingTaskError calculate() {
+        long calculationStarted = System.currentTimeMillis();
+
         Task rootTask = tasks.get(0);
-        CalculationResult result = rootTask.calculate(network, new ObjectArrayList<>(), System.currentTimeMillis());
+
+        //add outputs of root task to recursed items
+        IStackList<ItemStack> items = API.instance().createItemStackList();
+        rootTask.getPattern().getOutputs().forEach(items::add);
+        IStackList<FluidStack> fluids = API.instance().createFluidStackList();
+        rootTask.getPattern().getFluidOutputs().forEach(fluids::add);
+
+        CalculationResult result = rootTask.calculate(network,
+                        new ObjectArrayList<>(),
+                        items,
+                        fluids,
+                        calculationStarted
+        );
 
         //instantly cancel if calculation had any error, saver than waiting for the player to cancel
-        if(result.getError() != null) {
+        if (result.getError() != null) {
             onCancelled();
         } else {
             this.tasks.addAll(result.getNewTasks());
 
             this.missingItemStacks = result.getMissingItemStacks();
             this.missingFluidStacks = result.getMissingFluidStacks();
+
+            this.calculationTime = System.currentTimeMillis() - calculationStarted;
         }
 
         return result.getError();
@@ -147,7 +164,7 @@ public class MasterCraftingTask implements ICraftingTask {
                                 previewElement.getElement())) {
 
                             //do not merge available for infinite inputs
-                            if(!(input instanceof InfiniteInput) || ((InfiniteInput) input).hasActuallyExtracted()) {
+                            if (!(input instanceof InfiniteInput) || ((InfiniteInput) input).containsItem()) {
                                 previewElement.addAvailable(
                                         (isDurabilityInput ? ((DurabilityInput) input).getTotalItemInputAmount() :
                                                 input.getTotalInputAmount()));
@@ -173,7 +190,7 @@ public class MasterCraftingTask implements ICraftingTask {
                                 input.getTotalInputAmount());
 
                         //fix available count for infinite inputs
-                        if(input instanceof InfiniteInput && !((InfiniteInput) input).hasActuallyExtracted())
+                        if (input instanceof InfiniteInput && !((InfiniteInput) input).containsItem())
                             available = 0;
 
                         elements.add(new CraftingPreviewElementItemStack(
@@ -195,7 +212,7 @@ public class MasterCraftingTask implements ICraftingTask {
             for (Input input : task.getInputs()) {
                 boolean isDurabilityInput = input instanceof DurabilityInput;
 
-                if(input instanceof InfiniteInput && !((InfiniteInput) input).hasActuallyExtracted())
+                if (input instanceof InfiniteInput && !((InfiniteInput) input).containsItem())
                     continue;
 
                 List<ItemStack> itemStacks = input.getItemStacks();
@@ -286,5 +303,10 @@ public class MasterCraftingTask implements ICraftingTask {
     @Override
     public int getQuantity() {
         return this.quantity;
+    }
+
+    @Override
+    public long getCalculationTime() {
+        return this.calculationTime;
     }
 }

@@ -1,7 +1,6 @@
 package com.raoulvdberge.refinedstorage.gui;
 
 import com.raoulvdberge.refinedstorage.RS;
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawer;
@@ -10,7 +9,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPrev
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
 import com.raoulvdberge.refinedstorage.gui.control.Scrollbar;
-import com.raoulvdberge.refinedstorage.item.ItemPattern;
 import com.raoulvdberge.refinedstorage.network.MessageCraftingCancel;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingStart;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
@@ -23,6 +21,7 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import org.lwjgl.input.Keyboard;
@@ -56,6 +55,7 @@ public class GuiCraftingPreview extends GuiBase {
 
     private final UUID id;
     private final int quantity;
+    private final long calculationTime;
 
     private GuiButton startButton;
     private GuiButton cancelButton;
@@ -67,7 +67,8 @@ public class GuiCraftingPreview extends GuiBase {
 
     private final boolean fluids;
 
-    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID id, int quantity, boolean fluids) {
+    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID id, long calculationTime,
+                              int quantity, boolean fluids) {
         super(new Container() {
             @Override
             public boolean canInteractWith(@Nonnull EntityPlayer player) {
@@ -80,6 +81,7 @@ public class GuiCraftingPreview extends GuiBase {
 
         this.id = id;
         this.quantity = quantity;
+        this.calculationTime = calculationTime;
         this.fluids = fluids;
 
         this.scrollbar = new Scrollbar(235, 20, 12, 149);
@@ -124,19 +126,30 @@ public class GuiCraftingPreview extends GuiBase {
     public void drawForeground(int mouseX, int mouseY) {
         drawString(7, 7, t("gui.refinedstorage:crafting_preview"));
 
+        float scale = fontRenderer.getUnicodeFlag() ? 1F : 0.5F;
+        //draw calculation time
+        if (calculationTime != -1) {
+            GlStateManager.pushMatrix();
+            GlStateManager.scale(scale, scale, 1);
+            drawString(RenderUtils.getOffsetOnScale(7, 0.5f),
+                    RenderUtils.getOffsetOnScale(175, 0.5f),
+                    "Took: " + TextFormatting.DARK_GREEN + calculationTime + "ms");
+            GlStateManager.popMatrix();
+        }
+
         int x = 7;
         int y = 15;
-
-        float scale = fontRenderer.getUnicodeFlag() ? 1F : 0.5F;
 
         if (getErrorType() != null) {
             GlStateManager.pushMatrix();
             GlStateManager.scale(scale, scale, 1);
 
-            drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 11, scale), t("gui.refinedstorage:crafting_preview.error"));
+            drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 11, scale),
+                    t("gui.refinedstorage:crafting_preview.error"));
 
             switch (getErrorType()) {
-                case RECURSIVE: {
+                //recursive doesn't exist anymore, the tasks now quit silently
+                /*case RECURSIVE: {
                     drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 21, scale), t("gui.refinedstorage:crafting_preview.error.recursive.0"));
                     drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 31, scale), t("gui.refinedstorage:crafting_preview.error.recursive.1"));
                     drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 41, scale), t("gui.refinedstorage:crafting_preview.error.recursive.2"));
@@ -166,10 +179,12 @@ public class GuiCraftingPreview extends GuiBase {
                     }
 
                     break;
-                }
+                }*/
                 case TOO_COMPLEX: {
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 21, scale), t("gui.refinedstorage:crafting_preview.error.too_complex.0"));
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 31, scale), t("gui.refinedstorage:crafting_preview.error.too_complex.1"));
+                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 21, scale),
+                            t("gui.refinedstorage:crafting_preview.error.too_complex.0"));
+                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 31, scale),
+                            t("gui.refinedstorage:crafting_preview.error.too_complex.1"));
 
                     GlStateManager.popMatrix();
 
@@ -192,10 +207,12 @@ public class GuiCraftingPreview extends GuiBase {
                     stack.draw(x, y + 5, drawers);
 
                     if (inBounds(x + 5, y + 7, 16, 16, mouseX, mouseY)) {
-                        this.hoveringStack = stack.getId().equals(CraftingPreviewElementItemStack.ID) ? (ItemStack) stack.getElement() : null;
+                        this.hoveringStack = stack.getId().equals(CraftingPreviewElementItemStack.ID) ?
+                                (ItemStack) stack.getElement() : null;
 
                         if (this.hoveringStack == null) {
-                            this.hoveringFluid = stack.getId().equals(CraftingPreviewElementFluidStack.ID) ? (FluidStack) stack.getElement() : null;
+                            this.hoveringFluid = stack.getId().equals(CraftingPreviewElementFluidStack.ID) ?
+                                    (FluidStack) stack.getElement() : null;
                         }
                     }
                 }
@@ -217,7 +234,9 @@ public class GuiCraftingPreview extends GuiBase {
         super.drawScreen(mouseX, mouseY, partialTicks);
 
         if (hoveringStack != null) {
-            drawTooltip(hoveringStack, mouseX, mouseY, hoveringStack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL));
+            drawTooltip(hoveringStack, mouseX, mouseY, hoveringStack.getTooltip(Minecraft.getMinecraft().player,
+                    Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED :
+                            ITooltipFlag.TooltipFlags.NORMAL));
         } else if (hoveringFluid != null) {
             drawTooltip(mouseX, mouseY, hoveringFluid.getLocalizedName());
         }

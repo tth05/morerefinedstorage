@@ -10,10 +10,7 @@ import javax.annotation.Nonnull;
  */
 public class InfiniteInput extends Input {
 
-    /**
-     * Whether or not this infinite input actually extracted any item
-     */
-    private boolean actuallyExtracted;
+    private boolean containsItem;
 
     public InfiniteInput(@Nonnull ItemStack itemStack, boolean oredict) {
         super(NonNullList.from(ItemStack.EMPTY, itemStack), 1, oredict);
@@ -34,11 +31,15 @@ public class InfiniteInput extends Input {
         return 0;
     }
 
-    public boolean hasActuallyExtracted() {
-        return actuallyExtracted;
+    /**
+     * Whether or not this infinite input actually contains any item. If there are multiple infinite inputs for the
+     * same item, then this will only be true for one of them.
+     */
+    public boolean containsItem() {
+        return containsItem;
     }
 
-    public void setActuallyExtracted(boolean actuallyExtracted) {
-        this.actuallyExtracted = actuallyExtracted;
+    public void setContainsItem(boolean containsItem) {
+        this.containsItem = containsItem;
     }
 }

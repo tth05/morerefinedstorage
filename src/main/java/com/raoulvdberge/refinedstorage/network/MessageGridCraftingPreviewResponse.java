@@ -19,19 +19,23 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHandler<MessageGridCraftingPreviewResponse, IMessage> {
+public class MessageGridCraftingPreviewResponse
+        implements IMessage, IMessageHandler<MessageGridCraftingPreviewResponse, IMessage> {
     private List<ICraftingPreviewElement> stacks;
     private UUID id;
     private int quantity;
+    private long calculationTime;
     private boolean fluids;
 
     public MessageGridCraftingPreviewResponse() {
     }
 
-    public MessageGridCraftingPreviewResponse(List<ICraftingPreviewElement> stacks, UUID id, int quantity, boolean fluids) {
+    public MessageGridCraftingPreviewResponse(List<ICraftingPreviewElement> stacks, UUID id, long calculationTime,
+                                              int quantity, boolean fluids) {
         this.stacks = stacks;
         this.id = id;
         this.quantity = quantity;
+        this.calculationTime = calculationTime;
         this.fluids = fluids;
     }
 
@@ -39,6 +43,7 @@ public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHan
     public void fromBytes(ByteBuf buf) {
         this.id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         this.quantity = buf.readInt();
+        this.calculationTime = buf.readLong();
         this.fluids = buf.readBoolean();
 
         this.stacks = new LinkedList<>();
@@ -55,6 +60,7 @@ public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHan
     public void toBytes(ByteBuf buf) {
         ByteBufUtils.writeUTF8String(buf, id.toString());
         buf.writeInt(quantity);
+        buf.writeLong(calculationTime);
         buf.writeBoolean(fluids);
 
         buf.writeInt(stacks.size());
@@ -75,7 +81,9 @@ public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHan
                 screen = ((GuiGridCraftingSettings) screen).getParent();
             }
 
-            FMLCommonHandler.instance().showGuiScreen(new GuiCraftingPreview(screen, message.stacks, message.id, message.quantity, message.fluids));
+            FMLCommonHandler.instance().showGuiScreen(
+                    new GuiCraftingPreview(screen, message.stacks, message.id, message.calculationTime,
+                            message.quantity, message.fluids));
         });
 
         return null;

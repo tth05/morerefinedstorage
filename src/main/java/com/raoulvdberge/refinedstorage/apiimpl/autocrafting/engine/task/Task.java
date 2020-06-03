@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorTy
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.*;
@@ -17,6 +18,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
 
 public abstract class Task {
@@ -133,7 +135,6 @@ public abstract class Task {
         }
 
         //decrease output amounts if restockable input exists
-        List<Input> inputsToAdd = new ObjectArrayList<>();
         for (Input input : this.inputs) {
             if (!(input instanceof RestockableInput))
                 continue;
@@ -150,10 +151,10 @@ public abstract class Task {
                         ((RestockableInput) input).fixCounts((int) (input.getQuantityPerCraft() - remainder));
                         //add new input with remainder as quantity per craft. Amount needed is set later to the correct
                         // amount
-                        inputsToAdd.add(new Input(NonNullList.from(ItemStack.EMPTY,
+                        mergeIntoList(new Input(NonNullList.from(ItemStack.EMPTY,
                                 ItemHandlerHelper.copyStackWithSize(input.getCompareableItemStack(), (int) remainder)),
                                 1,
-                                pattern.isOredict()));
+                                pattern.isOredict()), this.inputs);
                     }
 
                     break;
@@ -161,17 +162,12 @@ public abstract class Task {
             }
         }
 
-        //merge new inputs
-        for (Input input : inputsToAdd) {
-            mergeIntoList(input, this.inputs);
-        }
-
         //find smallest output counts
         int smallestOutputStackSize = Integer.MAX_VALUE;
         int smallestOutputFluidStackSize = Integer.MAX_VALUE;
 
         for (Output output : this.outputs) {
-            if(output.getQuantityPerCraft() < 1)
+            if (output.getQuantityPerCraft() < 1)
                 continue;
 
             if (!output.isFluid()) {
@@ -214,18 +210,19 @@ public abstract class Task {
     }
 
     /**
-     * Calculates everything about this {link Task} and creates new sub tasks if they're needed.
+     * Calculates everything about this {@link Task} and creates new sub tasks if they're needed.
      * This function operates recursively.
      *
      * @param network              the network in which the calculation is run
-     * @param infiniteInputs       a list of already seen {@link ItemStack}s which have been detected as infinite. this is
+     * @param infiniteInputs       a list of already seen {@link ItemStack}s which have been detected as infinite. This
      *                             list is checked to make sure infinite items are not extracted multiple times
      * @param calculationTimeStart the timestamp of when the calculation initially started
      * @return the {@link CalculationResult}
      */
     @Nonnull
     public CalculationResult calculate(@Nonnull INetwork network, @Nonnull List<ItemStack> infiniteInputs,
-                                       long calculationTimeStart) {
+                                       @Nonnull IStackList<ItemStack> recursedItemStacks,
+                                       @Nonnull IStackList<FluidStack> recursedFluidStacks, long calculationTimeStart) {
         //return if calculation takes too long
         if (System.currentTimeMillis() - calculationTimeStart > RS.INSTANCE.config.calculationTimeoutMs)
             return new CalculationResult(new CraftingTaskError(CraftingTaskErrorType.TOO_COMPLEX));
@@ -289,7 +286,7 @@ public abstract class Task {
                         //special case for infinite inputs -> tell this input that it is the one that actually extracted
                         //an item
                         if (input instanceof InfiniteInput) {
-                            ((InfiniteInput) input).setActuallyExtracted(true);
+                            ((InfiniteInput) input).setContainsItem(true);
                         }
 
                         //if it extracted too much, insert it back. Shouldn't happen
@@ -329,23 +326,40 @@ public abstract class Task {
 
                 //add new sub task if pattern is valid
                 if (pattern != null && pattern.isValid()) {
-                    Task newTask;
-                    if (pattern.isProcessing())
-                        newTask = new ProcessingTask(pattern, input.getAmountMissing(), input.isFluid());
-                    else
-                        newTask = new CraftingTask(pattern, input.getAmountMissing());
-                    newTask.addParent(this);
-                    CalculationResult newTaskResult = newTask.calculate(network, infiniteInputs, calculationTimeStart);
-                    //immediately fail if calculation had any error
-                    if (newTaskResult.getError() != null)
-                        return newTaskResult;
+                    //if any of the given inputs are in the recursion lists, then this pattern cannot be used
+                    if (pattern.getInputs().stream()
+                            .flatMap(Collection::stream)
+                            .noneMatch(i -> recursedItemStacks.get(i) != null) &&
+                            pattern.getFluidInputs().stream()
+                                    .noneMatch(f -> recursedFluidStacks.get(f) != null)) {
 
-                    //make sure nothing is missing for this input, missing stuff is handled by the child task
-                    input.increaseToCraftAmount(input.getAmountMissing());
+                        Task newTask;
+                        if (pattern.isProcessing())
+                            newTask = new ProcessingTask(pattern, input.getAmountMissing(), input.isFluid());
+                        else
+                            newTask = new CraftingTask(pattern, input.getAmountMissing());
 
-                    result.getNewTasks().add(newTask);
-                    //merge the calculation results
-                    result.merge(newTaskResult);
+                        IStackList<ItemStack> itemCopy = recursedItemStacks.copy();
+                        IStackList<FluidStack> fluidCopy = recursedFluidStacks.copy();
+                        if (!input.isFluid())
+                            itemCopy.add(input.getCompareableItemStack());
+                        else
+                            fluidCopy.add(input.getFluidStack());
+
+                        CalculationResult newTaskResult =
+                                newTask.calculate(network, infiniteInputs, itemCopy, fluidCopy, calculationTimeStart);
+                        //immediately fail if calculation had any error
+                        if (newTaskResult.getError() != null)
+                            return newTaskResult;
+
+                        //make sure nothing is missing for this input, missing stuff is handled by the child task
+                        input.increaseToCraftAmount(input.getAmountMissing());
+
+                        newTask.addParent(this);
+                        result.getNewTasks().add(newTask);
+                        //merge the calculation results
+                        result.merge(newTaskResult);
+                    }
                 }
             }
 
@@ -383,9 +397,10 @@ public abstract class Task {
     /**
      * Copy of {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager#getPattern(ItemStack)} but the
      * pattern of this task is ignored.
-     * @param stack the stack to get a pattern for
+     *
+     * @param stack   the stack to get a pattern for
      * @param network the {@link INetwork} to the
-     * {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager} from.
+     *                {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager} from.
      * @return a corresponding pattern or null if none was found
      */
     @Nullable

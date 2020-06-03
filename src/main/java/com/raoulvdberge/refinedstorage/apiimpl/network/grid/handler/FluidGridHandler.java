@@ -141,9 +141,12 @@ public class FluidGridHandler implements IFluidGridHandler {
                     network.getCraftingManager().add(task);
 
                 if (error != null) {
-                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(
-                            new CraftingPreviewElementError(error.getType(), ItemStack.EMPTY)), task.getId(), quantity,
-                            true), player);
+                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
+                                    Collections
+                                            .singletonList(new CraftingPreviewElementError(error.getType(), ItemStack.EMPTY)),
+                                    task.getId(),
+                                    task.getCalculationTime(), quantity, true),
+                            player);
                 } else if (noPreview && !task.hasMissing()) {
                     task.setCanUpdate(true);
 
@@ -151,7 +154,7 @@ public class FluidGridHandler implements IFluidGridHandler {
                 } else {
                     RS.INSTANCE.network
                             .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
-                                    quantity, true), player);
+                                    task.getCalculationTime(), quantity, true), player);
                 }
             }, "RS crafting preview calculation");
         }
