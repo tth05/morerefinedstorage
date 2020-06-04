@@ -49,7 +49,7 @@ public class DurabilityInput extends Input {
     }
 
     @Override
-    public long increaseAmount(ItemStack stack, long amount) {
+    public long increaseItemStackAmount(ItemStack stack, long amount) {
         throw new UnsupportedOperationException("#addDamageableItemStack should be used!");
     }
 

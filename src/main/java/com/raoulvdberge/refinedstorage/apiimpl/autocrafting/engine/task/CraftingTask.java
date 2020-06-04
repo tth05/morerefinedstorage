@@ -1,48 +1,116 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
+import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
+import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
+import java.util.Iterator;
 
 /**
  * Represents a crafting task
  */
 public class CraftingTask extends Task {
 
+    /**
+     * Saves the remainder from previous crafting attempts to make sure this doesn't get lost
+     */
+    private ItemStack remainder = ItemStack.EMPTY;
+    private boolean finished = false;
+
     public CraftingTask(@Nonnull ICraftingPattern pattern, long amountNeeded) {
         super(pattern, amountNeeded, false);
 
-        if(pattern.isProcessing())
+        if (pattern.isProcessing())
             throw new IllegalArgumentException("Processing pattern cannot be used for crafting task!");
     }
 
     @Override
-    public void update() {
-        //TODO: update code
-    }
-
-    //TODO: move to Task class and add fluid version or remove
-    /*public long getMaxCraftableAmount(ItemStack stack) {
-        //max iterations
-        long min = Long.MAX_VALUE;
-        for (Input input : this.inputs) {
-            min = Math.min(min, input.getTotalInputAmount());
+    public int update(@Nonnull INetwork network, ICraftingPatternContainer container, int toCraft) {
+        //don't update if there's any remainder left from the previous update
+        if (!remainder.isEmpty()) {
+            remainder = network.insertItem(remainder, remainder.getCount(), Action.PERFORM);
+            return 0;
         }
 
-        //output quantity
-        long outputQuantity = 1;
+        //stop if task is finished
+        if (amountNeeded < 1) {
+            finished = true;
+            return 0;
+        }
 
-        outer:
-        for(Output output : this.outputs) {
-            for (ItemStack itemStack : output.getItemStacks()) {
-                if(API.instance().getComparer().isEqualNoQuantity(itemStack, stack)) {
-                    outputQuantity = output.getQuantityPerCraft();
-                    break outer;
+        //adjust the craftable amount
+        if (toCraft > amountNeeded)
+            toCraft = (int) amountNeeded;
+
+        for (Input input : this.inputs) {
+            toCraft = (int) Math.min(input.getMinCraftAmount(), toCraft);
+        }
+
+        if (toCraft < 1)
+            return 0;
+
+        //notify inputs
+        for (Input input : this.inputs) {
+            input.decreaseItemStackAmount(toCraft * input.getQuantityPerCraft());
+        }
+
+        //generate output item
+        Output output = this.outputs.get(0);
+        ItemStack crafted = ItemHandlerHelper
+                .copyStackWithSize(output.getCompareableItemStack(), output.getQuantityPerCraft() * toCraft);
+
+        //insert remainder
+        /*for (ItemStack byproduct : this.getPattern().getByproducts()) {
+            //TODO: by products for durability and infinite inputs
+            network.insertItem(byproduct, toCraft * byproduct.getCount(), Action.PERFORM);
+        }*/
+
+        //give to parents
+        if (!this.getParents().isEmpty()) {
+            for (Iterator<Task> iterator = this.getParents().iterator(); !crafted.isEmpty() && iterator.hasNext();) {
+                Task parent = iterator.next();
+                int remainder = parent.supplyInput(crafted);
+                //remove if parent doesn't accept the input or is done
+                if (remainder == -1 || remainder == crafted.getCount()) {
+                    iterator.remove();
+                    break;
+                } else {
+                    crafted.setCount(remainder);
                 }
             }
         }
 
-        return min * outputQuantity;
-    }*/
+        if(!crafted.isEmpty())
+            remainder = network.insertItem(crafted, crafted.getCount(), Action.PERFORM);
+        amountNeeded -= toCraft;
 
+        if(amountNeeded < 1 && remainder.isEmpty())
+            finished = true;
+
+        return toCraft;
+    }
+
+    @Override
+    protected int supplyInput(ItemStack stack) {
+        long remainder = stack.getCount();
+        for (Input input : this.inputs) {
+            long returnValue = input.decreaseToCraftAmount(stack, remainder);
+            if(returnValue == -2)
+                return 0;
+            else if(returnValue != -1)
+                remainder = returnValue;
+        }
+        return (int) remainder;
+    }
+
+    @Override
+    public boolean isFinished() {
+        return this.finished;
+    }
 }

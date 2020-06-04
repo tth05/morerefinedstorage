@@ -17,6 +17,11 @@ public class InfiniteInput extends Input {
     }
 
     @Override
+    public void decreaseItemStackAmount(long amount) {
+        //NO OP
+    }
+
+    @Override
     public long getAmountNeeded() {
         return 1;
     }
@@ -29,6 +34,11 @@ public class InfiniteInput extends Input {
     @Override
     public int getQuantityPerCraft() {
         return 0;
+    }
+
+    @Override
+    public long getMinCraftAmount() {
+        return Long.MAX_VALUE;
     }
 
     /**

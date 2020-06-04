@@ -82,7 +82,7 @@ public class Input {
      * @param amount the amount
      * @return the remaining amount; or {@code -1} if the given {@code amount} does not satisfy this input
      */
-    public long increaseAmount(ItemStack stack, long amount) {
+    public long increaseItemStackAmount(ItemStack stack, long amount) {
         long needed = amountNeeded - totalInputAmount;
         long returns = totalInputAmount + amount - amountNeeded;
 
@@ -130,6 +130,62 @@ public class Input {
      */
     public void increaseToCraftAmount(long amount) {
         this.toCraftAmount += amount;
+    }
+
+    /**
+     * Decreases the to craft amount for this input and increase the total input amount. This is used to supply this
+     * inputs with newly crafted items.
+     * @param stack the item that was crafted
+     * @param amount the amount that was crafted
+     * @return the amount of the given item that remains; {@code -1} if the item is not valid; or {@code -2} if there's
+     * no remainder
+     */
+    public long decreaseToCraftAmount(ItemStack stack, long amount) {
+        int i = 0;
+        boolean found = false;
+
+        List<ItemStack> stacks = this.itemStacks;
+        for (; i < stacks.size(); i++) {
+            ItemStack itemStack = stacks.get(i);
+            if (API.instance().getComparer().isEqualNoQuantity(stack, itemStack)) {
+                found = true;
+                break;
+            }
+        }
+
+        //these return code aren't optimal but better than making another method that checks just this
+        if(!found)
+            return -1;
+
+        long realAmount = Math.min(toCraftAmount, amount);
+        this.totalInputAmount += this.currentInputCounts.get(i) + realAmount;
+        this.currentInputCounts.set(i, this.currentInputCounts.get(i) + realAmount);
+        return amount - realAmount < 1 ? -2 : amount - realAmount;
+    }
+
+    /**
+     * Decrease the total input amount and input counts by the given {@code amount} as if they were used up in crafting.
+     * @param amount the amount that should be used up
+     */
+    public void decreaseItemStackAmount(long amount) {
+        this.totalInputAmount -= amount;
+
+        List<Long> inputCounts = this.currentInputCounts;
+        for (int i = 0; i < inputCounts.size(); i++) {
+            Long currentInputCount = inputCounts.get(i);
+            if(currentInputCount == 0)
+                continue;
+            if(amount < 1)
+                break;
+
+            currentInputCount -= amount;
+            if(currentInputCount < 0) {
+                amount = -currentInputCount;
+                currentInputCount = 0L;
+            }
+
+            inputCounts.set(i, currentInputCount);
+        }
     }
 
     /**
@@ -184,6 +240,13 @@ public class Input {
 
     public long getAmountMissing() {
         return Math.max(amountNeeded - totalInputAmount - toCraftAmount, 0);
+    }
+
+    public long getMinCraftAmount() {
+        long minCraftAmount = totalInputAmount / quantityPerCraft;
+        if(minCraftAmount > Integer.MAX_VALUE)
+            return Integer.MAX_VALUE;
+        return minCraftAmount;
     }
 
     public List<Long> getCurrentInputCounts() {

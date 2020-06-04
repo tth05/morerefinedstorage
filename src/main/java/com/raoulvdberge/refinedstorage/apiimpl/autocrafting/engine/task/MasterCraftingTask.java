@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
+import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
@@ -18,25 +19,24 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.I
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class MasterCraftingTask implements ICraftingTask {
 
     private final List<Task> tasks = new ObjectArrayList<>();
+    /**
+     * Used to know how many crafting updates are left for a specific container
+     */
+    private final Map<ICraftingPatternContainer, Integer> updateCountMap = new Object2IntOpenHashMap<>(20);
     private IStackList<ItemStack> missingItemStacks = API.instance().createItemStackList();
     private IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();
-
-    //TODO: remainder
-    private final IStackList<ItemStack> totalRemainder = API.instance().createItemStackList();
 
     private final INetwork network;
 
@@ -47,6 +47,7 @@ public class MasterCraftingTask implements ICraftingTask {
     private final int quantity;
     private long executionStarted = -1;
     private long calculationTime = -1;
+    private long ticks = 0;
     private boolean canUpdate;
 
     public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, int quantity,
@@ -68,14 +69,49 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
-    public void update() {
+    public boolean update() {
+        if(!canUpdate)
+            return false;
         if (executionStarted == -1)
             executionStarted = System.currentTimeMillis();
 
+        boolean allFinished = true;
+
+        updateCountMap.clear();
         for (int i = tasks.size() - 1; i >= 0; i--) {
-            //TODO: only update if dirty
-            tasks.get(i).update();
+            Task task = tasks.get(i);
+            if(task.isFinished())
+                continue;
+
+            Set<ICraftingPatternContainer> containers = network.getCraftingManager().getAllContainer(task.getPattern());
+            //TODO: maybe optimize somehow
+            for (ICraftingPatternContainer container : containers) {
+                //check if container is allowed to update
+                if(ticks % container.getUpdateInterval() != 0)
+                    continue;
+
+                //get current update count
+                Integer remainingUpdates = updateCountMap.get(container);
+                if(remainingUpdates == null)
+                    remainingUpdates = container.getMaximumSuccessfulCraftingUpdates();
+
+                //stop if no updates are left
+                if(remainingUpdates < 1)
+                    continue;
+
+                remainingUpdates -= task.update(network, container, remainingUpdates);
+                if(task.isFinished())
+                    break;
+
+                updateCountMap.put(container, remainingUpdates);
+            }
+
+            if(!task.isFinished())
+                allFinished = false;
         }
+
+        ticks++;
+        return allFinished;
     }
 
     @Override

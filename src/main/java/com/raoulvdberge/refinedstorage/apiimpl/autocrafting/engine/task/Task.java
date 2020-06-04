@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
+import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
@@ -29,7 +30,7 @@ public abstract class Task {
     protected final List<Output> outputs = new ObjectArrayList<>();
 
     protected final ICraftingPattern pattern;
-    protected final long amountNeeded;
+    protected long amountNeeded;
 
     public Task(@Nonnull ICraftingPattern pattern, long amountNeeded, boolean isFluidRequested) {
         //merge all pattern item inputs
@@ -192,6 +193,25 @@ public abstract class Task {
     }
 
     /**
+     * @param toCraft the amount that this task is allowed to craft
+     * @param container the container that should be used
+     * @return the amount of crafting updates that were used up by this task
+     */
+    public abstract int update(@Nonnull INetwork network, ICraftingPatternContainer container, int toCraft);
+
+    /**
+     * Supplies an input to this task. Called by sub tasks when they crafted something
+     * @param stack the stack to supply
+     * @return see {@link Input#decreaseToCraftAmount(ItemStack, long)}
+     */
+    protected abstract int supplyInput(ItemStack stack);
+
+    /**
+     * @return whether or not this task is finished
+     */
+    public abstract boolean isFinished();
+
+    /**
      * Merges the given {@code input} into the given {@code list}.
      *
      * @param input the {@link Input} the should be merged
@@ -240,7 +260,7 @@ public abstract class Task {
                     //input already has been handled
                     if (API.instance().getComparer().isEqual(infiniteInput, input.getCompareableItemStack())) {
                         //force set the count because it already exists
-                        input.increaseAmount(input.getCompareableItemStack(), 1);
+                        input.increaseItemStackAmount(input.getCompareableItemStack(), 1);
                         exists = true;
                         break;
                     }
@@ -283,7 +303,7 @@ public abstract class Task {
                         if (extracted.isEmpty())
                             continue;
 
-                        long remainder = input.increaseAmount(extracted, extracted.getCount());
+                        long remainder = input.increaseItemStackAmount(extracted, extracted.getCount());
                         //special case for infinite inputs -> tell this input that it is the one that actually extracted
                         //an item
                         if (input instanceof InfiniteInput) {
@@ -392,8 +412,6 @@ public abstract class Task {
 
         return result;
     }
-
-    public abstract void update();
 
     /**
      * Copy of {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager#getPattern(ItemStack)} but the

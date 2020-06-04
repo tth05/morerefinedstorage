@@ -28,7 +28,7 @@ public interface ICraftingTask {
      * Updates this task.
      * {@link ICraftingTask#calculate()} must be run before this!
      */
-    void update();
+    boolean update();
 
     /**
      * Called when this task is cancelled.
