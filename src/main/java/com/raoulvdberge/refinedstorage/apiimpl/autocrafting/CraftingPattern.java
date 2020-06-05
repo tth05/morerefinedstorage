@@ -145,6 +145,35 @@ public class CraftingPattern implements ICraftingPattern {
                 }
             }
         }
+
+        //if any input is found in the outputs with exactly the same amount, then either remove that input or invalidate
+        // the pattern
+        for (NonNullList<ItemStack> input : this.inputs) {
+            if(input.isEmpty())
+                continue;
+            int removed = 0;
+            for (ItemStack possibleItemStack : input) {
+                for (ItemStack output : this.outputs) {
+                    if (API.instance().getComparer().isEqual(possibleItemStack, output))
+                        removed++;
+                }
+            }
+
+            if(input.size() - removed < 1) {
+                this.valid = false;
+                break;
+            }
+        }
+
+        for (FluidStack fluidInput : this.fluidInputs) {
+            for (FluidStack fluidOutput : this.fluidOutputs) {
+                if(API.instance().getComparer().isEqual(fluidInput, fluidOutput,
+                        IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY)) {
+                    this.valid = false;
+                    return;
+                }
+            }
+        }
     }
 
     @Override
