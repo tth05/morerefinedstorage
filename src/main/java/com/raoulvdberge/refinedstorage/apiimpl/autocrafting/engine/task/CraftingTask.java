@@ -33,23 +33,23 @@ public class CraftingTask extends Task {
     @Override
     public int update(@Nonnull INetwork network, ICraftingPatternContainer container, int toCraft) {
         //don't update if there's any remainder left from the previous update
-        if (!remainder.isEmpty()) {
-            remainder = network.insertItem(remainder, remainder.getCount(), Action.PERFORM);
+        if (!this.remainder.isEmpty()) {
+            this.remainder = network.insertItem(this.remainder, this.remainder.getCount(), Action.PERFORM);
             return 0;
         }
 
         //stop if task is finished
-        if (amountNeeded < 1) {
-            finished = true;
+        if (this.amountNeeded < 1) {
+            this.finished = true;
             return 0;
         }
 
         //adjust the craftable amount
-        if (toCraft > amountNeeded)
-            toCraft = (int) amountNeeded;
+        if (toCraft > this.amountNeeded)
+            toCraft = (int) this.amountNeeded;
 
         for (Input input : this.inputs) {
-            toCraft = (int) Math.min(input.getMinCraftAmount(), toCraft);
+            toCraft = (int) Math.min(input.getMinimumCraftableAmount(), toCraft);
         }
 
         if (toCraft < 1)
@@ -71,9 +71,15 @@ public class CraftingTask extends Task {
             network.insertItem(byproduct, toCraft * byproduct.getCount(), Action.PERFORM);
         }*/
 
+
+        //TODO: PRUDENTIUM DOESN'T GET USED UP PROPERLY IDK WHY YEET
+
+
         //give to parents
         if (!this.getParents().isEmpty()) {
-            for (Iterator<Task> iterator = this.getParents().iterator(); !crafted.isEmpty() && iterator.hasNext();) {
+            //loop through all parents while there is anything left to split up
+            //TODO: evenly split up instead of giving everything to first parent
+            for (Iterator<Task> iterator = this.getParents().iterator(); !crafted.isEmpty() && iterator.hasNext(); ) {
                 Task parent = iterator.next();
                 int remainder = parent.supplyInput(crafted);
                 //remove if parent doesn't accept the input or is done
@@ -86,12 +92,15 @@ public class CraftingTask extends Task {
             }
         }
 
-        if(!crafted.isEmpty())
-            remainder = network.insertItem(crafted, crafted.getCount(), Action.PERFORM);
-        amountNeeded -= toCraft;
+        //if there is to much crafted we insert it back into the network
+        if (!crafted.isEmpty())
+            this.remainder = network.insertItem(crafted, crafted.getCount(), Action.PERFORM);
 
-        if(amountNeeded < 1 && remainder.isEmpty())
-            finished = true;
+        this.amountNeeded -= toCraft;
+
+        //if there's no remainder and the task has crafted everything, we're done
+        if (this.amountNeeded < 1 && this.remainder.isEmpty())
+            this.finished = true;
 
         return toCraft;
     }
@@ -99,11 +108,14 @@ public class CraftingTask extends Task {
     @Override
     protected int supplyInput(ItemStack stack) {
         long remainder = stack.getCount();
+        //give to all inputs while there's anything left
         for (Input input : this.inputs) {
             long returnValue = input.decreaseToCraftAmount(stack, remainder);
-            if(returnValue == -2)
+
+            //no remainder left -> just return
+            if (returnValue == -2)
                 return 0;
-            else if(returnValue != -1)
+            else if (returnValue != -1) //go into next iteration otherwise
                 remainder = returnValue;
         }
         return (int) remainder;

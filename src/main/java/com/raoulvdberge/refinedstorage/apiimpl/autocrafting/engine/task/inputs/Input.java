@@ -157,8 +157,10 @@ public class Input {
         if(!found)
             return -1;
 
+        //adjust all values accordingly
         long realAmount = Math.min(toCraftAmount, amount);
-        this.totalInputAmount += this.currentInputCounts.get(i) + realAmount;
+        this.toCraftAmount = Math.max(toCraftAmount - amount, 0);
+        this.totalInputAmount += realAmount;
         this.currentInputCounts.set(i, this.currentInputCounts.get(i) + realAmount);
         return amount - realAmount < 1 ? -2 : amount - realAmount;
     }
@@ -170,6 +172,7 @@ public class Input {
     public void decreaseItemStackAmount(long amount) {
         this.totalInputAmount -= amount;
 
+        //decrease the amount from all input counts
         List<Long> inputCounts = this.currentInputCounts;
         for (int i = 0; i < inputCounts.size(); i++) {
             Long currentInputCount = inputCounts.get(i);
@@ -182,6 +185,8 @@ public class Input {
             if(currentInputCount < 0) {
                 amount = -currentInputCount;
                 currentInputCount = 0L;
+            } else {
+                amount = 0;
             }
 
             inputCounts.set(i, currentInputCount);
@@ -242,7 +247,7 @@ public class Input {
         return Math.max(amountNeeded - totalInputAmount - toCraftAmount, 0);
     }
 
-    public long getMinCraftAmount() {
+    public long getMinimumCraftableAmount() {
         long minCraftAmount = totalInputAmount / quantityPerCraft;
         if(minCraftAmount > Integer.MAX_VALUE)
             return Integer.MAX_VALUE;

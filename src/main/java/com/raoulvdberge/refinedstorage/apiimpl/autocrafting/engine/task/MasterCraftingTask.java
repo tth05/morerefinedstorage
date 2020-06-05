@@ -30,6 +30,9 @@ import java.util.*;
 
 public class MasterCraftingTask implements ICraftingTask {
 
+    /**
+     * All current tasks that make up this auto crafting task
+     */
     private final List<Task> tasks = new ObjectArrayList<>();
     /**
      * Used to know how many crafting updates are left for a specific container
@@ -45,7 +48,13 @@ public class MasterCraftingTask implements ICraftingTask {
     private final UUID id = UUID.randomUUID();
 
     private final int quantity;
+    /**
+     * Timestamp of when the execution started
+     */
     private long executionStarted = -1;
+    /**
+     * The time in milli seconds it took for the calculation to complete
+     */
     private long calculationTime = -1;
     private long ticks = 0;
     private boolean canUpdate;

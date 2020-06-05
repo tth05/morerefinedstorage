@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
@@ -33,7 +34,8 @@ public class CraftingManager implements ICraftingManager {
     private static final String NBT_TASK_TYPE = "Type";
     private static final String NBT_TASK_DATA = "Task";
 
-    public static final ExecutorService CALCULATION_THREAD_POOL = Executors.newFixedThreadPool(4);
+    public static final ExecutorService CALCULATION_THREAD_POOL = Executors.newFixedThreadPool(4,
+            new ThreadFactoryBuilder().setNameFormat("RS Calculation Thread %d").build());
 
     private final TileController network;
 
@@ -152,7 +154,7 @@ public class CraftingManager implements ICraftingManager {
                     anyFinished = true;
 
                     it.remove();
-                    //insert everything that remains
+                    //insert everything that remains, like infinite inputs
                     task.onCancelled();
                 }
             }

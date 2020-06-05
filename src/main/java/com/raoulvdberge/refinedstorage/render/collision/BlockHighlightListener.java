@@ -17,7 +17,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class BlockHighlightListener {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onBlockDrawHighlight(DrawBlockHighlightEvent e) {
-        if (e.getTarget() == null) {
+        //noinspection ConstantConditions
+        if (e.getTarget() == null || e.getTarget().getBlockPos() == null) {
             return;
         }
 

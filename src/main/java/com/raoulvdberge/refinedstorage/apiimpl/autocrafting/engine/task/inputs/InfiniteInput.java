@@ -22,6 +22,14 @@ public class InfiniteInput extends Input {
     }
 
     @Override
+    public long decreaseToCraftAmount(ItemStack stack, long amount) {
+        long returns = super.decreaseToCraftAmount(stack, amount);
+        //if a sub tasks gives an item to an infinite input, then this infinite inputs actually contains something
+        this.setContainsItem(true);
+        return returns;
+    }
+
+    @Override
     public long getAmountNeeded() {
         return 1;
     }
@@ -37,7 +45,7 @@ public class InfiniteInput extends Input {
     }
 
     @Override
-    public long getMinCraftAmount() {
+    public long getMinimumCraftableAmount() {
         return Long.MAX_VALUE;
     }
 

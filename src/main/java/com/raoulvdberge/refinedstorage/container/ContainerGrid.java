@@ -7,7 +7,6 @@ import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandle
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
-import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
@@ -73,6 +72,11 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             if (!getPlayer().getEntityWorld().isRemote) {
                 Slot slot = inventorySlots.get(slotIndex);
 
+                if (grid instanceof IPortableGrid && slot instanceof SlotItemHandler) {
+                    if (((SlotItemHandler) slot).getItemHandler().equals(((IPortableGrid) grid).getDisk())) {
+                        return ItemStack.EMPTY;
+                    }
+                }
                 if (slot.getHasStack()) {
                     if (slot == craftingResultSlot) {
                         grid.onCraftedShift(getPlayer());
@@ -88,8 +92,7 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                         } else {
                             IItemGridHandler itemHandler = grid.getItemHandler();
 
-                            //make sure stack is not a disk, otherwise it gets inserted into itself
-                            if (itemHandler != null && !(stack.getItem() instanceof IStorageDiskProvider)) {
+                            if (itemHandler != null) {
                                 slot.putStack(itemHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
                             } else if (slot instanceof SlotGridCrafting &&
                                     mergeItemStack(stack, 14, 14 + (9 * 4), false)) {

@@ -20,7 +20,6 @@ import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
 
 public abstract class Task {
@@ -348,11 +347,8 @@ public abstract class Task {
                 //add new sub task if pattern is valid
                 if (pattern != null && pattern.isValid()) {
                     //if any of the given inputs are in the recursion lists, then this pattern cannot be used
-                    if (pattern.getInputs().stream()
-                            .flatMap(Collection::stream)
-                            .noneMatch(i -> recursedItemStacks.get(i) != null) &&
-                            pattern.getFluidInputs().stream()
-                                    .noneMatch(f -> recursedFluidStacks.get(f) != null)) {
+                    if (input.isFluid() ? recursedFluidStacks.get(input.getFluidStack()) == null :
+                            recursedItemStacks.get(input.getCompareableItemStack()) == null) {
 
                         Task newTask;
                         if (pattern.isProcessing())
