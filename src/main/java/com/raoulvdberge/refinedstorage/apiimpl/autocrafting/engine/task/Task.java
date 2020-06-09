@@ -20,6 +20,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class Task {
@@ -192,23 +193,100 @@ public abstract class Task {
     }
 
     /**
-     * @param toCraft the amount that this task is allowed to craft
+     * @param toCraft   the amount that this task is allowed to craft
      * @param container the container that should be used
      * @return the amount of crafting updates that were used up by this task
      */
-    public abstract int update(@Nonnull INetwork network, ICraftingPatternContainer container, int toCraft);
+    public abstract int update(@Nonnull INetwork network, @Nonnull ICraftingPatternContainer container, int toCraft);
 
     /**
-     * Supplies an input to this task. Called by sub tasks when they crafted something
-     * @param stack the stack to supply
-     * @return see {@link Input#decreaseToCraftAmount(ItemStack, long)}
-     */
-    protected abstract int supplyInput(ItemStack stack);
-
-    /**
+     * This also replaces {@code ProcessingState.PROCESSED}
+     *
      * @return whether or not this task is finished
      */
     public abstract boolean isFinished();
+
+    /**
+     * Supplies an input to this task. Called by sub tasks when they crafted something
+     *
+     * @param stack the stack to supply
+     * @return see {@link Input#decreaseToCraftAmount(ItemStack, long)}
+     */
+    protected int supplyInput(ItemStack stack) {
+        long remainder = stack.getCount();
+        if (!isFinished()) {
+            //give to all inputs while there's anything left
+            for (Input input : this.inputs) {
+                long returnValue = input.decreaseToCraftAmount(stack, remainder);
+
+                //no remainder left -> just return
+                if (returnValue == -2)
+                    return 0;
+                else if (returnValue != -1) //go into next iteration otherwise
+                    remainder = returnValue;
+            }
+        }
+
+        //if there's anything left and the item is an output of this processing task -> forward to parents
+        if (remainder > 0 && !this.getParents().isEmpty() && this.outputs.stream()
+                .anyMatch(o -> API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))) {
+            stack.setCount((int) remainder);
+            //loop through all parents while there is anything left to split up
+            for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
+                Task parent = iterator.next();
+                remainder = parent.supplyInput(stack);
+                //remove if there's nothing left
+                if (remainder == -1) {
+                    return 0;
+                } else {
+                    stack.setCount((int) remainder);
+                }
+            }
+        }
+
+        return remainder < 0 ? 0 : (int) remainder;
+    }
+
+    /**
+     * Supplies an input to this task. Called by sub tasks when they crafted something
+     *
+     * @param stack the stack to supply
+     * @return see {@link Input#decreaseToCraftAmount(FluidStack, long)}
+     */
+    protected int supplyInput(FluidStack stack) {
+        long remainder = stack.amount;
+        if (!isFinished()) {
+            //give to all inputs while there's anything left
+            for (Input input : this.inputs) {
+                long returnValue = input.decreaseToCraftAmount(stack, remainder);
+
+                //no remainder left -> just return
+                if (returnValue == -2)
+                    return 0;
+                else if (returnValue != -1) //go into next iteration otherwise
+                    remainder = returnValue;
+            }
+        }
+
+        //if there's anything left and the item is an output of this processing task -> forward to parents
+        if (remainder > 0 && !this.getParents().isEmpty() && this.outputs.stream()
+                .anyMatch(o -> API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))) {
+            stack.amount = (int) remainder;
+            //loop through all parents while there is anything left to split up
+            for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {
+                Task parent = iterator.next();
+                remainder = parent.supplyInput(stack);
+                //remove if there's nothing left
+                if (remainder == -1) {
+                    return 0;
+                } else {
+                    stack.amount = (int) remainder;
+                }
+            }
+        }
+
+        return remainder < 0 ? 0 : (int) remainder;
+    }
 
     /**
      * Merges the given {@code input} into the given {@code list}.
@@ -356,6 +434,7 @@ public abstract class Task {
                         else
                             newTask = new CraftingTask(pattern, input.getAmountMissing());
 
+                        //TODO: use patterns instead of items and fluids for recursion detection
                         IStackList<ItemStack> itemCopy = recursedItemStacks.copy();
                         IStackList<FluidStack> fluidCopy = recursedFluidStacks.copy();
                         if (!input.isFluid())
@@ -413,7 +492,7 @@ public abstract class Task {
      * Copy of {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager#getPattern(ItemStack)} but the
      * pattern of this task is ignored.
      *
-     * @param stack   the stack to get a pattern for
+     * @param stack           the stack to get a pattern for
      * @param craftingManager the crafting manager
      * @return a corresponding pattern or null if none was found
      */
@@ -422,7 +501,9 @@ public abstract class Task {
         for (ICraftingPattern patternInList : craftingManager.getPatterns()) {
             for (ItemStack output : patternInList.getOutputs()) {
                 if (API.instance().getComparer().isEqualNoQuantity(output, stack) &&
-                        !patternInList.equals(this.pattern)) {
+                        !patternInList.equals(this.pattern) &&
+                        patternInList.getBlacklistedItems().stream()
+                                .noneMatch(f -> API.instance().getComparer().isEqualNoQuantity(f, stack))) {
                     return patternInList;
                 }
             }
@@ -435,7 +516,7 @@ public abstract class Task {
      * Copy of {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager#getPattern(FluidStack)} but the
      * pattern of this task is ignored.
      *
-     * @param stack   the stack to get a pattern for
+     * @param stack           the stack to get a pattern for
      * @param craftingManager the crafting manager
      * @return a corresponding pattern or null if none was found
      */
@@ -444,7 +525,9 @@ public abstract class Task {
         for (ICraftingPattern patternInList : craftingManager.getPatterns()) {
             for (FluidStack output : patternInList.getFluidOutputs()) {
                 if (API.instance().getComparer().isEqual(output, stack, IComparer.COMPARE_NBT) &&
-                        !patternInList.equals(this.pattern)) {
+                        !patternInList.equals(this.pattern) &&
+                        patternInList.getBlacklistedFluids().stream().noneMatch(f -> API.instance().getComparer()
+                                .isEqual(f, stack, IComparer.COMPARE_NBT))) {
                     return patternInList;
                 }
             }

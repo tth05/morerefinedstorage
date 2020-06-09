@@ -67,7 +67,8 @@ public class GuiCraftingPreview extends GuiBase {
 
     private final boolean fluids;
 
-    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID craftingTaskId, long calculationTime,
+    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID craftingTaskId,
+                              long calculationTime,
                               int quantity, boolean fluids) {
         super(new Container() {
             @Override
@@ -133,7 +134,8 @@ public class GuiCraftingPreview extends GuiBase {
             GlStateManager.scale(scale, scale, 1);
             drawString(RenderUtils.getOffsetOnScale(7, 0.5f),
                     RenderUtils.getOffsetOnScale(175, 0.5f),
-                    "Took: " + TextFormatting.DARK_GREEN + calculationTime + "ms");
+                    t("gui.refinedstorage:crafting_preview.calculation_time") + " " + TextFormatting.DARK_GREEN +
+                            calculationTime + "ms");
             GlStateManager.popMatrix();
         }
 

@@ -31,7 +31,7 @@ public class CraftingTask extends Task {
     }
 
     @Override
-    public int update(@Nonnull INetwork network, ICraftingPatternContainer container, int toCraft) {
+    public int update(@Nonnull INetwork network, @Nonnull ICraftingPatternContainer container, int toCraft) {
         //don't update if there's any remainder left from the previous update
         if (!this.remainder.isEmpty()) {
             this.remainder = network.insertItem(this.remainder, this.remainder.getCount(), Action.PERFORM);
@@ -57,7 +57,7 @@ public class CraftingTask extends Task {
 
         //notify inputs
         for (Input input : this.inputs) {
-            input.decreaseItemStackAmount(toCraft * input.getQuantityPerCraft());
+            input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
         }
 
         //generate output item
@@ -70,10 +70,6 @@ public class CraftingTask extends Task {
             //TODO: by products for durability and infinite inputs
             network.insertItem(byproduct, toCraft * byproduct.getCount(), Action.PERFORM);
         }*/
-
-
-        //TODO: PRUDENTIUM DOESN'T GET USED UP PROPERLY IDK WHY YEET
-
 
         //give to parents
         if (!this.getParents().isEmpty()) {
@@ -103,22 +99,6 @@ public class CraftingTask extends Task {
             this.finished = true;
 
         return toCraft;
-    }
-
-    @Override
-    protected int supplyInput(ItemStack stack) {
-        long remainder = stack.getCount();
-        //give to all inputs while there's anything left
-        for (Input input : this.inputs) {
-            long returnValue = input.decreaseToCraftAmount(stack, remainder);
-
-            //no remainder left -> just return
-            if (returnValue == -2)
-                return 0;
-            else if (returnValue != -1) //go into next iteration otherwise
-                remainder = returnValue;
-        }
-        return (int) remainder;
     }
 
     @Override

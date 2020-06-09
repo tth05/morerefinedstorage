@@ -19,7 +19,7 @@ public class RestockableInput extends Input {
     }
 
     @Override
-    public long decreaseToCraftAmount(ItemStack stack, long amount) {
+    public long decreaseToCraftAmount(@Nonnull ItemStack stack, long amount) {
         //restockable inputs will never be crafted by sub tasks
         return amount;
     }

@@ -17,12 +17,12 @@ public class InfiniteInput extends Input {
     }
 
     @Override
-    public void decreaseItemStackAmount(long amount) {
+    public void decreaseInputAmount(long amount) {
         //NO OP
     }
 
     @Override
-    public long decreaseToCraftAmount(ItemStack stack, long amount) {
+    public long decreaseToCraftAmount(@Nonnull ItemStack stack, long amount) {
         long returns = super.decreaseToCraftAmount(stack, amount);
         //if a sub tasks gives an item to an infinite input, then this infinite inputs actually contains something
         this.setContainsItem(true);

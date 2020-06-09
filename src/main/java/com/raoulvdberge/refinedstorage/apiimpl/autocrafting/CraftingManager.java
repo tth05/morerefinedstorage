@@ -330,28 +330,26 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public int track(ItemStack stack, int size) {
-        //TODO: Processing tasks
-        /*for (ICraftingTask task : tasks.values()) {
+        for (ICraftingTask task : tasks.values()) {
             size = task.onTrackedInsert(stack, size);
 
-            if (size == 0) {
+            if (size < 1) {
                 return 0;
             }
-        }*/
+        }
 
         return size;
     }
 
     @Override
     public int track(FluidStack stack, int size) {
-        //TODO: Processing tasks
-        /*for (ICraftingTask task : tasks.values()) {
+        for (ICraftingTask task : tasks.values()) {
             size = task.onTrackedInsert(stack, size);
 
-            if (size == 0) {
+            if (size < 1) {
                 return 0;
             }
-        }*/
+        }
 
         return size;
     }
@@ -420,7 +418,9 @@ public class CraftingManager implements ICraftingManager {
     public ICraftingPattern getPattern(ItemStack pattern, int flags) {
         for (ICraftingPattern patternInList : patterns) {
             for (ItemStack output : patternInList.getOutputs()) {
-                if (API.instance().getComparer().isEqual(output, pattern, flags)) {
+                if (API.instance().getComparer().isEqual(output, pattern, flags) &&
+                        patternInList.getBlacklistedItems().stream()
+                                .noneMatch(f -> API.instance().getComparer().isEqualNoQuantity(f, pattern))) {
                     return patternInList;
                 }
             }
@@ -434,7 +434,9 @@ public class CraftingManager implements ICraftingManager {
     public ICraftingPattern getPattern(FluidStack pattern) {
         for (ICraftingPattern patternInList : patterns) {
             for (FluidStack output : patternInList.getFluidOutputs()) {
-                if (API.instance().getComparer().isEqual(output, pattern, IComparer.COMPARE_NBT)) {
+                if (API.instance().getComparer().isEqual(output, pattern, IComparer.COMPARE_NBT) &&
+                        patternInList.getBlacklistedFluids().stream().noneMatch(f -> API.instance().getComparer()
+                                .isEqual(f, pattern, IComparer.COMPARE_NBT))) {
                     return patternInList;
                 }
             }

@@ -36,6 +36,11 @@ public class CraftingPattern implements ICraftingPattern {
     private final NonNullList<FluidStack> fluidInputs = NonNullList.create();
     private final NonNullList<FluidStack> fluidOutputs = NonNullList.create();
 
+    //blacklisted items which this pattern cannot craft. 1x Wood -> 1x Wood (wood cannot be crafted because it gets used
+    // up in the next iteration, it doesn't multiply)
+    private final NonNullList<ItemStack> blacklistedItems = NonNullList.create();
+    private final NonNullList<FluidStack> blacklistedFluids = NonNullList.create();
+
     public CraftingPattern(World world, ICraftingPatternContainer container, ItemStack stack) {
         if (!OneSixMigrationHelper.isValidOneSixPattern(stack)) {
             this.valid = false;
@@ -72,7 +77,7 @@ public class CraftingPattern implements ICraftingPattern {
                     }
 
                     // Fix item count
-                    for (ItemStack ore: ores) {
+                    for (ItemStack ore : ores) {
                         ore.setCount(input.getCount());
                     }
 
@@ -133,7 +138,8 @@ public class CraftingPattern implements ICraftingPattern {
                                 inputs.clear();
 
                                 for (int i = 0; i < recipe.getIngredients().size(); ++i) {
-                                    inputs.add(i, NonNullList.from(ItemStack.EMPTY, recipe.getIngredients().get(i).getMatchingStacks()));
+                                    inputs.add(i, NonNullList
+                                            .from(ItemStack.EMPTY, recipe.getIngredients().get(i).getMatchingStacks()));
                                 }
                             } else {
                                 this.valid = false;
@@ -146,34 +152,30 @@ public class CraftingPattern implements ICraftingPattern {
             }
         }
 
-        //if any input is found in the outputs with exactly the same amount, then either remove that input or invalidate
-        // the pattern
+        //if any input is found in the outputs with exactly the same amount, then blacklist that output
         for (NonNullList<ItemStack> input : this.inputs) {
-            if(input.isEmpty())
-                continue;
-            int removed = 0;
             for (ItemStack possibleItemStack : input) {
                 for (ItemStack output : this.outputs) {
-                    if (API.instance().getComparer().isEqual(possibleItemStack, output))
-                        removed++;
+                    if (API.instance().getComparer().isEqual(possibleItemStack, output)) {
+                        blacklistedItems.add(output);
+                    }
                 }
-            }
-
-            if(input.size() - removed < 1) {
-                this.valid = false;
-                break;
             }
         }
 
         for (FluidStack fluidInput : this.fluidInputs) {
             for (FluidStack fluidOutput : this.fluidOutputs) {
-                if(API.instance().getComparer().isEqual(fluidInput, fluidOutput,
+                if (API.instance().getComparer().isEqual(fluidInput, fluidOutput,
                         IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY)) {
-                    this.valid = false;
+                    blacklistedFluids.add(fluidOutput);
                     return;
                 }
             }
         }
+
+        //if all items and fluids are blacklisted, then this pattern is useless
+        if(blacklistedFluids.size() == fluidOutputs.size() && blacklistedItems.size() == inputs.size())
+            this.valid = false;
     }
 
     @Override
@@ -217,7 +219,9 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         if (took.size() != inputs.size()) {
-            throw new IllegalArgumentException("The items that are taken (" + took.size() + ") should match the inputs for this pattern (" + inputs.size() + ")");
+            throw new IllegalArgumentException(
+                    "The items that are taken (" + took.size() + ") should match the inputs for this pattern (" +
+                            inputs.size() + ")");
         }
 
         InventoryCrafting inv = new InventoryCraftingDummy();
@@ -250,7 +254,9 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         if (took.size() != inputs.size()) {
-            throw new IllegalArgumentException("The items that are taken (" + took.size() + ") should match the inputs for this pattern (" + inputs.size() + ")");
+            throw new IllegalArgumentException(
+                    "The items that are taken (" + took.size() + ") should match the inputs for this pattern (" +
+                            inputs.size() + ")");
         }
 
         InventoryCrafting inv = new InventoryCraftingDummy();
@@ -282,6 +288,16 @@ public class CraftingPattern implements ICraftingPattern {
     }
 
     @Override
+    public NonNullList<ItemStack> getBlacklistedItems() {
+        return blacklistedItems;
+    }
+
+    @Override
+    public NonNullList<FluidStack> getBlacklistedFluids() {
+        return blacklistedFluids;
+    }
+
+    @Override
     public String getId() {
         return CraftingTaskFactory.ID;
     }
@@ -293,9 +309,9 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         if ((other.getInputs().size() != inputs.size()) ||
-            (other.getFluidInputs().size() != fluidInputs.size()) ||
-            (other.getOutputs().size() != outputs.size()) ||
-            (other.getFluidOutputs().size() != fluidOutputs.size())) {
+                (other.getFluidInputs().size() != fluidInputs.size()) ||
+                (other.getOutputs().size() != outputs.size()) ||
+                (other.getFluidOutputs().size() != fluidOutputs.size())) {
             return false;
         }
 
@@ -319,7 +335,8 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         for (int i = 0; i < fluidInputs.size(); ++i) {
-            if (!API.instance().getComparer().isEqual(fluidInputs.get(i), other.getFluidInputs().get(i), IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY)) {
+            if (!API.instance().getComparer().isEqual(fluidInputs.get(i), other.getFluidInputs().get(i),
+                    IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY)) {
                 return false;
             }
         }
@@ -331,7 +348,8 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         for (int i = 0; i < fluidOutputs.size(); ++i) {
-            if (!API.instance().getComparer().isEqual(fluidOutputs.get(i), other.getFluidOutputs().get(i), IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY)) {
+            if (!API.instance().getComparer().isEqual(fluidOutputs.get(i), other.getFluidOutputs().get(i),
+                    IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY)) {
                 return false;
             }
         }
@@ -386,7 +404,7 @@ public class CraftingPattern implements ICraftingPattern {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof CraftingPattern) {
+        if (obj instanceof CraftingPattern) {
             return canBeInChainWith((CraftingPattern) obj);
         }
         return false;

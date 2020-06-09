@@ -95,6 +95,9 @@ public class MasterCraftingTask implements ICraftingTask {
             Set<ICraftingPatternContainer> containers = network.getCraftingManager().getAllContainer(task.getPattern());
             //TODO: maybe optimize somehow
             for (ICraftingPatternContainer container : containers) {
+                if(container.getUpdateInterval() < 0)
+                    throw new IllegalStateException(container + " has an update interval of < 0");
+
                 //check if container is allowed to update
                 if(ticks % container.getUpdateInterval() != 0)
                     continue;
@@ -254,6 +257,7 @@ public class MasterCraftingTask implements ICraftingTask {
     public void onCancelled() {
         //just insert all stored items back into network
         for (Task task : this.tasks) {
+            //TODO: also insert remaining items of tasks
             for (Input input : task.getInputs()) {
                 boolean isDurabilityInput = input instanceof DurabilityInput;
 
@@ -261,8 +265,7 @@ public class MasterCraftingTask implements ICraftingTask {
                     continue;
 
                 List<ItemStack> itemStacks = input.getItemStacks();
-                //TODO: handle remainder if network is full
-                //TODO: Insert remainder
+                //TODO: insert remainder and handle remainder if network is full
                 for (int i = 0; i < itemStacks.size(); i++) {
                     ItemStack itemStack = itemStacks.get(i);
                     //TODO: real stack counts
@@ -283,13 +286,33 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public int onTrackedInsert(ItemStack stack, int size) {
-        //TODO: processing tasks
+        stack.setCount(size);
+
+        for (int i = this.tasks.size() - 1; i >= 0; i--) {
+           Task task = this.tasks.get(i);
+           if(!(task instanceof ProcessingTask))
+               continue;
+
+           size = task.supplyInput(stack);
+           if(size < 0)
+               return 0;
+        }
         return size;
     }
 
     @Override
     public int onTrackedInsert(FluidStack stack, int size) {
-        //TODO: processing tasks
+        stack.amount = size;
+
+        for (int i = this.tasks.size() - 1; i >= 0; i--) {
+            Task task = this.tasks.get(i);
+            if(!(task instanceof ProcessingTask))
+                continue;
+
+            size = task.supplyInput(stack);
+            if(size < 0)
+                return 0;
+        }
         return size;
     }
 

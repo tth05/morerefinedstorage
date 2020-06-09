@@ -15,39 +15,15 @@ import java.util.List;
  */
 public class Input {
 
-    /**
-     * The possible ItemStacks that are allowed for this input. Only contains multiple entries when using oredict.
-     */
     private final List<ItemStack> itemStacks = NonNullList.create();
-    /**
-     * The FluidStack used for this input, if this Input is a fluid
-     */
     private FluidStack fluidStack;
 
-    /**
-     * The current amount that this Input contains. Sums up all amounts from different oredict ItemStacks, that's
-     * why this is separate.
-     */
     protected long totalInputAmount;
-    /**
-     * The current input counts for all possibilities of this Input. Only contains multiple entries if oredict is
-     * used, because each oredict possibility can have a different amount. This information is needed, so that the
-     * correct items can be later inserted back into the network (if the task gets cancelled).
-     */
     private final List<Long> currentInputCounts = new LongArrayList(9);
 
-    /**
-     * The amount that will be crafted
-     */
     private long toCraftAmount;
 
-    /**
-     * The total amount that is needed of this Input
-     */
     private long amountNeeded;
-    /**
-     * How much of this Input is used per crafting operation
-     */
     protected int quantityPerCraft;
 
     /**
@@ -82,7 +58,7 @@ public class Input {
      * @param amount the amount
      * @return the remaining amount; or {@code -1} if the given {@code amount} does not satisfy this input
      */
-    public long increaseItemStackAmount(ItemStack stack, long amount) {
+    public long increaseItemStackAmount(@Nonnull ItemStack stack, long amount) {
         long needed = amountNeeded - totalInputAmount;
         long returns = totalInputAmount + amount - amountNeeded;
 
@@ -135,12 +111,13 @@ public class Input {
     /**
      * Decreases the to craft amount for this input and increase the total input amount. This is used to supply this
      * inputs with newly crafted items.
-     * @param stack the item that was crafted
+     *
+     * @param stack  the item that was crafted
      * @param amount the amount that was crafted
      * @return the amount of the given item that remains; {@code -1} if the item is not valid; or {@code -2} if there's
      * no remainder
      */
-    public long decreaseToCraftAmount(ItemStack stack, long amount) {
+    public long decreaseToCraftAmount(@Nonnull ItemStack stack, long amount) {
         int i = 0;
         boolean found = false;
 
@@ -154,7 +131,7 @@ public class Input {
         }
 
         //these return code aren't optimal but better than making another method that checks just this
-        if(!found)
+        if (!found)
             return -1;
 
         //adjust all values accordingly
@@ -166,30 +143,60 @@ public class Input {
     }
 
     /**
+     * Decreases the to craft amount for this input and increase the total input amount. This is used to supply this
+     * inputs with newly crafted fluids.
+     *
+     * @param stack  the fluid that was crafted
+     * @param amount the amount that was crafted
+     * @return the amount of the given item that remains; {@code -1} if the item is not valid; or {@code -2} if there's
+     * no remainder
+     */
+    public long decreaseToCraftAmount(@Nonnull FluidStack stack, long amount) {
+        //these return code aren't optimal but better than making another method that checks just this
+        if (!API.instance().getComparer().isEqual(stack, this.getFluidStack(), IComparer.COMPARE_NBT))
+            return -1;
+
+        //adjust all values accordingly
+        long realAmount = Math.min(toCraftAmount, amount);
+        this.toCraftAmount = Math.max(toCraftAmount - amount, 0);
+        this.totalInputAmount += realAmount;
+        this.currentInputCounts.set(0, this.currentInputCounts.get(0) + realAmount);
+        return amount - realAmount < 1 ? -2 : amount - realAmount;
+    }
+
+    /**
      * Decrease the total input amount and input counts by the given {@code amount} as if they were used up in crafting.
+     *
      * @param amount the amount that should be used up
      */
-    public void decreaseItemStackAmount(long amount) {
+    public void decreaseInputAmount(long amount) {
         this.totalInputAmount -= amount;
 
-        //decrease the amount from all input counts
-        List<Long> inputCounts = this.currentInputCounts;
-        for (int i = 0; i < inputCounts.size(); i++) {
-            Long currentInputCount = inputCounts.get(i);
-            if(currentInputCount == 0)
-                continue;
-            if(amount < 1)
-                break;
-
+        if(isFluid()) {
+            //only decrease the amount from first count
+            Long currentInputCount = this.currentInputCounts.get(0);
             currentInputCount -= amount;
-            if(currentInputCount < 0) {
-                amount = -currentInputCount;
-                currentInputCount = 0L;
-            } else {
-                amount = 0;
-            }
+            this.currentInputCounts.set(0, currentInputCount < 0 ? 0 : currentInputCount);
+        } else {
+            //decrease the amount from all input counts
+            List<Long> inputCounts = this.currentInputCounts;
+            for (int i = 0; i < inputCounts.size(); i++) {
+                Long currentInputCount = inputCounts.get(i);
+                if (currentInputCount == 0)
+                    continue;
+                if (amount < 1)
+                    break;
 
-            inputCounts.set(i, currentInputCount);
+                currentInputCount -= amount;
+                if (currentInputCount < 0) {
+                    amount = -currentInputCount;
+                    currentInputCount = 0L;
+                } else {
+                    amount = 0;
+                }
+
+                inputCounts.set(i, currentInputCount);
+            }
         }
     }
 
@@ -216,6 +223,9 @@ public class Input {
         this.amountNeeded = amountNeeded;
     }
 
+    /**
+     * @return whether or not this input represents a fluid
+     */
     public boolean isFluid() {
         return fluidStack != null;
     }
@@ -226,46 +236,76 @@ public class Input {
 
     @Nonnull
     public ItemStack getCompareableItemStack() {
-        if(this.isFluid())
+        if (this.isFluid())
             throw new UnsupportedOperationException("Comparable ItemStack does not exist for fluid inputs!");
         return this.itemStacks.get(0);
     }
 
+    /**
+     * @return the total amount that is needed of this Input
+     */
     public long getAmountNeeded() {
         return amountNeeded;
     }
 
+    /**
+     * @return the current amount that this Input contains. Sums up all amounts from different oredict ItemStacks, that's
+     * why this is separate.
+     */
     public long getTotalInputAmount() {
         return totalInputAmount;
     }
 
+    /**
+     * @return the amount that is expected to be crafted
+     */
     public long getToCraftAmount() {
         return toCraftAmount;
     }
 
+    /**
+     * @return the total amount that this input is still missing
+     */
     public long getAmountMissing() {
         return Math.max(amountNeeded - totalInputAmount - toCraftAmount, 0);
     }
 
+    /**
+     * @return the maximum count of crafting iterations that this input can do
+     */
     public long getMinimumCraftableAmount() {
         long minCraftAmount = totalInputAmount / quantityPerCraft;
-        if(minCraftAmount > Integer.MAX_VALUE)
+        if (minCraftAmount > Integer.MAX_VALUE)
             return Integer.MAX_VALUE;
         return minCraftAmount;
     }
 
+    /**
+     * @return the current input counts for all possibilities of this Input. Only contains multiple entries if oredict
+     * is used, because each oredict possibility can have a different amount. This information is needed, so that the
+     * correct items can be later inserted back into the network (if the task gets cancelled).
+     */
     public List<Long> getCurrentInputCounts() {
         return currentInputCounts;
     }
 
+    /**
+     * @return the FluidStack used for this input, if this Input is a fluid
+     */
     public FluidStack getFluidStack() {
         return fluidStack;
     }
 
+    /**
+     * @return the possible ItemStacks that are allowed for this input. Only contains multiple entries when using oredict.
+     */
     public List<ItemStack> getItemStacks() {
         return itemStacks;
     }
 
+    /**
+     * @return how much of this Input is used per crafting operation
+     */
     public int getQuantityPerCraft() {
         return quantityPerCraft;
     }
