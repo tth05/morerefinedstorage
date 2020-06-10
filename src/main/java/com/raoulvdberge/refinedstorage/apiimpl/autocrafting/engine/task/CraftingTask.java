@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
@@ -10,7 +11,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Represents a crafting task
@@ -98,7 +101,16 @@ public class CraftingTask extends Task {
         if (this.amountNeeded < 1 && this.remainder.isEmpty())
             this.finished = true;
 
+        network.getCraftingManager().onTaskChanged();
         return toCraft;
+    }
+
+    @Nonnull
+    @Override
+    public List<ICraftingMonitorElement> getCraftingMonitorElements() {
+        if(isFinished())
+            return Collections.emptyList();
+        return null;
     }
 
     @Override

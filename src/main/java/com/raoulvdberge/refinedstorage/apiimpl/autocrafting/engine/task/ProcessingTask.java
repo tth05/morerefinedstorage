@@ -2,8 +2,10 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
@@ -14,6 +16,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -66,6 +69,7 @@ public class ProcessingTask extends Task {
         //stop if task is finished
         if (this.amountNeeded < 1) {
             this.finished = true;
+            network.getCraftingManager().onTaskChanged();
             return 0;
         }
 
@@ -83,6 +87,7 @@ public class ProcessingTask extends Task {
         //machine is locked
         if (container.isLocked()) {
             this.state = ProcessingState.LOCKED;
+            network.getCraftingManager().onTaskChanged();
             return 0;
         }
 
@@ -90,6 +95,7 @@ public class ProcessingTask extends Task {
         if ((hasFluidInputs && container.getConnectedFluidInventory() == null) ||
                 (hasItemInputs && container.getConnectedInventory() == null)) {
             this.state = ProcessingState.MACHINE_NONE;
+            network.getCraftingManager().onTaskChanged();
             return 0;
         }
 
@@ -99,6 +105,8 @@ public class ProcessingTask extends Task {
             List<Long> inputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
 
             input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
+            //increase amount that is currently in the machine
+            input.setProcessingAmount(input.getProcessingAmount() + toCraft * input.getQuantityPerCraft());
 
             if (input.isFluid()) {
                 FluidStack newStack = input.getFluidStack().copy();
@@ -120,6 +128,10 @@ public class ProcessingTask extends Task {
             }
         }
 
+        //notify outputs of new set
+        for (Output output : this.outputs)
+            output.scheduleSet();
+
         insertIntoContainer(container);
 
         if (this.remainingItems.isEmpty() && this.remainingFluids.isEmpty()) { //everything went well
@@ -129,12 +141,14 @@ public class ProcessingTask extends Task {
             this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
         }
 
-        this.amountNeeded -= toCraft;
+        //this is done in supplyInput instead to avoid an early finish
+//        this.amountNeeded -= toCraft;
 
         //if there's no remainder and the task has crafted everything, we're done
         if (this.amountNeeded < 1 && this.remainingItems.isEmpty() && this.remainingFluids.isEmpty())
             this.finished = true;
 
+        network.getCraftingManager().onTaskChanged();
         return toCraft;
     }
 
@@ -189,6 +203,14 @@ public class ProcessingTask extends Task {
             else
                 remainingFluid.amount = remainder;
         }
+    }
+
+    @Nonnull
+    @Override
+    public List<ICraftingMonitorElement> getCraftingMonitorElements() {
+        if(isFinished())
+            return Collections.emptyList();
+        return null;
     }
 
     /**

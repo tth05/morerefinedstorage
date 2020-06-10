@@ -47,11 +47,15 @@ public class CraftingManager implements ICraftingManager {
     private final Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
     private final List<ICraftingTask> tasksToAdd = new ArrayList<>();
     private final List<UUID> tasksToCancel = new ArrayList<>();
-    private NBTTagList tasksToRead;
 
     private final Map<Object, Long> throttledRequesters = new HashMap<>();
-
     private final Set<ICraftingMonitorListener> listeners = new HashSet<>();
+
+    private NBTTagList tasksToRead;
+    /**
+     * Whether or not a crafting monitor update should be sent
+     */
+    private boolean tasksDirty;
 
     public CraftingManager(TileController network) {
         this.network = network;
@@ -125,8 +129,13 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void update() {
-        if (network.canRun()) {
+        if(this.tasksDirty) {
+            //makes sure updates are sent only once per tick
+            listeners.forEach(ICraftingMonitorListener::onChanged);
+            this.tasksDirty = false;
+        }
 
+        if (network.canRun()) {
             boolean changed = !tasksToCancel.isEmpty() || !tasksToAdd.isEmpty();
 
             for (ICraftingTask task : this.tasksToAdd) {
@@ -229,8 +238,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void onTaskChanged() {
-        //TODO: onTaskChanged(ICraftingTask task) for smaller packet sizes
-        listeners.forEach(ICraftingMonitorListener::onChanged);
+        this.tasksDirty = true;
     }
 
     @Override
@@ -330,28 +338,36 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public int track(ItemStack stack, int size) {
+        int remainder = size;
         for (ICraftingTask task : tasks.values()) {
-            size = task.onTrackedInsert(stack, size);
+            remainder = task.onTrackedInsert(stack, remainder);
 
-            if (size < 1) {
+            if(remainder != size) {
+                this.onTaskChanged();
+            }
+            if (remainder < 1) {
                 return 0;
             }
         }
 
-        return size;
+        return remainder;
     }
 
     @Override
     public int track(FluidStack stack, int size) {
+        int remainder = size;
         for (ICraftingTask task : tasks.values()) {
-            size = task.onTrackedInsert(stack, size);
+            remainder = task.onTrackedInsert(stack, remainder);
 
-            if (size < 1) {
+            if(remainder != size) {
+                this.onTaskChanged();
+            }
+            if (remainder < 1) {
                 return 0;
             }
         }
 
-        return size;
+        return remainder;
     }
 
     @Override

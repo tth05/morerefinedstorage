@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
@@ -200,6 +201,12 @@ public abstract class Task {
     public abstract int update(@Nonnull INetwork network, @Nonnull ICraftingPatternContainer container, int toCraft);
 
     /**
+     * @return all crafting monitor elements that are managed by this task
+     */
+    @Nonnull
+    public abstract List<ICraftingMonitorElement> getCraftingMonitorElements();
+
+    /**
      * This also replaces {@code ProcessingState.PROCESSED}
      *
      * @return whether or not this task is finished
@@ -229,18 +236,35 @@ public abstract class Task {
         }
 
         //if there's anything left and the item is an output of this processing task -> forward to parents
-        if (this instanceof ProcessingTask && remainder > 0 && !this.getParents().isEmpty() && this.outputs.stream()
-                .anyMatch(o -> API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))) {
-            stack.setCount((int) remainder);
-            //loop through all parents while there is anything left to split up
-            for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
-                Task parent = iterator.next();
-                remainder = parent.supplyInput(stack);
-                //remove if there's nothing left
-                if (remainder == -1) {
-                    return 0;
-                } else {
-                    stack.setCount((int) remainder);
+        Output matchingOutput = this.outputs.stream()
+                .filter(o -> API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
+                .findFirst().orElse(null);
+        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null) {
+            //every time we pass something to the parents, check if one full set is done
+            long previousSets = matchingOutput.getCurrentSets();
+            matchingOutput.setProcessingAmount(matchingOutput.getProcessingAmount() - remainder);
+            //if amount of inserted sets decreased and all outputs are at that state now, then one full set is done
+            if (previousSets > matchingOutput.getCurrentSets() &&
+                    this.outputs.stream().allMatch(o -> o.getCurrentSets() == previousSets - 1)) {
+                this.amountNeeded--;
+                //subtract one full set from each input
+                for (Input input : this.inputs)
+                    input.setProcessingAmount(input.getProcessingAmount() - input.getQuantityPerCraft());
+            }
+
+            //distribute to parents
+            if(!this.getParents().isEmpty()) {
+                stack.setCount((int) remainder);
+                //loop through all parents while there is anything left to split up
+                for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
+                    Task parent = iterator.next();
+                    remainder = parent.supplyInput(stack);
+                    //remove if there's nothing left
+                    if (remainder == -1) {
+                        return 0;
+                    } else {
+                        stack.setCount((int) remainder);
+                    }
                 }
             }
         }
@@ -271,18 +295,35 @@ public abstract class Task {
         }
 
         //if there's anything left and the item is an output of this processing task -> forward to parents
-        if (remainder > 0 && !this.getParents().isEmpty() && this.outputs.stream()
-                .anyMatch(o -> API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))) {
-            stack.amount = (int) remainder;
-            //loop through all parents while there is anything left to split up
-            for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {
-                Task parent = iterator.next();
-                remainder = parent.supplyInput(stack);
-                //remove if there's nothing left
-                if (remainder == -1) {
-                    return 0;
-                } else {
-                    stack.amount = (int) remainder;
+        Output matchingOutput = this.outputs.stream()
+                .filter(o -> API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
+                .findFirst().orElse(null);
+        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null) {
+            //every time we pass something to the parents, check if one full set is done
+            long previousSets = matchingOutput.getCurrentSets();
+            matchingOutput.setProcessingAmount(matchingOutput.getProcessingAmount() - remainder);
+            //if amount of inserted sets decreased and all outputs are at that state now, then one full set is done
+            if (previousSets > matchingOutput.getCurrentSets() &&
+                    this.outputs.stream().allMatch(o -> o.getCurrentSets() == previousSets - 1)) {
+                this.amountNeeded--;
+                //subtract one full set from each input
+                for (Input input : this.inputs)
+                    input.setProcessingAmount(input.getProcessingAmount() - input.getQuantityPerCraft());
+            }
+
+            //distribute to parents
+            if(!this.getParents().isEmpty()) {
+                stack.amount = (int) remainder;
+                //loop through all parents while there is anything left to split up
+                for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {
+                    Task parent = iterator.next();
+                    remainder = parent.supplyInput(stack);
+                    //remove if there's nothing left
+                    if (remainder == -1) {
+                        return 0;
+                    } else {
+                        stack.amount = (int) remainder;
+                    }
                 }
             }
         }

@@ -115,7 +115,9 @@ public class MasterCraftingTask implements ICraftingTask {
                 if(task.isFinished())
                     break;
 
-                updateCountMap.put(container, remainingUpdates);
+                //avoid put call
+                if(remainingUpdates != container.getMaximumSuccessfulCraftingUpdates())
+                    updateCountMap.put(container, remainingUpdates);
             }
 
             if(!task.isFinished())

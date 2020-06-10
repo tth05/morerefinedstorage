@@ -24,6 +24,7 @@ public class Input {
     private long toCraftAmount;
 
     private long amountNeeded;
+    protected long processingAmount;
     protected int quantityPerCraft;
 
     /**
@@ -223,6 +224,10 @@ public class Input {
         this.amountNeeded = amountNeeded;
     }
 
+    public void setProcessingAmount(long processingAmount) {
+        this.processingAmount = processingAmount;
+    }
+
     /**
      * @return whether or not this input represents a fluid
      */
@@ -246,6 +251,14 @@ public class Input {
      */
     public long getAmountNeeded() {
         return amountNeeded;
+    }
+
+    /**
+     * Only relevant for processing tasks
+     * @return the amount of this input that is currently being processed
+     */
+    public long getProcessingAmount() {
+        return processingAmount;
     }
 
     /**

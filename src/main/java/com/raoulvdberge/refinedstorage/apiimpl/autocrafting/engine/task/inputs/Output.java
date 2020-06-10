@@ -23,6 +23,20 @@ public class Output extends Input {
     }
 
     /**
+     * Adds one full set of this output to the processing amount
+     */
+    public void scheduleSet() {
+        this.processingAmount += this.quantityPerCraft;
+    }
+
+    /**
+     * @return the amount of sets that are currently being awaited
+     */
+    public long getCurrentSets() {
+        return (long) Math.ceil((double)this.processingAmount / this.quantityPerCraft);
+    }
+
+    /**
      * Applies the given {@code input} to this output. Basically subtracting this outputs QPC with the given QPC.
      * @param input the {@link RestockableInput} to apply
      * @return the amount that is still left of the restockable input because the input QPC is less than the output QPC;
