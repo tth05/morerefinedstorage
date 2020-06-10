@@ -207,7 +207,8 @@ public abstract class Task {
     public abstract boolean isFinished();
 
     /**
-     * Supplies an input to this task. Called by sub tasks when they crafted something
+     * Supplies an input to this task. Called by sub tasks when they crafted something or when a tracked item is
+     * imported. Also forwards imported items to parents if this is a processing task.
      *
      * @param stack the stack to supply
      * @return see {@link Input#decreaseToCraftAmount(ItemStack, long)}
@@ -228,7 +229,7 @@ public abstract class Task {
         }
 
         //if there's anything left and the item is an output of this processing task -> forward to parents
-        if (remainder > 0 && !this.getParents().isEmpty() && this.outputs.stream()
+        if (this instanceof ProcessingTask && remainder > 0 && !this.getParents().isEmpty() && this.outputs.stream()
                 .anyMatch(o -> API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))) {
             stack.setCount((int) remainder);
             //loop through all parents while there is anything left to split up
@@ -248,7 +249,8 @@ public abstract class Task {
     }
 
     /**
-     * Supplies an input to this task. Called by sub tasks when they crafted something
+     * Supplies an input to this task. Called when a tracked fluid is imported. Also forwards imported fluids to parents
+     * if this is a processing task.
      *
      * @param stack the stack to supply
      * @return see {@link Input#decreaseToCraftAmount(FluidStack, long)}

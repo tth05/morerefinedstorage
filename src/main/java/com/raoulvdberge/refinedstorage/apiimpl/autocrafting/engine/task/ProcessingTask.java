@@ -3,11 +3,10 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.ProcessingState;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -24,8 +23,8 @@ import java.util.List;
 public class ProcessingTask extends Task {
 
     private boolean finished;
-    private final NonNullList<ItemStack> remainingItems = NonNullList.create();
-    private final NonNullList<FluidStack> remainingFluids = NonNullList.create();
+    private final List<ItemStack> remainingItems = new ObjectArrayList<>();
+    private final List<FluidStack> remainingFluids = new ObjectArrayList<>();
     /**
      * Reference to the container that left behind the remainder. Ensures that all remainder is inserted into the
      * correct container.
@@ -51,9 +50,13 @@ public class ProcessingTask extends Task {
             if (!container.equals(remainderContainer))
                 return 0;
 
-            //TODO: insert into remainder container
-            
-            container.onUsedForProcessing();
+            //try to insert remainder until it's empty
+            insertIntoContainer(container);
+
+            if(remainingItems.isEmpty() && remainingFluids.isEmpty()) {
+                container.onUsedForProcessing();
+                this.state = ProcessingState.READY;
+            }
             //always use up all crafting updates if there's any remainder left. blocks other tasks somewhat
             return toCraft;
         }
@@ -77,11 +80,13 @@ public class ProcessingTask extends Task {
         if (toCraft < 1)
             return 0;
 
+        //machine is locked
         if (container.isLocked()) {
             this.state = ProcessingState.LOCKED;
             return 0;
         }
 
+        //no connected machine
         if ((hasFluidInputs && container.getConnectedFluidInventory() == null) ||
                 (hasItemInputs && container.getConnectedInventory() == null)) {
             this.state = ProcessingState.MACHINE_NONE;
@@ -115,34 +120,12 @@ public class ProcessingTask extends Task {
             }
         }
 
-        IItemHandler connectedInventory = container.getConnectedInventory();
-        IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
-        //insert generated items
-        for (Iterator<ItemStack> iterator = remainingItems.iterator(); iterator.hasNext(); ) {
-            ItemStack remainingItem = iterator.next();
+        insertIntoContainer(container);
 
-            ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem);
-            if (remainder.isEmpty())
-                iterator.remove();
-            else
-                remainingItem.setCount(remainder.getCount());
-        }
-
-        for (Iterator<FluidStack> iterator = remainingFluids.iterator(); iterator.hasNext(); ) {
-            FluidStack remainingFluid = iterator.next();
-
-            //noinspection ConstantConditions
-            int remainder = connectedFluidInventory.fill(remainingFluid, true);
-            if (remainder <= 0)
-                iterator.remove();
-            else
-                remainingFluid.amount = remainder;
-        }
-
-        if (this.remainingItems.isEmpty() && this.remainingFluids.isEmpty()) {
+        if (this.remainingItems.isEmpty() && this.remainingFluids.isEmpty()) { //everything went well
             container.onUsedForProcessing();
             this.state = ProcessingState.READY;
-        } else {
+        } else { //couldn't insert everything
             this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
         }
 
@@ -178,6 +161,37 @@ public class ProcessingTask extends Task {
     }
 
     /**
+     * Tries to insert all {@code remainingItems} and {@code remainingFluids} into the given {@code container}
+     * @param container the container
+     */
+    private void insertIntoContainer(@Nonnull ICraftingPatternContainer container) {
+        IItemHandler connectedInventory = container.getConnectedInventory();
+        IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
+        //insert generated items
+        for (Iterator<ItemStack> iterator = remainingItems.iterator(); iterator.hasNext(); ) {
+            ItemStack remainingItem = iterator.next();
+
+            ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem);
+            if (remainder.isEmpty())
+                iterator.remove();
+            else
+                remainingItem.setCount(remainder.getCount());
+        }
+
+        //insert generated fluids
+        for (Iterator<FluidStack> iterator = remainingFluids.iterator(); iterator.hasNext(); ) {
+            FluidStack remainingFluid = iterator.next();
+
+            //noinspection ConstantConditions
+            int remainder = connectedFluidInventory.fill(remainingFluid, true);
+            if (remainder <= 0)
+                iterator.remove();
+            else
+                remainingFluid.amount = remainder;
+        }
+    }
+
+    /**
      * @return the current processing state
      */
     public ProcessingState getState() {
@@ -187,5 +201,12 @@ public class ProcessingTask extends Task {
     @Override
     public boolean isFinished() {
         return this.finished;
+    }
+
+    public enum ProcessingState {
+        READY,
+        MACHINE_NONE,
+        MACHINE_DOES_NOT_ACCEPT,
+        LOCKED
     }
 }
