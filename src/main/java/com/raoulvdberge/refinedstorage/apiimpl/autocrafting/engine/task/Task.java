@@ -241,11 +241,11 @@ public abstract class Task {
                 .findFirst().orElse(null);
         if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null) {
             //every time we pass something to the parents, check if one full set is done
-            long previousSets = matchingOutput.getCurrentSets();
+            long previousSets = matchingOutput.getCurrentlyProcessingSetsCount();
             matchingOutput.setProcessingAmount(matchingOutput.getProcessingAmount() - remainder);
             //if amount of inserted sets decreased and all outputs are at that state now, then one full set is done
-            if (previousSets > matchingOutput.getCurrentSets() &&
-                    this.outputs.stream().allMatch(o -> o.getCurrentSets() == previousSets - 1)) {
+            if (previousSets > matchingOutput.getCurrentlyProcessingSetsCount() &&
+                    this.outputs.stream().allMatch(o -> o.getCurrentlyProcessingSetsCount() == previousSets - 1)) {
                 this.amountNeeded--;
                 //subtract one full set from each input
                 for (Input input : this.inputs)
@@ -300,11 +300,11 @@ public abstract class Task {
                 .findFirst().orElse(null);
         if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null) {
             //every time we pass something to the parents, check if one full set is done
-            long previousSets = matchingOutput.getCurrentSets();
+            long previousSets = matchingOutput.getCurrentlyProcessingSetsCount();
             matchingOutput.setProcessingAmount(matchingOutput.getProcessingAmount() - remainder);
             //if amount of inserted sets decreased and all outputs are at that state now, then one full set is done
-            if (previousSets > matchingOutput.getCurrentSets() &&
-                    this.outputs.stream().allMatch(o -> o.getCurrentSets() == previousSets - 1)) {
+            if (previousSets > matchingOutput.getCurrentlyProcessingSetsCount() &&
+                    this.outputs.stream().allMatch(o -> o.getCurrentlyProcessingSetsCount() == previousSets - 1)) {
                 this.amountNeeded--;
                 //subtract one full set from each input
                 for (Input input : this.inputs)

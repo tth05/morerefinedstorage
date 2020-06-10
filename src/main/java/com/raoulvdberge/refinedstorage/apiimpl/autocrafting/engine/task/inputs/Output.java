@@ -23,7 +23,12 @@ public class Output extends Input {
     }
 
     /**
-     * Adds one full set of this output to the processing amount
+     * Adds one full set of this output to the processing amount.
+     * <br>
+     * Equal to:
+     * <pre> {@code
+     * output.setProcessingAmount(output.getProcessingAmount() + output.getQuantityPerCraft());
+     * }</pre>
      */
     public void scheduleSet() {
         this.processingAmount += this.quantityPerCraft;
@@ -32,7 +37,7 @@ public class Output extends Input {
     /**
      * @return the amount of sets that are currently being awaited
      */
-    public long getCurrentSets() {
+    public long getCurrentlyProcessingSetsCount() {
         return (long) Math.ceil((double)this.processingAmount / this.quantityPerCraft);
     }
 
