@@ -86,7 +86,7 @@ public abstract class Task {
                                         IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY) &&
                                 remainder.getItemDamage() - 1 == itemStack.getItemDamage()) {
                             //item was found with one more damage in remainder, then it's a durability input
-                            newInput = new DurabilityInput(itemStack, amountNeeded, pattern.isOredict());
+                            newInput = new DurabilityInput(itemStack, amountNeeded);
                             break;
                         }
                     }
@@ -101,8 +101,7 @@ public abstract class Task {
                     for (ItemStack output : pattern.getOutputs()) {
                         //find the possibility that occurs in the output
                         if (API.instance().getComparer().isEqualNoQuantity(inputItemStack, output)) {
-                            newInput = new RestockableInput(inputItemStack, inputItemStack.getCount(),
-                                    pattern.isOredict());
+                            newInput = new RestockableInput(inputItemStack, inputItemStack.getCount());
                         }
                     }
                 }
@@ -110,7 +109,7 @@ public abstract class Task {
 
             //if it's not a durability or infinite input, then just use a normal input
             if (newInput == null)
-                newInput = new Input(itemStacks, amountNeeded, pattern.isOredict());
+                newInput = new Input(itemStacks, amountNeeded);
 
             mergeIntoList(newInput, this.inputs);
         }
@@ -156,8 +155,8 @@ public abstract class Task {
                         // amount
                         mergeIntoList(new Input(NonNullList.from(ItemStack.EMPTY,
                                 ItemHandlerHelper.copyStackWithSize(input.getCompareableItemStack(), (int) remainder)),
-                                1,
-                                pattern.isOredict()), this.inputs);
+                                1),
+                                this.inputs);
                     }
 
                     break;

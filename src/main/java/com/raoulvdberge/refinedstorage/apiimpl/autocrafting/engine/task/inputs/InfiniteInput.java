@@ -13,7 +13,7 @@ public class InfiniteInput extends Input {
     private boolean containsItem;
 
     public InfiniteInput(@Nonnull ItemStack itemStack, boolean oredict) {
-        super(NonNullList.from(ItemStack.EMPTY, itemStack), 1, oredict);
+        super(NonNullList.from(ItemStack.EMPTY, itemStack), 1);
     }
 
     @Override

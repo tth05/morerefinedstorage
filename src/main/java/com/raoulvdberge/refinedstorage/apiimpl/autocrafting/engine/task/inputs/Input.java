@@ -27,18 +27,12 @@ public class Input {
     protected long processingAmount = 0;
     protected int quantityPerCraft;
 
-    /**
-     * Whether or not this Input uses oredict. //TODO: maybe remove
-     */
-    private final boolean oredict;
-
-    private Input(long amount, boolean oredict) {
+    private Input(long amount) {
         this.amountNeeded = amount;
-        this.oredict = oredict;
     }
 
-    public Input(@Nonnull NonNullList<ItemStack> itemStacks, long amountNeeded, boolean oredict) {
-        this(amountNeeded, oredict);
+    public Input(@Nonnull NonNullList<ItemStack> itemStacks, long amountNeeded) {
+        this(amountNeeded);
         itemStacks.forEach(i -> this.itemStacks.add(i.copy()));
         this.quantityPerCraft = itemStacks.get(0).getCount();
 
@@ -46,7 +40,7 @@ public class Input {
     }
 
     public Input(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
-        this(amountNeeded, oredict);
+        this(amountNeeded);
         this.fluidStack = fluidStack.copy();
         this.quantityPerCraft = fluidStack.amount;
 
@@ -247,10 +241,6 @@ public class Input {
         return fluidStack != null;
     }
 
-    public boolean isOredict() {
-        return oredict;
-    }
-
     @Nonnull
     public ItemStack getCompareableItemStack() {
         if (this.isFluid())
@@ -343,8 +333,7 @@ public class Input {
         Input input = (Input) o;
 
         if (this.itemStacks.size() != input.getItemStacks().size() ||
-                (this.fluidStack == null) == (input.getFluidStack() != null) ||
-                oredict != input.isOredict())
+                (this.fluidStack == null) == (input.getFluidStack() != null))
             return false;
 
         for (int i = 0; i < itemStacks.size(); i++) {

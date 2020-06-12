@@ -14,8 +14,8 @@ import javax.annotation.Nonnull;
  */
 //TODO: override correct stuff
 public class RestockableInput extends Input {
-    public RestockableInput(@Nonnull ItemStack itemStack, long amountNeeded, boolean oredict) {
-        super(NonNullList.from(ItemStack.EMPTY, itemStack), amountNeeded, oredict);
+    public RestockableInput(@Nonnull ItemStack itemStack, long amountNeeded) {
+        super(NonNullList.from(ItemStack.EMPTY, itemStack), amountNeeded);
     }
 
     @Override

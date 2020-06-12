@@ -21,8 +21,8 @@ public class DurabilityInput extends Input {
     private final int maxDurability;
     private final ItemStack compareableItemStack;
 
-    public DurabilityInput(@Nonnull ItemStack itemStack, long amountNeeded, boolean oredict) {
-        super(NonNullList.from(ItemStack.EMPTY, ItemStack.EMPTY), amountNeeded, oredict);
+    public DurabilityInput(@Nonnull ItemStack itemStack, long amountNeeded) {
+        super(NonNullList.from(ItemStack.EMPTY, ItemStack.EMPTY), amountNeeded);
         this.getItemStacks().clear();
         this.compareableItemStack = itemStack;
         this.maxDurability = compareableItemStack.getMaxDamage() + 1;
@@ -99,7 +99,7 @@ public class DurabilityInput extends Input {
 
         DurabilityInput input = (DurabilityInput) o;
 
-        if (input.isFluid() || input.isOredict())
+        if (input.isFluid())
             return false;
 
         return API.instance().getComparer().isEqual(this.getCompareableItemStack(), input.getCompareableItemStack(),

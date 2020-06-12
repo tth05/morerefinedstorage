@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  */
 public class Output extends Input {
     public Output(@Nonnull ItemStack itemStack, int quantityPerCraft) {
-        super(NonNullList.from(ItemStack.EMPTY, itemStack), 0, false);
+        super(NonNullList.from(ItemStack.EMPTY, itemStack), 0);
         //amount needed is not relevant for outputs, but quantity is
         this.quantityPerCraft = quantityPerCraft;
     }
