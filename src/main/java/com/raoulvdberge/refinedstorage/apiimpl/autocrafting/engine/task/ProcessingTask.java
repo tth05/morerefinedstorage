@@ -4,6 +4,9 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -56,7 +59,7 @@ public class ProcessingTask extends Task {
             //try to insert remainder until it's empty
             insertIntoContainer(container);
 
-            if(remainingItems.isEmpty() && remainingFluids.isEmpty()) {
+            if (remainingItems.isEmpty() && remainingFluids.isEmpty()) {
                 container.onUsedForProcessing();
                 this.state = ProcessingState.READY;
             }
@@ -106,7 +109,7 @@ public class ProcessingTask extends Task {
 
             input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
             //increase amount that is currently in the machine
-            input.setProcessingAmount(input.getProcessingAmount() + toCraft * input.getQuantityPerCraft());
+            input.scheduleSets(toCraft);
 
             if (input.isFluid()) {
                 FluidStack newStack = input.getFluidStack().copy();
@@ -128,9 +131,9 @@ public class ProcessingTask extends Task {
             }
         }
 
-        //notify outputs of new set
+        //notify outputs of new sets
         for (Output output : this.outputs)
-            output.scheduleSet();
+            output.scheduleSets(toCraft);
 
         insertIntoContainer(container);
 
@@ -138,11 +141,12 @@ public class ProcessingTask extends Task {
             container.onUsedForProcessing();
             this.state = ProcessingState.READY;
         } else { //couldn't insert everything
+            //TODO: processing amount on inputs and outputs is tied to remainder lists but not actual amount in machines
             this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
         }
 
         //this is done in supplyInput instead to avoid an early finish
-//        this.amountNeeded -= toCraft;
+        //this.amountNeeded -= toCraft;
 
         //if there's no remainder and the task has crafted everything, we're done
         if (this.amountNeeded < 1 && this.remainingItems.isEmpty() && this.remainingFluids.isEmpty())
@@ -154,7 +158,8 @@ public class ProcessingTask extends Task {
 
     /**
      * Inserts the give {@code stack} into the given {@code destination}
-     * @param dest the destination
+     *
+     * @param dest  the destination
      * @param stack the stack that should be inserted
      * @return the remainder that couldn't be inserted; an empty ItemStack otherwise
      */
@@ -176,6 +181,7 @@ public class ProcessingTask extends Task {
 
     /**
      * Tries to insert all {@code remainingItems} and {@code remainingFluids} into the given {@code container}
+     *
      * @param container the container
      */
     private void insertIntoContainer(@Nonnull ICraftingPatternContainer container) {
@@ -208,8 +214,56 @@ public class ProcessingTask extends Task {
     @Nonnull
     @Override
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
-        if(isFinished())
+        if (isFinished())
             return Collections.emptyList();
+
+        //TODO: output should not show what is in the machine but rather what it globally expects
+
+        boolean hasError = this.state != ProcessingState.READY;
+        List<ICraftingMonitorElement> elements = new ObjectArrayList<>(this.inputs.size() + this.outputs.size());
+        for (Input input : this.inputs) {
+            if (input.isFluid()) {
+                //TODO: remove casts
+                CraftingMonitorElementFluidRender fluid =
+                        new CraftingMonitorElementFluidRender(input.getFluidStack(), (int) input.getTotalInputAmount(),
+                                0, 0, (int) input.getToCraftAmount());
+                elements.add(hasError ? getErrorElement(fluid) : fluid);
+            } else {
+                CraftingMonitorElementItemRender item =
+                        new CraftingMonitorElementItemRender(input.getCompareableItemStack(),
+                                (int) input.getTotalInputAmount(), (int) input.getProcessingAmount(), 0,
+                                (int) input.getToCraftAmount());
+                elements.add(hasError ? getErrorElement(item) : item);
+            }
+        }
+
+        for (Output output : this.outputs) {
+            if (output.isFluid()) {
+                elements.add(
+                        new CraftingMonitorElementFluidRender(output.getFluidStack(), 0, 0,
+                                (int) output.getProcessingAmount(), 0));
+            } else {
+                elements.add(
+                        new CraftingMonitorElementItemRender(output.getCompareableItemStack(), 0, 0,
+                                (int) output.getProcessingAmount(), 0));
+            }
+        }
+
+        return elements;
+    }
+
+    @Nullable
+    private CraftingMonitorElementError getErrorElement(ICraftingMonitorElement base) {
+        switch (this.state) {
+            case LOCKED:
+                return new CraftingMonitorElementError(base, "gui.refinedstorage:crafting_monitor.crafter_is_locked");
+            case MACHINE_NONE:
+                return new CraftingMonitorElementError(base, "gui.refinedstorage:crafting_monitor.machine_none");
+            case MACHINE_DOES_NOT_ACCEPT:
+                return new CraftingMonitorElementError(base,
+                        "gui.refinedstorage:crafting_monitor.machine_does_not_accept");
+        }
+
         return null;
     }
 

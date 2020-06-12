@@ -5,8 +5,11 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContaine
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
@@ -108,9 +111,27 @@ public class CraftingTask extends Task {
     @Nonnull
     @Override
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
-        if(isFinished())
+        if (isFinished())
             return Collections.emptyList();
-        return null;
+
+        List<ICraftingMonitorElement> elements = new ObjectArrayList<>(this.inputs.size());
+        for (Input input : this.inputs) {
+            if (input.isFluid()) {
+                //TODO: remove casts
+                elements.add(
+                        new CraftingMonitorElementFluidRender(input.getFluidStack(),
+                                (int)input.getTotalInputAmount(), 0, 0,
+                                (int)input.getToCraftAmount()));
+            } else {
+                elements.add(
+                        new CraftingMonitorElementItemRender(input.getCompareableItemStack(),
+                                (int)input.getTotalInputAmount(), 0, 0,
+                                (int)input.getToCraftAmount()));
+            }
+        }
+
+
+        return elements;
     }
 
     @Override

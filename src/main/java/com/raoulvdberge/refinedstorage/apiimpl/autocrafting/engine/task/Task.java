@@ -243,7 +243,10 @@ public abstract class Task {
             //every time we pass something to the parents, check if one full set is done
             long previousSets = matchingOutput.getCurrentlyProcessingSetsCount();
             matchingOutput.setProcessingAmount(matchingOutput.getProcessingAmount() - remainder);
-            //if amount of inserted sets decreased and all outputs are at that state now, then one full set is done
+
+            //if amount of inserted sets decreased and all outputs are at that state now,
+            // then one full set is DONE
+            //TODO: does not work if more than one set is done at once -> find highest check if that's lower then that's the amount
             if (previousSets > matchingOutput.getCurrentlyProcessingSetsCount() &&
                     this.outputs.stream().allMatch(o -> o.getCurrentlyProcessingSetsCount() == previousSets - 1)) {
                 this.amountNeeded--;
@@ -597,5 +600,9 @@ public abstract class Task {
 
     public List<Output> getOutputs() {
         return outputs;
+    }
+
+    public long getAmountNeeded() {
+        return amountNeeded;
     }
 }

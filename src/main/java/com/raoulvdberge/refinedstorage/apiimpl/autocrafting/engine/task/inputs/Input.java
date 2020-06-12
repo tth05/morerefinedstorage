@@ -24,7 +24,7 @@ public class Input {
     private long toCraftAmount;
 
     private long amountNeeded;
-    protected long processingAmount;
+    protected long processingAmount = 0;
     protected int quantityPerCraft;
 
     /**
@@ -51,6 +51,18 @@ public class Input {
         this.quantityPerCraft = fluidStack.amount;
 
         this.currentInputCounts.add(0L);
+    }
+
+    /**
+     * Adds one full set of this output to the processing amount.
+     * <br>
+     * Equal to:
+     * <pre> {@code
+     * this.processingAmount = this.processingAmount + (this.quantityPerCraft * amount);
+     * }</pre>
+     */
+    public void scheduleSets(int amount) {
+        this.processingAmount += this.quantityPerCraft * amount;
     }
 
     /**
@@ -254,7 +266,7 @@ public class Input {
     }
 
     /**
-     * Only relevant for processing tasks
+     * Only relevant for processing tasks and not used during calculation
      * @return the amount of this input that is currently being processed
      */
     public long getProcessingAmount() {

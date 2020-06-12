@@ -342,14 +342,13 @@ public class CraftingManager implements ICraftingManager {
         for (ICraftingTask task : tasks.values()) {
             remainder = task.onTrackedInsert(stack, remainder);
 
-            if(remainder != size) {
-                this.onTaskChanged();
-            }
             if (remainder < 1) {
                 return 0;
             }
         }
 
+        //TODO: don't call this on every insert
+        this.onTaskChanged();
         return remainder;
     }
 
@@ -359,14 +358,12 @@ public class CraftingManager implements ICraftingManager {
         for (ICraftingTask task : tasks.values()) {
             remainder = task.onTrackedInsert(stack, remainder);
 
-            if(remainder != size) {
-                this.onTaskChanged();
-            }
             if (remainder < 1) {
                 return 0;
             }
         }
 
+        this.onTaskChanged();
         return remainder;
     }
 

@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementList;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
@@ -14,9 +15,11 @@ import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -79,7 +82,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public boolean update() {
-        if(!canUpdate)
+        if (!canUpdate)
             return false;
         if (executionStarted == -1)
             executionStarted = System.currentTimeMillis();
@@ -89,38 +92,37 @@ public class MasterCraftingTask implements ICraftingTask {
         updateCountMap.clear();
         for (int i = tasks.size() - 1; i >= 0; i--) {
             Task task = tasks.get(i);
-            if(task.isFinished())
+            if (task.isFinished())
                 continue;
 
             Set<ICraftingPatternContainer> containers = network.getCraftingManager().getAllContainer(task.getPattern());
-            //TODO: maybe optimize somehow
             for (ICraftingPatternContainer container : containers) {
-                if(container.getUpdateInterval() < 0)
+                if (container.getUpdateInterval() < 0)
                     throw new IllegalStateException(container + " has an update interval of < 0");
 
                 //check if container is allowed to update
-                if(ticks % container.getUpdateInterval() != 0)
+                if (ticks % container.getUpdateInterval() != 0)
                     continue;
 
                 //get current update count
                 Integer remainingUpdates = updateCountMap.get(container);
-                if(remainingUpdates == null)
+                if (remainingUpdates == null)
                     remainingUpdates = container.getMaximumSuccessfulCraftingUpdates();
 
                 //stop if no updates are left
-                if(remainingUpdates < 1)
+                if (remainingUpdates < 1)
                     continue;
 
                 remainingUpdates -= task.update(network, container, remainingUpdates);
-                if(task.isFinished())
+                if (task.isFinished())
                     break;
 
                 //avoid put call
-                if(remainingUpdates != container.getMaximumSuccessfulCraftingUpdates())
+                if (remainingUpdates != container.getMaximumSuccessfulCraftingUpdates())
                     updateCountMap.put(container, remainingUpdates);
             }
 
-            if(!task.isFinished())
+            if (!task.isFinished())
                 allFinished = false;
         }
 
@@ -141,10 +143,10 @@ public class MasterCraftingTask implements ICraftingTask {
         rootTask.getPattern().getFluidOutputs().forEach(fluids::add);
 
         CalculationResult result = rootTask.calculate(network,
-                        new ObjectArrayList<>(),
-                        items,
-                        fluids,
-                        calculationStarted
+                new ObjectArrayList<>(),
+                items,
+                fluids,
+                calculationStarted
         );
 
         //instantly cancel if calculation had any error, saver than waiting for the player to cancel
@@ -291,13 +293,13 @@ public class MasterCraftingTask implements ICraftingTask {
         stack.setCount(size);
 
         for (int i = this.tasks.size() - 1; i >= 0; i--) {
-           Task task = this.tasks.get(i);
-           if(!(task instanceof ProcessingTask))
-               continue;
+            Task task = this.tasks.get(i);
+            if (!(task instanceof ProcessingTask))
+                continue;
 
-           size = task.supplyInput(stack);
-           if(size < 0)
-               return 0;
+            size = task.supplyInput(stack);
+            if (size < 0)
+                return 0;
         }
         return size;
     }
@@ -308,11 +310,11 @@ public class MasterCraftingTask implements ICraftingTask {
 
         for (int i = this.tasks.size() - 1; i >= 0; i--) {
             Task task = this.tasks.get(i);
-            if(!(task instanceof ProcessingTask))
+            if (!(task instanceof ProcessingTask))
                 continue;
 
             size = task.supplyInput(stack);
-            if(size < 0)
+            if (size < 0)
                 return 0;
         }
         return size;
@@ -336,8 +338,29 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
-        //TODO: update code live elements, each task will have their own monitor element
-        return Collections.emptyList();
+        ICraftingMonitorElementList elements = API.instance().createCraftingMonitorElementList();
+        List<Task> taskList = this.tasks;
+        for (int i = 0; i < taskList.size(); i++) {
+            Task task = taskList.get(i);
+            if (i == 0 && task instanceof CraftingTask) {
+                Output output = task.getOutputs().get(0);
+                //TODO remove cast
+                elements.add(new CraftingMonitorElementItemRender(output.getCompareableItemStack(), 0, 0, 0,
+                        (int) task.getAmountNeeded()));
+            }
+
+            for (ICraftingMonitorElement craftingMonitorElement : task.getCraftingMonitorElements()) {
+                elements.add(craftingMonitorElement);
+            }
+        }
+
+        return elements.getElements();
+    }
+
+    @Override
+    public int getCompletionPercentage() {
+        //TODO: completion percentage
+        return 0;
     }
 
     @Override

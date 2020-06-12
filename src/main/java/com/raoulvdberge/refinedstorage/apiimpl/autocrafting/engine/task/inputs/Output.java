@@ -23,18 +23,6 @@ public class Output extends Input {
     }
 
     /**
-     * Adds one full set of this output to the processing amount.
-     * <br>
-     * Equal to:
-     * <pre> {@code
-     * output.setProcessingAmount(output.getProcessingAmount() + output.getQuantityPerCraft());
-     * }</pre>
-     */
-    public void scheduleSet() {
-        this.processingAmount += this.quantityPerCraft;
-    }
-
-    /**
      * @return the amount of sets that are currently being awaited
      */
     public long getCurrentlyProcessingSetsCount() {

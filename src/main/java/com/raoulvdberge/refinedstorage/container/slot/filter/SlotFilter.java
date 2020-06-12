@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.container.slot.filter;
 
 import com.raoulvdberge.refinedstorage.container.slot.SlotBase;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.*;
 import net.minecraft.util.math.BlockPos;
@@ -48,6 +49,11 @@ public class SlotFilter extends SlotBase {
         }
 
         super.putStack(stack);
+    }
+
+    @Override
+    public boolean canTakeStack(EntityPlayer playerIn) {
+        return false;
     }
 
     public boolean isSizeAllowed() {

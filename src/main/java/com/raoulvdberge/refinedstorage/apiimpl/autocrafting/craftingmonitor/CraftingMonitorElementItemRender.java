@@ -73,7 +73,8 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
             yy += 7;
         }
 
-        if (crafting > 0) {
+        //do not draw crafting if scheduled is present
+        if (crafting > 0 && scheduled < 1) {
             drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 25, scale), RenderUtils.getOffsetOnScale(yy, scale), I18n.format("gui.refinedstorage:crafting_monitor.crafting", crafting));
         }
 
