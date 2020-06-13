@@ -21,7 +21,6 @@ import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Iterator;
 import java.util.List;
 
 public abstract class Task {
@@ -217,140 +216,50 @@ public abstract class Task {
     public abstract boolean isFinished();
 
     /**
-     * Supplies an input to this task. Called by sub tasks when they crafted something or when a tracked item is
-     * imported. Also forwards imported items to parents if this is a processing task.
+     * Supplies an input to this task. Called by sub tasks when they crafted something.
      *
-     * @param stack the stack to supply
-     * @return see {@link Input#decreaseToCraftAmount(ItemStack, long)}
+     * @param stack the stack to supply (the count of this stack is modified)
+     * @return {@code true} if stack changed in any way; {@code false} otherwise
      */
-    protected int supplyInput(ItemStack stack) {
-        long remainder = stack.getCount();
+    protected boolean supplyInput(ItemStack stack) {
+        int originalCount = stack.getCount();
+
         if (!isFinished()) {
             //give to all inputs while there's anything left
             for (Input input : this.inputs) {
-                long returnValue = input.decreaseToCraftAmount(stack, remainder);
+                input.decreaseToCraftAmount(stack);
 
                 //no remainder left -> just return
-                if (returnValue == -2)
-                    return 0;
-                else if (returnValue != -1) //go into next iteration otherwise
-                    remainder = returnValue;
+                if (stack.isEmpty())
+                    return true;
             }
         }
 
-        //if there's anything left and the item is an output of this processing task -> forward to parents
-        Output matchingOutput = this.outputs.stream()
-                .filter(o -> !o.isFluid() &&
-                        API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
-                .findFirst().orElse(null);
-        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null &&
-                matchingOutput.getProcessingAmount() > 0) {
-
-            updateInputsAndOutputs(matchingOutput, remainder);
-
-            //distribute to parents
-            if (!this.getParents().isEmpty()) {
-                stack.setCount((int) remainder);
-                //loop through all parents while there is anything left to split up
-                for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
-                    Task parent = iterator.next();
-                    remainder = parent.supplyInput(stack);
-                    //remove if there's nothing left
-                    if (remainder == -1) {
-                        return 0;
-                    } else {
-                        stack.setCount((int) remainder);
-                    }
-                }
-            }
-        }
-
-        return remainder < 0 ? 0 : (int) remainder;
+        return stack.getCount() != originalCount;
     }
 
     /**
      * Supplies an input to this task. Called when a tracked fluid is imported. Also forwards imported fluids to parents
      * if this is a processing task.
      *
-     * @param stack the stack to supply
-     * @return see {@link Input#decreaseToCraftAmount(FluidStack, long)}
+     * @param stack the stack to supply (the count of this stack is modified)
+     * @return {@code true} if the stack changed in any way; {@code false} otherwise
      */
-    protected int supplyInput(FluidStack stack) {
-        long remainder = stack.amount;
+    protected boolean supplyInput(FluidStack stack) {
+        int originalCount = stack.amount;
+
         if (!isFinished()) {
             //give to all inputs while there's anything left
             for (Input input : this.inputs) {
-                long returnValue = input.decreaseToCraftAmount(stack, remainder);
+                input.decreaseToCraftAmount(stack);
 
                 //no remainder left -> just return
-                if (returnValue == -2)
-                    return 0;
-                else if (returnValue != -1) //go into next iteration otherwise
-                    remainder = returnValue;
+                if (stack.amount < 1)
+                    return true;
             }
         }
 
-        //if there's anything left and the item is an output of this processing task -> forward to parents
-        Output matchingOutput = this.outputs.stream()
-                .filter(o -> o.isFluid() &&
-                        API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
-                .findFirst().orElse(null);
-        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null &&
-                matchingOutput.getProcessingAmount() > 0) {
-
-            updateInputsAndOutputs(matchingOutput, remainder);
-
-            //distribute to parents
-            if (!this.getParents().isEmpty()) {
-                stack.amount = (int) remainder;
-                //loop through all parents while there is anything left to split up
-                for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {
-                    Task parent = iterator.next();
-                    remainder = parent.supplyInput(stack);
-                    //remove if there's nothing left
-                    if (remainder == -1) {
-                        return 0;
-                    } else {
-                        stack.amount = (int) remainder;
-                    }
-                }
-            }
-        }
-
-        return remainder < 0 ? 0 : (int) remainder;
-    }
-
-    /**
-     * Updates the processing amount of all outputs. Also check if any new amount of sets are completed and notifies the
-     * inputs accordingly.
-     *
-     * @param output the output
-     * @param amount the amount that was imported for the given output
-     */
-    private void updateInputsAndOutputs(Output output, long amount) {
-        //every time we pass something to the parents, check if one full set is done
-        //the following code is just meant for tracking and does not use up the amount in any way
-        long oldCompletedSets = output.getCompletedSets();
-        output.setProcessingAmount(output.getProcessingAmount() - amount);
-
-        //calculate new completed set amount
-        output.setCompletedSets(
-                (long) Math.floor((output.getAmountNeeded() - output.getProcessingAmount()) /
-                        (double) output.getQuantityPerCraft()));
-
-        //calculate the amount of completed sets
-        long smallestCompletedSetCount =
-                this.outputs.stream().mapToLong(Output::getCompletedSets).min().getAsLong();
-        long newlyCompletedSets = smallestCompletedSetCount - oldCompletedSets;
-
-        //if there are new sets that got completed by this insertion -> notify the inputs
-        if (newlyCompletedSets > 0) {
-            this.amountNeeded -= newlyCompletedSets;
-            //subtract one full set from each input
-            for (Input input : this.inputs)
-                input.setProcessingAmount(
-                        input.getProcessingAmount() - input.getQuantityPerCraft() * newlyCompletedSets);
-        }
+        return stack.amount != originalCount;
     }
 
     /**

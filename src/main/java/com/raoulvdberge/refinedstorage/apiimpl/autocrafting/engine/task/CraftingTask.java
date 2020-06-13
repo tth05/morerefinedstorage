@@ -83,14 +83,7 @@ public class CraftingTask extends Task {
             //TODO: evenly split up instead of giving everything to first parent
             for (Iterator<Task> iterator = this.getParents().iterator(); !crafted.isEmpty() && iterator.hasNext(); ) {
                 Task parent = iterator.next();
-                int remainder = parent.supplyInput(crafted);
-                //remove if parent doesn't accept the input or is done
-                if (remainder == -1 || remainder == crafted.getCount()) {
-                    iterator.remove();
-                    break;
-                } else {
-                    crafted.setCount(remainder);
-                }
+                parent.supplyInput(crafted);
             }
         }
 

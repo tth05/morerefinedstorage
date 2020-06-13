@@ -110,13 +110,14 @@ public interface INetwork {
      */
     @Nonnull
     default ItemStack insertItemTracked(@Nonnull ItemStack stack, int size) {
-        int remainder = getCraftingManager().track(stack, size);
+        stack.setCount(size);
+        getCraftingManager().track(stack);
 
-        if (remainder == 0) {
+        if (stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        return insertItem(stack, remainder, Action.PERFORM);
+        return insertItem(stack, stack.getCount(), Action.PERFORM);
     }
 
     /**
@@ -179,13 +180,14 @@ public interface INetwork {
      */
     @Nullable
     default FluidStack insertFluidTracked(@Nonnull FluidStack stack, int size) {
-        int remainder = getCraftingManager().track(stack, size);
+        stack.amount = size;
+        getCraftingManager().track(stack);
 
-        if (remainder == 0) {
+        if (stack.amount < 1) {
             return null;
         }
 
-        return insertFluid(stack, remainder, Action.PERFORM);
+        return insertFluid(stack, stack.amount, Action.PERFORM);
     }
 
     /**

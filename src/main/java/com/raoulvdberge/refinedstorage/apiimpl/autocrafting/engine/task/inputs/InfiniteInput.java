@@ -22,11 +22,10 @@ public class InfiniteInput extends Input {
     }
 
     @Override
-    public long decreaseToCraftAmount(@Nonnull ItemStack stack, long amount) {
-        long returns = super.decreaseToCraftAmount(stack, amount);
+    public void decreaseToCraftAmount(@Nonnull ItemStack stack) {
+        super.decreaseToCraftAmount(stack);
         //if a sub tasks gives an item to an infinite input, then this infinite inputs actually contains something
         this.setContainsItem(true);
-        return returns;
     }
 
     @Override

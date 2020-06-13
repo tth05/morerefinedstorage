@@ -289,35 +289,47 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
-    public int onTrackedInsert(ItemStack stack, int size) {
-        stack.setCount(size);
+    public int onTrackedInsert(ItemStack stack) {
+        int trackedAmount = 0;
 
         for (int i = this.tasks.size() - 1; i >= 0; i--) {
             Task task = this.tasks.get(i);
             if (!(task instanceof ProcessingTask))
                 continue;
 
-            size = task.supplyInput(stack);
-            if (size < 0)
-                return 0;
+            int oldTrackedAmount = trackedAmount;
+
+            stack.shrink(trackedAmount);
+            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
+            stack.grow(oldTrackedAmount);
+
+            if (stack.getCount() - trackedAmount < 1)
+                return trackedAmount;
         }
-        return size;
+
+        return trackedAmount;
     }
 
     @Override
-    public int onTrackedInsert(FluidStack stack, int size) {
-        stack.amount = size;
+    public int onTrackedInsert(FluidStack stack) {
+        int trackedAmount = 0;
 
         for (int i = this.tasks.size() - 1; i >= 0; i--) {
             Task task = this.tasks.get(i);
             if (!(task instanceof ProcessingTask))
                 continue;
 
-            size = task.supplyInput(stack);
-            if (size < 0)
-                return 0;
+            int oldTrackedAmount = trackedAmount;
+
+            stack.amount -= trackedAmount;
+            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
+            stack.amount += oldTrackedAmount;
+
+            if (stack.amount - trackedAmount < 1)
+                return trackedAmount;
         }
-        return size;
+
+        return trackedAmount;
     }
 
     @Override

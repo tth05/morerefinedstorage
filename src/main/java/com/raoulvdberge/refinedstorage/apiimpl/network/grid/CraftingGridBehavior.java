@@ -482,7 +482,6 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
      * This methods tries to give the given {@code itemStack} to the given {@code player} first and if that fails the
      * item is inserted into the given {@code network} or dropped on the ground.
      */
-    //TODO: Move this to util/helper class
     private static void giveToPlayerOrNetwork(@Nonnull ItemStack itemStack, @Nonnull EntityPlayer player,
                                               @Nullable INetwork network) {
         if (!player.inventory.addItemStackToInventory(itemStack)) {

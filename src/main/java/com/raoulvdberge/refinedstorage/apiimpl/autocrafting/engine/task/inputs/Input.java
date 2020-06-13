@@ -119,12 +119,9 @@ public class Input {
      * Decreases the to craft amount for this input and increase the total input amount. This is used to supply this
      * inputs with newly crafted items.
      *
-     * @param stack  the item that was crafted
-     * @param amount the amount that was crafted
-     * @return the amount of the given item that remains; {@code -1} if the item is not valid; or {@code -2} if there's
-     * no remainder
+     * @param stack  the item that was crafted (the count of this stack is modified)
      */
-    public long decreaseToCraftAmount(@Nonnull ItemStack stack, long amount) {
+    public void decreaseToCraftAmount(@Nonnull ItemStack stack) {
         int i = 0;
         boolean found = false;
 
@@ -139,36 +136,33 @@ public class Input {
 
         //these return code aren't optimal but better than making another method that checks just this
         if (!found)
-            return -1;
+            return;
 
         //adjust all values accordingly
-        long realAmount = Math.min(toCraftAmount, amount);
-        this.toCraftAmount = Math.max(toCraftAmount - amount, 0);
+        long realAmount = Math.min(toCraftAmount, stack.getCount());
+        this.toCraftAmount = Math.max(toCraftAmount - stack.getCount(), 0);
         this.totalInputAmount += realAmount;
         this.currentInputCounts.set(i, this.currentInputCounts.get(i) + realAmount);
-        return amount - realAmount < 1 ? -2 : amount - realAmount;
+        stack.setCount((int) (stack.getCount() - realAmount));
     }
 
     /**
      * Decreases the to craft amount for this input and increase the total input amount. This is used to supply this
      * inputs with newly crafted fluids.
      *
-     * @param stack  the fluid that was crafted
-     * @param amount the amount that was crafted
-     * @return the amount of the given item that remains; {@code -1} if the item is not valid; or {@code -2} if there's
-     * no remainder
+     * @param stack the fluid that was crafted (the count of this stack is modified)
      */
-    public long decreaseToCraftAmount(@Nonnull FluidStack stack, long amount) {
+    public void decreaseToCraftAmount(@Nonnull FluidStack stack) {
         //these return code aren't optimal but better than making another method that checks just this
         if (!API.instance().getComparer().isEqual(stack, this.getFluidStack(), IComparer.COMPARE_NBT))
-            return -1;
+            return;
 
         //adjust all values accordingly
-        long realAmount = Math.min(toCraftAmount, amount);
-        this.toCraftAmount = Math.max(toCraftAmount - amount, 0);
+        long realAmount = Math.min(toCraftAmount, stack.amount);
+        this.toCraftAmount = Math.max(toCraftAmount - stack.amount, 0);
         this.totalInputAmount += realAmount;
         this.currentInputCounts.set(0, this.currentInputCounts.get(0) + realAmount);
-        return amount - realAmount < 1 ? -2 : amount - realAmount;
+        stack.amount -= realAmount;
     }
 
     /**
@@ -231,7 +225,7 @@ public class Input {
     }
 
     public void setProcessingAmount(long processingAmount) {
-        this.processingAmount = processingAmount;
+        this.processingAmount = Math.max(processingAmount, 0);
     }
 
     /**

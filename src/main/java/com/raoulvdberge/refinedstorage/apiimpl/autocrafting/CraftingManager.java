@@ -129,7 +129,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void update() {
-        if(this.tasksDirty) {
+        if (this.tasksDirty) {
             //makes sure updates are sent only once per tick
             listeners.forEach(ICraftingMonitorListener::onChanged);
             this.tasksDirty = false;
@@ -286,7 +286,8 @@ public class CraftingManager implements ICraftingManager {
 
         for (ICraftingTask task : getTasks()) {
             if (task.getRequested().getFluid() != null) {
-                if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
+                if (API.instance().getComparer()
+                        .isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
                     amount -= task.getQuantity();
                 }
             }
@@ -337,34 +338,39 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public int track(ItemStack stack, int size) {
-        int remainder = size;
-        for (ICraftingTask task : tasks.values()) {
-            remainder = task.onTrackedInsert(stack, remainder);
+    public void track(ItemStack stack) {
+        int trackedAmount = 0;
 
-            if (remainder < 1) {
-                return 0;
-            }
+        for (ICraftingTask task : tasks.values()) {
+            int oldTrackedAmount = trackedAmount;
+
+            stack.shrink(trackedAmount);
+            trackedAmount += task.onTrackedInsert(stack);
+            stack.grow(oldTrackedAmount);
+
+            if (stack.getCount() - trackedAmount < 1 || stack.isEmpty())
+                break;
         }
 
-        //TODO: don't call this on every insert
-        this.onTaskChanged();
-        return remainder;
+        this.tasksDirty |= trackedAmount > 0;
     }
 
     @Override
-    public int track(FluidStack stack, int size) {
-        int remainder = size;
-        for (ICraftingTask task : tasks.values()) {
-            remainder = task.onTrackedInsert(stack, remainder);
+    public void track(FluidStack stack) {
+        int trackedAmount = 0;
 
-            if (remainder < 1) {
-                return 0;
-            }
+        for (ICraftingTask task : tasks.values()) {
+            int oldTrackedAmount = trackedAmount;
+
+            stack.amount -= trackedAmount;
+            trackedAmount += task.onTrackedInsert(stack);
+            stack.amount += oldTrackedAmount;
+
+            if (stack.amount - trackedAmount < 1)
+                break;
         }
 
-        this.onTaskChanged();
-        return remainder;
+        this.tasksDirty |= trackedAmount > 0;
     }
 
     @Override

@@ -4,6 +4,8 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
@@ -50,6 +52,13 @@ public class ProcessingTask extends Task {
 
     @Override
     public int update(@Nonnull INetwork network, @Nonnull ICraftingPatternContainer container, int toCraft) {
+        //stop if task is finished
+        if (this.amountNeeded < 1) {
+            this.finished = true;
+            network.getCraftingManager().onTaskChanged();
+            return 0;
+        }
+
         //don't update if there's any remainder left from the previous update
         if (!this.remainingItems.isEmpty() || !this.remainingFluids.isEmpty()) {
             //only update if we get the same container again
@@ -68,13 +77,6 @@ public class ProcessingTask extends Task {
         }
 
         remainderContainer = container;
-
-        //stop if task is finished
-        if (this.amountNeeded < 1) {
-            this.finished = true;
-            network.getCraftingManager().onTaskChanged();
-            return 0;
-        }
 
         //adjust the craftable amount
         if (toCraft > this.amountNeeded)
@@ -150,6 +152,115 @@ public class ProcessingTask extends Task {
 
         network.getCraftingManager().onTaskChanged();
         return toCraft;
+    }
+
+    /**
+     * Called when a tracked item is imported. Forwards imported items to parents if this is a processing task.
+     * @param stack the imported stack (this stack is modified)
+     * @return the amount that was tracked but not actually used up
+     */
+    public long supplyOutput(ItemStack stack) {
+        int trackedAmount = 0;
+
+        //if there's anything left and the item is an output of this processing task -> forward to parents
+        Output matchingOutput = this.outputs.stream()
+                .filter(o -> !o.isFluid() &&
+                        API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
+                .findFirst().orElse(null);
+
+        if (stack.getCount() > 0 && matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
+
+            long processingAmount = matchingOutput.getProcessingAmount();
+            updateInputsAndOutputs(matchingOutput, stack.getCount());
+            trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
+
+            //distribute to parents
+            if (!this.getParents().isEmpty()) {
+                //loop through all parents while there is anything left to split up
+                for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
+                    Task parent = iterator.next();
+
+                    parent.supplyInput(stack);
+
+                    //return if there's nothing left
+                    if (stack.isEmpty())
+                        return trackedAmount;
+                }
+            }
+        }
+
+        return trackedAmount;
+    }
+
+    /**
+     * Called when a tracked fluid is imported. Forwards imported fluids to parents if this is a processing task.
+     * @param stack the imported stack (this stack is modified)
+     * @return the amount that was tracked but not actually used up
+     */
+    public int supplyOutput(FluidStack stack) {
+        int trackedAmount = 0;
+
+        //if there's anything left and the item is an output of this processing task -> forward to parents
+        Output matchingOutput = this.outputs.stream()
+                .filter(o -> o.isFluid() &&
+                        API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
+                .findFirst().orElse(null);
+
+        if (stack.amount > 0 && matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
+
+            long processingAmount = matchingOutput.getProcessingAmount();
+            updateInputsAndOutputs(matchingOutput, stack.amount);
+            trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
+
+            //distribute to parents
+            if (!this.getParents().isEmpty()) {
+                //loop through all parents while there is anything left to split up
+                for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {
+                    Task parent = iterator.next();
+
+                    parent.supplyInput(stack);
+
+                    //remove if there's nothing left
+                    if (stack.amount < 1)
+                        return trackedAmount;
+                }
+            }
+        }
+
+        return trackedAmount;
+    }
+
+    /**
+     * Updates the processing amount of all outputs. Also check if any new amount of sets are completed and notifies the
+     * inputs accordingly.
+     *
+     * @param output the output
+     * @param amount the amount that was imported for the given output
+     */
+    private void updateInputsAndOutputs(Output output, long amount) {
+        //every time we pass something to the parents, check if one full set is done
+        //the following code is just meant for tracking and does not use up the amount in any way
+        long oldCompletedSets = output.getCompletedSets();
+        output.setProcessingAmount(output.getProcessingAmount() - amount);
+
+        //calculate new completed set amount
+        output.setCompletedSets(
+                (long) Math.floor((output.getAmountNeeded() - output.getProcessingAmount()) /
+                        (double) output.getQuantityPerCraft()));
+
+        //calculate the amount of completed sets
+        long smallestCompletedSetCount =
+                this.outputs.stream().mapToLong(Output::getCompletedSets).min().getAsLong();
+        long newlyCompletedSets = smallestCompletedSetCount - oldCompletedSets;
+
+        //if there are new sets that got completed by this insertion -> notify the inputs
+        if (newlyCompletedSets > 0) {
+            this.amountNeeded -= newlyCompletedSets;
+            //subtract one full set from each input
+            for (Input input : this.inputs)
+                input.setProcessingAmount(
+                        input.getProcessingAmount() - input.getQuantityPerCraft() * newlyCompletedSets);
+        }
     }
 
     /**
