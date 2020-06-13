@@ -131,10 +131,6 @@ public class ProcessingTask extends Task {
             }
         }
 
-        //notify outputs of new sets
-        for (Output output : this.outputs)
-            output.scheduleSets(toCraft);
-
         insertIntoContainer(container);
 
         if (this.remainingItems.isEmpty() && this.remainingFluids.isEmpty()) { //everything went well
@@ -216,8 +212,6 @@ public class ProcessingTask extends Task {
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
         if (isFinished())
             return Collections.emptyList();
-
-        //TODO: output should not show what is in the machine but rather what it globally expects
 
         boolean hasError = this.state != ProcessingState.READY;
         List<ICraftingMonitorElement> elements = new ObjectArrayList<>(this.inputs.size() + this.outputs.size());

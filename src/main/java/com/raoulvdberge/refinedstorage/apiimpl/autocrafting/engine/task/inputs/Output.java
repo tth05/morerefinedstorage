@@ -43,12 +43,6 @@ public class Output extends Input {
         return 0;
     }
 
-    @Override
-    public void setAmountNeeded(long amountNeeded) {
-        super.setAmountNeeded(amountNeeded);
-        setProcessingAmount(amountNeeded);
-    }
-
     public void setCompletedSets(long completedSets) {
         this.completedSets = completedSets;
     }

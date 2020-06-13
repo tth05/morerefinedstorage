@@ -68,6 +68,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -105,7 +106,7 @@ public class ProxyCommon {
                 buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readInt(), buf.readInt(),
                         buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID,
-                buf -> new CraftingMonitorElementFluidRender(StackUtils.readFluidGridStack(buf).getStack(),
+                buf -> new CraftingMonitorElementFluidRender(FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf)),
                         buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementError.ID, buf -> {
             String id = ByteBufUtils.readUTF8String(buf);

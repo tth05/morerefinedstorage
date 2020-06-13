@@ -45,7 +45,6 @@ public class MessageCraftingCancel extends MessageHandlerPlayerToServer<MessageC
 
             if(grid.getItemHandler() != null)
                 grid.getItemHandler().onCraftingCancelRequested(player, message.taskId);
-            //TODO: cancel task from fluid grid?
         }
     }
 }
