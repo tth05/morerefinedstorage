@@ -41,7 +41,7 @@ public class MessageGridCraftingPreviewResponse
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        this.id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        this.id = new UUID(buf.readLong(), buf.readLong());
         this.quantity = buf.readInt();
         this.calculationTime = buf.readLong();
         this.fluids = buf.readBoolean();
@@ -58,7 +58,8 @@ public class MessageGridCraftingPreviewResponse
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+        buf.writeLong(id.getLeastSignificantBits());
+        buf.writeLong(id.getMostSignificantBits());
         buf.writeInt(quantity);
         buf.writeLong(calculationTime);
         buf.writeBoolean(fluids);

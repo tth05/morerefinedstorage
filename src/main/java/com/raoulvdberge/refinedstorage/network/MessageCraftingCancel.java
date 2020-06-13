@@ -5,7 +5,6 @@ import com.raoulvdberge.refinedstorage.container.ContainerCraftingMonitor;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.UUID;
@@ -23,7 +22,7 @@ public class MessageCraftingCancel extends MessageHandlerPlayerToServer<MessageC
     @Override
     public void fromBytes(ByteBuf buf) {
         if (buf.readBoolean()) {
-            taskId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            taskId = new UUID(buf.readLong(), buf.readLong());
         }
     }
 
@@ -32,7 +31,8 @@ public class MessageCraftingCancel extends MessageHandlerPlayerToServer<MessageC
         buf.writeBoolean(taskId != null);
 
         if (taskId != null) {
-            ByteBufUtils.writeUTF8String(buf, taskId.toString());
+            buf.writeLong(taskId.getLeastSignificantBits());
+            buf.writeLong(taskId.getMostSignificantBits());
         }
     }
 

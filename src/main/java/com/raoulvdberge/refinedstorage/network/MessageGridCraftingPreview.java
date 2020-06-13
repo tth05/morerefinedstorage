@@ -5,7 +5,6 @@ import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.UUID;
@@ -28,7 +27,7 @@ public class MessageGridCraftingPreview extends MessageHandlerPlayerToServer<Mes
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        id = new UUID(buf.readLong(), buf.readLong());
         quantity = buf.readInt();
         noPreview = buf.readBoolean();
         fluids = buf.readBoolean();
@@ -36,7 +35,8 @@ public class MessageGridCraftingPreview extends MessageHandlerPlayerToServer<Mes
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+        buf.writeLong(id.getLeastSignificantBits());
+        buf.writeLong(id.getMostSignificantBits());
         buf.writeInt(quantity);
         buf.writeBoolean(noPreview);
         buf.writeBoolean(fluids);

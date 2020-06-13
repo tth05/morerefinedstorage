@@ -4,7 +4,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskSync;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskSyncData;
 import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -27,14 +26,15 @@ public class MessageStorageDiskSizeResponse implements IMessage, IMessageHandler
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        id = new UUID(buf.readLong(), buf.readLong());
         stored = buf.readInt();
         capacity = buf.readInt();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+        buf.writeLong(id.getLeastSignificantBits());
+        buf.writeLong(id.getMostSignificantBits());
         buf.writeInt(stored);
         buf.writeInt(capacity);
     }

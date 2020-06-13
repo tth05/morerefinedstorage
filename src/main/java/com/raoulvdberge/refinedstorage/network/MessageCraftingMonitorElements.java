@@ -37,7 +37,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
         int size = buf.readInt();
 
         for (int i = 0; i < size; ++i) {
-            UUID id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            UUID id = new UUID(buf.readLong(), buf.readLong());
 
             ICraftingRequestInfo requested = null;
             try {
@@ -71,7 +71,9 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
         buf.writeInt(craftingMonitor.getTasks().size());
 
         for (ICraftingTask task : craftingMonitor.getTasks()) {
-            ByteBufUtils.writeUTF8String(buf, task.getId().toString());
+            buf.writeLong(task.getId().getLeastSignificantBits());
+            buf.writeLong(task.getId().getMostSignificantBits());
+            
             ByteBufUtils.writeTag(buf, task.getRequested().writeToNbt());
 
             buf.writeInt(task.getQuantity());

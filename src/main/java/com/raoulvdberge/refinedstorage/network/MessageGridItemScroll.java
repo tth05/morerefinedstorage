@@ -8,7 +8,6 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.UUID;
@@ -31,7 +30,7 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        id = new UUID(buf.readLong(), buf.readLong());
         shift = buf.readBoolean();
         ctrl = buf.readBoolean();
         up = buf.readBoolean();
@@ -39,7 +38,8 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+        buf.writeLong(id.getLeastSignificantBits());
+        buf.writeLong(id.getMostSignificantBits());
         buf.writeBoolean(shift);
         buf.writeBoolean(ctrl);
         buf.writeBoolean(up);
