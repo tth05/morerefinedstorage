@@ -10,6 +10,9 @@ import javax.annotation.Nonnull;
  * Represents an Output of a Task
  */
 public class Output extends Input {
+
+    private long completedSets;
+
     public Output(@Nonnull ItemStack itemStack, int quantityPerCraft) {
         super(NonNullList.from(ItemStack.EMPTY, itemStack), 0);
         //amount needed is not relevant for outputs, but quantity is
@@ -20,13 +23,6 @@ public class Output extends Input {
         super(fluidStack, 0, false);
         //amount needed is not relevant for outputs, but quantity is
         this.quantityPerCraft = quantityPerCraft;
-    }
-
-    /**
-     * @return the amount of sets that are currently being awaited
-     */
-    public long getCurrentlyProcessingSetsCount() {
-        return (long) Math.ceil((double)this.processingAmount / this.quantityPerCraft);
     }
 
     /**
@@ -45,5 +41,22 @@ public class Output extends Input {
         }
 
         return 0;
+    }
+
+    @Override
+    public void setAmountNeeded(long amountNeeded) {
+        super.setAmountNeeded(amountNeeded);
+        setProcessingAmount(amountNeeded);
+    }
+
+    public void setCompletedSets(long completedSets) {
+        this.completedSets = completedSets;
+    }
+
+    /**
+     * @return the amount of sets that are completed
+     */
+    public long getCompletedSets() {
+        return this.completedSets;
     }
 }

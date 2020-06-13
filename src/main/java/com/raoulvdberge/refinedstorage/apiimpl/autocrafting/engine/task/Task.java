@@ -124,7 +124,6 @@ public abstract class Task {
         //merge all pattern item outputs
         for (ItemStack itemStack : pattern.getOutputs()) {
             Output newOutput = new Output(itemStack, itemStack.getCount());
-
             //lovely cast
             mergeIntoList(newOutput, (List<Input>) (List<?>) this.outputs);
         }
@@ -155,7 +154,7 @@ public abstract class Task {
                         // amount
                         mergeIntoList(new Input(NonNullList.from(ItemStack.EMPTY,
                                 ItemHandlerHelper.copyStackWithSize(input.getCompareableItemStack(), (int) remainder)),
-                                1),
+                                        1),
                                 this.inputs);
                     }
 
@@ -238,24 +237,36 @@ public abstract class Task {
         Output matchingOutput = this.outputs.stream()
                 .filter(o -> API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
                 .findFirst().orElse(null);
-        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null) {
+        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null &&
+                matchingOutput.getProcessingAmount() > 0) {
+
             //every time we pass something to the parents, check if one full set is done
-            long previousSets = matchingOutput.getCurrentlyProcessingSetsCount();
+            //the following code is just meant for tracking and does not use up the remainder in any way
+            long oldCompletedSets = matchingOutput.getCompletedSets();
             matchingOutput.setProcessingAmount(matchingOutput.getProcessingAmount() - remainder);
+
+            //calculate new completed set amount
+            matchingOutput.setCompletedSets(
+                    (long) Math.floor((matchingOutput.getAmountNeeded() - matchingOutput.getProcessingAmount()) /
+                            (double) matchingOutput.getQuantityPerCraft()));
+
+            //calculate the amount of completed sets
+            long smallestCompletedSetCount =
+                    this.outputs.stream().mapToLong(Output::getCompletedSets).min().getAsLong();
+            long newlyCompletedSets = smallestCompletedSetCount - oldCompletedSets;
 
             //if amount of inserted sets decreased and all outputs are at that state now,
             // then one full set is DONE
-            //TODO: does not work if more than one set is done at once -> find highest check if that's lower then that's the amount
-            if (previousSets > matchingOutput.getCurrentlyProcessingSetsCount() &&
-                    this.outputs.stream().allMatch(o -> o.getCurrentlyProcessingSetsCount() == previousSets - 1)) {
-                this.amountNeeded--;
+            if (newlyCompletedSets > 0) {
+                this.amountNeeded -= newlyCompletedSets;
                 //subtract one full set from each input
                 for (Input input : this.inputs)
-                    input.setProcessingAmount(input.getProcessingAmount() - input.getQuantityPerCraft());
+                    input.setProcessingAmount(
+                            input.getProcessingAmount() - input.getQuantityPerCraft() * newlyCompletedSets);
             }
 
             //distribute to parents
-            if(!this.getParents().isEmpty()) {
+            if (!this.getParents().isEmpty()) {
                 stack.setCount((int) remainder);
                 //loop through all parents while there is anything left to split up
                 for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
@@ -300,21 +311,36 @@ public abstract class Task {
         Output matchingOutput = this.outputs.stream()
                 .filter(o -> API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
                 .findFirst().orElse(null);
-        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null) {
+        if (this instanceof ProcessingTask && remainder > 0 && matchingOutput != null &&
+                matchingOutput.getProcessingAmount() > 0) {
+
             //every time we pass something to the parents, check if one full set is done
-            long previousSets = matchingOutput.getCurrentlyProcessingSetsCount();
+            //the following code is just meant for tracking and does not use up the remainder in any way
+            long oldCompletedSets = matchingOutput.getCompletedSets();
             matchingOutput.setProcessingAmount(matchingOutput.getProcessingAmount() - remainder);
-            //if amount of inserted sets decreased and all outputs are at that state now, then one full set is done
-            if (previousSets > matchingOutput.getCurrentlyProcessingSetsCount() &&
-                    this.outputs.stream().allMatch(o -> o.getCurrentlyProcessingSetsCount() == previousSets - 1)) {
-                this.amountNeeded--;
+
+            //calculate new completed set amount
+            matchingOutput.setCompletedSets(
+                    (long) Math.floor((matchingOutput.getAmountNeeded() - matchingOutput.getProcessingAmount()) /
+                            (double) matchingOutput.getQuantityPerCraft()));
+
+            //calculate the amount of completed sets
+            long smallestCompletedSetCount =
+                    this.outputs.stream().mapToLong(Output::getCompletedSets).min().getAsLong();
+            long newlyCompletedSets = smallestCompletedSetCount - oldCompletedSets;
+
+            //if amount of inserted sets decreased and all outputs are at that state now,
+            // then one full set is DONE
+            if (newlyCompletedSets > 0) {
+                this.amountNeeded -= newlyCompletedSets;
                 //subtract one full set from each input
                 for (Input input : this.inputs)
-                    input.setProcessingAmount(input.getProcessingAmount() - input.getQuantityPerCraft());
+                    input.setProcessingAmount(
+                            input.getProcessingAmount() - input.getQuantityPerCraft() * newlyCompletedSets);
             }
 
             //distribute to parents
-            if(!this.getParents().isEmpty()) {
+            if (!this.getParents().isEmpty()) {
                 stack.amount = (int) remainder;
                 //loop through all parents while there is anything left to split up
                 for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {

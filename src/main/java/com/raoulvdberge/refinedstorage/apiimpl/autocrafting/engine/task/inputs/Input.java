@@ -28,7 +28,8 @@ public class Input {
     protected int quantityPerCraft;
 
     private Input(long amount) {
-        this.amountNeeded = amount;
+        //uses the setter in case this method is overridden
+        setAmountNeeded(amount);
     }
 
     public Input(@Nonnull NonNullList<ItemStack> itemStacks, long amountNeeded) {
