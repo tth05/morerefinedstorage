@@ -35,8 +35,8 @@ public class MessageGridCraftingPreview extends MessageHandlerPlayerToServer<Mes
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeLong(id.getLeastSignificantBits());
         buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
         buf.writeInt(quantity);
         buf.writeBoolean(noPreview);
         buf.writeBoolean(fluids);

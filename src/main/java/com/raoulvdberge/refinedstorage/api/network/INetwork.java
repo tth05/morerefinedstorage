@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 /**
  * Represents a network, usually is a controller.
  */
+//TODO: add system that ensures items don't get voided when inserting into full network -> basically keep them in memory
 public interface INetwork {
     /**
      * @return the energy usage per tick of this network

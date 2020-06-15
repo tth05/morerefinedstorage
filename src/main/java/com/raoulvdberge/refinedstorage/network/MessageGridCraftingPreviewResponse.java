@@ -58,8 +58,8 @@ public class MessageGridCraftingPreviewResponse
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeLong(id.getLeastSignificantBits());
         buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
         buf.writeInt(quantity);
         buf.writeLong(calculationTime);
         buf.writeBoolean(fluids);

@@ -129,7 +129,7 @@ public class FluidGridHandler implements IFluidGridHandler {
         FluidStack stack = network.getFluidStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            CraftingManager.CALCULATION_THREAD_POOL.submit(() -> {
+            CraftingManager.CALCULATION_THREAD_POOL.execute(() -> {
                 ICraftingTask task = network.getCraftingManager().create(stack, quantity);
                 if (task == null) {
                     return;
@@ -156,7 +156,7 @@ public class FluidGridHandler implements IFluidGridHandler {
                             .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
                                     task.getCalculationTime(), quantity, true), player);
                 }
-            }, "RS crafting preview calculation");
+            });
         }
     }
 

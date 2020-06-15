@@ -63,13 +63,13 @@ public final class StackUtils {
         writeItemStack(buf, stack);
 
         buf.writeBoolean(craftable);
-        buf.writeLong(id.getLeastSignificantBits());
         buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
 
         buf.writeBoolean(otherId != null);
         if (otherId != null) {
-            buf.writeLong(otherId.getLeastSignificantBits());
             buf.writeLong(otherId.getMostSignificantBits());
+            buf.writeLong(otherId.getLeastSignificantBits());
         }
 
         if (entry == null) {
@@ -106,13 +106,13 @@ public final class StackUtils {
 
         buf.writeBoolean(craftable);
 
-        buf.writeLong(id.getLeastSignificantBits());
         buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
 
         buf.writeBoolean(otherId != null);
         if (otherId != null) {
-            buf.writeLong(otherId.getLeastSignificantBits());
             buf.writeLong(otherId.getMostSignificantBits());
+            buf.writeLong(otherId.getLeastSignificantBits());
         }
 
         if (entry == null) {

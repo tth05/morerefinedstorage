@@ -357,6 +357,18 @@ public class ProcessingTask extends Task {
         return elements;
     }
 
+    @Nonnull
+    @Override
+    public List<ItemStack> getLooseItemStacks() {
+        return this.remainingItems;
+    }
+
+    @Nonnull
+    @Override
+    public List<FluidStack> getLooseFluidStacks() {
+        return this.remainingFluids;
+    }
+
     @Nullable
     private CraftingMonitorElementError getErrorElement(ICraftingMonitorElement base) {
         switch (this.state) {
@@ -372,19 +384,12 @@ public class ProcessingTask extends Task {
         return null;
     }
 
-    /**
-     * @return the current processing state
-     */
-    public ProcessingState getState() {
-        return state;
-    }
-
     @Override
     public boolean isFinished() {
         return this.finished;
     }
 
-    public enum ProcessingState {
+    private enum ProcessingState {
         READY,
         MACHINE_NONE,
         MACHINE_DOES_NOT_ACCEPT,

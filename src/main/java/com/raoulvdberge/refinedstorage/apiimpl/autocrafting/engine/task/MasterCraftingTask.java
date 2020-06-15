@@ -261,7 +261,14 @@ public class MasterCraftingTask implements ICraftingTask {
     public void onCancelled() {
         //just insert all stored items back into network
         for (Task task : this.tasks) {
-            //TODO: also insert remaining items of tasks
+            //insert loose items and fluids
+            for (ItemStack looseItemStack : task.getLooseItemStacks())
+                network.insertItem(looseItemStack, looseItemStack.getCount(), Action.PERFORM);
+
+            for (FluidStack looseFluidStack : task.getLooseFluidStacks())
+                network.insertFluid(looseFluidStack, looseFluidStack.amount, Action.PERFORM);
+
+            //insert items that are still inside of inputs
             for (Input input : task.getInputs()) {
                 boolean isDurabilityInput = input instanceof DurabilityInput;
 
@@ -269,7 +276,6 @@ public class MasterCraftingTask implements ICraftingTask {
                     continue;
 
                 List<ItemStack> itemStacks = input.getItemStacks();
-                //TODO: insert remainder and handle remainder if network is full
                 for (int i = 0; i < itemStacks.size(); i++) {
                     ItemStack itemStack = itemStacks.get(i);
                     //TODO: real stack counts
@@ -279,7 +285,6 @@ public class MasterCraftingTask implements ICraftingTask {
                 }
 
                 if (input.isFluid()) {
-                    //TODO: real stack amounts
                     int amount = input.getCurrentInputCounts().get(0).intValue();
                     if (amount > 0)
                         network.insertFluid(input.getFluidStack(), amount, Action.PERFORM);
@@ -299,6 +304,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
             int oldTrackedAmount = trackedAmount;
 
+            //fake the stack count so imported items cannot get tracked by multiple tasks
             stack.shrink(trackedAmount);
             trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
             stack.grow(oldTrackedAmount);
@@ -321,6 +327,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
             int oldTrackedAmount = trackedAmount;
 
+            //fake the stack count so imported items cannot get tracked by multiple tasks
             stack.amount -= trackedAmount;
             trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
             stack.amount += oldTrackedAmount;

@@ -21,6 +21,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class Task {
@@ -207,6 +208,20 @@ public abstract class Task {
      */
     @Nonnull
     public abstract List<ICraftingMonitorElement> getCraftingMonitorElements();
+
+    /**
+     * @return any loose item stacks that should not be voided if the task completes
+     */
+    @Nonnull
+    public abstract List<ItemStack> getLooseItemStacks();
+
+    /**
+     * @return any loose fluid stacks that should not be voided if the task completes
+     */
+    @Nonnull
+    public List<FluidStack> getLooseFluidStacks() {
+        return Collections.emptyList();
+    }
 
     /**
      * This also replaces {@code ProcessingState.PROCESSED}

@@ -198,7 +198,7 @@ public class ItemGridHandler implements IItemGridHandler {
         ItemStack stack = network.getItemStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            CraftingManager.CALCULATION_THREAD_POOL.submit(() -> {
+            CraftingManager.CALCULATION_THREAD_POOL.execute(() -> {
                 ICraftingTask task = network.getCraftingManager().create(stack, quantity);
                 if (task == null) {
                     return;
@@ -227,7 +227,7 @@ public class ItemGridHandler implements IItemGridHandler {
                             .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
                                     task.getCalculationTime(), quantity, false), player);
                 }
-            }, "RS crafting preview calculation");
+            });
         }
     }
 

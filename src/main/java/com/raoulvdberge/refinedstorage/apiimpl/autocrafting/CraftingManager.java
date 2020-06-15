@@ -344,6 +344,7 @@ public class CraftingManager implements ICraftingManager {
         for (ICraftingTask task : tasks.values()) {
             int oldTrackedAmount = trackedAmount;
 
+            //fake the stack count so imported items cannot get tracked by multiple tasks
             stack.shrink(trackedAmount);
             trackedAmount += task.onTrackedInsert(stack);
             stack.grow(oldTrackedAmount);
@@ -362,6 +363,7 @@ public class CraftingManager implements ICraftingManager {
         for (ICraftingTask task : tasks.values()) {
             int oldTrackedAmount = trackedAmount;
 
+            //fake the stack count so imported items cannot get tracked by multiple tasks
             stack.amount -= trackedAmount;
             trackedAmount += task.onTrackedInsert(stack);
             stack.amount += oldTrackedAmount;

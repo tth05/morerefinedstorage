@@ -31,8 +31,8 @@ public class MessageCraftingCancel extends MessageHandlerPlayerToServer<MessageC
         buf.writeBoolean(taskId != null);
 
         if (taskId != null) {
-            buf.writeLong(taskId.getLeastSignificantBits());
             buf.writeLong(taskId.getMostSignificantBits());
+            buf.writeLong(taskId.getLeastSignificantBits());
         }
     }
 

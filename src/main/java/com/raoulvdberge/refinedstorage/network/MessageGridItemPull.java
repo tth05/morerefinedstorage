@@ -29,8 +29,8 @@ public class MessageGridItemPull extends MessageHandlerPlayerToServer<MessageGri
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeLong(id.getLeastSignificantBits());
         buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
         buf.writeInt(flags);
     }
 

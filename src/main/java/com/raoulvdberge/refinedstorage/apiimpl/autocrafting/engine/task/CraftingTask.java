@@ -5,8 +5,12 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContaine
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -14,6 +18,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +33,10 @@ public class CraftingTask extends Task {
      * Saves the remainder from previous crafting attempts to make sure this doesn't get lost
      */
     private ItemStack remainder = ItemStack.EMPTY;
+
+    @Nullable
+    private final List<ItemStack> byProducts;
+
     private boolean finished = false;
 
     public CraftingTask(@Nonnull ICraftingPattern pattern, long amountNeeded) {
@@ -34,6 +44,18 @@ public class CraftingTask extends Task {
 
         if (pattern.isProcessing())
             throw new IllegalArgumentException("Processing pattern cannot be used for crafting task!");
+
+        List<ItemStack> byproducts = new ArrayList<>(pattern.getByproducts());
+
+        //clean by-products
+        byproducts.removeIf(i -> this.getInputs().stream()
+                .filter(input -> input instanceof InfiniteInput || input instanceof DurabilityInput)
+                //don't compare damage for durability inputs
+                .anyMatch(input -> API.instance().getComparer().isEqual(i, input.getCompareableItemStack(),
+                        IComparer.COMPARE_NBT | (input instanceof InfiniteInput ? IComparer.COMPARE_DAMAGE : 0)))
+        );
+
+        this.byProducts = byproducts;
     }
 
     @Override
@@ -72,10 +94,10 @@ public class CraftingTask extends Task {
                 .copyStackWithSize(output.getCompareableItemStack(), output.getQuantityPerCraft() * toCraft);
 
         //insert remainder
-        /*for (ItemStack byproduct : this.getPattern().getByproducts()) {
-            //TODO: by products for durability and infinite inputs
-            network.insertItem(byproduct, toCraft * byproduct.getCount(), Action.PERFORM);
-        }*/
+        if (this.byProducts != null && !this.byProducts.isEmpty()) {
+            for (ItemStack byproduct : this.byProducts)
+                network.insertItem(byproduct, toCraft * byproduct.getCount(), Action.PERFORM);
+        }
 
         //give to parents
         if (!this.getParents().isEmpty()) {
@@ -113,18 +135,24 @@ public class CraftingTask extends Task {
                 //TODO: remove casts
                 elements.add(
                         new CraftingMonitorElementFluidRender(input.getFluidStack(),
-                                (int)input.getTotalInputAmount(), 0, 0,
-                                (int)input.getToCraftAmount()));
+                                (int) input.getTotalInputAmount(), 0, 0,
+                                (int) input.getToCraftAmount()));
             } else {
                 elements.add(
                         new CraftingMonitorElementItemRender(input.getCompareableItemStack(),
-                                (int)input.getTotalInputAmount(), 0, 0,
-                                (int)input.getToCraftAmount()));
+                                (int) input.getTotalInputAmount(), 0, 0,
+                                (int) input.getToCraftAmount()));
             }
         }
 
 
         return elements;
+    }
+
+    @Nonnull
+    @Override
+    public List<ItemStack> getLooseItemStacks() {
+        return !remainder.isEmpty() ? Collections.singletonList(remainder) : Collections.emptyList();
     }
 
     @Override
