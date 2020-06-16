@@ -129,4 +129,26 @@ public interface ICraftingPatternContainer {
      */
     default void onUsedForProcessing() {
     }
+
+    /**
+     * @return the current crafter mode, used by autocrafting
+     */
+    default CrafterMode getCrafterMode() {
+        return CrafterMode.IGNORE;
+    }
+
+    enum CrafterMode {
+        IGNORE,
+        SIGNAL_UNLOCKS_AUTOCRAFTING,
+        SIGNAL_LOCKS_AUTOCRAFTING,
+        PULSE_INSERTS_NEXT_SET;
+
+        public static CrafterMode getById(int id) {
+            if (id >= 0 && id < values().length) {
+                return values()[id];
+            }
+
+            return IGNORE;
+        }
+    }
 }

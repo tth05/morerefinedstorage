@@ -89,6 +89,9 @@ public class ProcessingTask extends Task {
         if (toCraft < 1)
             return 0;
 
+        if (container.getCrafterMode() == ICraftingPatternContainer.CrafterMode.PULSE_INSERTS_NEXT_SET)
+            toCraft = 1;
+
         //machine is locked
         if (container.isLocked()) {
             this.state = ProcessingState.LOCKED;
@@ -104,42 +107,12 @@ public class ProcessingTask extends Task {
             return 0;
         }
 
-        //notify inputs and generate input items
-        for (Input input : this.inputs) {
-            //copy current input counts
-            List<Long> inputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
-
-            input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
-            //increase amount that is currently in the machine
-            input.scheduleSets(toCraft);
-
-            if (input.isFluid()) {
-                FluidStack newStack = input.getFluidStack().copy();
-                newStack.amount = input.getQuantityPerCraft() * toCraft;
-                remainingFluids.add(newStack);
-            } else {
-                //this ensures that the correct item stacks are created when ore dict is being used
-                for (int i = 0; i < inputCounts.size(); i++) {
-                    Long oldInputCount = inputCounts.get(i);
-                    Long newInputCount = input.getCurrentInputCounts().get(i);
-
-                    long diff = oldInputCount - newInputCount;
-                    if (diff < 1)
-                        continue;
-
-                    //generate new item using the difference in counts
-                    remainingItems.add(ItemHandlerHelper.copyStackWithSize(input.getItemStacks().get(i), (int) diff));
-                }
-            }
-        }
-
-        insertIntoContainer(container);
+        generateAndInsertIntoContainer(container, toCraft);
 
         if (this.remainingItems.isEmpty() && this.remainingFluids.isEmpty()) { //everything went well
             container.onUsedForProcessing();
             this.state = ProcessingState.READY;
         } else { //couldn't insert everything
-            //TODO: processing amount on inputs and outputs is tied to remainder lists but not actual amount in machines
             this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
         }
 
@@ -156,6 +129,7 @@ public class ProcessingTask extends Task {
 
     /**
      * Called when a tracked item is imported. Forwards imported items to parents if this is a processing task.
+     *
      * @param stack the imported stack (this stack is modified)
      * @return the amount that was tracked but not actually used up
      */
@@ -171,20 +145,14 @@ public class ProcessingTask extends Task {
         if (stack.getCount() > 0 && matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
             long processingAmount = matchingOutput.getProcessingAmount();
-            updateInputsAndOutputs(matchingOutput, stack.getCount());
+            trackAndUpdate(matchingOutput, stack.getCount());
             trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
 
             //distribute to parents
             if (!this.getParents().isEmpty()) {
                 //loop through all parents while there is anything left to split up
                 for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
-                    Task parent = iterator.next();
-
-                    parent.supplyInput(stack);
-
-                    //return if there's nothing left
-                    if (stack.isEmpty())
-                        return trackedAmount;
+                    iterator.next().supplyInput(stack);
                 }
             }
         }
@@ -194,6 +162,7 @@ public class ProcessingTask extends Task {
 
     /**
      * Called when a tracked fluid is imported. Forwards imported fluids to parents if this is a processing task.
+     *
      * @param stack the imported stack (this stack is modified)
      * @return the amount that was tracked but not actually used up
      */
@@ -209,20 +178,14 @@ public class ProcessingTask extends Task {
         if (stack.amount > 0 && matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
             long processingAmount = matchingOutput.getProcessingAmount();
-            updateInputsAndOutputs(matchingOutput, stack.amount);
+            trackAndUpdate(matchingOutput, stack.amount);
             trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
 
             //distribute to parents
             if (!this.getParents().isEmpty()) {
                 //loop through all parents while there is anything left to split up
                 for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {
-                    Task parent = iterator.next();
-
-                    parent.supplyInput(stack);
-
-                    //remove if there's nothing left
-                    if (stack.amount < 1)
-                        return trackedAmount;
+                    iterator.next().supplyInput(stack);
                 }
             }
         }
@@ -237,7 +200,7 @@ public class ProcessingTask extends Task {
      * @param output the output
      * @param amount the amount that was imported for the given output
      */
-    private void updateInputsAndOutputs(Output output, long amount) {
+    private void trackAndUpdate(Output output, long amount) {
         //every time we pass something to the parents, check if one full set is done
         //the following code is just meant for tracking and does not use up the amount in any way
         long oldCompletedSets = output.getCompletedSets();
@@ -287,7 +250,67 @@ public class ProcessingTask extends Task {
     }
 
     /**
-     * Tries to insert all {@code remainingItems} and {@code remainingFluids} into the given {@code container}
+     * Generates new items and fluids and tries to insert them directly into the given {@code container}. Also updates
+     * the processing amount of inputs.
+     *
+     * @param container the container
+     * @param toCraft   the amount of sets to insert
+     */
+    private void generateAndInsertIntoContainer(@Nonnull ICraftingPatternContainer container, int toCraft) {
+        IItemHandler connectedInventory = container.getConnectedInventory();
+        IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
+
+        //notify inputs and generate input items
+        for (Input input : this.inputs) {
+            //copy current input counts
+            List<Long> inputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
+
+            input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
+
+            if (input.isFluid()) {
+                FluidStack newStack = input.getFluidStack().copy();
+                newStack.amount = input.getQuantityPerCraft() * toCraft;
+
+                int remainder = connectedFluidInventory.fill(newStack, true);
+
+                //increase amount that is currently in the machine
+                input.setProcessingAmount(input.getProcessingAmount() + (newStack.amount - remainder));
+
+                //save everything that couldn't be inserted
+                if (remainder > 0) {
+                    //copy again just to be safe
+                    newStack = newStack.copy();
+                    newStack.amount = remainder;
+                    remainingFluids.add(newStack);
+                }
+            } else {
+                //this ensures that the correct item stacks are created when ore dict is being used
+                for (int i = 0; i < inputCounts.size(); i++) {
+                    Long oldInputCount = inputCounts.get(i);
+                    Long newInputCount = input.getCurrentInputCounts().get(i);
+
+                    long diff = oldInputCount - newInputCount;
+                    if (diff < 1)
+                        continue;
+
+                    //generate new item using the difference in counts
+                    ItemStack remainder = insertIntoInventory(connectedInventory,
+                            ItemHandlerHelper.copyStackWithSize(input.getItemStacks().get(i), (int) diff));
+
+                    //increase amount that is currently in the machine
+                    input.setProcessingAmount(input.getProcessingAmount() + (diff - remainder.getCount()));
+
+                    //save everything that couldn't be inserted
+                    if (!remainder.isEmpty())
+                        remainingItems.add(remainder);
+                }
+            }
+        }
+    }
+
+    /**
+     * Tries to insert all {@code remainingItems} and {@code remainingFluids} into the given {@code container}. Also
+     * updates the processing amount of inputs.
      *
      * @param container the container
      */
@@ -299,6 +322,13 @@ public class ProcessingTask extends Task {
             ItemStack remainingItem = iterator.next();
 
             ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem);
+            //ugly
+            Input input = this.inputs.stream().filter(i -> !i.isFluid() &&
+                    API.instance().getComparer().isEqualNoQuantity(i.getCompareableItemStack(), remainingItem))
+                    .findFirst().get();
+            //increase amount that is currently in the machine
+            input.setProcessingAmount(input.getProcessingAmount() + (remainingItem.getCount() - remainder.getCount()));
+
             if (remainder.isEmpty())
                 iterator.remove();
             else
@@ -311,6 +341,13 @@ public class ProcessingTask extends Task {
 
             //noinspection ConstantConditions
             int remainder = connectedFluidInventory.fill(remainingFluid, true);
+            //ugly
+            Input input = this.inputs.stream().filter(i -> i.isFluid() &&
+                    API.instance().getComparer().isEqual(i.getFluidStack(), remainingFluid, IComparer.COMPARE_NBT))
+                    .findFirst().get();
+            //increase amount that is currently in the machine
+            input.setProcessingAmount(input.getProcessingAmount() + (remainingFluid.amount - remainder));
+
             if (remainder <= 0)
                 iterator.remove();
             else
@@ -326,6 +363,17 @@ public class ProcessingTask extends Task {
 
         boolean hasError = this.state != ProcessingState.READY;
         List<ICraftingMonitorElement> elements = new ObjectArrayList<>(this.inputs.size() + this.outputs.size());
+
+        //count loose items as stored
+        for (ItemStack remainingItem : this.remainingItems) {
+            elements.add(new CraftingMonitorElementItemRender(remainingItem, remainingItem.getCount(), 0, 0, 0));
+        }
+
+        for (FluidStack remainingFluid : this.remainingFluids) {
+            elements.add(new CraftingMonitorElementFluidRender(remainingFluid, remainingFluid.amount, 0, 0, 0));
+        }
+
+        //inputs
         for (Input input : this.inputs) {
             if (input.isFluid()) {
                 //TODO: remove casts
@@ -342,6 +390,7 @@ public class ProcessingTask extends Task {
             }
         }
 
+        //ouputs
         for (Output output : this.outputs) {
             if (output.isFluid()) {
                 elements.add(

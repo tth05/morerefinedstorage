@@ -48,18 +48,6 @@ public class Input {
     }
 
     /**
-     * Adds one full set of this output to the processing amount.
-     * <br>
-     * Equal to:
-     * <pre> {@code
-     * this.processingAmount = this.processingAmount + (this.quantityPerCraft * amount);
-     * }</pre>
-     */
-    public void scheduleSets(int amount) {
-        this.processingAmount += this.quantityPerCraft * amount;
-    }
-
-    /**
      * Increases the given {@code amount} for the given {@code stack}
      *
      * @param amount the amount

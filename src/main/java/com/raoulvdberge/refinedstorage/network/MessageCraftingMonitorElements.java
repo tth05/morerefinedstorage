@@ -71,8 +71,8 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
         buf.writeInt(craftingMonitor.getTasks().size());
 
         for (ICraftingTask task : craftingMonitor.getTasks()) {
-            buf.writeLong(task.getId().getLeastSignificantBits());
             buf.writeLong(task.getId().getMostSignificantBits());
+            buf.writeLong(task.getId().getLeastSignificantBits());
 
             ByteBufUtils.writeTag(buf, task.getRequested().writeToNbt());
 
