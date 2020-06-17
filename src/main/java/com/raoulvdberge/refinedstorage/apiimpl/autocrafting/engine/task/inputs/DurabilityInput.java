@@ -24,7 +24,9 @@ public class DurabilityInput extends Input {
     public DurabilityInput(@Nonnull ItemStack itemStack, long amountNeeded) {
         super(NonNullList.from(ItemStack.EMPTY, ItemStack.EMPTY), amountNeeded);
         this.getItemStacks().clear();
+        this.getCurrentInputCounts().clear();
         this.compareableItemStack = itemStack;
+        this.quantityPerCraft = 1;
         this.maxDurability = compareableItemStack.getMaxDamage() + 1;
     }
 
@@ -37,10 +39,11 @@ public class DurabilityInput extends Input {
      * Adds the given {@code itemStack} to the list of {@link ItemStack}s of this input. The {@code itemStack} has to
      * damageable and is assumed to be valid for this input. The remaining durability of the {@code itemStack} is then
      * added to the total input count of this input.
+     *
      * @param itemStack the {@link ItemStack} to add
      */
     public void addDamageableItemStack(@Nonnull ItemStack itemStack) {
-        if(!itemStack.isItemStackDamageable())
+        if (!itemStack.isItemStackDamageable())
             throw new IllegalArgumentException("itemStack has to be damageable!");
 
         this.getItemStacks().add(itemStack);
@@ -75,21 +78,26 @@ public class DurabilityInput extends Input {
     @Override
     public long getAmountMissing() {
         //returns the amount missing in items, not durability
-        long missing = (long) Math.ceil((getAmountNeeded() - totalInputAmount) / (double) maxDurability) -
-                getToCraftAmount() * maxDurability;
+        long missing = (long) Math.ceil((getAmountNeeded() - this.totalInputAmount) / (double) this.maxDurability) -
+                getToCraftAmount() * this.maxDurability;
         return missing < 0 ? 0 : missing;
     }
 
     public long getTotalItemInputAmount() {
         //divide by durability to get the item count and not the count in durability
-        return (long) Math.ceil(this.totalInputAmount / (double)this.maxDurability);
+        return (long) Math.ceil(this.totalInputAmount / (double) this.maxDurability);
+    }
+
+    @Override
+    public long getMinimumCraftableAmount() {
+        return this.totalInputAmount;
     }
 
     @Override
     @Nonnull
     public ItemStack getCompareableItemStack() {
         //the ItemStack list may be empty, so we need a separate variable
-        return compareableItemStack;
+        return this.compareableItemStack;
     }
 
     @Override

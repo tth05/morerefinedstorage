@@ -279,8 +279,15 @@ public class MasterCraftingTask implements ICraftingTask {
                 for (int i = 0; i < itemStacks.size(); i++) {
                     ItemStack itemStack = itemStacks.get(i);
                     //TODO: real stack counts
-                    int amount = isDurabilityInput ? 1 : input.getCurrentInputCounts().get(i).intValue();
-                    if (amount > 0)
+                    int amount = 1;
+                    if (!isDurabilityInput) {
+                        amount = input.getCurrentInputCounts().get(i).intValue();
+                    } else { //set correct durability to item stack
+                        itemStack.setItemDamage(
+                                itemStack.getMaxDamage() - input.getCurrentInputCounts().get(i).intValue() + 1);
+                    }
+
+                    if (amount > 0 && itemStack.getItemDamage() <= itemStack.getMaxDamage())
                         network.insertItem(itemStack, amount, Action.PERFORM);
                 }
 

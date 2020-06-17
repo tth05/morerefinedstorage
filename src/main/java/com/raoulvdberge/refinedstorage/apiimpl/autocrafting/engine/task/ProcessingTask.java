@@ -322,7 +322,7 @@ public class ProcessingTask extends Task {
             ItemStack remainingItem = iterator.next();
 
             ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem);
-            //ugly
+            //ugly -> store remaining stuff as (Input, int) pair
             Input input = this.inputs.stream().filter(i -> !i.isFluid() &&
                     API.instance().getComparer().isEqualNoQuantity(i.getCompareableItemStack(), remainingItem))
                     .findFirst().get();

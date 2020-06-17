@@ -13,12 +13,12 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.D
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
+import com.sun.istack.internal.Nullable;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -102,7 +102,9 @@ public class CraftingTask extends Task {
         //give to parents
         if (!this.getParents().isEmpty()) {
             //loop through all parents while there is anything left to split up
-            //TODO: evenly split up instead of giving everything to first parent
+
+            //TODO: evenly split up instead of giving everything to first parent. Only useful once tasks can have
+            // multiple parents
             for (Iterator<Task> iterator = this.getParents().iterator(); !crafted.isEmpty() && iterator.hasNext(); ) {
                 iterator.next().supplyInput(crafted);
             }
