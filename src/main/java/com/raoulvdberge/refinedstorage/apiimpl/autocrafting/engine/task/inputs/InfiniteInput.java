@@ -8,7 +8,7 @@ import net.minecraft.util.NonNullList;
 import javax.annotation.Nonnull;
 
 /**
- * Represents an Input that is infinite and only needs to be extracted once. Only allowed for crafting tasks currently.
+ * Represents an Input that is infinite and only needs to be extracted once. Only allowed for crafting tasks.
  */
 public class InfiniteInput extends Input {
 

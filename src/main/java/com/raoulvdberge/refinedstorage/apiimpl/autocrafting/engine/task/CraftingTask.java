@@ -181,6 +181,9 @@ public class CraftingTask extends Task {
 
         List<ICraftingMonitorElement> elements = new ObjectArrayList<>(this.inputs.size());
         for (Input input : this.inputs) {
+            if(input instanceof InfiniteInput && !((InfiniteInput) input).containsItem())
+                continue;
+
             if (input.isFluid()) {
                 //TODO: remove casts
                 elements.add(
