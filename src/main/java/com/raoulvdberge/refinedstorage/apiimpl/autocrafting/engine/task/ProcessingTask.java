@@ -3,7 +3,9 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
@@ -15,6 +17,10 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.R
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -30,6 +36,15 @@ import java.util.List;
  * Represents a processing task
  */
 public class ProcessingTask extends Task {
+
+    public static final String TYPE = "processing";
+
+    private static final String NBT_REMAINING_ITEMS = "RemainingItems";
+    private static final String NBT_REMAINING_FLUIDS = "RemainingFluids";
+    private static final String NBT_REMAINDER_CONTAINER_POS = "RemainderContainerPos";
+    private static final String NBT_STATE = "State";
+    private static final String NBT_HAS_ITEM_INPUTS = "HasItemInputs";
+    private static final String NBT_HAS_FLUID_INPUTS = "HasFluidInputs";
 
     private boolean finished;
     private final List<ItemStack> remainingItems = new ObjectArrayList<>();
@@ -49,6 +64,48 @@ public class ProcessingTask extends Task {
         super(pattern, amountNeeded, isFluidRequested);
         this.hasFluidInputs = this.inputs.stream().anyMatch(Input::isFluid);
         this.hasItemInputs = this.inputs.stream().anyMatch(i -> !i.isFluid());
+    }
+
+    public ProcessingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound compound)
+            throws CraftingTaskReadException {
+        super(network, compound);
+        this.hasItemInputs = compound.getBoolean(NBT_HAS_ITEM_INPUTS);
+        this.hasFluidInputs = compound.getBoolean(NBT_HAS_FLUID_INPUTS);
+
+        try {
+            this.state = ProcessingState.valueOf(compound.getString(NBT_STATE));
+        } catch (IllegalArgumentException e) {
+            throw new CraftingTaskReadException("Processing task has unknown state");
+        }
+
+        if (compound.hasKey(NBT_REMAINDER_CONTAINER_POS)) {
+            BlockPos containerPos = BlockPos.fromLong(compound.getLong(NBT_REMAINDER_CONTAINER_POS));
+
+            INetworkNode node = API.instance().getNetworkNodeManager(network.world()).getNode(containerPos);
+
+            if (node == null) {
+                throw new CraftingTaskReadException("No network node found at remainder container pos");
+            } else if (node instanceof ICraftingPatternContainer) {
+                this.remainderContainer = (ICraftingPatternContainer) node;
+            } else {
+                throw new CraftingTaskReadException(
+                        "Remainer container of processing task is not a Crafting Pattern Container");
+            }
+        }
+
+        if (compound.hasKey(NBT_REMAINING_ITEMS)) {
+            NBTTagList items = compound.getTagList(NBT_REMAINING_ITEMS, Constants.NBT.TAG_COMPOUND);
+            for (int i = 0; i < items.tagCount(); i++) {
+                this.remainingItems.add(new ItemStack(items.getCompoundTagAt(i)));
+            }
+        }
+
+        if (compound.hasKey(NBT_REMAINING_FLUIDS)) {
+            NBTTagList fluids = compound.getTagList(NBT_REMAINING_FLUIDS, Constants.NBT.TAG_COMPOUND);
+            for (int i = 0; i < fluids.tagCount(); i++) {
+                this.remainingFluids.add(FluidStack.loadFluidStackFromNBT(fluids.getCompoundTagAt(i)));
+            }
+        }
     }
 
     @Override
@@ -384,6 +441,44 @@ public class ProcessingTask extends Task {
             else
                 remainingFluid.amount = remainder;
         }
+    }
+
+    @Nonnull
+    @Override
+    public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
+        NBTTagCompound tag = super.writeToNbt(compound);
+        tag.setBoolean(NBT_HAS_ITEM_INPUTS, this.hasItemInputs);
+        tag.setBoolean(NBT_HAS_FLUID_INPUTS, this.hasFluidInputs);
+
+        if (this.remainderContainer != null)
+            tag.setLong(NBT_REMAINDER_CONTAINER_POS, this.remainderContainer.getPosition().toLong());
+        tag.setString(NBT_STATE, this.state.toString());
+
+        if (!this.remainingItems.isEmpty()) {
+            NBTTagList items = new NBTTagList();
+            for (ItemStack remainingItem : this.remainingItems) {
+                items.appendTag(remainingItem.writeToNBT(new NBTTagCompound()));
+            }
+
+            compound.setTag(NBT_REMAINING_ITEMS, items);
+        }
+
+        if (!this.remainingFluids.isEmpty()) {
+            NBTTagList fluids = new NBTTagList();
+            for (FluidStack remainingFluid : this.remainingFluids) {
+                fluids.appendTag(remainingFluid.writeToNBT(new NBTTagCompound()));
+            }
+
+            compound.setTag(NBT_REMAINING_FLUIDS, fluids);
+        }
+
+        return tag;
+    }
+
+    @Nonnull
+    @Override
+    public String getTaskType() {
+        return TYPE;
     }
 
     @Nonnull

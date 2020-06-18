@@ -1,8 +1,10 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -13,6 +15,10 @@ import javax.annotation.Nonnull;
  * crafting operation.
  */
 public class DurabilityInput extends Input {
+
+    public static final String TYPE = "durability";
+
+    private static final String NBT_MAX_DURABILITY = "MaxDurability";
 
     /**
      * The max durability of the item that this input represents. Or in other words: the max iterations that can be done
@@ -31,8 +37,14 @@ public class DurabilityInput extends Input {
     }
 
     private DurabilityInput(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
-        super(fluidStack, amountNeeded, oredict);
+        super(fluidStack, amountNeeded);
         throw new IllegalArgumentException("FluidStacks are no supported for durability inputs");
+    }
+
+    public DurabilityInput(@Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
+        super(compound);
+        this.compareableItemStack = this.getItemStacks().get(0);
+        this.maxDurability = compound.getInteger(NBT_MAX_DURABILITY);
     }
 
     /**
@@ -67,6 +79,20 @@ public class DurabilityInput extends Input {
 
             this.totalInputAmount = this.getCurrentInputCounts().stream().mapToLong(l -> l).sum();
         }
+    }
+
+    @Nonnull
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    @Nonnull
+    @Override
+    public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
+        NBTTagCompound tag = super.writeToNbt(compound);
+        tag.setInteger(NBT_MAX_DURABILITY, this.maxDurability);
+        return tag;
     }
 
     @Override

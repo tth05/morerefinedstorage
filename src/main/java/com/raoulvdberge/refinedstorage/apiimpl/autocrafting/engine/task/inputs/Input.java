@@ -1,10 +1,15 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
@@ -14,6 +19,17 @@ import java.util.List;
  * Represents an Input of a Task. Can be a fluid or an item
  */
 public class Input {
+
+    public static final String TYPE = "default";
+    public static final String NBT_INPUT_TYPE = "InputType";
+
+    private static final String NBT_ITEMSTACKS = "Itemstacks";
+    private static final String NBT_FLUIDSTACK = "Fluidstack";
+    private static final String NBT_CURRENT_INPUT_COUNTS = "CurrentInputCounts";
+    private static final String NBT_TO_CRAFT_AMOUNT = "ToCraftAmount";
+    private static final String NBT_AMOUNT_NEEDED = "AmountNeeded";
+    private static final String NBT_PROCESSING_AMOUNT = "ProcessingAmount";
+    private static final String NBT_QUANTITY_PER_CRAFT = "QuantityPerCraft";
 
     private final List<ItemStack> itemStacks = NonNullList.create();
     private FluidStack fluidStack;
@@ -39,12 +55,46 @@ public class Input {
         this.itemStacks.forEach(i -> currentInputCounts.add(0L));
     }
 
-    public Input(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
+    public Input(@Nonnull FluidStack fluidStack, long amountNeeded) {
         this(amountNeeded);
         this.fluidStack = fluidStack.copy();
         this.quantityPerCraft = fluidStack.amount;
 
         this.currentInputCounts.add(0L);
+    }
+
+    public Input(@Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
+        this.amountNeeded = compound.getLong(NBT_AMOUNT_NEEDED);
+        this.quantityPerCraft = compound.getInteger(NBT_QUANTITY_PER_CRAFT);
+        this.toCraftAmount = compound.getLong(NBT_TO_CRAFT_AMOUNT);
+        this.processingAmount = compound.getLong(NBT_PROCESSING_AMOUNT);
+
+        if (compound.hasKey(NBT_ITEMSTACKS)) {
+            NBTTagList itemStacks = compound.getTagList(NBT_ITEMSTACKS, Constants.NBT.TAG_COMPOUND);
+
+            if (itemStacks.tagCount() < 1)
+                throw new CraftingTaskReadException("Item stack list of input is empty. Expected at least 1!");
+
+            for (int i = 0; i < itemStacks.tagCount(); i++) {
+                this.itemStacks.add(new ItemStack(itemStacks.getCompoundTagAt(i)));
+            }
+        } else if (compound.hasKey(NBT_FLUIDSTACK)) {
+            this.fluidStack = FluidStack.loadFluidStackFromNBT(compound.getCompoundTag(NBT_FLUIDSTACK));
+        } else {
+            throw new CraftingTaskReadException("Input does not have item or fluid stack key!");
+        }
+
+        NBTTagList inputCounts = compound.getTagList(NBT_CURRENT_INPUT_COUNTS, Constants.NBT.TAG_LONG);
+        for (int i = 0; i < inputCounts.tagCount(); i++) {
+            this.currentInputCounts.add(((NBTTagLong)inputCounts.get(i)).getLong());
+        }
+
+        if (this.currentInputCounts.size() != (isFluid() ? 1 : this.itemStacks.size()))
+            throw new CraftingTaskReadException(
+                    "Input count list length does not match item/fluid stack count! " + this.currentInputCounts.size() +
+                            " != " + (isFluid() ? 1 : this.itemStacks.size()) + " | isFluid: " + isFluid());
+
+        this.totalInputAmount = this.currentInputCounts.stream().mapToLong(l -> l).sum();
     }
 
     /**
@@ -104,7 +154,7 @@ public class Input {
      * Decreases the to craft amount for this input and increase the total input amount. This is used to supply this
      * inputs with newly crafted items.
      *
-     * @param stack  the item that was crafted (the count of this stack is modified)
+     * @param stack the item that was crafted (the count of this stack is modified)
      */
     public void decreaseToCraftAmount(@Nonnull ItemStack stack) {
         int i = 0;
@@ -158,7 +208,7 @@ public class Input {
     public void decreaseInputAmount(long amount) {
         this.totalInputAmount -= amount;
 
-        if(isFluid()) {
+        if (isFluid()) {
             //only decrease the amount from first count
             Long currentInputCount = this.currentInputCounts.get(0);
             currentInputCount -= amount;
@@ -184,6 +234,35 @@ public class Input {
                 inputCounts.set(i, currentInputCount);
             }
         }
+    }
+
+    @Nonnull
+    public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
+        compound.setString(NBT_INPUT_TYPE, getType());
+        compound.setLong(NBT_AMOUNT_NEEDED, this.amountNeeded);
+        compound.setInteger(NBT_QUANTITY_PER_CRAFT, this.quantityPerCraft);
+        compound.setLong(NBT_TO_CRAFT_AMOUNT, this.toCraftAmount);
+        compound.setLong(NBT_PROCESSING_AMOUNT, this.processingAmount);
+
+        if (!this.isFluid()) {
+            NBTTagList list = new NBTTagList();
+            for (ItemStack itemStack : this.itemStacks) {
+                list.appendTag(itemStack.writeToNBT(new NBTTagCompound()));
+            }
+
+            compound.setTag(NBT_ITEMSTACKS, list);
+        } else {
+            compound.setTag(NBT_FLUIDSTACK, this.fluidStack.writeToNBT(new NBTTagCompound()));
+        }
+
+        NBTTagList list = new NBTTagList();
+        for (Long currentInputCount : this.currentInputCounts) {
+            list.appendTag(new NBTTagLong(currentInputCount));
+        }
+
+        compound.setTag(NBT_CURRENT_INPUT_COUNTS, list);
+
+        return compound;
     }
 
     /**
@@ -227,6 +306,11 @@ public class Input {
         return this.itemStacks.get(0);
     }
 
+    @Nonnull
+    public String getType() {
+        return TYPE;
+    }
+
     /**
      * @return the total amount that is needed of this Input
      */
@@ -236,6 +320,7 @@ public class Input {
 
     /**
      * Only relevant for processing tasks and not used during calculation
+     *
      * @return the amount of this input that is currently being processed
      */
     public long getProcessingAmount() {

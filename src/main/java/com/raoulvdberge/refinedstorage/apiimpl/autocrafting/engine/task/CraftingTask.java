@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
@@ -16,18 +17,20 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.O
 import com.sun.istack.internal.Nullable;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Represents a crafting task
  */
 public class CraftingTask extends Task {
+
+    public static final String TYPE = "crafting";
+
+    private static final String NBT_REMAINDER_ITEM = "RemainderItem";
 
     /**
      * Saves the remainder from previous crafting attempts to make sure this doesn't get lost
@@ -50,9 +53,45 @@ public class CraftingTask extends Task {
         //clean by-products
         byproducts.removeIf(i -> this.getInputs().stream()
                 .filter(input -> input instanceof InfiniteInput || input instanceof DurabilityInput)
+                .map(input -> this.getPattern().getInputs().stream()
+                        .filter(possibilities -> possibilities.stream()
+                            .anyMatch(possibility -> API.instance().getComparer()
+                                    .isEqualNoQuantity(possibility, input.getCompareableItemStack())))
+                        .findFirst()
+                ).filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMap(Collection::stream)
                 //don't compare damage for durability inputs
-                .anyMatch(input -> API.instance().getComparer().isEqual(i, input.getCompareableItemStack(),
-                        IComparer.COMPARE_NBT | (input instanceof InfiniteInput ? IComparer.COMPARE_DAMAGE : 0)))
+                .anyMatch(itemStack -> API.instance().getComparer().isEqual(i, itemStack,
+                        IComparer.COMPARE_NBT | (itemStack.isItemStackDamageable() ? IComparer.COMPARE_DAMAGE : 0)))
+        );
+
+        this.byProducts = byproducts;
+    }
+
+    public CraftingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound compound)
+            throws CraftingTaskReadException {
+        super(network, compound);
+
+        if (compound.hasKey(NBT_REMAINDER_ITEM))
+            this.remainder = new ItemStack(compound.getCompoundTag(NBT_REMAINDER_ITEM));
+
+        List<ItemStack> byproducts = new ArrayList<>(pattern.getByproducts());
+
+        //clean by-products
+        byproducts.removeIf(i -> this.getInputs().stream()
+                .filter(input -> input instanceof InfiniteInput || input instanceof DurabilityInput)
+                .map(input -> this.getPattern().getInputs().stream()
+                        .filter(possibilities -> possibilities.stream()
+                                .anyMatch(possibility -> API.instance().getComparer()
+                                        .isEqualNoQuantity(possibility, input.getCompareableItemStack())))
+                        .findFirst()
+                ).filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMap(Collection::stream)
+                //don't compare damage for durability inputs
+                .anyMatch(itemStack -> API.instance().getComparer().isEqual(i, itemStack,
+                        IComparer.COMPARE_NBT | (itemStack.isItemStackDamageable() ? IComparer.COMPARE_DAMAGE : 0)))
         );
 
         this.byProducts = byproducts;
@@ -126,6 +165,16 @@ public class CraftingTask extends Task {
 
     @Nonnull
     @Override
+    public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
+        NBTTagCompound tag = super.writeToNbt(compound);
+        if (!remainder.isEmpty())
+            compound.setTag(NBT_REMAINDER_ITEM, remainder.writeToNBT(new NBTTagCompound()));
+
+        return tag;
+    }
+
+    @Nonnull
+    @Override
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
         if (isFinished())
             return Collections.emptyList();
@@ -154,6 +203,12 @@ public class CraftingTask extends Task {
     @Override
     public List<ItemStack> getLooseItemStacks() {
         return !remainder.isEmpty() ? Collections.singletonList(remainder) : Collections.emptyList();
+    }
+
+    @Nonnull
+    @Override
+    public String getTaskType() {
+        return TYPE;
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -11,6 +13,8 @@ import javax.annotation.Nonnull;
  */
 public class Output extends Input {
 
+    private static final String NBT_COMPLETED_SETS = "CompletedSets";
+
     private long completedSets;
 
     public Output(@Nonnull ItemStack itemStack, int quantityPerCraft) {
@@ -20,9 +24,14 @@ public class Output extends Input {
     }
 
     public Output(@Nonnull FluidStack fluidStack, int quantityPerCraft) {
-        super(fluidStack, 0, false);
+        super(fluidStack, 0);
         //amount needed is not relevant for outputs, but quantity is
         this.quantityPerCraft = quantityPerCraft;
+    }
+
+    public Output(@Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
+        super(compound);
+        this.completedSets = compound.getLong(NBT_COMPLETED_SETS);
     }
 
     /**
@@ -41,6 +50,14 @@ public class Output extends Input {
         }
 
         return 0;
+    }
+
+    @Nonnull
+    @Override
+    public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
+        NBTTagCompound tag = super.writeToNbt(compound);
+        tag.setLong(NBT_COMPLETED_SETS, this.completedSets);
+        return tag;
     }
 
     public void setCompletedSets(long completedSets) {

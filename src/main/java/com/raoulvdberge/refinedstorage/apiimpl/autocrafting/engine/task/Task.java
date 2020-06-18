@@ -4,9 +4,12 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
+import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternProvider;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
@@ -14,7 +17,12 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskE
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.*;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
@@ -23,8 +31,20 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 public abstract class Task {
+
+    public static final String NBT_TASK_TYPE = "TaskType";
+    public static final String NBT_PARENT_UUIDS = "ParentUuids";
+
+    private static final String NBT_PATTERN = "Pattern";
+    private static final String NBT_PATTERN_STACK = "PatternStack";
+    private static final String NBT_PATTERN_CONTAINER_POS = "PatternContainerPos";
+    private static final String NBT_AMOUNT_NEEDED = "AmountNeeded";
+    private static final String NBT_INPUTS = "Inputs";
+    private static final String NBT_OUTPUTS = "Outputs";
+    private static final String NBT_UUID = "Uuid";
 
     protected final List<Task> parents = new ObjectArrayList<>();
     protected final List<Input> inputs = new ObjectArrayList<>();
@@ -32,6 +52,8 @@ public abstract class Task {
 
     protected final ICraftingPattern pattern;
     protected long amountNeeded;
+
+    private UUID uuid = UUID.randomUUID();
 
     public Task(@Nonnull ICraftingPattern pattern, long amountNeeded, boolean isFluidRequested) {
         this.pattern = pattern;
@@ -118,7 +140,7 @@ public abstract class Task {
 
         //merge all pattern fluid inputs
         for (FluidStack i : pattern.getFluidInputs()) {
-            Input newInput = new Input(i, amountNeeded, pattern.isOredict());
+            Input newInput = new Input(i, amountNeeded);
 
             mergeIntoList(newInput, this.inputs);
         }
@@ -197,6 +219,71 @@ public abstract class Task {
         }
     }
 
+    public Task(@Nonnull INetwork network, @Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
+        this.uuid = compound.getUniqueId(NBT_UUID);
+        this.pattern = readPatternFromNbt(compound.getCompoundTag(NBT_PATTERN), network.world());
+        this.amountNeeded = compound.getLong(NBT_AMOUNT_NEEDED);
+
+        NBTTagList inputs = compound.getTagList(NBT_INPUTS, Constants.NBT.TAG_COMPOUND);
+        for(int i = 0; i < inputs.tagCount(); i++) {
+            Input newInput;
+            //determine correct input type
+            NBTTagCompound inputTag = inputs.getCompoundTagAt(i);
+            String inputType = inputTag.getString(Input.NBT_INPUT_TYPE);
+
+            switch (inputType) {
+                case Input.TYPE:
+                    newInput = new Input(inputTag);
+                    break;
+                case RestockableInput.TYPE:
+                    newInput = new RestockableInput(inputTag);
+                    break;
+                case InfiniteInput.TYPE:
+                    newInput = new InfiniteInput(inputTag);
+                    break;
+                case DurabilityInput.TYPE:
+                    newInput = new DurabilityInput(inputTag);
+                    break;
+                default:
+                    throw new CraftingTaskReadException("Unknown input type: " + inputType);
+            }
+
+            this.inputs.add(newInput);
+        }
+
+        NBTTagList outputs = compound.getTagList(NBT_OUTPUTS, Constants.NBT.TAG_COMPOUND);
+        for(int i = 0; i < inputs.tagCount(); i++) {
+            this.outputs.add(new Output(outputs.getCompoundTagAt(i)));
+        }
+    }
+
+    private NBTTagCompound writePatternToNbt(ICraftingPattern pattern) {
+        NBTTagCompound tag = new NBTTagCompound();
+
+        tag.setTag(NBT_PATTERN_STACK, pattern.getStack().serializeNBT());
+        tag.setLong(NBT_PATTERN_CONTAINER_POS, pattern.getContainer().getPosition().toLong());
+
+        return tag;
+    }
+
+    private ICraftingPattern readPatternFromNbt(NBTTagCompound tag, World world) throws CraftingTaskReadException {
+        BlockPos containerPos = BlockPos.fromLong(tag.getLong(NBT_PATTERN_CONTAINER_POS));
+
+        INetworkNode node = API.instance().getNetworkNodeManager(world).getNode(containerPos);
+
+        if (node instanceof ICraftingPatternContainer) {
+            ItemStack stack = new ItemStack(tag.getCompoundTag(NBT_PATTERN_STACK));
+
+            if (stack.getItem() instanceof ICraftingPatternProvider) {
+                return ((ICraftingPatternProvider) stack.getItem()).create(world, stack, (ICraftingPatternContainer) node);
+            } else {
+                throw new CraftingTaskReadException("Pattern stack is not a crafting pattern provider");
+            }
+        } else {
+            throw new CraftingTaskReadException("Crafting pattern container doesn't exist anymore");
+        }
+    }
+
     /**
      * @param toCraft   the amount that this task is allowed to craft
      * @param container the container that should be used
@@ -223,6 +310,12 @@ public abstract class Task {
     public List<FluidStack> getLooseFluidStacks() {
         return Collections.emptyList();
     }
+
+    /**
+     * @return the type of the task
+     */
+    @Nonnull
+    public abstract String getTaskType();
 
     /**
      * This also replaces {@code ProcessingState.PROCESSED}
@@ -466,6 +559,49 @@ public abstract class Task {
         }
 
         return result;
+    }
+
+    @Nonnull
+    public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
+        compound.setUniqueId(NBT_UUID, this.uuid);
+        compound.setString(NBT_TASK_TYPE, getTaskType());
+        compound.setTag(NBT_PATTERN, writePatternToNbt(this.pattern));
+        compound.setLong(NBT_AMOUNT_NEEDED, this.amountNeeded);
+
+        NBTTagList inputs = new NBTTagList();
+        for (Input input : this.inputs) {
+            NBTTagCompound inputTag = new NBTTagCompound();
+            inputTag.setString(Input.NBT_INPUT_TYPE, input.getType());
+            inputs.appendTag(input.writeToNbt(inputTag));
+        }
+        compound.setTag(NBT_INPUTS, inputs);
+
+        NBTTagList outputs = new NBTTagList();
+        for (Output output : this.outputs) {
+            outputs.appendTag(output.writeToNbt(new NBTTagCompound()));
+        }
+        compound.setTag(NBT_OUTPUTS, outputs);
+
+        if(!this.parents.isEmpty()) {
+            NBTTagList list = new NBTTagList();
+            for (Task parent : this.parents) {
+                NBTTagCompound tag = new NBTTagCompound();
+                tag.setUniqueId(NBT_UUID, parent.getUuid());
+                list.appendTag(tag);
+            }
+
+            compound.setTag(NBT_PARENT_UUIDS, list);
+        }
+
+        return compound;
+    }
+
+    /**
+     * @return the unique id of this task
+     */
+    @Nonnull
+    public UUID getUuid() {
+        return this.uuid;
     }
 
     /**

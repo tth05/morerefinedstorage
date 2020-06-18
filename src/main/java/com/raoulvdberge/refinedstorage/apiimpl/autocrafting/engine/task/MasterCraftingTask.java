@@ -17,6 +17,7 @@ import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
@@ -24,15 +25,27 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.O
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 
 public class MasterCraftingTask implements ICraftingTask {
+
+    private static final String NBT_QUANTITY = "Quantity";
+    private static final String NBT_TASKS = "Tasks";
+    private static final String NBT_CAN_UPDATE = "CanUpdate";
+    private static final String NBT_TICKS = "Ticks";
+    private static final String NBT_EXECUTION_STARTED = "ExecutionStarted";
+    private static final String NBT_CALCULATION_TIME = "CalculationTime";
+    private static final String NBT_UUID = "Uuid";
+    private static final String NBT_REQUEST_INFO = "RequestInfo";
 
     /**
      * All current tasks that make up this auto crafting task
@@ -49,7 +62,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
     private final ICraftingRequestInfo info;
 
-    private final UUID id = UUID.randomUUID();
+    private UUID id = UUID.randomUUID();
 
     private final int quantity;
     /**
@@ -75,10 +88,74 @@ public class MasterCraftingTask implements ICraftingTask {
             tasks.add(new CraftingTask(pattern, quantity));
     }
 
-    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound tag) throws CraftingTaskReadException {
+    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound compound)
+            throws CraftingTaskReadException {
         this.network = network;
 
-        throw new CraftingTaskReadException("yeet");
+        this.executionStarted = compound.getLong(NBT_EXECUTION_STARTED);
+        this.calculationTime = compound.getLong(NBT_CALCULATION_TIME);
+        this.canUpdate = compound.getBoolean(NBT_CAN_UPDATE);
+        this.quantity = compound.getInteger(NBT_QUANTITY);
+        this.ticks = compound.getLong(NBT_TICKS);
+        this.info = new CraftingRequestInfo(compound.getCompoundTag(NBT_REQUEST_INFO));
+        this.id = compound.getUniqueId(NBT_UUID);
+
+        NBTTagList list = compound.getTagList(NBT_TASKS, Constants.NBT.TAG_COMPOUND);
+        if (list.tagCount() < 1)
+            throw new CraftingTaskReadException("List of sub tasks is empty");
+
+        Map<UUID, Task> taskMap = new Object2ObjectLinkedOpenHashMap<>();
+        Map<UUID, List<UUID>> parentMap = new HashMap<>();
+
+        for (int i = 0; i < list.tagCount(); i++) {
+            NBTTagCompound taskCompound = list.getCompoundTagAt(i);
+            String type = taskCompound.getString(Task.NBT_TASK_TYPE);
+
+            Task newTask;
+            switch (type) {
+                case CraftingTask.TYPE:
+                    newTask = new CraftingTask(network, taskCompound);
+                    break;
+                case ProcessingTask.TYPE:
+                    newTask = new ProcessingTask(network, taskCompound);
+                    break;
+                default:
+                    throw new CraftingTaskReadException("Unknown task type: " + type);
+            }
+
+            taskMap.put(newTask.getUuid(), newTask);
+
+            if (taskCompound.hasKey(Task.NBT_PARENT_UUIDS)) {
+                List<UUID> parentUuids = new ArrayList<>();
+
+                NBTTagList parentsTagList = taskCompound.getTagList(Task.NBT_PARENT_UUIDS, Constants.NBT.TAG_COMPOUND);
+                if (parentsTagList.tagCount() < 1)
+                    throw new CraftingTaskReadException("Parents tag exists but is empty");
+
+                for (int j = 0; j < parentsTagList.tagCount(); j++)
+                    parentUuids.add(parentsTagList.getCompoundTagAt(j).getUniqueId(NBT_UUID));
+
+                parentMap.put(newTask.getUuid(), parentUuids);
+            }
+        }
+
+        for (Map.Entry<UUID, List<UUID>> uuidListEntry : parentMap.entrySet()) {
+            List<UUID> parents = uuidListEntry.getValue();
+            Task child = taskMap.get(uuidListEntry.getKey());
+
+            for (UUID uuid : parents) {
+                Task parent = taskMap.get(uuid);
+
+                if (child.getUuid().equals(uuid))
+                    throw new CraftingTaskReadException("Parent of task is itself");
+                if (parent == null)
+                    throw new CraftingTaskReadException("Task references parent that doesn't exist");
+
+                child.addParent(parent);
+            }
+        }
+
+        this.tasks.addAll(taskMap.values());
     }
 
     @Override
@@ -156,6 +233,115 @@ public class MasterCraftingTask implements ICraftingTask {
         }
 
         return result.getError();
+    }
+
+    @Override
+    public void onCancelled() {
+        //just insert all stored items back into network
+        for (Task task : this.tasks) {
+            //insert loose items and fluids
+            for (ItemStack looseItemStack : task.getLooseItemStacks())
+                network.insertItem(looseItemStack, looseItemStack.getCount(), Action.PERFORM);
+
+            for (FluidStack looseFluidStack : task.getLooseFluidStacks())
+                network.insertFluid(looseFluidStack, looseFluidStack.amount, Action.PERFORM);
+
+            //insert items that are still inside of inputs
+            for (Input input : task.getInputs()) {
+                boolean isDurabilityInput = input instanceof DurabilityInput;
+
+                if (input instanceof InfiniteInput && !((InfiniteInput) input).containsItem())
+                    continue;
+
+                List<ItemStack> itemStacks = input.getItemStacks();
+                for (int i = 0; i < itemStacks.size(); i++) {
+                    ItemStack itemStack = itemStacks.get(i);
+                    //TODO: real stack counts
+                    int amount = 1;
+                    if (!isDurabilityInput) {
+                        amount = input.getCurrentInputCounts().get(i).intValue();
+                    } else { //set correct durability to item stack
+                        itemStack.setItemDamage(
+                                itemStack.getMaxDamage() - input.getCurrentInputCounts().get(i).intValue() + 1);
+                    }
+
+                    if (amount > 0 && (!isDurabilityInput ||
+                            itemStack.getItemDamage() <= itemStack.getMaxDamage()))
+                        network.insertItem(itemStack, amount, Action.PERFORM);
+                }
+
+                if (input.isFluid()) {
+                    int amount = input.getCurrentInputCounts().get(0).intValue();
+                    if (amount > 0)
+                        network.insertFluid(input.getFluidStack(), amount, Action.PERFORM);
+                }
+            }
+        }
+    }
+
+    @Override
+    public int onTrackedInsert(ItemStack stack) {
+        int trackedAmount = 0;
+
+        for (int i = this.tasks.size() - 1; i >= 0; i--) {
+            Task task = this.tasks.get(i);
+            if (!(task instanceof ProcessingTask))
+                continue;
+
+            int oldTrackedAmount = trackedAmount;
+
+            //fake the stack count so imported items cannot get tracked by multiple tasks
+            stack.shrink(trackedAmount);
+            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
+            stack.grow(oldTrackedAmount);
+
+            if (stack.getCount() - trackedAmount < 1)
+                return trackedAmount;
+        }
+
+        return trackedAmount;
+    }
+
+    @Override
+    public int onTrackedInsert(FluidStack stack) {
+        int trackedAmount = 0;
+
+        for (int i = this.tasks.size() - 1; i >= 0; i--) {
+            Task task = this.tasks.get(i);
+            if (!(task instanceof ProcessingTask))
+                continue;
+
+            int oldTrackedAmount = trackedAmount;
+
+            //fake the stack count so imported items cannot get tracked by multiple tasks
+            stack.amount -= trackedAmount;
+            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
+            stack.amount += oldTrackedAmount;
+
+            if (stack.amount - trackedAmount < 1)
+                return trackedAmount;
+        }
+
+        return trackedAmount;
+    }
+
+    @Override
+    public NBTTagCompound writeToNbt(NBTTagCompound compound) {
+        compound.setUniqueId(NBT_UUID, this.id);
+        compound.setInteger(NBT_QUANTITY, this.quantity);
+        compound.setLong(NBT_CALCULATION_TIME, this.calculationTime);
+        compound.setLong(NBT_EXECUTION_STARTED, this.executionStarted);
+        compound.setBoolean(NBT_CAN_UPDATE, this.canUpdate);
+        compound.setLong(NBT_TICKS, this.ticks);
+        compound.setTag(NBT_REQUEST_INFO, this.info.writeToNbt());
+
+        NBTTagList list = new NBTTagList();
+        for (Task task : this.tasks) {
+            list.appendTag(task.writeToNbt(new NBTTagCompound()));
+        }
+
+        compound.setTag(NBT_TASKS, list);
+        return compound;
     }
 
     @Override
@@ -249,101 +435,6 @@ public class MasterCraftingTask implements ICraftingTask {
         }
 
         return elements;
-    }
-
-    @Override
-    public void onCancelled() {
-        //just insert all stored items back into network
-        for (Task task : this.tasks) {
-            //insert loose items and fluids
-            for (ItemStack looseItemStack : task.getLooseItemStacks())
-                network.insertItem(looseItemStack, looseItemStack.getCount(), Action.PERFORM);
-
-            for (FluidStack looseFluidStack : task.getLooseFluidStacks())
-                network.insertFluid(looseFluidStack, looseFluidStack.amount, Action.PERFORM);
-
-            //insert items that are still inside of inputs
-            for (Input input : task.getInputs()) {
-                boolean isDurabilityInput = input instanceof DurabilityInput;
-
-                if (input instanceof InfiniteInput && !((InfiniteInput) input).containsItem())
-                    continue;
-
-                List<ItemStack> itemStacks = input.getItemStacks();
-                for (int i = 0; i < itemStacks.size(); i++) {
-                    ItemStack itemStack = itemStacks.get(i);
-                    //TODO: real stack counts
-                    int amount = 1;
-                    if (!isDurabilityInput) {
-                        amount = input.getCurrentInputCounts().get(i).intValue();
-                    } else { //set correct durability to item stack
-                        itemStack.setItemDamage(
-                                itemStack.getMaxDamage() - input.getCurrentInputCounts().get(i).intValue() + 1);
-                    }
-
-                    if (amount > 0 && itemStack.getItemDamage() <= itemStack.getMaxDamage())
-                        network.insertItem(itemStack, amount, Action.PERFORM);
-                }
-
-                if (input.isFluid()) {
-                    int amount = input.getCurrentInputCounts().get(0).intValue();
-                    if (amount > 0)
-                        network.insertFluid(input.getFluidStack(), amount, Action.PERFORM);
-                }
-            }
-        }
-    }
-
-    @Override
-    public int onTrackedInsert(ItemStack stack) {
-        int trackedAmount = 0;
-
-        for (int i = this.tasks.size() - 1; i >= 0; i--) {
-            Task task = this.tasks.get(i);
-            if (!(task instanceof ProcessingTask))
-                continue;
-
-            int oldTrackedAmount = trackedAmount;
-
-            //fake the stack count so imported items cannot get tracked by multiple tasks
-            stack.shrink(trackedAmount);
-            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
-            stack.grow(oldTrackedAmount);
-
-            if (stack.getCount() - trackedAmount < 1)
-                return trackedAmount;
-        }
-
-        return trackedAmount;
-    }
-
-    @Override
-    public int onTrackedInsert(FluidStack stack) {
-        int trackedAmount = 0;
-
-        for (int i = this.tasks.size() - 1; i >= 0; i--) {
-            Task task = this.tasks.get(i);
-            if (!(task instanceof ProcessingTask))
-                continue;
-
-            int oldTrackedAmount = trackedAmount;
-
-            //fake the stack count so imported items cannot get tracked by multiple tasks
-            stack.amount -= trackedAmount;
-            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
-            stack.amount += oldTrackedAmount;
-
-            if (stack.amount - trackedAmount < 1)
-                return trackedAmount;
-        }
-
-        return trackedAmount;
-    }
-
-    @Override
-    public NBTTagCompound writeToNbt(NBTTagCompound tag) {
-        //TODO: nbt writing of tasks
-        return null;
     }
 
     @Override

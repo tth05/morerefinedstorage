@@ -1,6 +1,8 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 
 import javax.annotation.Nonnull;
@@ -13,12 +15,25 @@ import javax.annotation.Nonnull;
  * This input type is only allowed for Processing Tasks!
  */
 public class RestockableInput extends Input {
+
+    public static final String TYPE = "restockable";
+
     public RestockableInput(@Nonnull ItemStack itemStack, long amountNeeded) {
         super(NonNullList.from(ItemStack.EMPTY, itemStack), amountNeeded);
+    }
+
+    public RestockableInput(@Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
+        super(compound);
     }
 
     public void fixCounts(int quantityPerCraft) {
         this.quantityPerCraft = quantityPerCraft;
         super.setAmountNeeded(quantityPerCraft);
+    }
+
+    @Nonnull
+    @Override
+    public String getType() {
+        return TYPE;
     }
 }

@@ -1,6 +1,8 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 
 import javax.annotation.Nonnull;
@@ -10,10 +12,18 @@ import javax.annotation.Nonnull;
  */
 public class InfiniteInput extends Input {
 
+    public static final String TYPE = "infinite";
+    private static final String NBT_CONTAINS_ITEM = "ContainsItem";
+
     private boolean containsItem;
 
     public InfiniteInput(@Nonnull ItemStack itemStack, boolean oredict) {
         super(NonNullList.from(ItemStack.EMPTY, itemStack), 1);
+    }
+
+    public InfiniteInput(@Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
+        super(compound);
+        this.containsItem = compound.hasKey(NBT_CONTAINS_ITEM);
     }
 
     @Override
@@ -26,6 +36,21 @@ public class InfiniteInput extends Input {
         super.decreaseToCraftAmount(stack);
         //if a sub tasks gives an item to an infinite input, then this infinite inputs actually contains something
         this.setContainsItem(true);
+    }
+
+    @Nonnull
+    @Override
+    public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
+        NBTTagCompound tag = super.writeToNbt(compound);
+        if (this.containsItem)
+            tag.setBoolean(NBT_CONTAINS_ITEM, true);
+        return tag;
+    }
+
+    @Nonnull
+    @Override
+    public String getType() {
+        return TYPE;
     }
 
     @Override
