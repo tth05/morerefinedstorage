@@ -45,6 +45,25 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     }
 
     @Override
+    public void clearEmptyElements() {
+        this.elements.removeIf(e -> {
+            ICraftingMonitorElement element =
+                    e instanceof CraftingMonitorElementError ? ((CraftingMonitorElementError) e).getBase() : e;
+            if (element instanceof CraftingMonitorElementFluidRender) {
+                CraftingMonitorElementFluidRender fluid = (CraftingMonitorElementFluidRender) element;
+                return fluid.getStored() < 1 && fluid.getCrafting() < 1 && fluid.getProcessing() < 1 &&
+                        fluid.getScheduled() < 1;
+            } else if (element instanceof CraftingMonitorElementItemRender) {
+                CraftingMonitorElementItemRender item = (CraftingMonitorElementItemRender) element;
+                return item.getStored() < 1 && item.getCrafting() < 1 && item.getProcessing() < 1 &&
+                        item.getScheduled() < 1;
+            }
+
+            return true;
+        });
+    }
+
+    @Override
     public List<ICraftingMonitorElement> getElements() {
         if (!currentStorageLists.isEmpty())
             commit();

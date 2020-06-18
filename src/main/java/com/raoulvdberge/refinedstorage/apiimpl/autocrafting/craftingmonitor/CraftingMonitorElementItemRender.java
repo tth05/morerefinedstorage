@@ -97,6 +97,22 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
         return String.join("\n", RenderUtils.getItemTooltip(this.stack));
     }
 
+    public int getStored() {
+        return stored;
+    }
+
+    public int getProcessing() {
+        return processing;
+    }
+
+    public int getScheduled() {
+        return scheduled;
+    }
+
+    public int getCrafting() {
+        return crafting;
+    }
+
     @Override
     public void write(ByteBuf buf) {
         StackUtils.writeItemStack(buf, stack);

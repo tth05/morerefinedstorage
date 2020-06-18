@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
+import com.google.common.collect.Sets;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
@@ -136,16 +137,9 @@ public class MasterCraftingTask implements ICraftingTask {
 
         Task rootTask = tasks.get(0);
 
-        //add outputs of root task to recursed items
-        IStackList<ItemStack> items = API.instance().createItemStackList();
-        rootTask.getPattern().getOutputs().forEach(items::add);
-        IStackList<FluidStack> fluids = API.instance().createFluidStackList();
-        rootTask.getPattern().getFluidOutputs().forEach(fluids::add);
-
         CalculationResult result = rootTask.calculate(network,
                 new ObjectArrayList<>(),
-                items,
-                fluids,
+                Sets.newHashSet(rootTask.getPattern()),
                 calculationStarted
         );
 
@@ -379,6 +373,9 @@ public class MasterCraftingTask implements ICraftingTask {
                 elements.add(craftingMonitorElement);
             }
         }
+
+        elements.commit();
+        elements.clearEmptyElements();
 
         return elements.getElements();
     }

@@ -9,7 +9,6 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorTy
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
-import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.*;
@@ -22,6 +21,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 public abstract class Task {
@@ -309,8 +309,7 @@ public abstract class Task {
      */
     @Nonnull
     public CalculationResult calculate(@Nonnull INetwork network, @Nonnull List<ItemStack> infiniteInputs,
-                                       @Nonnull IStackList<ItemStack> recursedItemStacks,
-                                       @Nonnull IStackList<FluidStack> recursedFluidStacks, long calculationTimeStart) {
+                                       @Nonnull HashSet<ICraftingPattern> recursedPatterns, long calculationTimeStart) {
         //return if calculation takes too long
         if (System.currentTimeMillis() - calculationTimeStart > RS.INSTANCE.config.calculationTimeoutMs)
             return new CalculationResult(new CraftingTaskError(CraftingTaskErrorType.TOO_COMPLEX));
@@ -412,40 +411,31 @@ public abstract class Task {
                 else
                     pattern = getPattern(network.getCraftingManager(), input.getFluidStack());
 
-                //add new sub task if pattern is valid
-                if (pattern != null && pattern.isValid()) {
-                    //if any of the given inputs are in the recursion lists, then this pattern cannot be used
-                    if (input.isFluid() ? recursedFluidStacks.get(input.getFluidStack()) == null :
-                            recursedItemStacks.get(input.getCompareableItemStack()) == null) {
+                //add new sub task if pattern is valid and is not used recursively
+                if (pattern != null && pattern.isValid() && !recursedPatterns.contains(pattern)) {
+                    Task newTask;
+                    if (pattern.isProcessing())
+                        newTask = new ProcessingTask(pattern, input.getAmountMissing(), input.isFluid());
+                    else
+                        newTask = new CraftingTask(pattern, input.getAmountMissing());
 
-                        Task newTask;
-                        if (pattern.isProcessing())
-                            newTask = new ProcessingTask(pattern, input.getAmountMissing(), input.isFluid());
-                        else
-                            newTask = new CraftingTask(pattern, input.getAmountMissing());
+                    HashSet<ICraftingPattern> recursedPatternsCopy =
+                            (HashSet<ICraftingPattern>) recursedPatterns.clone();
+                    recursedPatternsCopy.add(pattern);
 
-                        //TODO: use patterns instead of items and fluids for recursion detection
-                        IStackList<ItemStack> itemCopy = recursedItemStacks.copy();
-                        IStackList<FluidStack> fluidCopy = recursedFluidStacks.copy();
-                        if (!input.isFluid())
-                            itemCopy.add(input.getCompareableItemStack());
-                        else
-                            fluidCopy.add(input.getFluidStack());
+                    CalculationResult newTaskResult =
+                            newTask.calculate(network, infiniteInputs, recursedPatternsCopy, calculationTimeStart);
+                    //immediately fail if calculation had any error
+                    if (newTaskResult.getError() != null)
+                        return newTaskResult;
 
-                        CalculationResult newTaskResult =
-                                newTask.calculate(network, infiniteInputs, itemCopy, fluidCopy, calculationTimeStart);
-                        //immediately fail if calculation had any error
-                        if (newTaskResult.getError() != null)
-                            return newTaskResult;
+                    //make sure nothing is missing for this input, missing stuff is handled by the child task
+                    input.increaseToCraftAmount(input.getAmountMissing());
 
-                        //make sure nothing is missing for this input, missing stuff is handled by the child task
-                        input.increaseToCraftAmount(input.getAmountMissing());
-
-                        newTask.addParent(this);
-                        result.getNewTasks().add(newTask);
-                        //merge the calculation results
-                        result.merge(newTaskResult);
-                    }
+                    newTask.addParent(this);
+                    result.getNewTasks().add(newTask);
+                    //merge the calculation results
+                    result.merge(newTaskResult);
                 }
             }
 

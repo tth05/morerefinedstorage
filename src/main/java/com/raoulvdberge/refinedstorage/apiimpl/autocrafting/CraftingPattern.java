@@ -156,7 +156,8 @@ public class CraftingPattern implements ICraftingPattern {
         for (NonNullList<ItemStack> input : this.inputs) {
             for (ItemStack possibleItemStack : input) {
                 for (ItemStack output : this.outputs) {
-                    if (API.instance().getComparer().isEqual(possibleItemStack, output, IComparer.COMPARE_NBT)
+                    if (API.instance().getComparer()
+                            .isEqual(possibleItemStack, output, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE)
                             && possibleItemStack.getCount() >= output.getCount()) {
                         blacklistedItems.add(output);
                     }

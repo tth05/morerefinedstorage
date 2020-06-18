@@ -12,21 +12,9 @@ import javax.annotation.Nonnull;
  *
  * This input type is only allowed for Processing Tasks!
  */
-//TODO: override correct stuff
 public class RestockableInput extends Input {
     public RestockableInput(@Nonnull ItemStack itemStack, long amountNeeded) {
         super(NonNullList.from(ItemStack.EMPTY, itemStack), amountNeeded);
-    }
-
-    @Override
-    public void decreaseToCraftAmount(@Nonnull ItemStack stack) {
-        //restockable inputs will never be crafted by sub tasks
-        //NO OP
-    }
-
-    @Override
-    public long getAmountMissing() {
-        return this.quantityPerCraft - this.totalInputAmount - getToCraftAmount();
     }
 
     public void fixCounts(int quantityPerCraft) {

@@ -44,6 +44,10 @@ public class CraftingMonitorElementError implements ICraftingMonitorElement {
         return base.getId();
     }
 
+    public ICraftingMonitorElement getBase() {
+        return base;
+    }
+
     @Override
     public void write(ByteBuf buf) {
         ByteBufUtils.writeUTF8String(buf, base.getId());

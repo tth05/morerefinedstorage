@@ -98,6 +98,22 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
         return stack.getLocalizedName();
     }
 
+    public int getStored() {
+        return stored;
+    }
+
+    public int getProcessing() {
+        return processing;
+    }
+
+    public int getScheduled() {
+        return scheduled;
+    }
+
+    public int getCrafting() {
+        return crafting;
+    }
+
     @Override
     public void write(ByteBuf buf) {
         ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));

@@ -17,6 +17,12 @@ public interface ICraftingMonitorElementList {
     void commit();
 
     /**
+     * Removes all elements in this list which are completely empty (All counts are below 1).
+     * This method only operates on already committed elements.
+     */
+    void clearEmptyElements();
+
+    /**
      * Gets all the elements in the list.
      * This also commits the last changes.
      *
