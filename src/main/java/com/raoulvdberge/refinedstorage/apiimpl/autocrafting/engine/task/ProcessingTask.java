@@ -11,6 +11,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.Craf
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.RestockableInput;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
@@ -142,14 +143,29 @@ public class ProcessingTask extends Task {
                         API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
                 .findFirst().orElse(null);
 
-        if (stack.getCount() > 0 && matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
+        RestockableInput matchingInput = (RestockableInput) this.inputs.stream()
+                .filter(input -> input instanceof RestockableInput && !input.isFluid() &&
+                        API.instance().getComparer().isEqualNoQuantity(input.getCompareableItemStack(), stack))
+                .findFirst().orElse(null);
+
+        long inputRemainder = stack.getCount();
+        //give item to restockable input
+        if (matchingOutput != null && matchingInput != null && matchingInput.getAmountMissing() > 0 &&
+                matchingOutput.getProcessingAmount() > 0)
+            inputRemainder = matchingInput.increaseItemStackAmount(stack, stack.getCount());
+
+        if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
             long processingAmount = matchingOutput.getProcessingAmount();
             trackAndUpdate(matchingOutput, stack.getCount());
             trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
 
+            //subtract amount that was given to input
+            stack.setCount((int) inputRemainder);
+
             //distribute to parents
             if (!this.getParents().isEmpty()) {
+
                 //loop through all parents while there is anything left to split up
                 for (Iterator<Task> iterator = this.getParents().iterator(); !stack.isEmpty() && iterator.hasNext(); ) {
                     iterator.next().supplyInput(stack);
@@ -175,14 +191,29 @@ public class ProcessingTask extends Task {
                         API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
                 .findFirst().orElse(null);
 
-        if (stack.amount > 0 && matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
+        RestockableInput matchingInput = (RestockableInput) this.inputs.stream()
+                .filter(input -> input instanceof RestockableInput && input.isFluid() &&
+                        API.instance().getComparer().isEqual(input.getFluidStack(), stack, IComparer.COMPARE_NBT))
+                .findFirst().orElse(null);
+
+        long inputRemainder = stack.amount;
+        //give item to restockable input
+        if (matchingOutput != null && matchingInput != null && matchingInput.getAmountMissing() > 0 &&
+                matchingOutput.getProcessingAmount() > 0)
+            inputRemainder = matchingInput.increaseFluidStackAmount(stack.amount);
+
+        if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
             long processingAmount = matchingOutput.getProcessingAmount();
             trackAndUpdate(matchingOutput, stack.amount);
             trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
 
+            //subtract amount that was given to input
+            stack.amount = (int) inputRemainder;
+
             //distribute to parents
             if (!this.getParents().isEmpty()) {
+
                 //loop through all parents while there is anything left to split up
                 for (Iterator<Task> iterator = this.getParents().iterator(); stack.amount > 0 && iterator.hasNext(); ) {
                     iterator.next().supplyInput(stack);

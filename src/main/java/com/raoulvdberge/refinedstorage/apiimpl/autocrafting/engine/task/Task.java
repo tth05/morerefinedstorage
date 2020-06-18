@@ -191,7 +191,8 @@ public abstract class Task {
 
         //set correct processing amounts for all outputs
         for (Output output : this.outputs) {
-            output.setProcessingAmount(this.amountNeeded * output.getQuantityPerCraft());
+            int qpc = output.getQuantityPerCraft();
+            output.setProcessingAmount(this.amountNeeded * Math.max(qpc, 1));
             output.setAmountNeeded(output.getProcessingAmount());
         }
     }

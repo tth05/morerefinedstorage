@@ -26,7 +26,7 @@ public class RestockableInput extends Input {
 
     @Override
     public long getAmountMissing() {
-        return quantityPerCraft - totalInputAmount - getToCraftAmount();
+        return this.quantityPerCraft - this.totalInputAmount - getToCraftAmount();
     }
 
     public void fixCounts(int quantityPerCraft) {

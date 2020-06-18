@@ -156,7 +156,8 @@ public class CraftingPattern implements ICraftingPattern {
         for (NonNullList<ItemStack> input : this.inputs) {
             for (ItemStack possibleItemStack : input) {
                 for (ItemStack output : this.outputs) {
-                    if (API.instance().getComparer().isEqual(possibleItemStack, output)) {
+                    if (API.instance().getComparer().isEqual(possibleItemStack, output, IComparer.COMPARE_NBT)
+                            && possibleItemStack.getCount() >= output.getCount()) {
                         blacklistedItems.add(output);
                     }
                 }
@@ -165,8 +166,8 @@ public class CraftingPattern implements ICraftingPattern {
 
         for (FluidStack fluidInput : this.fluidInputs) {
             for (FluidStack fluidOutput : this.fluidOutputs) {
-                if (API.instance().getComparer().isEqual(fluidInput, fluidOutput,
-                        IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY)) {
+                if (API.instance().getComparer().isEqual(fluidInput, fluidOutput, IComparer.COMPARE_NBT)
+                        && fluidInput.amount >= fluidOutput.amount) {
                     blacklistedFluids.add(fluidOutput);
                     return;
                 }
@@ -174,7 +175,7 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         //if all items and fluids are blacklisted, then this pattern is useless
-        if(blacklistedFluids.size() == fluidOutputs.size() && blacklistedItems.size() == inputs.size())
+        if (blacklistedFluids.size() == fluidOutputs.size() && blacklistedItems.size() == inputs.size())
             this.valid = false;
     }
 

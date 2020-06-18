@@ -51,17 +51,17 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         IFluidTankProperties[] props = getProperties();
 
         if (props != null) {
-            int cap = 0;
+            long capacity = 0;
 
             for (IFluidTankProperties properties : props) {
-                cap += properties.getCapacity();
+                capacity += properties.getCapacity();
             }
 
-            return cap;
+            return capacity;
         }
 
         return 0;

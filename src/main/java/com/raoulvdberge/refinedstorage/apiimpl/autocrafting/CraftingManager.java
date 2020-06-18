@@ -403,11 +403,23 @@ public class CraftingManager implements ICraftingManager {
             for (ICraftingPattern pattern : container.getPatterns()) {
                 this.patterns.add(pattern);
 
+                outer:
                 for (ItemStack output : pattern.getOutputs()) {
+                    for (ItemStack blacklistedItem : pattern.getBlacklistedItems()) {
+                        if(API.instance().getComparer().isEqualNoQuantity(blacklistedItem, output))
+                            continue outer;
+                    }
+
                     network.getItemStorageCache().getCraftablesList().add(output);
                 }
 
+                outer:
                 for (FluidStack output : pattern.getFluidOutputs()) {
+                    for (FluidStack blacklistedFluid : pattern.getBlacklistedFluids()) {
+                        if(API.instance().getComparer().isEqual(blacklistedFluid, output, IComparer.COMPARE_NBT))
+                            continue outer;
+                    }
+
                     network.getFluidStorageCache().getCraftablesList().add(output);
                 }
 

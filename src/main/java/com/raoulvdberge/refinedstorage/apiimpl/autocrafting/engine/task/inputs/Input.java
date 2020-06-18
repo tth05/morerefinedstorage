@@ -54,17 +54,14 @@ public class Input {
      * @return the remaining amount; or {@code -1} if the given {@code amount} does not satisfy this input
      */
     public long increaseItemStackAmount(@Nonnull ItemStack stack, long amount) {
-        long needed = amountNeeded - totalInputAmount;
-        long returns = totalInputAmount + amount - amountNeeded;
+        long needed = this.amountNeeded - this.totalInputAmount;
+        long returns = this.totalInputAmount + amount - this.amountNeeded;
 
-        this.totalInputAmount = returns < 0 ? this.totalInputAmount + amount : amountNeeded;
+        this.totalInputAmount = returns < 0 ? this.totalInputAmount + amount : this.amountNeeded;
 
         for (int i = 0; i < this.itemStacks.size(); i++) {
             if (API.instance().getComparer().isEqualNoQuantity(stack, this.itemStacks.get(i))) {
-                long currentCount = 0;
-                if (i < this.currentInputCounts.size()) {
-                    currentCount = this.currentInputCounts.get(i);
-                }
+                long currentCount = this.currentInputCounts.get(i);
 
                 this.currentInputCounts.set(i, currentCount + (returns < 0 ? amount : needed));
                 break;
