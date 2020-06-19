@@ -81,7 +81,7 @@ public class Input {
         } else if (compound.hasKey(NBT_FLUIDSTACK)) {
             this.fluidStack = FluidStack.loadFluidStackFromNBT(compound.getCompoundTag(NBT_FLUIDSTACK));
         } else {
-            throw new CraftingTaskReadException("Input does not have item or fluid stack key!");
+            throw new CraftingTaskReadException("Input does not have item or fluid stack key! " + compound);
         }
 
         NBTTagList inputCounts = compound.getTagList(NBT_CURRENT_INPUT_COUNTS, Constants.NBT.TAG_LONG);

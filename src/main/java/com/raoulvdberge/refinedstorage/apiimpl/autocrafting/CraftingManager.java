@@ -23,6 +23,7 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,6 +33,8 @@ import java.util.concurrent.Executors;
 
 public class CraftingManager implements ICraftingManager {
     private static final int THROTTLE_DELAY_MS = 3000;
+
+    private static final Logger LOGGER = LogManager.getLogger(CraftingManager.class);
 
     private static final String NBT_TASKS = "Tasks";
     private static final String NBT_TASK_TYPE = "Type";
@@ -65,72 +68,6 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public Collection<ICraftingTask> getTasks() {
-        return tasks.values();
-    }
-
-    @Override
-    @Nullable
-    public ICraftingTask getTask(UUID id) {
-        return tasks.get(id);
-    }
-
-    @Override
-    public Map<String, List<IItemHandlerModifiable>> getNamedContainers() {
-        return containerInventories;
-    }
-
-    @Override
-    public void add(@Nonnull ICraftingTask task) {
-        tasksToAdd.add(task);
-
-        network.markDirty();
-    }
-
-    @Override
-    public void cancel(@Nullable UUID id) {
-        if (id == null) {
-            tasksToCancel.addAll(tasks.keySet());
-        } else {
-            tasksToCancel.add(id);
-        }
-
-        network.markDirty();
-    }
-
-    @Override
-    @Nullable
-    public ICraftingTask create(ItemStack stack, int quantity) {
-        ICraftingPattern pattern = getPattern(stack);
-        if (pattern == null) {
-            return null;
-        }
-
-        ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(pattern.getId());
-        if (factory == null) {
-            return null;
-        }
-
-        return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
-    }
-
-    @Nullable
-    @Override
-    public ICraftingTask create(FluidStack stack, int quantity) {
-        ICraftingPattern pattern = getPattern(stack);
-        if (pattern == null) {
-            return null;
-        }
-
-        ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(pattern.getId());
-        if (factory == null) {
-            return null;
-        }
-
-        return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
-    }
-
-    @Override
     public void update() {
         if (this.tasksDirty) {
             //makes sure updates are sent only once per tick
@@ -153,7 +90,7 @@ public class CraftingManager implements ICraftingManager {
 
                             tasks.put(task.getId(), task);
                         } catch (CraftingTaskReadException e) {
-                            LogManager.getLogger(CraftingManager.class).catching(e);
+                            LOGGER.catching(e);
                         }
                     }
                 }
@@ -204,8 +141,8 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public void readFromNbt(NBTTagCompound tag) {
-        this.tasksToRead = tag.getTagList(NBT_TASKS, Constants.NBT.TAG_COMPOUND);
+    public void onTaskChanged() {
+        this.tasksDirty = true;
     }
 
     @Override
@@ -227,6 +164,29 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
+    public void readFromNbt(NBTTagCompound tag) {
+        this.tasksToRead = tag.getTagList(NBT_TASKS, Constants.NBT.TAG_COMPOUND);
+    }
+
+    @Override
+    public void add(@Nonnull ICraftingTask task) {
+        tasksToAdd.add(task);
+
+        network.markDirty();
+    }
+
+    @Override
+    public void cancel(@Nullable UUID id) {
+        if (id == null) {
+            tasksToCancel.addAll(tasks.keySet());
+        } else {
+            tasksToCancel.add(id);
+        }
+
+        network.markDirty();
+    }
+
+    @Override
     public void addListener(ICraftingMonitorListener listener) {
         listeners.add(listener);
 
@@ -236,11 +196,6 @@ public class CraftingManager implements ICraftingManager {
     @Override
     public void removeListener(ICraftingMonitorListener listener) {
         listeners.remove(listener);
-    }
-
-    @Override
-    public void onTaskChanged() {
-        this.tasksDirty = true;
     }
 
     @Override
@@ -316,27 +271,36 @@ public class CraftingManager implements ICraftingManager {
         return null;
     }
 
-    private void throttle(@Nullable Object source) {
-        OneSixMigrationHelper.removalHook(); // Remove @Nullable source
-
-        if (source != null) {
-            throttledRequesters.put(source, MinecraftServer.getCurrentTimeMillis());
+    @Override
+    @Nullable
+    public ICraftingTask create(ItemStack stack, int quantity) {
+        ICraftingPattern pattern = getPattern(stack);
+        if (pattern == null) {
+            return null;
         }
+
+        ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(pattern.getId());
+        if (factory == null) {
+            return null;
+        }
+
+        return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
     }
 
-    private boolean isThrottled(@Nullable Object source) {
-        OneSixMigrationHelper.removalHook(); // Remove @Nullable source
-
-        if (source == null) {
-            return false;
+    @Nullable
+    @Override
+    public ICraftingTask create(FluidStack stack, int quantity) {
+        ICraftingPattern pattern = getPattern(stack);
+        if (pattern == null) {
+            return null;
         }
 
-        Long throttledSince = throttledRequesters.get(source);
-        if (throttledSince == null) {
-            return false;
+        ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(pattern.getId());
+        if (factory == null) {
+            return null;
         }
 
-        return MinecraftServer.getCurrentTimeMillis() - throttledSince < THROTTLE_DELAY_MS;
+        return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
     }
 
     @Override
@@ -375,11 +339,6 @@ public class CraftingManager implements ICraftingManager {
         }
 
         this.tasksDirty |= trackedAmount > 0;
-    }
-
-    @Override
-    public List<ICraftingPattern> getPatterns() {
-        return patterns;
     }
 
     @Override
@@ -443,9 +402,33 @@ public class CraftingManager implements ICraftingManager {
         this.network.getFluidStorageCache().reAttachListeners();
     }
 
+    private void throttle(@Nullable Object source) {
+        OneSixMigrationHelper.removalHook(); // Remove @Nullable source
+
+        if (source != null) {
+            throttledRequesters.put(source, MinecraftServer.getCurrentTimeMillis());
+        }
+    }
+
+    private boolean isThrottled(@Nullable Object source) {
+        OneSixMigrationHelper.removalHook(); // Remove @Nullable source
+
+        if (source == null) {
+            return false;
+        }
+
+        Long throttledSince = throttledRequesters.get(source);
+        if (throttledSince == null) {
+            return false;
+        }
+
+        return MinecraftServer.getCurrentTimeMillis() - throttledSince < THROTTLE_DELAY_MS;
+    }
+
     @Override
-    public Set<ICraftingPatternContainer> getAllContainer(ICraftingPattern pattern) {
-        return patternToContainer.getOrDefault(pattern, Collections.emptySet());
+    @Nullable
+    public ICraftingTask getTask(UUID id) {
+        return tasks.get(id);
     }
 
     @Nullable
@@ -479,4 +462,25 @@ public class CraftingManager implements ICraftingManager {
 
         return null;
     }
+
+    @Override
+    public Set<ICraftingPatternContainer> getAllContainer(ICraftingPattern pattern) {
+        return patternToContainer.getOrDefault(pattern, Collections.emptySet());
+    }
+
+    @Override
+    public Collection<ICraftingTask> getTasks() {
+        return tasks.values();
+    }
+
+    @Override
+    public List<ICraftingPattern> getPatterns() {
+        return patterns;
+    }
+
+    @Override
+    public Map<String, List<IItemHandlerModifiable>> getNamedContainers() {
+        return containerInventories;
+    }
+
 }

@@ -252,7 +252,7 @@ public abstract class Task {
         }
 
         NBTTagList outputs = compound.getTagList(NBT_OUTPUTS, Constants.NBT.TAG_COMPOUND);
-        for(int i = 0; i < inputs.tagCount(); i++) {
+        for(int i = 0; i < outputs.tagCount(); i++) {
             this.outputs.add(new Output(outputs.getCompoundTagAt(i)));
         }
     }
