@@ -1,6 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.ItemStack;
@@ -36,7 +36,7 @@ public class DurabilityInput extends Input {
         this.maxDurability = compareableItemStack.getMaxDamage() + 1;
     }
 
-    private DurabilityInput(@Nonnull FluidStack fluidStack, long amountNeeded, boolean oredict) {
+    private DurabilityInput(@Nonnull FluidStack fluidStack, long amountNeeded) {
         super(fluidStack, amountNeeded);
         throw new IllegalArgumentException("FluidStacks are no supported for durability inputs");
     }
@@ -90,9 +90,9 @@ public class DurabilityInput extends Input {
     @Nonnull
     @Override
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
-        NBTTagCompound tag = super.writeToNbt(compound);
-        tag.setInteger(NBT_MAX_DURABILITY, this.maxDurability);
-        return tag;
+        super.writeToNbt(compound);
+        compound.setInteger(NBT_MAX_DURABILITY, this.maxDurability);
+        return compound;
     }
 
     @Override

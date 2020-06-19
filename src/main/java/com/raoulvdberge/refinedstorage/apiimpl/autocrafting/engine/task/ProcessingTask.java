@@ -3,7 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
@@ -301,7 +301,8 @@ public class ProcessingTask extends Task {
 
         //calculate the amount of completed sets
         long smallestCompletedSetCount =
-                this.outputs.stream().mapToLong(Output::getCompletedSets).min().getAsLong();
+                this.outputs.stream().mapToLong(Output::getCompletedSets).min()
+                        .orElseThrow(() -> new RuntimeException("Outputs list is empty"));
         long newlyCompletedSets = smallestCompletedSetCount - oldCompletedSets;
 
         //if there are new sets that got completed by this insertion -> notify the inputs
@@ -413,7 +414,7 @@ public class ProcessingTask extends Task {
             //ugly -> store remaining stuff as (Input, int) pair
             Input input = this.inputs.stream().filter(i -> !i.isFluid() &&
                     API.instance().getComparer().isEqualNoQuantity(i.getCompareableItemStack(), remainingItem))
-                    .findFirst().get();
+                    .findFirst().orElseThrow(RuntimeException::new);
             //increase amount that is currently in the machine
             input.setProcessingAmount(input.getProcessingAmount() + (remainingItem.getCount() - remainder.getCount()));
 
@@ -432,7 +433,7 @@ public class ProcessingTask extends Task {
             //ugly
             Input input = this.inputs.stream().filter(i -> i.isFluid() &&
                     API.instance().getComparer().isEqual(i.getFluidStack(), remainingFluid, IComparer.COMPARE_NBT))
-                    .findFirst().get();
+                    .findFirst().orElseThrow(RuntimeException::new);
             //increase amount that is currently in the machine
             input.setProcessingAmount(input.getProcessingAmount() + (remainingFluid.amount - remainder));
 
@@ -446,13 +447,13 @@ public class ProcessingTask extends Task {
     @Nonnull
     @Override
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
-        NBTTagCompound tag = super.writeToNbt(compound);
-        tag.setBoolean(NBT_HAS_ITEM_INPUTS, this.hasItemInputs);
-        tag.setBoolean(NBT_HAS_FLUID_INPUTS, this.hasFluidInputs);
+        super.writeToNbt(compound);
+        compound.setBoolean(NBT_HAS_ITEM_INPUTS, this.hasItemInputs);
+        compound.setBoolean(NBT_HAS_FLUID_INPUTS, this.hasFluidInputs);
 
         if (this.remainderContainer != null)
-            tag.setLong(NBT_REMAINDER_CONTAINER_POS, this.remainderContainer.getPosition().toLong());
-        tag.setString(NBT_STATE, this.state.toString());
+            compound.setLong(NBT_REMAINDER_CONTAINER_POS, this.remainderContainer.getPosition().toLong());
+        compound.setString(NBT_STATE, this.state.toString());
 
         if (!this.remainingItems.isEmpty()) {
             NBTTagList items = new NBTTagList();
@@ -472,7 +473,7 @@ public class ProcessingTask extends Task {
             compound.setTag(NBT_REMAINING_FLUIDS, fluids);
         }
 
-        return tag;
+        return compound;
     }
 
     @Nonnull

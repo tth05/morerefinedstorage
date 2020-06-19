@@ -6,8 +6,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternProvider;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
@@ -328,11 +327,8 @@ public abstract class Task {
      * Supplies an input to this task. Called by sub tasks when they crafted something.
      *
      * @param stack the stack to supply (the count of this stack is modified)
-     * @return {@code true} if stack changed in any way; {@code false} otherwise
      */
-    protected boolean supplyInput(ItemStack stack) {
-        int originalCount = stack.getCount();
-
+    protected void supplyInput(ItemStack stack) {
         if (!isFinished()) {
             //give to all inputs while there's anything left
             for (Input input : this.inputs) {
@@ -340,11 +336,9 @@ public abstract class Task {
 
                 //no remainder left -> just return
                 if (stack.isEmpty())
-                    return true;
+                    return;
             }
         }
-
-        return stack.getCount() != originalCount;
     }
 
     /**
@@ -352,11 +346,8 @@ public abstract class Task {
      * if this is a processing task.
      *
      * @param stack the stack to supply (the count of this stack is modified)
-     * @return {@code true} if the stack changed in any way; {@code false} otherwise
      */
-    protected boolean supplyInput(FluidStack stack) {
-        int originalCount = stack.amount;
-
+    protected void supplyInput(FluidStack stack) {
         if (!isFinished()) {
             //give to all inputs while there's anything left
             for (Input input : this.inputs) {
@@ -364,11 +355,9 @@ public abstract class Task {
 
                 //no remainder left -> just return
                 if (stack.amount < 1)
-                    return true;
+                    return;
             }
         }
-
-        return stack.amount != originalCount;
     }
 
     /**
@@ -405,7 +394,7 @@ public abstract class Task {
                                        @Nonnull HashSet<ICraftingPattern> recursedPatterns, long calculationTimeStart) {
         //return if calculation takes too long
         if (System.currentTimeMillis() - calculationTimeStart > RS.INSTANCE.config.calculationTimeoutMs)
-            return new CalculationResult(new CraftingTaskError(CraftingTaskErrorType.TOO_COMPLEX));
+            return new CalculationResult(new CraftingTaskError());
 
         CalculationResult result = new CalculationResult();
 

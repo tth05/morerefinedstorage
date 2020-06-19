@@ -287,6 +287,7 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
         return owner;
     }
 
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     @Override
     public boolean equals(Object o) {
         return API.instance().isNetworkNodeEqual(this, o);

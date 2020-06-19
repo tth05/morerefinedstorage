@@ -12,7 +12,6 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -65,11 +64,6 @@ public final class RS {
     @EventHandler
     public void init(FMLInitializationEvent e) {
         PROXY.init(e);
-    }
-
-    @EventHandler
-    public void postInit(FMLPostInitializationEvent e) {
-        PROXY.postInit(e);
     }
 
     @EventHandler

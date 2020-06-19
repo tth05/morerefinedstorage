@@ -157,7 +157,7 @@ public abstract class BlockBase extends Block {
 
     @Override
     public boolean removedByPlayer(@Nonnull IBlockState state, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EntityPlayer player, boolean willHarvest) {
-        return willHarvest || super.removedByPlayer(state, world, pos, player, willHarvest);
+        return willHarvest || super.removedByPlayer(state, world, pos, player, false);
     }
 
     @Override

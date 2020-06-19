@@ -2,7 +2,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandler;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
@@ -143,7 +143,7 @@ public class FluidGridHandler implements IFluidGridHandler {
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
                                     Collections
-                                            .singletonList(new CraftingPreviewElementError(error.getType(), ItemStack.EMPTY)),
+                                            .singletonList(new CraftingPreviewElementError(ItemStack.EMPTY)),
                                     task.getId(),
                                     task.getCalculationTime(), quantity, true),
                             player);

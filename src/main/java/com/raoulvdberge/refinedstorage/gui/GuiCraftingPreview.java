@@ -2,7 +2,6 @@ package com.raoulvdberge.refinedstorage.gui;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskErrorType;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawer;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
@@ -27,7 +26,6 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +90,7 @@ public class GuiCraftingPreview extends GuiBase {
     public void init(int x, int y) {
         cancelButton = addButton(x + 55, y + 201 - 20 - 7, 50, 20, t("gui.cancel"));
         startButton = addButton(x + 129, y + 201 - 20 - 7, 50, 20, t("misc.refinedstorage:start"));
-        startButton.enabled = stacks.stream().noneMatch(ICraftingPreviewElement::hasMissing) && getErrorType() == null;
+        startButton.enabled = stacks.stream().noneMatch(ICraftingPreviewElement::hasMissing) && !hasError();
     }
 
     @Override
@@ -103,13 +101,8 @@ public class GuiCraftingPreview extends GuiBase {
         }
     }
 
-    @Nullable
-    private CraftingTaskErrorType getErrorType() {
-        if (stacks.size() == 1 && stacks.get(0) instanceof CraftingPreviewElementError) {
-            return ((CraftingPreviewElementError) stacks.get(0)).getType();
-        }
-
-        return null;
+    private boolean hasError() {
+        return stacks.size() == 1 && stacks.get(0) instanceof CraftingPreviewElementError;
     }
 
     @Override
@@ -118,7 +111,7 @@ public class GuiCraftingPreview extends GuiBase {
 
         drawTexture(x, y, 0, 0, screenWidth, screenHeight);
 
-        if (getErrorType() != null) {
+        if (hasError()) {
             drawRect(x + 7, y + 20, x + 228, y + 169, 0xFFDBDBDB);
         }
     }
@@ -142,57 +135,19 @@ public class GuiCraftingPreview extends GuiBase {
         int x = 7;
         int y = 15;
 
-        if (getErrorType() != null) {
+        if (hasError()) {
             GlStateManager.pushMatrix();
             GlStateManager.scale(scale, scale, 1);
 
             drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 11, scale),
                     t("gui.refinedstorage:crafting_preview.error"));
 
-            switch (getErrorType()) {
-                //recursive doesn't exist anymore, the tasks now quit silently
-                /*case RECURSIVE: {
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 21, scale), t("gui.refinedstorage:crafting_preview.error.recursive.0"));
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 31, scale), t("gui.refinedstorage:crafting_preview.error.recursive.1"));
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 41, scale), t("gui.refinedstorage:crafting_preview.error.recursive.2"));
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 51, scale), t("gui.refinedstorage:crafting_preview.error.recursive.3"));
+            drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 21, scale),
+                    t("gui.refinedstorage:crafting_preview.error.too_complex.0"));
+            drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 31, scale),
+                    t("gui.refinedstorage:crafting_preview.error.too_complex.1"));
 
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 61, scale), t("gui.refinedstorage:crafting_preview.error.recursive.4"));
-
-                    GlStateManager.popMatrix();
-
-                    ICraftingPattern pattern = ItemPattern.getPatternFromCache(parent.mc.world, (ItemStack) stacks.get(0).getElement());
-
-                    int yy = 83;
-                    for (ItemStack output : pattern.getOutputs()) {
-                        if (output != null) {
-                            GlStateManager.pushMatrix();
-                            GlStateManager.scale(scale, scale, 1);
-                            drawString(RenderUtils.getOffsetOnScale(x + 25, scale), RenderUtils.getOffsetOnScale(yy + 6, scale), output.getDisplayName());
-                            GlStateManager.popMatrix();
-
-                            RenderHelper.enableGUIStandardItemLighting();
-                            GlStateManager.enableDepth();
-                            drawItem(x + 5, yy, output);
-                            RenderHelper.disableStandardItemLighting();
-
-                            yy += 17;
-                        }
-                    }
-
-                    break;
-                }*/
-                case TOO_COMPLEX: {
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 21, scale),
-                            t("gui.refinedstorage:crafting_preview.error.too_complex.0"));
-                    drawString(RenderUtils.getOffsetOnScale(x + 5, scale), RenderUtils.getOffsetOnScale(y + 31, scale),
-                            t("gui.refinedstorage:crafting_preview.error.too_complex.1"));
-
-                    GlStateManager.popMatrix();
-
-                    break;
-                }
-            }
+            GlStateManager.popMatrix();
         } else {
             int slot = scrollbar != null ? (scrollbar.getOffset() * 3) : 0;
 

@@ -3,7 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
@@ -38,7 +38,7 @@ public class CraftingTask extends Task {
     private ItemStack remainder = ItemStack.EMPTY;
 
     @Nullable
-    private final List<ItemStack> byProducts;
+    private List<ItemStack> byProducts;
 
     private boolean finished = false;
 
@@ -48,25 +48,7 @@ public class CraftingTask extends Task {
         if (pattern.isProcessing())
             throw new IllegalArgumentException("Processing pattern cannot be used for crafting task!");
 
-        List<ItemStack> byproducts = new ArrayList<>(pattern.getByproducts());
-
-        //clean by-products
-        byproducts.removeIf(i -> this.getInputs().stream()
-                .filter(input -> input instanceof InfiniteInput || input instanceof DurabilityInput)
-                .map(input -> this.getPattern().getInputs().stream()
-                        .filter(possibilities -> possibilities.stream()
-                            .anyMatch(possibility -> API.instance().getComparer()
-                                    .isEqualNoQuantity(possibility, input.getCompareableItemStack())))
-                        .findFirst()
-                ).filter(Optional::isPresent)
-                .map(Optional::get)
-                .flatMap(Collection::stream)
-                //don't compare damage for durability inputs
-                .anyMatch(itemStack -> API.instance().getComparer().isEqual(i, itemStack,
-                        IComparer.COMPARE_NBT | (itemStack.isItemStackDamageable() ? IComparer.COMPARE_DAMAGE : 0)))
-        );
-
-        this.byProducts = byproducts;
+        generateCleanByProducts();
     }
 
     public CraftingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound compound)
@@ -76,20 +58,29 @@ public class CraftingTask extends Task {
         if (compound.hasKey(NBT_REMAINDER_ITEM))
             this.remainder = new ItemStack(compound.getCompoundTag(NBT_REMAINDER_ITEM));
 
-        List<ItemStack> byproducts = new ArrayList<>(pattern.getByproducts());
+        generateCleanByProducts();
+    }
 
+    /**
+     * Gets the by-products of the current pattern and removes all items which belong to infinite or durability inputs.
+     * Assigns the result to the {@code byProducts} variable.
+     */
+    public void generateCleanByProducts() {
+        List<ItemStack> byproducts = new ArrayList<>(this.pattern.getByproducts());
         //clean by-products
         byproducts.removeIf(i -> this.getInputs().stream()
+                //filter inputs
                 .filter(input -> input instanceof InfiniteInput || input instanceof DurabilityInput)
+                //find lists which contain the items of the filtered inputs
                 .map(input -> this.getPattern().getInputs().stream()
                         .filter(possibilities -> possibilities.stream()
                                 .anyMatch(possibility -> API.instance().getComparer()
                                         .isEqualNoQuantity(possibility, input.getCompareableItemStack())))
-                        .findFirst()
-                ).filter(Optional::isPresent)
-                .map(Optional::get)
+                        .findFirst().orElse(null)
+                ).filter(Objects::nonNull)
+                //flat map all items
                 .flatMap(Collection::stream)
-                //don't compare damage for durability inputs
+                //find match -> don't compare damage for durability inputs
                 .anyMatch(itemStack -> API.instance().getComparer().isEqual(i, itemStack,
                         IComparer.COMPARE_NBT | (itemStack.isItemStackDamageable() ? IComparer.COMPARE_DAMAGE : 0)))
         );
@@ -166,11 +157,11 @@ public class CraftingTask extends Task {
     @Nonnull
     @Override
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
-        NBTTagCompound tag = super.writeToNbt(compound);
+        super.writeToNbt(compound);
         if (!remainder.isEmpty())
             compound.setTag(NBT_REMAINDER_ITEM, remainder.writeToNBT(new NBTTagCompound()));
 
-        return tag;
+        return compound;
     }
 
     @Nonnull

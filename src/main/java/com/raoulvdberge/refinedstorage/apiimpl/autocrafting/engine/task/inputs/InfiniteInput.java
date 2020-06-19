@@ -1,6 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
@@ -41,10 +41,10 @@ public class InfiniteInput extends Input {
     @Nonnull
     @Override
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
-        NBTTagCompound tag = super.writeToNbt(compound);
+        super.writeToNbt(compound);
         if (this.containsItem)
-            tag.setBoolean(NBT_CONTAINS_ITEM, true);
-        return tag;
+            compound.setBoolean(NBT_CONTAINS_ITEM, true);
+        return compound;
     }
 
     @Nonnull

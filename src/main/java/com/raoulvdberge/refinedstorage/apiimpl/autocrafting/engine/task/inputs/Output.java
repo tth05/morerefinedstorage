@@ -1,6 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs;
 
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
@@ -55,9 +55,9 @@ public class Output extends Input {
     @Nonnull
     @Override
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
-        NBTTagCompound tag = super.writeToNbt(compound);
-        tag.setLong(NBT_COMPLETED_SETS, this.completedSets);
-        return tag;
+        super.writeToNbt(compound);
+        compound.setLong(NBT_COMPLETED_SETS, this.completedSets);
+        return compound;
     }
 
     public void setCompletedSets(long completedSets) {
