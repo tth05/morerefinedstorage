@@ -360,15 +360,13 @@ public class ProcessingTask extends Task {
                 FluidStack newStack = input.getFluidStack().copy();
                 newStack.amount = input.getQuantityPerCraft() * toCraft;
 
-                int remainder = connectedFluidInventory.fill(newStack, true);
+                int remainder = newStack.amount - connectedFluidInventory.fill(newStack, true);
 
                 //increase amount that is currently in the machine
                 input.setProcessingAmount(input.getProcessingAmount() + (newStack.amount - remainder));
 
                 //save everything that couldn't be inserted
                 if (remainder > 0) {
-                    //copy again just to be safe
-                    newStack = newStack.copy();
                     newStack.amount = remainder;
                     remainingFluids.add(newStack);
                 }
@@ -429,7 +427,7 @@ public class ProcessingTask extends Task {
             FluidStack remainingFluid = iterator.next();
 
             //noinspection ConstantConditions
-            int remainder = connectedFluidInventory.fill(remainingFluid, true);
+            int remainder = remainingFluid.amount - connectedFluidInventory.fill(remainingFluid, true);
             //ugly
             Input input = this.inputs.stream().filter(i -> i.isFluid() &&
                     API.instance().getComparer().isEqual(i.getFluidStack(), remainingFluid, IComparer.COMPARE_NBT))
