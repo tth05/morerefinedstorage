@@ -221,6 +221,7 @@ public class CraftingManager implements ICraftingManager {
 
                 if (error == null && !task.hasMissing()) {
                     this.add(task);
+                    task.setCanUpdate(true);
 
                     return task;
                 } else {
@@ -258,6 +259,7 @@ public class CraftingManager implements ICraftingManager {
 
                 if (error == null && !task.hasMissing()) {
                     this.add(task);
+                    task.setCanUpdate(true);
 
                     return task;
                 } else {

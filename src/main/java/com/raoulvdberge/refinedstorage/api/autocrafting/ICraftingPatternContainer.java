@@ -120,7 +120,8 @@ public interface ICraftingPatternContainer {
     /**
      * Unlocks this container if it is locked
      */
-    void unlock();
+    default void unlock() {
+    }
 
     /**
      * @return true if the connected inventory is locked for processing patterns, false otherwise
