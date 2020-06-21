@@ -1,8 +1,11 @@
 # More Refined Storage Changelog
 
 ### 2.0.2
-- Increased Disk Manipulator speed by 25x
-- Fixed disks being inserted into themselfs when the inventory is full in Portable Grid
+- Completely new, lightweight and fast auto-crafting engine
+- Increased Disk Manipulator speed by 25
+- Fixed Portable Grid inserting disks into themselves if the players inventory is full
+- Fixed dupe in filter slots when using Inventory Tweaks Reborn
+- Other small bug fixes
 
 ### 2.0.1
 - Shift clicking upgrades doesn't put the upgrades into the filter slots anymore
