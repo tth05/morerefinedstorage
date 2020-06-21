@@ -118,6 +118,11 @@ public interface ICraftingPatternContainer {
     UUID getUuid();
 
     /**
+     * Unlocks this container if it is locked
+     */
+    void unlock();
+
+    /**
      * @return true if the connected inventory is locked for processing patterns, false otherwise
      */
     default boolean isLocked() {

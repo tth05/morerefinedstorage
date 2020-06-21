@@ -241,6 +241,11 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
+    public void unlock() {
+        this.locked = false;
+    }
+
+    @Override
     public boolean isLocked() {
         Optional<ICraftingPatternContainer> root = getRootContainerNotSelf();
         if (root.isPresent()) {

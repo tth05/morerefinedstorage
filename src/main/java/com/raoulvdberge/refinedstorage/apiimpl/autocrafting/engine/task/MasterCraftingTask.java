@@ -276,6 +276,13 @@ public class MasterCraftingTask implements ICraftingTask {
                         network.insertFluid(input.getFluidStack(), amount, Action.PERFORM);
                 }
             }
+
+            //unlock all crafters
+            if(!task.isFinished()) {
+                for (ICraftingPatternContainer craftingPatternContainer :
+                        network.getCraftingManager().getAllContainer(task.getPattern()))
+                    craftingPatternContainer.unlock();
+            }
         }
     }
 
