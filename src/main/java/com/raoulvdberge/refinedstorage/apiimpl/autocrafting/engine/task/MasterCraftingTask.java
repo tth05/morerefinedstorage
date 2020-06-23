@@ -5,11 +5,11 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementList;
-import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
@@ -24,7 +24,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.I
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
@@ -51,10 +50,6 @@ public class MasterCraftingTask implements ICraftingTask {
      * All current tasks that make up this auto crafting task
      */
     private final List<Task> tasks = new ObjectArrayList<>();
-    /**
-     * Used to know how many crafting updates are left for a specific container
-     */
-    private final Map<ICraftingPatternContainer, Integer> updateCountMap = new Object2IntOpenHashMap<>(20);
     private IStackList<ItemStack> missingItemStacks = API.instance().createItemStackList();
     private IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();
 
@@ -159,7 +154,7 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
-    public boolean update() {
+    public boolean update(Map<ICraftingPatternContainer, Integer> updateCountMap) {
         if (!canUpdate)
             return false;
         if (executionStarted == -1)
@@ -167,7 +162,6 @@ public class MasterCraftingTask implements ICraftingTask {
 
         boolean allFinished = true;
 
-        updateCountMap.clear();
         for (int i = tasks.size() - 1; i >= 0; i--) {
             Task task = tasks.get(i);
             if (task.isFinished())

@@ -15,6 +15,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.tile.TileController;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -44,6 +45,11 @@ public class CraftingManager implements ICraftingManager {
             new ThreadFactoryBuilder().setNameFormat("RS Calculation Thread %d").build());
 
     private final TileController network;
+
+    /**
+     * Used to know how many crafting updates are left for a specific container
+     */
+    private final Map<ICraftingPatternContainer, Integer> updateCountMap = new Object2IntOpenHashMap<>();
 
     private final Map<String, List<IItemHandlerModifiable>> containerInventories = new LinkedHashMap<>();
     private final Map<ICraftingPattern, Set<ICraftingPatternContainer>> patternToContainer = new HashMap<>();
@@ -117,11 +123,13 @@ public class CraftingManager implements ICraftingManager {
 
             boolean anyFinished = false;
 
+            updateCountMap.clear();
+
             Iterator<Map.Entry<UUID, ICraftingTask>> it = tasks.entrySet().iterator();
             while (it.hasNext()) {
                 ICraftingTask task = it.next().getValue();
 
-                if (task.canUpdate() && task.update()) {
+                if (task.canUpdate() && task.update(updateCountMap)) {
                     anyFinished = true;
 
                     it.remove();
