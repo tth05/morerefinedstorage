@@ -68,7 +68,7 @@ public class MasterCraftingTask implements ICraftingTask {
      * The time in milli seconds it took for the calculation to complete
      */
     private long calculationTime = -1;
-    private long ticks = 0;
+    private long ticks;
     private boolean canUpdate;
 
     public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, int quantity,

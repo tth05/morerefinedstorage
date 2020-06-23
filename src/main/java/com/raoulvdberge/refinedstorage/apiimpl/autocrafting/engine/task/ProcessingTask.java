@@ -119,6 +119,9 @@ public class ProcessingTask extends Task {
 
         //don't update if there's any remainder left from the previous update
         if (!this.remainingItems.isEmpty() || !this.remainingFluids.isEmpty()) {
+            int prevItemSize = this.remainingItems.size();
+            int prevFluidSize = this.remainingFluids.size();
+
             //only update if we get the same container again
             if (!container.equals(remainderContainer))
                 return 0;
@@ -131,7 +134,8 @@ public class ProcessingTask extends Task {
                 this.state = ProcessingState.READY;
             }
             //always use up all crafting updates if there's any remainder left. blocks other tasks somewhat
-            return toCraft;
+            return prevItemSize != this.remainingItems.size() || prevFluidSize != this.remainingFluids.size() ?
+                    toCraft : 0;
         }
 
         remainderContainer = container;
@@ -238,7 +242,7 @@ public class ProcessingTask extends Task {
     /**
      * Called when a tracked fluid is imported. Forwards imported fluids to parents if this is a processing task.
      *
-     * @param stack the imported stack (this stack is modified)
+     * @param stack         the imported stack (this stack is modified)
      * @param trackedAmount the amount of the stack that already has been tracked
      * @return the amount of the stack amount that has been tracked
      */
@@ -356,7 +360,7 @@ public class ProcessingTask extends Task {
         //notify inputs and generate input items
         for (Input input : this.inputs) {
             //copy current input counts
-            List<Long> inputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
+            List<Long> oldInputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
 
             input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
 
@@ -376,8 +380,8 @@ public class ProcessingTask extends Task {
                 }
             } else {
                 //this ensures that the correct item stacks are created when ore dict is being used
-                for (int i = 0; i < inputCounts.size(); i++) {
-                    Long oldInputCount = inputCounts.get(i);
+                for (int i = 0; i < oldInputCounts.size(); i++) {
+                    Long oldInputCount = oldInputCounts.get(i);
                     Long newInputCount = input.getCurrentInputCounts().get(i);
 
                     long diff = oldInputCount - newInputCount;
