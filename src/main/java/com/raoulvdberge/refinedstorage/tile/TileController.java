@@ -175,36 +175,6 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public IEnergy getEnergy() {
-        return this.energy;
-    }
-
-    @Override
-    public BlockPos getPosition() {
-        return pos;
-    }
-
-    @Override
-    public boolean canRun() {
-        return this.energy.getStored() > 0 && redstoneMode.isEnabled(world, pos);
-    }
-
-    @Override
-    public INetworkNodeGraph getNodeGraph() {
-        return nodeGraph;
-    }
-
-    @Override
-    public ISecurityManager getSecurityManager() {
-        return securityManager;
-    }
-
-    @Override
-    public ICraftingManager getCraftingManager() {
-        return craftingManager;
-    }
-
-    @Override
     public void update() {
         if (!world.isRemote) {
             if (canRun()) {
@@ -257,47 +227,8 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public String getId() {
-        return null;
-    }
-
-    @Override
-    public IItemGridHandler getItemGridHandler() {
-        return itemGridHandler;
-    }
-
-    @Override
-    public IFluidGridHandler getFluidGridHandler() {
-        return fluidGridHandler;
-    }
-
-    @Override
-    public INetworkItemHandler getNetworkItemHandler() {
-        return networkItemHandler;
-    }
-
-    @Override
-    public void invalidate() {
-        super.invalidate();
-
-        if (world != null && !world.isRemote) {
-            nodeGraph.disconnectAll();
-        }
-    }
-
-    @Override
-    public IStorageCache<ItemStack> getItemStorageCache() {
-        return itemStorage;
-    }
-
-    @Override
-    public IStorageCache<FluidStack> getFluidStorageCache() {
-        return fluidStorage;
-    }
-
-    @Override
-    public IReaderWriterManager getReaderWriterManager() {
-        return readerWriterManager;
+    public boolean canRun() {
+        return this.energy.getStored() > 0 && redstoneMode.isEnabled(world, pos);
     }
 
     @Nonnull
@@ -496,31 +427,6 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public IStorageTracker<ItemStack> getItemStorageTracker() {
-        return itemStorageTracker;
-    }
-
-    @Override
-    public IStorageTracker<FluidStack> getFluidStorageTracker() {
-        return fluidStorageTracker;
-    }
-
-    @Nonnull
-    @Override
-    public World world() {
-        return world;
-    }
-
-    @Nonnull
-    @Override
-    public World getWorld()
-    {
-        // This is provided by net.minecraft.TileEntity - and needed as a part of INetworkNode
-        // After obfuscation - these two methods will not be the same - so we have to redefine this here
-        return this.world;
-    }
-
-    @Override
     public void read(NBTTagCompound tag) {
         super.read(tag);
 
@@ -579,6 +485,93 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         super.readUpdate(tag);
     }
 
+    @Override
+    public void visit(Operator operator) {
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            BlockPos pos = this.pos.offset(facing);
+
+            TileEntity tile = world.getTileEntity(pos);
+
+            // Little hack to support not conducting through covers (if the cover is right next to the controller).
+            if (tile != null && tile.hasCapability(NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite())) {
+                INetworkNodeProxy otherNodeProxy = NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite()));
+                INetworkNode otherNode = otherNodeProxy.getNode();
+
+                if (otherNode instanceof ICoverable && ((ICoverable) otherNode).getCoverManager().hasCover(facing.getOpposite())) {
+                    continue;
+                }
+            }
+
+            operator.apply(world, pos, facing.getOpposite());
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+
+        if (world != null && !world.isRemote) {
+            nodeGraph.disconnectAll();
+        }
+    }
+
+    @Override
+    public void onConnected(INetwork network) {
+        Preconditions.checkArgument(this == network, "Should not be connected to another controller");
+    }
+
+    @Override
+    public void onDisconnected(INetwork network) {
+        Preconditions.checkArgument(this == network, "Should not be connected to another controller");
+    }
+
+    @Override
+    public void setRedstoneMode(RedstoneMode mode) {
+        this.redstoneMode = mode;
+
+        markDirty();
+    }
+
+    @Override
+    public boolean canUpdate() {
+        return false;
+    }
+
+    @Override
+    public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
+        return capability == CapabilityEnergy.ENERGY
+            || capability == CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY
+            || super.hasCapability(capability, facing);
+    }
+
+    @Override
+    public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
+        if (capability == CapabilityEnergy.ENERGY) {
+            return CapabilityEnergy.ENERGY.cast(energyProxy);
+        }
+
+        if (capability == CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY) {
+            return CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY.cast(this);
+        }
+
+        return super.getCapability(capability, facing);
+    }
+
+    @Nonnull
+    @Override
+    public World world() {
+        return world;
+    }
+
+    @Nonnull
+    @Override
+    public World getWorld()
+    {
+        // This is provided by net.minecraft.TileEntity - and needed as a part of INetworkNode
+        // After obfuscation - these two methods will not be the same - so we have to redefine this here
+        return this.world;
+    }
+
     public static int getEnergyScaled(int stored, int capacity, int scale) {
         return (int) ((float) stored / (float) capacity * (float) scale);
     }
@@ -610,15 +603,8 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public RedstoneMode getRedstoneMode() {
-        return redstoneMode;
-    }
-
-    @Override
-    public void setRedstoneMode(RedstoneMode mode) {
-        this.redstoneMode = mode;
-
-        markDirty();
+    public IEnergy getEnergy() {
+        return this.energy;
     }
 
     @Override
@@ -634,6 +620,77 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         return usage;
     }
 
+    @Override
+    public INetworkNodeGraph getNodeGraph() {
+        return nodeGraph;
+    }
+
+    @Override
+    public IStorageCache<FluidStack> getFluidStorageCache() {
+        return fluidStorage;
+    }
+
+    @Override
+    public IStorageCache<ItemStack> getItemStorageCache() {
+        return itemStorage;
+    }
+
+    @Override
+    public IReaderWriterManager getReaderWriterManager() {
+        return readerWriterManager;
+    }
+
+    @Override
+    public ICraftingManager getCraftingManager() {
+        return craftingManager;
+    }
+
+    @Override
+    public ISecurityManager getSecurityManager() {
+        return securityManager;
+    }
+
+    @Override
+    public INetworkItemHandler getNetworkItemHandler() {
+        return networkItemHandler;
+    }
+
+    @Override
+    public IItemGridHandler getItemGridHandler() {
+        return itemGridHandler;
+    }
+
+    @Override
+    public IFluidGridHandler getFluidGridHandler() {
+        return fluidGridHandler;
+    }
+
+    @Override
+    public IStorageTracker<ItemStack> getItemStorageTracker() {
+        return itemStorageTracker;
+    }
+
+    @Override
+    public IStorageTracker<FluidStack> getFluidStorageTracker() {
+        return fluidStorageTracker;
+    }
+
+    @Override
+    @Nonnull
+    public TileController getNode() {
+        return this;
+    }
+
+    @Override
+    public RedstoneMode getRedstoneMode() {
+        return redstoneMode;
+    }
+
+    @Override
+    public BlockPos getPosition() {
+        return pos;
+    }
+
     @Nonnull
     @Override
     public ItemStack getItemStack() {
@@ -645,23 +702,13 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public void onConnected(INetwork network) {
-        Preconditions.checkArgument(this == network, "Should not be connected to another controller");
-    }
-
-    @Override
-    public void onDisconnected(INetwork network) {
-        Preconditions.checkArgument(this == network, "Should not be connected to another controller");
-    }
-
-    @Override
-    public boolean canUpdate() {
-        return false;
-    }
-
-    @Override
     public INetwork getNetwork() {
         return this;
+    }
+
+    @Override
+    public String getId() {
+        return null;
     }
 
     public ControllerType getType() {
@@ -673,53 +720,6 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         }
 
         return type == null ? ControllerType.NORMAL : type;
-    }
-
-    @Override
-    public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
-        if (capability == CapabilityEnergy.ENERGY) {
-            return CapabilityEnergy.ENERGY.cast(energyProxy);
-        }
-
-        if (capability == CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY) {
-            return CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY.cast(this);
-        }
-
-        return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
-        return capability == CapabilityEnergy.ENERGY
-            || capability == CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY
-            || super.hasCapability(capability, facing);
-    }
-
-    @Override
-    @Nonnull
-    public TileController getNode() {
-        return this;
-    }
-
-    @Override
-    public void visit(Operator operator) {
-        for (EnumFacing facing : EnumFacing.VALUES) {
-            BlockPos pos = this.pos.offset(facing);
-
-            TileEntity tile = world.getTileEntity(pos);
-
-            // Little hack to support not conducting through covers (if the cover is right next to the controller).
-            if (tile != null && tile.hasCapability(NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite())) {
-                INetworkNodeProxy otherNodeProxy = NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite()));
-                INetworkNode otherNode = otherNodeProxy.getNode();
-
-                if (otherNode instanceof ICoverable && ((ICoverable) otherNode).getCoverManager().hasCover(facing.getOpposite())) {
-                    continue;
-                }
-            }
-
-            operator.apply(world, pos, facing.getOpposite());
-        }
     }
 
     // Cannot use API#getNetworkNodeHashCode or API#isNetworkNodeEqual: it will crash with a AbstractMethodError (getPos).
