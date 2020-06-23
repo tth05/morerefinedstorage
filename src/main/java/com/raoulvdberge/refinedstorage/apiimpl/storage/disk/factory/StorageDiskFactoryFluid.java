@@ -25,6 +25,8 @@ public class StorageDiskFactoryFluid implements IStorageDiskFactory<FluidStack> 
             }
         }
 
+        disk.calculateStoredAmount();
+
         return disk;
     }
 

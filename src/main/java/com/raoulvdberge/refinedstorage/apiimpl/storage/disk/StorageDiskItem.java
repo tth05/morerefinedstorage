@@ -29,6 +29,12 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
     private final World world;
     private final int capacity;
+
+    /**
+     * tracks the amount of stored items
+     */
+    private int stored;
+
     private final Multimap<Item, ItemStack> stacks = ArrayListMultimap.create();
 
     @Nullable
@@ -81,6 +87,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
                     if (action == Action.PERFORM) {
                         otherStack.grow(remainingSpace);
+                        stored += remainingSpace;
 
                         onChanged();
                     }
@@ -89,6 +96,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
                 } else {
                     if (action == Action.PERFORM) {
                         otherStack.grow(size);
+                        stored += size;
 
                         onChanged();
                     }
@@ -107,6 +115,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
             if (action == Action.PERFORM) {
                 stacks.put(stack.getItem(), ItemHandlerHelper.copyStackWithSize(stack, remainingSpace));
+                stored += remainingSpace;
 
                 onChanged();
             }
@@ -115,6 +124,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         } else {
             if (action == Action.PERFORM) {
                 stacks.put(stack.getItem(), ItemHandlerHelper.copyStackWithSize(stack, size));
+                stored += size;
 
                 onChanged();
             }
@@ -135,8 +145,10 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
                 if (action == Action.PERFORM) {
                     if (otherStack.getCount() - size == 0) {
                         stacks.remove(otherStack.getItem(), otherStack);
+                        stored -= otherStack.getCount();
                     } else {
                         otherStack.shrink(size);
+                        stored -= size;
                     }
 
                     onChanged();
@@ -151,7 +163,14 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
     @Override
     public int getStored() {
-        return stacks.values().stream().mapToInt(ItemStack::getCount).sum();
+        return this.stored;
+    }
+
+    /**
+     * forces the stored amount to be re-calculated
+     */
+    public void calculateStoredAmount() {
+        this.stored = stacks.values().stream().mapToInt(ItemStack::getCount).sum();
     }
 
     @Override

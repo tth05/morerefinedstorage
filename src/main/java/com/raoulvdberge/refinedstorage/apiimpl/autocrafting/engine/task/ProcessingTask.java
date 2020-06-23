@@ -411,7 +411,8 @@ public class ProcessingTask extends Task {
             ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem);
             //ugly -> store remaining stuff as (Input, int) pair
             Input input = this.inputs.stream().filter(i -> !i.isFluid() &&
-                    API.instance().getComparer().isEqualNoQuantity(i.getCompareableItemStack(), remainingItem))
+                    i.getItemStacks().stream().anyMatch(
+                            inputStack -> API.instance().getComparer().isEqualNoQuantity(inputStack, remainingItem)))
                     .findFirst().orElseThrow(RuntimeException::new);
             //increase amount that is currently in the machine
             input.setProcessingAmount(input.getProcessingAmount() + (remainingItem.getCount() - remainder.getCount()));

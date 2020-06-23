@@ -28,6 +28,12 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
 
     private final World world;
     private final int capacity;
+
+    /**
+     * tracks the stored amount
+     */
+    private int stored;
+
     private final Multimap<Fluid, FluidStack> stacks = ArrayListMultimap.create();
 
     @Nullable
@@ -75,6 +81,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
 
                     if (action == Action.PERFORM) {
                         otherStack.amount += remainingSpace;
+                        stored += remainingSpace;
 
                         onChanged();
                     }
@@ -83,6 +90,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
                 } else {
                     if (action == Action.PERFORM) {
                         otherStack.amount += size;
+                        stored += size;
 
                         onChanged();
                     }
@@ -101,6 +109,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
 
             if (action == Action.PERFORM) {
                 stacks.put(stack.getFluid(), StackUtils.copy(stack, remainingSpace));
+                stored += remainingSpace;
 
                 onChanged();
             }
@@ -109,6 +118,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
         } else {
             if (action == Action.PERFORM) {
                 stacks.put(stack.getFluid(), StackUtils.copy(stack, size));
+                stored += size;
 
                 onChanged();
             }
@@ -129,8 +139,10 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
                 if (action == Action.PERFORM) {
                     if (otherStack.amount - size == 0) {
                         stacks.remove(otherStack.getFluid(), otherStack);
+                        stored -= otherStack.amount;
                     } else {
                         otherStack.amount -= size;
+                        stored -= size;
                     }
 
                     onChanged();
@@ -145,7 +157,14 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
 
     @Override
     public int getStored() {
-        return stacks.values().stream().mapToInt(s -> s.amount).sum();
+        return this.stored;
+    }
+
+    /**
+     * forces the stored amount to be re-calculated
+     */
+    public void calculateStoredAmount() {
+        this.stored = stacks.values().stream().mapToInt(s -> s.amount).sum();
     }
 
     @Override
