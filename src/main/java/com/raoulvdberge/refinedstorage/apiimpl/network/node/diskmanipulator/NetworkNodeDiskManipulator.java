@@ -192,7 +192,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
             }
 
             ItemStack remainder = network.insertItem(extracted, extracted.getCount(), Action.PERFORM);
-            if (remainder.isEmpty()) {
+            if (remainder == null) {
                 break;
             }
 
@@ -226,7 +226,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
             }
 
             ItemStack remainder = network.insertItem(extracted, extracted.getCount(), Action.SIMULATE);
-            if (remainder.isEmpty()) { //An item could be inserted (no remainders when trying to). This disk isn't done.
+            if (remainder == null) { //An item could be inserted (no remainders when trying to). This disk isn't done.
                 return false;
             }
         }

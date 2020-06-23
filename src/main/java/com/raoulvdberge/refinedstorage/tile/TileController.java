@@ -231,7 +231,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
         return this.energy.getStored() > 0 && redstoneMode.isEnabled(world, pos);
     }
 
-    @Nonnull
+    @Nullable
     @Override
     public ItemStack insertItem(@Nonnull ItemStack stack, int size, Action action) {
         if (stack.isEmpty() || itemStorage.getStorages().isEmpty()) {
@@ -281,7 +281,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             itemStorage.add(stack, inserted - insertedExternally, false, false);
         }
 
-        return StackUtils.nullToEmpty(remainder);
+        return StackUtils.emptyToNull(remainder);
     }
 
     @Nonnull

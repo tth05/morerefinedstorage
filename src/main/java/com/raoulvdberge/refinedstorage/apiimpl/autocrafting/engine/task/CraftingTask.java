@@ -14,6 +14,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.D
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
+import com.raoulvdberge.refinedstorage.util.StackUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -35,6 +36,7 @@ public class CraftingTask extends Task {
     /**
      * Saves the remainder from previous crafting attempts to make sure this doesn't get lost
      */
+    @Nonnull
     private ItemStack remainder = ItemStack.EMPTY;
 
     @Nullable
@@ -142,7 +144,7 @@ public class CraftingTask extends Task {
 
         //if there is to much crafted we insert it back into the network
         if (!crafted.isEmpty())
-            this.remainder = network.insertItem(crafted, crafted.getCount(), Action.PERFORM);
+            this.remainder = StackUtils.nullToEmpty(network.insertItem(crafted, crafted.getCount(), Action.PERFORM));
 
         this.amountNeeded -= toCraft;
 

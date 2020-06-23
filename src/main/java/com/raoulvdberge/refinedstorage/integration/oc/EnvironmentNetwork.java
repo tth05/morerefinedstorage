@@ -316,7 +316,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         // Simulate extracting the item and get the amount of items that can be extracted
         ItemStack extracted = node.getNetwork().extractItem(stack, count, Action.SIMULATE);
-        if (extracted == null) {
+        if (extracted.isEmpty()) {
             return new Object[]{null, "could not extract the specified item"};
         }
 
@@ -336,7 +336,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         // Actually do it and return how many items we've inserted
         extracted = node.getNetwork().extractItem(stack, transferableAmount, Action.PERFORM);
-        if (extracted != null) {
+        if (!extracted.isEmpty()) {
             remainder = ItemHandlerHelper.insertItemStacked(handler, extracted, false);
 
             if (!remainder.isEmpty()) {

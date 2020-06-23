@@ -148,8 +148,8 @@ public final class StackUtils {
     }
 
     @Nullable
-    public static ItemStack emptyToNull(@Nonnull ItemStack stack) {
-        return stack.isEmpty() ? null : stack;
+    public static ItemStack emptyToNull(@Nullable ItemStack stack) {
+        return stack == null || stack.isEmpty() ? null : stack;
     }
 
     @SuppressWarnings("unchecked")

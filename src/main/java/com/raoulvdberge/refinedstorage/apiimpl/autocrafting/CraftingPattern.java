@@ -369,9 +369,8 @@ public class CraftingPattern implements ICraftingPattern {
 
     @Override
     public int getChainHashCode() {
-        int result = 0;
+        int result = (processing ? 1 : 0);
 
-        result = 31 * result + (processing ? 1 : 0);
         result = 31 * result + (oredict ? 1 : 0);
 
         for (List<ItemStack> inputs : this.inputs) {

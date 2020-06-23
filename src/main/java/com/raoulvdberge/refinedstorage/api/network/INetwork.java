@@ -99,7 +99,7 @@ public interface INetwork {
      * @param action the action
      * @return null if the insert was successful, or a stack with the remainder
      */
-    @Nonnull
+    @Nullable
     ItemStack insertItem(@Nonnull ItemStack stack, int size, Action action);
 
     /**
@@ -109,7 +109,7 @@ public interface INetwork {
      * @param size  the amount of that prototype that has to be inserted
      * @return null if the insert was successful, or a stack with the remainder
      */
-    @Nonnull
+    @Nullable
     default ItemStack insertItemTracked(@Nonnull ItemStack stack, int size) {
         stack.setCount(size);
         getCraftingManager().track(stack);

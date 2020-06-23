@@ -139,7 +139,7 @@ public class ItemGridHandler implements IItemGridHandler {
 
         ItemStack remainder;
         if (single) {
-            if (network.insertItem(stack, 1, Action.SIMULATE).isEmpty()) {
+            if (network.insertItem(stack, 1, Action.SIMULATE) == null) {
                 network.insertItem(stack, 1, Action.PERFORM);
                 stack.shrink(1);
             }
@@ -166,7 +166,7 @@ public class ItemGridHandler implements IItemGridHandler {
         network.getItemStorageTracker().changed(player, stack.copy());
 
         if (single) {
-            if (network.insertItem(stack, size, Action.SIMULATE).isEmpty()) {
+            if (network.insertItem(stack, size, Action.SIMULATE) == null) {
                 network.insertItem(stack, size, Action.PERFORM);
 
                 stack.shrink(size);

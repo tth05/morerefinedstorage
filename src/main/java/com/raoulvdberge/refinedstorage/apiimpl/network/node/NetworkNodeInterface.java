@@ -70,7 +70,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
 
             ItemStack remainder = network.insertItemTracked(slot, size);
 
-            if (remainder.isEmpty()) {
+            if (remainder == null) {
                 importItems.extractItem(currentSlot, size, false);
             } else if (size - remainder.getCount() > 0) {
                 importItems.extractItem(currentSlot, size - remainder.getCount(), false);
@@ -124,7 +124,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
                 } else if (delta < 0) {
                     ItemStack remainder = network.insertItemTracked(got, Math.abs(delta));
 
-                    if (remainder.isEmpty()) {
+                    if (remainder == null) {
                         exportItems.extractItem(i, Math.abs(delta), false);
                     } else {
                         exportItems.extractItem(i, Math.abs(delta) - remainder.getCount(), false);

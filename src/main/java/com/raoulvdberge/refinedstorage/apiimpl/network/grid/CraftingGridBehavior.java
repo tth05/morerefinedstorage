@@ -490,10 +490,10 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     network == null ? itemStack : network.insertItem(itemStack, itemStack.getCount(), Action.PERFORM);
 
             //if the network doesn't accept it, drop it into the world
-            if (!remainingItem.isEmpty()) {
+            if (remainingItem != null) {
                 InventoryHelper.spawnItemStack(player.getEntityWorld(), player.getPosition().getX(),
                         player.getPosition().getY(), player.getPosition().getZ(), remainingItem);
-            } else if (network != null && network.getItemStorageTracker() != null) {
+            } else if (network.getItemStorageTracker() != null) {
                 network.getItemStorageTracker().changed(player, itemStack);
             }
         }
