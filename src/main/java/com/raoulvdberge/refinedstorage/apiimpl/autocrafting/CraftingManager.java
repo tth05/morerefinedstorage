@@ -206,10 +206,21 @@ public class CraftingManager implements ICraftingManager {
         }
 
         for (ICraftingTask task : getTasks()) {
-            if (task.getRequested().getItem() != null) {
-                if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack)) {
+            if (task.getRequested().getItem() == null)
+                continue;
+
+            if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack))
+                amount -= task.getQuantity();
+        }
+
+        //also check in pending tasks
+        if (amount > 0) {
+            for (ICraftingTask task : this.tasksToAdd) {
+                if (task.getRequested().getItem() == null)
+                    continue;
+
+                if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack))
                     amount -= task.getQuantity();
-                }
             }
         }
 
@@ -243,7 +254,20 @@ public class CraftingManager implements ICraftingManager {
         }
 
         for (ICraftingTask task : getTasks()) {
-            if (task.getRequested().getFluid() != null) {
+            if (task.getRequested().getFluid() == null)
+                continue;
+
+            if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
+                amount -= task.getQuantity();
+            }
+        }
+
+        //also check in pending tasks
+        if (amount > 0) {
+            for (ICraftingTask task : this.tasksToAdd) {
+                if (task.getRequested().getFluid() == null)
+                    continue;
+
                 if (API.instance().getComparer()
                         .isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
                     amount -= task.getQuantity();
@@ -369,7 +393,7 @@ public class CraftingManager implements ICraftingManager {
                 outer:
                 for (ItemStack output : pattern.getOutputs()) {
                     for (ItemStack blacklistedItem : pattern.getBlacklistedItems()) {
-                        if(API.instance().getComparer().isEqualNoQuantity(blacklistedItem, output))
+                        if (API.instance().getComparer().isEqualNoQuantity(blacklistedItem, output))
                             continue outer;
                     }
 
@@ -379,7 +403,7 @@ public class CraftingManager implements ICraftingManager {
                 outer:
                 for (FluidStack output : pattern.getFluidOutputs()) {
                     for (FluidStack blacklistedFluid : pattern.getBlacklistedFluids()) {
-                        if(API.instance().getComparer().isEqual(blacklistedFluid, output, IComparer.COMPARE_NBT))
+                        if (API.instance().getComparer().isEqual(blacklistedFluid, output, IComparer.COMPARE_NBT))
                             continue outer;
                     }
 

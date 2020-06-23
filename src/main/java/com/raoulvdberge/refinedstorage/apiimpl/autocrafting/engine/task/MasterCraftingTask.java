@@ -299,7 +299,17 @@ public class MasterCraftingTask implements ICraftingTask {
 
             //fake the stack count so imported items cannot get tracked by multiple tasks
             stack.shrink(trackedAmount);
-            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
+
+            int oldStackSize = stack.getCount();
+            long newTrackedAmount = ((ProcessingTask) task).supplyOutput(stack);
+
+            //if stack size changed then use that instead as the tracked amount, basically whatever is given to parents
+            // is going to be the tracked amount. This ensures that this code doesn't break if the stack size changes
+            if(oldStackSize != stack.getCount())
+                trackedAmount += oldStackSize -  Math.max(stack.getCount(), 0);
+            else
+                trackedAmount += newTrackedAmount;
+
             stack.grow(oldTrackedAmount);
 
             if (stack.getCount() - trackedAmount < 1)
@@ -322,7 +332,17 @@ public class MasterCraftingTask implements ICraftingTask {
 
             //fake the stack count so imported items cannot get tracked by multiple tasks
             stack.amount -= trackedAmount;
-            trackedAmount += ((ProcessingTask) task).supplyOutput(stack);
+
+            int oldStackSize = stack.amount;
+            long newTrackedAmount = ((ProcessingTask) task).supplyOutput(stack);
+
+            //if stack size changed then use that instead as the tracked amount, basically whatever is given to parents
+            // is going to be the tracked amount. This ensures that this code doesn't break if the stack size changes
+            if(oldStackSize != stack.amount)
+                trackedAmount += oldStackSize - Math.max(stack.amount, 0);
+            else
+                trackedAmount += newTrackedAmount;
+
             stack.amount += oldTrackedAmount;
 
             if (stack.amount - trackedAmount < 1)

@@ -503,8 +503,9 @@ public class ProcessingTask extends Task {
             if (input.isFluid()) {
                 //TODO: remove casts
                 CraftingMonitorElementFluidRender fluid =
-                        new CraftingMonitorElementFluidRender(input.getFluidStack(), (int) input.getTotalInputAmount(),
-                                0, 0, (int) input.getToCraftAmount());
+                        new CraftingMonitorElementFluidRender(input.getFluidStack(),
+                                (int) input.getTotalInputAmount(), (int) input.getProcessingAmount(), 0,
+                                (int) input.getToCraftAmount());
                 elements.add(hasError ? getErrorElement(fluid) : fluid);
             } else {
                 CraftingMonitorElementItemRender item =
