@@ -58,17 +58,19 @@ public interface ICraftingTask {
      * Called when a stack is inserted into the system through {@link com.raoulvdberge.refinedstorage.api.network.INetwork#insertItemTracked(ItemStack, int)}.
      *
      * @param stack the stack
-     * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(ItemStack)}
+     * @param trackedAmount the amount of the stack that already has been tracked
+     * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(ItemStack, int)}
      */
-    int onTrackedInsert(ItemStack stack);
+    int onTrackedInsert(ItemStack stack, int trackedAmount);
 
     /**
      * Called when a stack is inserted into the system through {@link com.raoulvdberge.refinedstorage.api.network.INetwork#insertFluidTracked(FluidStack, int)}.
      *
      * @param stack the stack
-     * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(FluidStack)}
+     * @param trackedAmount the amount of the stack that already has been tracked
+     * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(FluidStack, int)}
      */
-    int onTrackedInsert(FluidStack stack);
+    int onTrackedInsert(FluidStack stack, int trackedAmount);
 
     /**
      * Writes this task to NBT.

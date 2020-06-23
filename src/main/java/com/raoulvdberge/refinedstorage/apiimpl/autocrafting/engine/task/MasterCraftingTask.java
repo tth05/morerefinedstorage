@@ -278,7 +278,7 @@ public class MasterCraftingTask implements ICraftingTask {
             }
 
             //unlock all crafters
-            if(!task.isFinished()) {
+            if (!task.isFinished()) {
                 for (ICraftingPatternContainer craftingPatternContainer :
                         network.getCraftingManager().getAllContainer(task.getPattern()))
                     craftingPatternContainer.unlock();
@@ -287,66 +287,41 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
-    public int onTrackedInsert(ItemStack stack) {
-        int trackedAmount = 0;
-
+    public int onTrackedInsert(ItemStack stack, int trackedAmount) {
         for (int i = this.tasks.size() - 1; i >= 0; i--) {
             Task task = this.tasks.get(i);
             if (!(task instanceof ProcessingTask))
                 continue;
 
-            int oldTrackedAmount = trackedAmount;
-
-            //fake the stack count so imported items cannot get tracked by multiple tasks
-            stack.shrink(trackedAmount);
-
             int oldStackSize = stack.getCount();
-            long newTrackedAmount = ((ProcessingTask) task).supplyOutput(stack);
+            trackedAmount = ((ProcessingTask) task).supplyOutput(stack, trackedAmount);
 
-            //if stack size changed then use that instead as the tracked amount, basically whatever is given to parents
-            // is going to be the tracked amount. This ensures that this code doesn't break if the stack size changes
-            if(oldStackSize != stack.getCount())
-                trackedAmount += oldStackSize -  Math.max(stack.getCount(), 0);
-            else
-                trackedAmount += newTrackedAmount;
+            //make sure tracked amount is not bigger than stack size
+            if (oldStackSize != stack.getCount())
+                trackedAmount = Math.max(trackedAmount - (oldStackSize - stack.getCount()), 0);
 
-            stack.grow(oldTrackedAmount);
-
-            if (stack.getCount() - trackedAmount < 1)
-                return trackedAmount;
+            if (stack.isEmpty())
+                break;
         }
 
         return trackedAmount;
     }
 
     @Override
-    public int onTrackedInsert(FluidStack stack) {
-        int trackedAmount = 0;
-
+    public int onTrackedInsert(FluidStack stack, int trackedAmount) {
         for (int i = this.tasks.size() - 1; i >= 0; i--) {
             Task task = this.tasks.get(i);
             if (!(task instanceof ProcessingTask))
                 continue;
 
-            int oldTrackedAmount = trackedAmount;
-
-            //fake the stack count so imported items cannot get tracked by multiple tasks
-            stack.amount -= trackedAmount;
-
             int oldStackSize = stack.amount;
-            long newTrackedAmount = ((ProcessingTask) task).supplyOutput(stack);
+            trackedAmount = ((ProcessingTask) task).supplyOutput(stack, trackedAmount);
 
-            //if stack size changed then use that instead as the tracked amount, basically whatever is given to parents
-            // is going to be the tracked amount. This ensures that this code doesn't break if the stack size changes
-            if(oldStackSize != stack.amount)
-                trackedAmount += oldStackSize - Math.max(stack.amount, 0);
-            else
-                trackedAmount += newTrackedAmount;
+            if (oldStackSize != stack.amount)
+                trackedAmount = Math.max(trackedAmount - (oldStackSize - stack.amount), 0);
 
-            stack.amount += oldTrackedAmount;
-
-            if (stack.amount - trackedAmount < 1)
-                return trackedAmount;
+            if (stack.amount < 1)
+                break;
         }
 
         return trackedAmount;

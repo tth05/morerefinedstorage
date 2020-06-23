@@ -332,39 +332,31 @@ public class CraftingManager implements ICraftingManager {
     @Override
     public void track(ItemStack stack) {
         int trackedAmount = 0;
+        int oldStackSize = stack.getCount();
 
         for (ICraftingTask task : tasks.values()) {
-            int oldTrackedAmount = trackedAmount;
+            trackedAmount = task.onTrackedInsert(stack, trackedAmount);
 
-            //fake the stack count so imported items cannot get tracked by multiple tasks
-            stack.shrink(trackedAmount);
-            trackedAmount += task.onTrackedInsert(stack);
-            stack.grow(oldTrackedAmount);
-
-            if (stack.getCount() - trackedAmount < 1 || stack.isEmpty())
+            if (stack.isEmpty())
                 break;
         }
 
-        this.tasksDirty |= trackedAmount > 0;
+        this.tasksDirty |= trackedAmount > 0 || oldStackSize != stack.getCount();
     }
 
     @Override
     public void track(FluidStack stack) {
         int trackedAmount = 0;
+        int oldStackSize = stack.amount;
 
         for (ICraftingTask task : tasks.values()) {
-            int oldTrackedAmount = trackedAmount;
+            trackedAmount = task.onTrackedInsert(stack, trackedAmount);
 
-            //fake the stack count so imported items cannot get tracked by multiple tasks
-            stack.amount -= trackedAmount;
-            trackedAmount += task.onTrackedInsert(stack);
-            stack.amount += oldTrackedAmount;
-
-            if (stack.amount - trackedAmount < 1)
+            if (stack.amount < 1)
                 break;
         }
 
-        this.tasksDirty |= trackedAmount > 0;
+        this.tasksDirty |= trackedAmount > 0 || oldStackSize != stack.amount;
     }
 
     @Override

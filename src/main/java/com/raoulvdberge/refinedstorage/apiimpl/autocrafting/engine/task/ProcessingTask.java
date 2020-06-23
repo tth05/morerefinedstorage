@@ -188,12 +188,11 @@ public class ProcessingTask extends Task {
     /**
      * Called when a tracked item is imported. Forwards imported items to parents if this is a processing task.
      *
-     * @param stack the imported stack (this stack is modified)
-     * @return the amount that was tracked but not actually used up
+     * @param stack         the imported stack (this stack is modified)
+     * @param trackedAmount the amount of the stack that already has been tracked
+     * @return the amount of the stack amount that has been tracked
      */
-    public long supplyOutput(ItemStack stack) {
-        int trackedAmount = 0;
-
+    public int supplyOutput(ItemStack stack, int trackedAmount) {
         //if there's anything left and the item is an output of this processing task -> forward to parents
         Output matchingOutput = this.outputs.stream()
                 .filter(o -> !o.isFluid() &&
@@ -213,9 +212,12 @@ public class ProcessingTask extends Task {
 
         if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
-            long processingAmount = matchingOutput.getProcessingAmount();
-            trackAndUpdate(matchingOutput, stack.getCount());
-            trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
+            //only track what hasn't been tracked
+            if (stack.getCount() > trackedAmount) {
+                long processingAmount = matchingOutput.getProcessingAmount();
+                trackAndUpdate(matchingOutput, stack.getCount() - trackedAmount);
+                trackedAmount += (int) (processingAmount - matchingOutput.getProcessingAmount());
+            }
 
             //subtract amount that was given to input
             stack.setCount((int) inputRemainder);
@@ -237,11 +239,10 @@ public class ProcessingTask extends Task {
      * Called when a tracked fluid is imported. Forwards imported fluids to parents if this is a processing task.
      *
      * @param stack the imported stack (this stack is modified)
-     * @return the amount that was tracked but not actually used up
+     * @param trackedAmount the amount of the stack that already has been tracked
+     * @return the amount of the stack amount that has been tracked
      */
-    public int supplyOutput(FluidStack stack) {
-        int trackedAmount = 0;
-
+    public int supplyOutput(FluidStack stack, int trackedAmount) {
         //if there's anything left and the item is an output of this processing task -> forward to parents
         Output matchingOutput = this.outputs.stream()
                 .filter(o -> o.isFluid() &&
@@ -261,9 +262,12 @@ public class ProcessingTask extends Task {
 
         if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
-            long processingAmount = matchingOutput.getProcessingAmount();
-            trackAndUpdate(matchingOutput, stack.amount);
-            trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
+            //only track what hasn't been tracked
+            if (stack.amount > trackedAmount) {
+                long processingAmount = matchingOutput.getProcessingAmount();
+                trackAndUpdate(matchingOutput, stack.amount - trackedAmount);
+                trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
+            }
 
             //subtract amount that was given to input
             stack.amount = (int) inputRemainder;
@@ -302,7 +306,7 @@ public class ProcessingTask extends Task {
         //calculate the amount of completed sets
         long smallestCompletedSetCount =
                 this.outputs.stream().mapToLong(Output::getCompletedSets).min()
-                        .orElseThrow(() -> new RuntimeException("Outputs list is empty"));
+                        .orElseThrow(() -> new IllegalStateException("Outputs list is empty"));
         long newlyCompletedSets = smallestCompletedSetCount - oldCompletedSets;
 
         //if there are new sets that got completed by this insertion -> notify the inputs
@@ -413,7 +417,7 @@ public class ProcessingTask extends Task {
             Input input = this.inputs.stream().filter(i -> !i.isFluid() &&
                     i.getItemStacks().stream().anyMatch(
                             inputStack -> API.instance().getComparer().isEqualNoQuantity(inputStack, remainingItem)))
-                    .findFirst().orElseThrow(RuntimeException::new);
+                    .findFirst().orElseThrow(IllegalStateException::new);
             //increase amount that is currently in the machine
             input.setProcessingAmount(input.getProcessingAmount() + (remainingItem.getCount() - remainder.getCount()));
 
@@ -432,7 +436,7 @@ public class ProcessingTask extends Task {
             //ugly
             Input input = this.inputs.stream().filter(i -> i.isFluid() &&
                     API.instance().getComparer().isEqual(i.getFluidStack(), remainingFluid, IComparer.COMPARE_NBT))
-                    .findFirst().orElseThrow(RuntimeException::new);
+                    .findFirst().orElseThrow(IllegalStateException::new);
             //increase amount that is currently in the machine
             input.setProcessingAmount(input.getProcessingAmount() + (remainingFluid.amount - remainder));
 
