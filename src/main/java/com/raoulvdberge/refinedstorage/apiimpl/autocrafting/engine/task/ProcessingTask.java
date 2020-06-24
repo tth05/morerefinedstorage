@@ -50,6 +50,9 @@ public class ProcessingTask extends Task {
     private boolean finished;
     private final List<ItemStack> remainingItems = new ObjectArrayList<>();
     private final List<FluidStack> remainingFluids = new ObjectArrayList<>();
+
+    private final List<Pair<Input, Integer>> generatedPairs = new ObjectArrayList<>(this.inputs.size());
+
     /**
      * Reference to the container that left behind the remainder. Ensures that all remainder is inserted into the
      * correct container.
@@ -185,7 +188,7 @@ public class ProcessingTask extends Task {
                 .orElseThrow(IllegalStateException::new);
 
         //if we could insert something but not at least a full set, return
-        if(toCraft < 1) {
+        if (toCraft < 1) {
             this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
             network.getCraftingManager().onTaskChanged();
             return 0;
@@ -325,14 +328,14 @@ public class ProcessingTask extends Task {
         long oldCompletedSets = output.getCompletedSets();
         output.setProcessingAmount(output.getProcessingAmount() - amount);
 
-        if(output.getProcessingAmount() < 1) { //ceil if output is done to complete final set
+        if (output.getProcessingAmount() < 1) { //ceil if output is done to complete final set
             output.setCompletedSets(
                     (long) Math.ceil((output.getAmountNeeded() - output.getProcessingAmount()) /
                             (double) output.getQuantityPerCraft()));
         } else { //floor otherwise
             output.setCompletedSets(
-                (long) Math.floor((output.getAmountNeeded() - output.getProcessingAmount()) /
-                        (double) output.getQuantityPerCraft()));
+                    (long) Math.floor((output.getAmountNeeded() - output.getProcessingAmount()) /
+                            (double) output.getQuantityPerCraft()));
         }
 
         //calculate the amount of completed sets
@@ -354,8 +357,8 @@ public class ProcessingTask extends Task {
     /**
      * Inserts the give {@code stack} into the given {@code destination}
      *
-     * @param dest  the destination
-     * @param stack the stack that should be inserted
+     * @param dest     the destination
+     * @param stack    the stack that should be inserted
      * @param simulate whether or not the {@code stack} should not actually be inserted
      * @return the remainder that couldn't be inserted; an empty ItemStack otherwise
      */
@@ -389,7 +392,7 @@ public class ProcessingTask extends Task {
      */
     private List<Pair<Input, Integer>> tryInsertIntoContainer(@Nonnull ICraftingPatternContainer container,
                                                               int toCraft) {
-        List<Pair<Input, Integer>> pairs = new ObjectArrayList<>(this.inputs.size());
+        generatedPairs.clear();
 
         IItemHandler connectedInventory = container.getConnectedInventory();
         IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
@@ -409,7 +412,7 @@ public class ProcessingTask extends Task {
                 if (insertedAmount < 1)
                     return Collections.emptyList();
                 //save inserted amount
-                pairs.add(Pair.of(input, insertedAmount));
+                generatedPairs.add(Pair.of(input, insertedAmount));
 
                 newStack.amount = oldAmount;
             } else {
@@ -460,11 +463,11 @@ public class ProcessingTask extends Task {
                     itemStack.setCount(oldCount);
                 }
 
-                pairs.add(Pair.of(input, amount - notInsertedAmount));
+                generatedPairs.add(Pair.of(input, amount - notInsertedAmount));
             }
         }
 
-        return pairs;
+        return generatedPairs;
     }
 
     /**
