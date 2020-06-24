@@ -64,6 +64,17 @@ public class DurabilityInput extends Input {
     }
 
     @Override
+    public void decreaseToCraftAmount(@Nonnull ItemStack stack) {
+        if (!API.instance().getComparer().isEqual(this.compareableItemStack, stack, IComparer.COMPARE_NBT))
+            return;
+
+        for (int i = 0; i < stack.getCount(); i++)
+            addDamageableItemStack(stack.copy());
+
+        stack.setCount(0);
+    }
+
+    @Override
     public long increaseItemStackAmount(@Nonnull ItemStack stack, long amount) {
         throw new UnsupportedOperationException("#addDamageableItemStack should be used!");
     }

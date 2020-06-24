@@ -70,21 +70,24 @@ public class CraftingTask extends Task {
     public void generateCleanByProducts() {
         List<ItemStack> byproducts = new ArrayList<>(this.pattern.getByproducts());
         //clean by-products
-        byproducts.removeIf(i -> this.getInputs().stream()
+        byproducts.removeIf(i -> i.isEmpty() || this.getInputs().stream()
                 //filter inputs
                 .filter(input -> input instanceof InfiniteInput || input instanceof DurabilityInput)
                 //find lists which contain the items of the filtered inputs
                 .map(input -> this.getPattern().getInputs().stream()
                         .filter(possibilities -> possibilities.stream()
                                 .anyMatch(possibility -> API.instance().getComparer()
-                                        .isEqualNoQuantity(possibility, input.getCompareableItemStack())))
+                                        //don't compare damage for durability inputs
+                                        .isEqual(possibility, input.getCompareableItemStack(), IComparer.COMPARE_NBT |
+                                                (input.getCompareableItemStack().isItemStackDamageable() ?
+                                                        0 : IComparer.COMPARE_DAMAGE))))
                         .findFirst().orElse(null)
                 ).filter(Objects::nonNull)
                 //flat map all items
                 .flatMap(Collection::stream)
                 //find match -> don't compare damage for durability inputs
                 .anyMatch(itemStack -> API.instance().getComparer().isEqual(i, itemStack,
-                        IComparer.COMPARE_NBT | (itemStack.isItemStackDamageable() ? IComparer.COMPARE_DAMAGE : 0)))
+                        IComparer.COMPARE_NBT | (itemStack.isItemStackDamageable() ? 0 : IComparer.COMPARE_DAMAGE)))
         );
 
         this.byProducts = byproducts;
@@ -174,7 +177,7 @@ public class CraftingTask extends Task {
 
         List<ICraftingMonitorElement> elements = new ObjectArrayList<>(this.inputs.size());
         for (Input input : this.inputs) {
-            if(input instanceof InfiniteInput && !((InfiniteInput) input).containsItem())
+            if (input instanceof InfiniteInput && !((InfiniteInput) input).containsItem())
                 continue;
 
             if (input.isFluid()) {
