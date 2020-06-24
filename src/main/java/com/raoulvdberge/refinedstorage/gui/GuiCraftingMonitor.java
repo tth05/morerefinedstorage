@@ -284,6 +284,7 @@ public class GuiCraftingMonitor extends GuiBase {
         int item = scrollbar != null ? scrollbar.getOffset() * 3 : 0;
 
         RenderHelper.enableGUIStandardItemLighting();
+        GlStateManager.enableDepth();
 
         int x = 7;
         int y = 20;
