@@ -25,6 +25,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -133,24 +134,26 @@ public class ProcessingTask extends Task {
                 container.onUsedForProcessing();
                 this.state = ProcessingState.READY;
             }
-            //always use up all crafting updates if there's any remainder left. blocks other tasks somewhat
+
+            //always use up all crafting updates if anything changed. blocks other tasks somewhat
             return prevItemSize != this.remainingItems.size() || prevFluidSize != this.remainingFluids.size() ?
                     toCraft : 0;
         }
 
         remainderContainer = container;
 
-        //adjust the craftable amount
+        //limit by amount needed
         if (toCraft > this.amountNeeded)
             toCraft = (int) this.amountNeeded;
 
-        for (Input input : this.inputs) {
+        //limit by input counts
+        for (Input input : this.inputs)
             toCraft = (int) Math.min(input.getMinimumCraftableAmount(), toCraft);
-        }
 
         if (toCraft < 1)
             return 0;
 
+        //limit by crafter mode
         if (container.getCrafterMode() == ICraftingPatternContainer.CrafterMode.PULSE_INSERTS_NEXT_SET)
             toCraft = 1;
 
@@ -169,7 +172,27 @@ public class ProcessingTask extends Task {
             return 0;
         }
 
-        generateAndInsertIntoContainer(container, toCraft);
+        List<Pair<Input, Integer>> pairs = tryInsertIntoContainer(container, toCraft);
+        //something couldn't be inserted at all
+        if (pairs.isEmpty()) {
+            this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
+            network.getCraftingManager().onTaskChanged();
+            return 0;
+        }
+
+        toCraft = pairs.stream()
+                .mapToInt(p -> (int) Math.floor(p.getRight() / (double) p.getLeft().getQuantityPerCraft())).min()
+                .orElseThrow(IllegalStateException::new);
+
+        //if we could insert something but not at least a full set, return
+        if(toCraft < 1) {
+            this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
+            network.getCraftingManager().onTaskChanged();
+            return 0;
+        } else {
+            //actually try to insert now
+            generateAndInsertIntoContainer(container, toCraft);
+        }
 
         if (this.remainingItems.isEmpty() && this.remainingFluids.isEmpty()) { //everything went well
             container.onUsedForProcessing();
@@ -302,10 +325,15 @@ public class ProcessingTask extends Task {
         long oldCompletedSets = output.getCompletedSets();
         output.setProcessingAmount(output.getProcessingAmount() - amount);
 
-        //calculate new completed set amount
-        output.setCompletedSets(
+        if(output.getProcessingAmount() < 1) { //ceil if output is done to complete final set
+            output.setCompletedSets(
+                    (long) Math.ceil((output.getAmountNeeded() - output.getProcessingAmount()) /
+                            (double) output.getQuantityPerCraft()));
+        } else { //floor otherwise
+            output.setCompletedSets(
                 (long) Math.floor((output.getAmountNeeded() - output.getProcessingAmount()) /
                         (double) output.getQuantityPerCraft()));
+        }
 
         //calculate the amount of completed sets
         long smallestCompletedSetCount =
@@ -328,22 +356,115 @@ public class ProcessingTask extends Task {
      *
      * @param dest  the destination
      * @param stack the stack that should be inserted
+     * @param simulate whether or not the {@code stack} should not actually be inserted
      * @return the remainder that couldn't be inserted; an empty ItemStack otherwise
      */
-    private ItemStack insertIntoInventory(@Nullable IItemHandler dest, @Nonnull ItemStack stack) {
+    private ItemStack insertIntoInventory(@Nullable IItemHandler dest, @Nonnull ItemStack stack, boolean simulate) {
         if (dest == null) {
             return stack;
         }
 
         for (int i = 0; i < dest.getSlots(); ++i) {
             // .copy() is mandatory!
-            stack = dest.insertItem(i, stack.copy(), false);
+            stack = dest.insertItem(i, stack.copy(), simulate);
 
             if (stack.isEmpty())
                 break;
         }
 
         return stack;
+    }
+
+    /**
+     * Generates new items and fluids and tries to insert them directly into the given {@code container}, but only
+     * simulating the insertion. Returns information about how much could be inserted for each {@link Input}. For items,
+     * this simulation will be very inaccurate, because often there are multiple slots and or the
+     * {@link Input#getItemStacks()} list contains multiple variations which are never inserted all at the same time,
+     * just one after another.
+     *
+     * @param container the container
+     * @param toCraft   the amount of sets to insert
+     * @return a list of pairs containing each an {@link Input} and the amount for that input that could be inserted;
+     * if there was any {@link Input} of which nothing could be inserted, then an empty list is returned
+     */
+    private List<Pair<Input, Integer>> tryInsertIntoContainer(@Nonnull ICraftingPatternContainer container,
+                                                              int toCraft) {
+        List<Pair<Input, Integer>> pairs = new ObjectArrayList<>(this.inputs.size());
+
+        IItemHandler connectedInventory = container.getConnectedInventory();
+        IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
+
+        //notify inputs and generate input items
+        for (Input input : this.inputs) {
+            int amount = toCraft * input.getQuantityPerCraft();
+
+            if (input.isFluid()) {
+                //saving this is better than copying the whole stack again
+                int oldAmount = input.getFluidStack().amount;
+                FluidStack newStack = input.getFluidStack();
+                newStack.amount = amount;
+
+                int insertedAmount = connectedFluidInventory.fill(newStack, false);
+
+                if (insertedAmount < 1)
+                    return Collections.emptyList();
+                //save inserted amount
+                pairs.add(Pair.of(input, insertedAmount));
+
+                newStack.amount = oldAmount;
+            } else {
+                long tempAmount = amount;
+                //copy current input counts
+                List<Long> newInputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
+                //generate new input counts
+                for (int i = 0; i < newInputCounts.size(); i++) {
+                    Long currentInputCount = newInputCounts.get(i);
+                    if (currentInputCount == 0)
+                        continue;
+                    if (tempAmount < 1)
+                        break;
+
+                    currentInputCount -= tempAmount;
+                    if (currentInputCount < 0) {
+                        tempAmount = -currentInputCount;
+                        currentInputCount = 0L;
+                    } else {
+                        tempAmount = 0;
+                    }
+
+                    newInputCounts.set(i, currentInputCount);
+                }
+
+                int notInsertedAmount = 0;
+
+                //this ensures that the correct item stacks are created when ore dict is being used
+                for (int i = 0; i < input.getCurrentInputCounts().size(); i++) {
+                    long diff = input.getCurrentInputCounts().get(i) - newInputCounts.get(i);
+                    if (diff < 1)
+                        continue;
+
+                    //fake count
+                    ItemStack itemStack = input.getItemStacks().get(i);
+                    int oldCount = itemStack.getCount();
+                    itemStack.setCount((int) diff);
+
+                    int returnedCount = insertIntoInventory(connectedInventory, itemStack, true).getCount();
+
+                    //return if nothing changed
+                    if (returnedCount == oldCount)
+                        return Collections.emptyList();
+
+                    //try to insert new item
+                    notInsertedAmount += returnedCount;
+
+                    itemStack.setCount(oldCount);
+                }
+
+                pairs.add(Pair.of(input, amount - notInsertedAmount));
+            }
+        }
+
+        return pairs;
     }
 
     /**
@@ -390,7 +511,7 @@ public class ProcessingTask extends Task {
 
                     //generate new item using the difference in counts
                     ItemStack remainder = insertIntoInventory(connectedInventory,
-                            ItemHandlerHelper.copyStackWithSize(input.getItemStacks().get(i), (int) diff));
+                            ItemHandlerHelper.copyStackWithSize(input.getItemStacks().get(i), (int) diff), false);
 
                     //increase amount that is currently in the machine
                     input.setProcessingAmount(input.getProcessingAmount() + (diff - remainder.getCount()));
@@ -416,7 +537,8 @@ public class ProcessingTask extends Task {
         for (Iterator<ItemStack> iterator = remainingItems.iterator(); iterator.hasNext(); ) {
             ItemStack remainingItem = iterator.next();
 
-            ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem);
+            ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem, false);
+
             //ugly -> store remaining stuff as (Input, int) pair
             Input input = this.inputs.stream().filter(i -> !i.isFluid() &&
                     i.getItemStacks().stream().anyMatch(

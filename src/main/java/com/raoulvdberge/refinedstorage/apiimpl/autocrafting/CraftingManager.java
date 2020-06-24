@@ -5,10 +5,10 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
-import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
@@ -343,6 +343,9 @@ public class CraftingManager implements ICraftingManager {
         int oldStackSize = stack.getCount();
 
         for (ICraftingTask task : tasks.values()) {
+            if(!task.canUpdate())
+                continue;
+
             trackedAmount = task.onTrackedInsert(stack, trackedAmount);
 
             if (stack.isEmpty())
@@ -358,6 +361,9 @@ public class CraftingManager implements ICraftingManager {
         int oldStackSize = stack.amount;
 
         for (ICraftingTask task : tasks.values()) {
+            if(!task.canUpdate())
+                continue;
+
             trackedAmount = task.onTrackedInsert(stack, trackedAmount);
 
             if (stack.amount < 1)

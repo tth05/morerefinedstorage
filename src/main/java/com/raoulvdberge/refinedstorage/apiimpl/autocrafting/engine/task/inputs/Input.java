@@ -169,16 +169,15 @@ public class Input {
             }
         }
 
-        //these return code aren't optimal but better than making another method that checks just this
         if (!found)
             return;
 
         //adjust all values accordingly
-        long realAmount = Math.min(toCraftAmount, stack.getCount());
+        int realAmount = (int) Math.min(toCraftAmount, stack.getCount());
         this.toCraftAmount = Math.max(toCraftAmount - stack.getCount(), 0);
         this.totalInputAmount += realAmount;
         this.currentInputCounts.set(i, this.currentInputCounts.get(i) + realAmount);
-        stack.setCount((int) (stack.getCount() - realAmount));
+        stack.shrink(realAmount);
     }
 
     /**
@@ -188,7 +187,6 @@ public class Input {
      * @param stack the fluid that was crafted (the count of this stack is modified)
      */
     public void decreaseToCraftAmount(@Nonnull FluidStack stack) {
-        //these return code aren't optimal but better than making another method that checks just this
         if (!API.instance().getComparer().isEqual(stack, this.getFluidStack(), IComparer.COMPARE_NBT))
             return;
 
