@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementAttributeHolder;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementList;
 
 import java.util.*;
@@ -45,21 +46,43 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     }
 
     @Override
+    public void sort() {
+        this.elements.sort((o1, o2) -> {
+            ICraftingMonitorElementAttributeHolder one =
+                    (ICraftingMonitorElementAttributeHolder) (o1 instanceof CraftingMonitorElementError ?
+                            ((CraftingMonitorElementError) o1).getBase() : o1);
+            ICraftingMonitorElementAttributeHolder two =
+                    (ICraftingMonitorElementAttributeHolder) (o2 instanceof CraftingMonitorElementError ?
+                            ((CraftingMonitorElementError) o2).getBase() : o2);
+
+            if (one.getScheduled() > two.getScheduled())
+                return -1;
+            else if (one.getScheduled() < two.getScheduled())
+                return 1;
+            else if (one.getProcessing() > two.getProcessing())
+                return -1;
+            else if (one.getProcessing() < two.getProcessing())
+                return 1;
+            else if (one.getCrafting() > two.getCrafting())
+                return -1;
+            else if (one.getCrafting() < two.getCrafting())
+                return 1;
+            else if (one.getStored() > two.getStored())
+                return -1;
+            else if (one.getStored() < two.getStored())
+                return 1;
+            return 0;
+        });
+    }
+
+    @Override
     public void clearEmptyElements() {
         this.elements.removeIf(e -> {
-            ICraftingMonitorElement element =
-                    e instanceof CraftingMonitorElementError ? ((CraftingMonitorElementError) e).getBase() : e;
-            if (element instanceof CraftingMonitorElementFluidRender) {
-                CraftingMonitorElementFluidRender fluid = (CraftingMonitorElementFluidRender) element;
-                return fluid.getStored() < 1 && fluid.getCrafting() < 1 && fluid.getProcessing() < 1 &&
-                        fluid.getScheduled() < 1;
-            } else if (element instanceof CraftingMonitorElementItemRender) {
-                CraftingMonitorElementItemRender item = (CraftingMonitorElementItemRender) element;
-                return item.getStored() < 1 && item.getCrafting() < 1 && item.getProcessing() < 1 &&
-                        item.getScheduled() < 1;
-            }
-
-            return true;
+            ICraftingMonitorElementAttributeHolder element =
+                    (ICraftingMonitorElementAttributeHolder) (e instanceof CraftingMonitorElementError ?
+                            ((CraftingMonitorElementError) e).getBase() : e);
+            return element.getStored() < 1 && element.getCrafting() < 1 && element.getProcessing() < 1 &&
+                    element.getScheduled() < 1;
         });
     }
 

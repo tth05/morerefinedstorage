@@ -463,6 +463,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
         elements.commit();
         elements.clearEmptyElements();
+        elements.sort();
 
         return elements.getElements();
     }

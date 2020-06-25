@@ -17,6 +17,17 @@ public interface ICraftingMonitorElementList {
     void commit();
 
     /**
+     * Sorts the committed elements according to the following order:
+     * <ul>
+     *     <li>Scheduled</li>
+     *     <li>Processing</li>
+     *     <li>Crafting</li>
+     *     <li>Stored</li>
+     * </ul>
+     */
+    void sort();
+
+    /**
      * Removes all elements in this list which are completely empty (All counts are below 1).
      * This method only operates on already committed elements.
      */

@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementAttributeHolder;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
@@ -14,7 +15,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 
-public class CraftingMonitorElementItemRender implements ICraftingMonitorElement {
+public class CraftingMonitorElementItemRender implements ICraftingMonitorElement,
+        ICraftingMonitorElementAttributeHolder {
     private static final int COLOR_PROCESSING = 0xFFD9EDF7;
     private static final int COLOR_SCHEDULED = 0xFFE8E5CA;
     private static final int COLOR_CRAFTING = 0xFFADDBC6;
@@ -97,18 +99,22 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
         return String.join("\n", RenderUtils.getItemTooltip(this.stack));
     }
 
+    @Override
     public int getStored() {
         return stored;
     }
 
+    @Override
     public int getProcessing() {
         return processing;
     }
 
+    @Override
     public int getScheduled() {
         return scheduled;
     }
 
+    @Override
     public int getCrafting() {
         return crafting;
     }
