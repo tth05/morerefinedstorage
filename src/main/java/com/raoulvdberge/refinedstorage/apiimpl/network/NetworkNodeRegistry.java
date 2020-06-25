@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NetworkNodeRegistry implements INetworkNodeRegistry {
-    private Map<String, INetworkNodeFactory> factories = new HashMap<>();
+    private final Map<String, INetworkNodeFactory> factories = new HashMap<>();
 
     @Override
     public void add(String id, INetworkNodeFactory factory) {

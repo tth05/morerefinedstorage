@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.api.autocrafting;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -69,11 +70,6 @@ public interface ICraftingManager {
     ICraftingTask create(FluidStack stack, int quantity);
 
     /**
-     * @return a new pattern chain list
-     */
-    ICraftingPatternChainList createPatternChainList();
-
-    /**
      * @deprecated Use {@link #request(Object, ItemStack, int)}
      */
     @Nullable
@@ -118,14 +114,14 @@ public interface ICraftingManager {
      *
      * @param stack the stack
      */
-    int track(ItemStack stack, int size);
+    void track(ItemStack stack);
 
     /**
      * Tracks an incoming stack.
      *
      * @param stack the stack
      */
-    int track(FluidStack stack, int size);
+    void track(FluidStack stack);
 
     /**
      * @return the crafting patterns in this network
@@ -144,7 +140,12 @@ public interface ICraftingManager {
      * @return the crafting pattern, or null if none is found
      */
     @Nullable
-    ICraftingPattern getPattern(ItemStack pattern);
+    ICraftingPattern getPattern(ItemStack pattern, int flags);
+
+    @Nullable
+    default ICraftingPattern getPattern(ItemStack pattern) {
+        return getPattern(pattern, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
+    }
 
     /**
      * Return a crafting pattern from a fluid stack.

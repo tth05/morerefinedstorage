@@ -10,9 +10,9 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 public class QuantityFormatter implements IQuantityFormatter {
-    private DecimalFormat formatterWithUnits = new DecimalFormat("####0.#", DecimalFormatSymbols.getInstance(Locale.US));
-    private DecimalFormat formatter = new DecimalFormat("#,###", DecimalFormatSymbols.getInstance(Locale.US));
-    private DecimalFormat bucketFormatter = new DecimalFormat("####0.###", DecimalFormatSymbols.getInstance(Locale.US));
+    private final DecimalFormat formatterWithUnits = new DecimalFormat("####0.#", DecimalFormatSymbols.getInstance(Locale.US));
+    private final DecimalFormat formatter = new DecimalFormat("#,###", DecimalFormatSymbols.getInstance(Locale.US));
+    private final DecimalFormat bucketFormatter = new DecimalFormat("####0.###", DecimalFormatSymbols.getInstance(Locale.US));
 
     public QuantityFormatter() {
         formatterWithUnits.setRoundingMode(RoundingMode.DOWN);
@@ -61,6 +61,11 @@ public class QuantityFormatter implements IQuantityFormatter {
     @Override
     public String formatInBucketForm(int qty) {
         return bucketFormatter.format((float) qty / (float) Fluid.BUCKET_VOLUME) + " B";
+    }
+
+    @Override
+    public String formatInBucketForm(long qty) {
+        return bucketFormatter.format((double) qty / (double) Fluid.BUCKET_VOLUME) + " B";
     }
 
     @Override

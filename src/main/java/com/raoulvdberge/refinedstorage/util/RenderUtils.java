@@ -69,10 +69,10 @@ public final class RenderUtils {
     }
 
     private static void drawFluidTexture(double xCoord, double yCoord, TextureAtlasSprite textureSprite, int maskTop, int maskRight, double zLevel) {
-        double uMin = (double) textureSprite.getMinU();
-        double uMax = (double) textureSprite.getMaxU();
-        double vMin = (double) textureSprite.getMinV();
-        double vMax = (double) textureSprite.getMaxV();
+        double uMin = textureSprite.getMinU();
+        double uMax = textureSprite.getMaxU();
+        double vMin = textureSprite.getMinV();
+        double vMax = textureSprite.getMaxV();
         uMax = uMax - (maskRight / 16.0 * (uMax - uMin));
         vMax = vMax - (maskTop / 16.0 * (vMax - vMin));
 
@@ -253,7 +253,7 @@ public final class RenderUtils {
                     }
                 }
 
-                data = (displayAmount ? (String.valueOf(amount) + "x ") : "") + data;
+                data = (displayAmount ? (amount + "x ") : "") + data;
 
                 tooltip.add(data);
             }
@@ -295,7 +295,6 @@ public final class RenderUtils {
             mouseX = event.getX();
             mouseY = event.getY();
 
-            screenWidth = event.getScreenWidth();
             screenHeight = event.getScreenHeight();
 
             FontRenderer font = event.getFontRenderer();
@@ -340,9 +339,7 @@ public final class RenderUtils {
 
             if (textLines.size() > 1) {
                 tooltipHeight += (textLines.size() - 1) * 10;
-                if (textLines.size() > titleLinesCount) {
-                    tooltipHeight += 2;
-                }
+                tooltipHeight += 2;
             }
 
             // RS BEGIN

@@ -5,9 +5,9 @@ import com.raoulvdberge.refinedstorage.gui.IResizableDisplay;
 import net.minecraftforge.items.IItemHandler;
 
 public class SlotCrafterManager extends SlotBase {
-    private boolean visible;
-    private NetworkNodeCrafterManager crafterManager;
-    private IResizableDisplay display;
+    private final boolean visible;
+    private final NetworkNodeCrafterManager crafterManager;
+    private final IResizableDisplay display;
 
     public SlotCrafterManager(IItemHandler itemHandler, int inventoryIndex, int x, int y, boolean visible, IResizableDisplay display, NetworkNodeCrafterManager crafterManager) {
         super(itemHandler, inventoryIndex, x, y);

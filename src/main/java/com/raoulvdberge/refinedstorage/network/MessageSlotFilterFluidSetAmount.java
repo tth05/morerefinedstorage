@@ -10,7 +10,8 @@ import net.minecraft.inventory.Slot;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
-public class MessageSlotFilterFluidSetAmount extends MessageHandlerPlayerToServer<MessageSlotFilterFluidSetAmount> implements IMessage {
+public class MessageSlotFilterFluidSetAmount extends MessageHandlerPlayerToServer<MessageSlotFilterFluidSetAmount>
+        implements IMessage {
     private int containerSlot;
     private int amount;
 
@@ -27,20 +28,21 @@ public class MessageSlotFilterFluidSetAmount extends MessageHandlerPlayerToServe
     protected void handle(MessageSlotFilterFluidSetAmount message, EntityPlayerMP player) {
         Container container = player.openContainer;
 
-        if (container != null) {
-            if (message.containerSlot >= 0 && message.containerSlot < container.inventorySlots.size()) {
-                Slot slot = container.getSlot(message.containerSlot);
+        if (container == null)
+            return;
+        if (message.containerSlot < 0 || message.containerSlot >= container.inventorySlots.size())
+            return;
 
-                if (slot instanceof SlotFilterFluid) {
-                    FluidInventory inventory = ((SlotFilterFluid) slot).getFluidInventory();
+        Slot slot = container.getSlot(message.containerSlot);
 
-                    FluidStack stack = inventory.getFluid(slot.getSlotIndex());
+        if (!(slot instanceof SlotFilterFluid))
+            return;
+        FluidInventory inventory = ((SlotFilterFluid) slot).getFluidInventory();
 
-                    if (stack != null && message.amount > 0 && message.amount <= inventory.getMaxAmount()) {
-                        inventory.setFluid(slot.getSlotIndex(), StackUtils.copy(stack, message.amount));
-                    }
-                }
-            }
+        FluidStack stack = inventory.getFluid(slot.getSlotIndex());
+
+        if (stack != null && message.amount > 0 && message.amount <= inventory.getMaxAmount()) {
+            inventory.setFluid(slot.getSlotIndex(), StackUtils.copy(stack, message.amount));
         }
     }
 

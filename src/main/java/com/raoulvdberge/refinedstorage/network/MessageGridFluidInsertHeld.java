@@ -9,14 +9,17 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class MessageGridFluidInsertHeld extends MessageHandlerPlayerToServer<MessageGridFluidInsertHeld> implements IMessage {
     public MessageGridFluidInsertHeld() {
+        //NO OP
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
+        //NO OP
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
+        //NO OP
     }
 
     @Override

@@ -2,6 +2,8 @@ package com.raoulvdberge.refinedstorage.block.enums;
 
 import net.minecraft.util.IStringSerializable;
 
+import javax.annotation.Nonnull;
+
 public enum FluidStorageType implements IStringSerializable {
     TYPE_64K(0, 64_000, "64k"),
     TYPE_256K(1, 256_000, "256k"),
@@ -9,9 +11,9 @@ public enum FluidStorageType implements IStringSerializable {
     TYPE_4096K(3, 4096_000, "4096k"),
     TYPE_CREATIVE(4, -1, "creative");
 
-    private int id;
-    private int capacity;
-    private String name;
+    private final int id;
+    private final int capacity;
+    private final String name;
 
     FluidStorageType(int id, int capacity, String name) {
         this.id = id;
@@ -19,6 +21,7 @@ public enum FluidStorageType implements IStringSerializable {
         this.name = name;
     }
 
+    @Nonnull
     @Override
     public String getName() {
         return name;

@@ -23,7 +23,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-// TODO: getId: return a ResourceLocation.
 public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     private static final String NBT_OWNER = "Owner";
     private static final String NBT_DIRECTION = "Direction";
@@ -107,10 +106,8 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
 
     @Override
     public boolean canUpdate() {
-        if (redstoneMode.isEnabled(world, pos)) {
-            if (network != null) {
-                return network.canRun();
-            }
+        if (redstoneMode.isEnabled(world, pos) && network != null) {
+            return network.canRun();
         }
 
         return false;
@@ -288,6 +285,7 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
         return owner;
     }
 
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     @Override
     public boolean equals(Object o) {
         return API.instance().isNetworkNodeEqual(this, o);

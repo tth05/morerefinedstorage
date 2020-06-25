@@ -10,6 +10,8 @@ import net.minecraft.util.BlockRenderLayer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public class BlockNetworkReceiver extends BlockNode {
     public BlockNetworkReceiver() {
         super(BlockInfoBuilder.forId("network_receiver").tileEntity(TileNetworkReceiver::new).create());
@@ -23,6 +25,7 @@ public class BlockNetworkReceiver extends BlockNode {
         modelRegistration.addBakedModelOverride(info.getId(), base -> new BakedModelFullbright(base, RS.ID + ":blocks/network_receiver/cutouts/connected"));
     }
 
+    @Nonnull
     @Override
     public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;

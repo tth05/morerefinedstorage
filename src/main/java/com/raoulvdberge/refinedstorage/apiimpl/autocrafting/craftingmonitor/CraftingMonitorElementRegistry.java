@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class CraftingMonitorElementRegistry implements ICraftingMonitorElementRegistry {
-    private Map<String, Function<ByteBuf, ICraftingMonitorElement>> registry = new HashMap<>();
+    private final Map<String, Function<ByteBuf, ICraftingMonitorElement>> registry = new HashMap<>();
 
     @Override
     public void add(String id, Function<ByteBuf, ICraftingMonitorElement> factory) {

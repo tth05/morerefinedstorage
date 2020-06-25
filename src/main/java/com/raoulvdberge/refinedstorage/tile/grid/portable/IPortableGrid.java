@@ -22,7 +22,7 @@ public interface IPortableGrid {
     }
 
     @Nullable
-    IStorageCache getCache();
+    IStorageCache<?> getCache();
 
     default IStorageCache<ItemStack> getItemCache() {
         return (IStorageCache<ItemStack>) getCache();
@@ -33,7 +33,7 @@ public interface IPortableGrid {
     }
 
     @Nullable
-    IStorageDisk getStorage();
+    IStorageDisk<?> getStorage();
 
     default IStorageDisk<ItemStack> getItemStorage() {
         return (IStorageDisk<ItemStack>) getStorage();

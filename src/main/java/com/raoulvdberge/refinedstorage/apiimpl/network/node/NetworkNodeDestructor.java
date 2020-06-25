@@ -69,17 +69,17 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
 
     private static final int BASE_SPEED = 20;
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_SILK_TOUCH, ItemUpgrade.TYPE_FORTUNE_1, ItemUpgrade.TYPE_FORTUNE_2, ItemUpgrade.TYPE_FORTUNE_3);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_SILK_TOUCH, ItemUpgrade.TYPE_FORTUNE_1, ItemUpgrade.TYPE_FORTUNE_2, ItemUpgrade.TYPE_FORTUNE_3);
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
     private int mode = IFilterable.BLACKLIST;
     private int type = IType.ITEMS;
     private boolean pickupItem = false;
 
-    private CoverManager coverManager = new CoverManager(this);
+    private final CoverManager coverManager = new CoverManager(this);
 
     public NetworkNodeDestructor(World world, BlockPos pos) {
         super(world, pos);
@@ -107,7 +107,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     public void update() {
         super.update();
 
-        if (canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
+        if (network != null && canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
             BlockPos front = pos.offset(getDirection());
 
             if (pickupItem && type == IType.ITEMS) {
@@ -120,7 +120,8 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                     if (entity instanceof EntityItem) {
                         ItemStack droppedItem = ((EntityItem) entity).getItem();
 
-                        if (IFilterable.acceptsItem(itemFilters, mode, compare, droppedItem) && network.insertItem(droppedItem, droppedItem.getCount(), Action.SIMULATE) == null) {
+                        if (IFilterable.acceptsItem(itemFilters, mode, compare, droppedItem) &&
+                                network.insertItem(droppedItem, droppedItem.getCount(), Action.SIMULATE) == null) {
                             network.insertItemTracked(droppedItem.copy(), droppedItem.getCount());
 
                             world.removeEntity(entity);
@@ -141,46 +142,46 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                     getFakePlayer()
                 );
 
-                if (!frontStack.isEmpty()) {
-                    if (IFilterable.acceptsItem(itemFilters, mode, compare, frontStack) && frontBlockState.getBlockHardness(world, front) != -1.0) {
-                        NonNullList<ItemStack> drops = NonNullList.create();
+                if (!frontStack.isEmpty() && IFilterable.acceptsItem(itemFilters, mode, compare, frontStack) &&
+                        frontBlockState.getBlockHardness(world, front) != -1.0) {
+                    NonNullList<ItemStack> drops = NonNullList.create();
 
-                        if (frontBlock instanceof BlockShulkerBox) {
-                            drops.add(((BlockShulkerBox) frontBlock).getItem(world, front, frontBlockState));
+                    if (frontBlock instanceof BlockShulkerBox) {
+                        drops.add(((BlockShulkerBox) frontBlock).getItem(world, front, frontBlockState));
 
-                            TileEntity shulkerBoxTile = world.getTileEntity(front);
+                        TileEntity shulkerBoxTile = world.getTileEntity(front);
 
-                            if (shulkerBoxTile instanceof TileEntityShulkerBox) {
-                                // Avoid dropping the shulker box when Block#breakBlock is called
-                                ((TileEntityShulkerBox) shulkerBoxTile).setDestroyedByCreativePlayer(true);
-                                ((TileEntityShulkerBox) shulkerBoxTile).clear();
-                            }
-                        } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_SILK_TOUCH) && frontBlock.canSilkHarvest(world, front, frontBlockState, null)) {
-                            drops.add(frontStack);
-                        } else {
-                            frontBlock.getDrops(drops, world, front, frontBlockState, upgrades.getFortuneLevel());
+                        if (shulkerBoxTile instanceof TileEntityShulkerBox) {
+                            // Avoid dropping the shulker box when Block#breakBlock is called
+                            ((TileEntityShulkerBox) shulkerBoxTile).setDestroyedByCreativePlayer(true);
+                            ((TileEntityShulkerBox) shulkerBoxTile).clear();
                         }
+                    } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_SILK_TOUCH) &&
+                            frontBlock.canSilkHarvest(world, front, frontBlockState, null)) {
+                        drops.add(frontStack);
+                    } else {
+                        frontBlock.getDrops(drops, world, front, frontBlockState, upgrades.getFortuneLevel());
+                    }
+
+                    for (ItemStack drop : drops) {
+                        if (network.insertItem(drop, drop.getCount(), Action.SIMULATE) != null) {
+                            return;
+                        }
+                    }
+
+                    BlockEvent.BreakEvent e = new BlockEvent.BreakEvent(world, front, frontBlockState, getFakePlayer());
+
+                    if (!MinecraftForge.EVENT_BUS.post(e)) {
+                        world.playEvent(null, 2001, front, Block.getStateId(frontBlockState));
+                        world.setBlockToAir(front);
 
                         for (ItemStack drop : drops) {
-                            if (network.insertItem(drop, drop.getCount(), Action.SIMULATE) != null) {
-                                return;
-                            }
-                        }
-
-                        BlockEvent.BreakEvent e = new BlockEvent.BreakEvent(world, front, frontBlockState, getFakePlayer());
-
-                        if (!MinecraftForge.EVENT_BUS.post(e)) {
-                            world.playEvent(null, 2001, front, Block.getStateId(frontBlockState));
-                            world.setBlockToAir(front);
-
-                            for (ItemStack drop : drops) {
-                                // We check if the controller isn't null here because when a destructor faces a node and removes it
-                                // it will essentially remove this block itself from the network without knowing
-                                if (network == null) {
-                                    InventoryHelper.spawnItemStack(world, front.getX(), front.getY(), front.getZ(), drop);
-                                } else {
-                                    network.insertItemTracked(drop, drop.getCount());
-                                }
+                            // We check if the controller isn't null here because when a destructor faces a node and removes it
+                            // it will essentially remove this block itself from the network without knowing
+                            if (network == null) {
+                                InventoryHelper.spawnItemStack(world, front.getX(), front.getY(), front.getZ(), drop);
+                            } else {
+                                network.insertItemTracked(drop, drop.getCount());
                             }
                         }
                     }
@@ -202,7 +203,8 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                     if (stack != null && IFilterable.acceptsFluid(fluidFilters, mode, compare, stack) && network.insertFluid(stack, stack.amount, Action.SIMULATE) == null) {
                         FluidStack drained = handler.drain(Fluid.BUCKET_VOLUME, true);
 
-                        network.insertFluidTracked(drained, drained.amount);
+                        if(drained != null)
+                            network.insertFluidTracked(drained, drained.amount);
                     }
                 }
             }

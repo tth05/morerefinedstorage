@@ -27,7 +27,7 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
 
     private List<Pair<IGridStack, Integer>> clientDeltas;
 
-    public MessageGridFluidDelta(INetwork network, List<StackListResult<FluidStack>> deltas) {
+    public MessageGridFluidDelta(@Nullable INetwork network, List<StackListResult<FluidStack>> deltas) {
         this.network = network;
         this.deltas = deltas;
     }
@@ -39,15 +39,13 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
     public void fromBytes(ByteBuf buf) {
         int size = buf.readInt();
 
-        List<Pair<IGridStack, Integer>> clientDeltas = new LinkedList<>();
+        this.clientDeltas = new LinkedList<>();
 
         for (int i = 0; i < size; ++i) {
             int delta = buf.readInt();
 
-            clientDeltas.add(Pair.of(StackUtils.readFluidGridStack(buf), delta));
+            this.clientDeltas.add(Pair.of(StackUtils.readFluidGridStack(buf), delta));
         }
-
-        this.clientDeltas = clientDeltas;
     }
 
     @Override

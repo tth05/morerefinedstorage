@@ -19,7 +19,7 @@ import java.util.List;
 
 public class MessageGridItemUpdate implements IMessage, IMessageHandler<MessageGridItemUpdate, IMessage> {
     private boolean canCraft;
-    private List<IGridStack> stacks = new ArrayList<>();
+    private final List<IGridStack> stacks = new ArrayList<>();
     private INetwork network;
 
 
@@ -48,20 +48,27 @@ public class MessageGridItemUpdate implements IMessage, IMessageHandler<MessageG
     public void toBytes(ByteBuf buf) {
         buf.writeBoolean(canCraft);
 
-        int size = network.getItemStorageCache().getList().getStacks().size() + network.getItemStorageCache().getCraftablesList().getStacks().size();
+        int size = network.getItemStorageCache().getList().getStacks().size() +
+                network.getItemStorageCache().getCraftablesList().getStacks().size();
 
         buf.writeInt(size);
 
         for (StackListEntry<ItemStack> stack : network.getItemStorageCache().getList().getStacks()) {
-            StackListEntry<ItemStack> craftingEntry = network.getItemStorageCache().getCraftablesList().getEntry(stack.getStack(), IComparer.COMPARE_NBT);
+            StackListEntry<ItemStack> craftingEntry = network.getItemStorageCache().getCraftablesList()
+                    .getEntry(stack.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
 
-            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getId(), craftingEntry != null ? craftingEntry.getId() : null, false, network.getItemStorageTracker().get(stack.getStack()));
+            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getId(),
+                    craftingEntry != null ? craftingEntry.getId() : null, false,
+                    network.getItemStorageTracker().get(stack.getStack()));
         }
 
         for (StackListEntry<ItemStack> stack : network.getItemStorageCache().getCraftablesList().getStacks()) {
-            StackListEntry<ItemStack> regularEntry = network.getItemStorageCache().getList().getEntry(stack.getStack(), IComparer.COMPARE_NBT);
+            StackListEntry<ItemStack> regularEntry = network.getItemStorageCache().getList()
+                    .getEntry(stack.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
 
-            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getId(), regularEntry != null ? regularEntry.getId() : null, true, network.getItemStorageTracker().get(stack.getStack()));
+            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getId(),
+                    regularEntry != null ? regularEntry.getId() : null, true,
+                    network.getItemStorageTracker().get(stack.getStack()));
         }
     }
 

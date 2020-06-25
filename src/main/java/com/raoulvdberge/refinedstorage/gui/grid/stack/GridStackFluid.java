@@ -12,14 +12,14 @@ import java.util.UUID;
 
 public class GridStackFluid implements IGridStack {
 
-    private UUID id;
+    private final UUID id;
     @Nullable
     private UUID otherId;
 
-    private FluidStack stack;
+    private final FluidStack stack;
     @Nullable
     private StorageTrackerEntry entry;
-    private boolean craftable;
+    private final boolean craftable;
     private String modId;
     private String modName;
 
@@ -124,7 +124,7 @@ public class GridStackFluid implements IGridStack {
 
     @Override
     public Object getIngredient() {
-        return stack;
+        return getStack();
     }
 
     @Nullable

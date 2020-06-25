@@ -15,7 +15,7 @@ public interface ICraftingPreviewElementRegistry {
      * @param id      the id, as specified in {@link ICraftingPreviewElement#getId()}
      * @param factory the factory
      */
-    void add(String id, Function<ByteBuf, ICraftingPreviewElement> factory);
+    void add(String id, Function<ByteBuf, ICraftingPreviewElement<?>> factory);
 
     /**
      * Returns a factory from the registry.
@@ -24,5 +24,5 @@ public interface ICraftingPreviewElementRegistry {
      * @return the factory, or null if no factory was found
      */
     @Nullable
-    Function<ByteBuf, ICraftingPreviewElement> get(String id);
+    Function<ByteBuf, ICraftingPreviewElement<?>> get(String id);
 }

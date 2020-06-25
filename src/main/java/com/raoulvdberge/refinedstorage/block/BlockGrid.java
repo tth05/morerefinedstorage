@@ -28,10 +28,11 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class BlockGrid extends BlockNode {
-    public static final PropertyEnum TYPE = PropertyEnum.create("type", GridType.class);
+    public static final PropertyEnum<GridType> TYPE = PropertyEnum.create("type", GridType.class);
 
     public BlockGrid() {
         super(BlockInfoBuilder.forId("grid").tileEntity(TileGrid::new).create());
@@ -54,6 +55,7 @@ public class BlockGrid extends BlockNode {
         ));
     }
 
+    @Nonnull
     @Override
     public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
@@ -66,12 +68,13 @@ public class BlockGrid extends BlockNode {
     }
 
     @Override
-    public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> items) {
+    public void getSubBlocks(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
         for (int i = 0; i <= 3; i++) {
             items.add(new ItemStack(this, 1, i));
         }
     }
 
+    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return createBlockStateBuilder()
@@ -79,18 +82,20 @@ public class BlockGrid extends BlockNode {
             .build();
     }
 
+    @Nonnull
     @Override
+    @Deprecated
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, meta == 0 ? GridType.NORMAL : (meta == 1 ? GridType.CRAFTING : (meta == 2 ? GridType.PATTERN : GridType.FLUID)));
     }
 
     @Override
-    public int getMetaFromState(IBlockState state) {
+    public int getMetaFromState(@Nonnull IBlockState state) {
         return state.getValue(TYPE) == GridType.NORMAL ? 0 : (state.getValue(TYPE) == GridType.CRAFTING ? 1 : (state.getValue(TYPE) == GridType.PATTERN ? 2 : 3));
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         return openNetworkGui(player, world, pos, side, () -> API.instance().getGridManager().openGrid(NetworkNodeGrid.FACTORY_ID, (EntityPlayerMP) player, pos));
     }
 

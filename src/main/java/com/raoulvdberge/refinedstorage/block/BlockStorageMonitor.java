@@ -20,6 +20,7 @@ import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class BlockStorageMonitor extends BlockNode {
@@ -42,7 +43,7 @@ public class BlockStorageMonitor extends BlockNode {
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         if (!world.isRemote) {
             ItemStack held = player.inventory.getCurrentItem();
 
@@ -63,7 +64,7 @@ public class BlockStorageMonitor extends BlockNode {
     }
 
     @Override
-    public void onBlockClicked(World world, BlockPos pos, EntityPlayer player) {
+    public void onBlockClicked(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull EntityPlayer player) {
         super.onBlockClicked(world, pos, player);
 
         if (!world.isRemote) {

@@ -9,17 +9,19 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.common.model.IModelState;
 
+import javax.annotation.Nonnull;
 import java.util.function.Function;
 
 public class ModelCover implements IModel {
-    private CoverType coverType;
+    private final CoverType coverType;
 
     public ModelCover(CoverType coverType) {
         this.coverType = coverType;
     }
 
+    @Nonnull
     @Override
-    public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
+    public IBakedModel bake(@Nonnull IModelState state, @Nonnull VertexFormat format, @Nonnull Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
         return new BakedModelCover(null, coverType);
     }
 }

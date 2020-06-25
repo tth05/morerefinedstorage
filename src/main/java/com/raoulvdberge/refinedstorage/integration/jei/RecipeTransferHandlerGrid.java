@@ -18,6 +18,7 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,13 +27,14 @@ public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
     public static final long TRANSFER_SCROLL_DELAY_MS = 200;
     public static long LAST_TRANSFER;
 
+    @Nonnull
     @Override
     public Class<? extends Container> getContainerClass() {
         return ContainerGrid.class;
     }
 
     @Override
-    public IRecipeTransferError transferRecipe(Container container, IRecipeLayout recipeLayout, EntityPlayer player,
+    public IRecipeTransferError transferRecipe(@Nonnull Container container, @Nonnull IRecipeLayout recipeLayout, @Nonnull EntityPlayer player,
                                                boolean maxTransfer, boolean doTransfer) {
         IGrid grid = ((ContainerGrid) container).getGrid();
 

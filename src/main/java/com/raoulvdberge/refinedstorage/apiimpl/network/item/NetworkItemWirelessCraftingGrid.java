@@ -16,10 +16,10 @@ import net.minecraftforge.energy.IEnergyStorage;
 
 public class NetworkItemWirelessCraftingGrid extends NetworkItemWirelessGrid {
 
-    private INetworkItemHandler handler;
-    private ItemStack stack;
-    private EntityPlayer player;
-    private int slotId;
+    private final INetworkItemHandler handler;
+    private final ItemStack stack;
+    private final EntityPlayer player;
+    private final int slotId;
 
     public NetworkItemWirelessCraftingGrid(final INetworkItemHandler handler, final EntityPlayer player,
                                            final ItemStack stack, final int slotId) {
@@ -30,6 +30,7 @@ public class NetworkItemWirelessCraftingGrid extends NetworkItemWirelessGrid {
         this.slotId = slotId;
     }
 
+    @Override
     public boolean onOpen(final INetwork network) {
         if (RS.INSTANCE.config.wirelessCraftingGridUsesEnergy && this.stack.getItemDamage() != ItemEnergyItem.TYPE_CREATIVE && this.stack.getCapability(CapabilityEnergy.ENERGY, null).getEnergyStored() <= RS.INSTANCE.config.wirelessCraftingGridOpenUsage) {
             return false;
@@ -43,6 +44,7 @@ public class NetworkItemWirelessCraftingGrid extends NetworkItemWirelessGrid {
         return true;
     }
 
+    @Override
     public void drainEnergy(final int energy) {
         if (RS.INSTANCE.config.wirelessCraftingGridUsesEnergy && this.stack.getItemDamage() != ItemEnergyItem.TYPE_CREATIVE) {
             IEnergyStorage energyStorage = this.stack.getCapability(CapabilityEnergy.ENERGY, null);

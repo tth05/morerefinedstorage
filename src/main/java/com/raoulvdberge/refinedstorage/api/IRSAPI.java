@@ -5,8 +5,8 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftin
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementRegistry;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElementRegistry;
 import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskRegistry;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.ICraftingGridBehavior;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridManager;
@@ -155,13 +155,13 @@ public interface IRSAPI {
      * @param type     the storage type
      * @param provider the external storage provider
      */
-    void addExternalStorageProvider(StorageType type, IExternalStorageProvider provider);
+    void addExternalStorageProvider(StorageType type, IExternalStorageProvider<?> provider);
 
     /**
      * @param type the type
      * @return a set of external storage providers
      */
-    Set<IExternalStorageProvider> getExternalStorageProviders(StorageType type);
+    Set<IExternalStorageProvider<?>> getExternalStorageProviders(StorageType type);
 
     /**
      * @param world    the world

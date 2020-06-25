@@ -13,7 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public class ContainerFilter extends ContainerBase {
-    private ItemStack stack;
+    private final ItemStack stack;
 
     public ContainerFilter(EntityPlayer player, ItemStack stack) {
         super(null, player);

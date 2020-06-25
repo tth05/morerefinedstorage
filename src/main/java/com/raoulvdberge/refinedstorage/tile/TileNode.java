@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public abstract class TileNode<N extends NetworkNode> extends TileBase implements INetworkNodeProxy<N>, IRedstoneConfigurable {
-    public static final TileDataParameter<Integer, TileNode> REDSTONE_MODE = RedstoneMode.createParameter();
+    public static final TileDataParameter<Integer, TileNode<?>> REDSTONE_MODE = RedstoneMode.createParameter();
 
     protected static final String NBT_ACTIVE = "Active";
     private static final String NBT_COVERS = "Cover";
@@ -47,6 +47,7 @@ public abstract class TileNode<N extends NetworkNode> extends TileBase implement
         getNode().setRedstoneMode(mode);
     }
 
+    @Override
     public NBTTagCompound writeUpdate(NBTTagCompound tag) {
         super.writeUpdate(tag);
 
@@ -59,6 +60,7 @@ public abstract class TileNode<N extends NetworkNode> extends TileBase implement
         return tag;
     }
 
+    @Override
     public void readUpdate(NBTTagCompound tag) {
         super.readUpdate(tag);
 

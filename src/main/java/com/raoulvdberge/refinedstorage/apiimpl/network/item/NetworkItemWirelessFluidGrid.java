@@ -17,10 +17,10 @@ import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 
 public class NetworkItemWirelessFluidGrid implements INetworkItem {
-    private INetworkItemHandler handler;
-    private EntityPlayer player;
-    private ItemStack stack;
-    private int slotId;
+    private final INetworkItemHandler handler;
+    private final EntityPlayer player;
+    private final ItemStack stack;
+    private final int slotId;
 
     public NetworkItemWirelessFluidGrid(INetworkItemHandler handler, EntityPlayer player, ItemStack stack, int slotId) {
         this.handler = handler;

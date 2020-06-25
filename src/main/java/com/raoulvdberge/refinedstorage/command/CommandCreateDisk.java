@@ -15,6 +15,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
@@ -22,13 +23,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class CommandCreateDisk extends CommandBase {
+    @Nonnull
     @Override
     public String getName() {
         return "createdisk";
     }
 
+    @Nonnull
     @Override
-    public String getUsage(ICommandSender sender) {
+    public String getUsage(@Nonnull ICommandSender sender) {
         return "commands.refinedstorage.createdisk.usage";
     }
 
@@ -38,7 +41,7 @@ public class CommandCreateDisk extends CommandBase {
     }
 
     @Override
-    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+    public void execute(@Nonnull MinecraftServer server, @Nonnull ICommandSender sender, String[] args) throws CommandException {
         if (args.length < 4) {
             throw new WrongUsageException("commands.refinedstorage.createdisk.usage");
         } else {
@@ -57,7 +60,7 @@ public class CommandCreateDisk extends CommandBase {
                 throw new CommandException("commands.refinedstorage.createdisk.error.notADisk");
             }
 
-            IStorageDisk disk = API.instance().getStorageDiskManager(sender.getEntityWorld()).get(id);
+            IStorageDisk<?> disk = API.instance().getStorageDiskManager(sender.getEntityWorld()).get(id);
             if (disk == null) {
                 throw new CommandException("commands.refinedstorage.createdisk.error.diskNotFound", args[3]);
             }
@@ -75,8 +78,9 @@ public class CommandCreateDisk extends CommandBase {
         }
     }
 
+    @Nonnull
     @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
+    public List<String> getTabCompletions(@Nonnull MinecraftServer server, @Nonnull ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
         } else if (args.length == 2) {

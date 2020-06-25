@@ -20,7 +20,7 @@ import java.util.Map;
 @MouseTweaksDisableWheelTweak
 public class GuiCrafterManager extends GuiBase implements IResizableDisplay {
     private ContainerCrafterManager container;
-    private NetworkNodeCrafterManager crafterManager;
+    private final NetworkNodeCrafterManager crafterManager;
 
     private TextFieldSearch searchField;
 
@@ -61,8 +61,6 @@ public class GuiCrafterManager extends GuiBase implements IResizableDisplay {
                 int screenSpaceAvailable = height - getTopHeight() - getBottomHeight();
 
                 return Math.max(3, Math.min((screenSpaceAvailable / 18) - 3, RS.INSTANCE.config.maxRowsStretch));
-            case IGrid.SIZE_SMALL:
-                return 3;
             case IGrid.SIZE_MEDIUM:
                 return 5;
             case IGrid.SIZE_LARGE:
@@ -95,7 +93,7 @@ public class GuiCrafterManager extends GuiBase implements IResizableDisplay {
     public void init(int x, int y) {
         addSideButton(new SideButtonRedstoneMode(this, TileCrafterManager.REDSTONE_MODE));
         addSideButton(new SideButtonCrafterManagerSearchBoxMode(this));
-        addSideButton(new SideButtonGridSize(this, () -> crafterManager.getSize(), size -> TileDataManager.setParameter(TileCrafterManager.SIZE, size)));
+        addSideButton(new SideButtonGridSize(this, crafterManager::getSize, size -> TileDataManager.setParameter(TileCrafterManager.SIZE, size)));
 
         this.scrollbar = new Scrollbar(174, getTopHeight(), 12, (getVisibleRows() * 18) - 2);
         this.scrollbar.addListener((oldOffset, newOffset) -> {
@@ -169,13 +167,11 @@ public class GuiCrafterManager extends GuiBase implements IResizableDisplay {
 
     @Override
     protected void keyTyped(char character, int keyCode) throws IOException {
-        if (searchField == null) {
+        if (searchField == null || checkHotbarKeys(keyCode)) {
             return;
         }
 
-        if (checkHotbarKeys(keyCode)) {
-            // NO OP
-        } else if (searchField.textboxKeyTyped(character, keyCode)) {
+        if (searchField.textboxKeyTyped(character, keyCode)) {
             container.initSlots(null);
         } else {
             super.keyTyped(character, keyCode);

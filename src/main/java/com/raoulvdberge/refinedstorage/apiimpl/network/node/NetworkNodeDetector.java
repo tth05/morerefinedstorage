@@ -15,7 +15,6 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
@@ -37,8 +36,8 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
     private static final String NBT_TYPE = "Type";
     private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(1, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(1, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(1, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(1, new ListenerNetworkNode(this));
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
     private int type = IType.ITEMS;
@@ -69,7 +68,7 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
             WorldUtils.updateBlock(world, pos);
         }
 
-        if (canUpdate() && ticks % SPEED == 0) {
+        if (network != null && canUpdate() && ticks % SPEED == 0) {
             if (type == IType.ITEMS) {
                 ItemStack slot = itemFilters.getStackInSlot(0);
 
@@ -121,22 +120,18 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
             switch (mode) {
                 case MODE_UNDER:
                     return size < amount;
-                case MODE_EQUAL:
-                    return size == amount;
                 case MODE_ABOVE:
                     return size > amount;
+                case MODE_EQUAL:
+                    return size == amount;
+                default:
+                    return false;
             }
         } else {
             if (mode == MODE_UNDER && amount != 0) {
                 return true;
-            } else if (mode == MODE_EQUAL && amount == 0) {
-                return true;
-            } else {
-                return false;
-            }
+            } else return mode == MODE_EQUAL && amount == 0;
         }
-
-        return false;
     }
 
     @Override

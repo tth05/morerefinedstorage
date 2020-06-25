@@ -5,11 +5,13 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
+import javax.annotation.Nonnull;
+
 public class BaublesContainer extends ItemStackHandler implements IBaublesItemHandler {
 
-	private final static int BAUBLE_SLOTS = 7;
+	private static final int BAUBLE_SLOTS = 7;
 	private boolean[] changed = new boolean[BAUBLE_SLOTS];
-	private boolean blockEvents=false;	
+	private boolean blockEvents=false;
 	private EntityLivingBase player;
 
 	public BaublesContainer()
@@ -43,14 +45,15 @@ public class BaublesContainer extends ItemStackHandler implements IBaublesItemHa
 	}
 
 	@Override
-	public void setStackInSlot(int slot, ItemStack stack) {
-		if (stack==null || stack.isEmpty() || this.isItemValidForSlot(slot, stack, player)) {
+	public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
+		if (stack.isEmpty() || this.isItemValidForSlot(slot, stack, player)) {
 			super.setStackInSlot(slot, stack);
 		}
 	}
 
 	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+	@Nonnull
+	public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
 		if (!this.isItemValidForSlot(slot, stack, player)) return stack;
 		return super.insertItem(slot, stack, simulate);
 	}

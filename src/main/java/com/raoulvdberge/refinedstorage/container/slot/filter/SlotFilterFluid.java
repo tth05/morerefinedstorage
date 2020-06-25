@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.container.slot.filter;
 import com.raoulvdberge.refinedstorage.container.slot.SlotBase;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemStackHandler;
@@ -12,8 +13,8 @@ import javax.annotation.Nonnull;
 public class SlotFilterFluid extends SlotBase {
     public static final int FILTER_ALLOW_SIZE = 1;
 
-    private int flags;
-    private FluidInventory fluidInventory;
+    private final int flags;
+    private final FluidInventory fluidInventory;
 
     public SlotFilterFluid(FluidInventory inventory, int inventoryIndex, int x, int y, int flags) {
         super(new ItemStackHandler(inventory.getSlots()), inventoryIndex, x, y);
@@ -24,6 +25,11 @@ public class SlotFilterFluid extends SlotBase {
 
     public SlotFilterFluid(FluidInventory inventory, int inventoryIndex, int x, int y) {
         this(inventory, inventoryIndex, x, y, 0);
+    }
+
+    @Override
+    public boolean canTakeStack(EntityPlayer playerIn) {
+        return false;
     }
 
     @Override

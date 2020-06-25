@@ -8,6 +8,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public class ItemCuttingTool extends ItemBase {
     public ItemCuttingTool() {
         super(new ItemInfo(RS.ID, "cutting_tool"));
@@ -27,6 +29,7 @@ public class ItemCuttingTool extends ItemBase {
         return false;
     }
 
+    @Nonnull
     @Override
     public ItemStack getContainerItem(ItemStack stack) {
         ItemStack copy = stack.copy();
@@ -37,12 +40,13 @@ public class ItemCuttingTool extends ItemBase {
     }
 
     @Override
-    public boolean hasContainerItem(ItemStack stack) {
+    public boolean hasContainerItem(@Nonnull ItemStack stack) {
         return true;
     }
 
+    @Nonnull
     @Override
-    public String getTranslationKey(ItemStack stack) {
+    public String getTranslationKey(@Nonnull ItemStack stack) {
         return getTranslationKey(); // Ignore damage
     }
 }

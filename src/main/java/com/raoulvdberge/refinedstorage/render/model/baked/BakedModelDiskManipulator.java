@@ -13,15 +13,16 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.model.TRSRTransformation;
 import net.minecraftforge.common.property.IExtendedBlockState;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.vecmath.Vector3f;
 import java.util.*;
 
 public class BakedModelDiskManipulator extends BakedModelDelegate {
-    private class CacheKey {
-        private IBlockState state;
-        private EnumFacing side;
-        private Integer[] diskState;
+    private static class CacheKey {
+        private final IBlockState state;
+        private final EnumFacing side;
+        private final Integer[] diskState;
 
         CacheKey(IBlockState state, @Nullable EnumFacing side, Integer[] diskState) {
             this.state = state;
@@ -61,13 +62,13 @@ public class BakedModelDiskManipulator extends BakedModelDelegate {
         }
     }
 
-    private Map<EnumFacing, IBakedModel> modelsConnected = new HashMap<>();
-    private Map<EnumFacing, IBakedModel> modelsDisconnected = new HashMap<>();
-    private Map<EnumFacing, Map<Integer, List<IBakedModel>>> disks = new HashMap<>();
+    private final Map<EnumFacing, IBakedModel> modelsConnected = new EnumMap<>(EnumFacing.class);
+    private final Map<EnumFacing, IBakedModel> modelsDisconnected = new EnumMap<>(EnumFacing.class);
+    private final Map<EnumFacing, Map<Integer, List<IBakedModel>>> disks = new EnumMap<>(EnumFacing.class);
 
-    private LoadingCache<CacheKey, List<BakedQuad>> cache = CacheBuilder.newBuilder().build(new CacheLoader<CacheKey, List<BakedQuad>>() {
+    private final LoadingCache<CacheKey, List<BakedQuad>> cache = CacheBuilder.newBuilder().build(new CacheLoader<CacheKey, List<BakedQuad>>() {
         @Override
-        public List<BakedQuad> load(CacheKey key) {
+        public List<BakedQuad> load(@Nonnull CacheKey key) {
             EnumFacing facing = key.state.getValue(RSBlocks.DISK_MANIPULATOR.getDirection().getProperty());
 
             List<BakedQuad> quads = (key.state.getValue(BlockDiskManipulator.CONNECTED) ? modelsConnected : modelsDisconnected).get(facing).getQuads(key.state, key.side, 0);
@@ -108,7 +109,7 @@ public class BakedModelDiskManipulator extends BakedModelDelegate {
             for (int y = 0; y < 3; ++y) {
                 BakedModelTRSR model = new BakedModelTRSR(disk, facing);
 
-                Vector3f trans = model.transformation.getTranslation();
+                Vector3f trans = model.getTransformation().getTranslation();
 
                 if (facing == EnumFacing.NORTH || facing == EnumFacing.SOUTH) {
                     trans.x += (2F / 16F + ((float) x * 7F) / 16F) * (facing == EnumFacing.NORTH ? -1 : 1);
@@ -118,13 +119,16 @@ public class BakedModelDiskManipulator extends BakedModelDelegate {
 
                 trans.y -= (6F / 16F) + (3F * y) / 16F;
 
-                model.transformation = new TRSRTransformation(trans, model.transformation.getLeftRot(), model.transformation.getScale(), model.transformation.getRightRot());
+                model.setTransformation(
+                        new TRSRTransformation(trans, model.getTransformation().getLeftRot(), model.getTransformation().getScale(), model
+                                .getTransformation().getRightRot()));
 
                 disks.get(facing).get(type).add(model);
             }
         }
     }
 
+    @Nonnull
     @Override
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         if (!(state instanceof IExtendedBlockState)) {

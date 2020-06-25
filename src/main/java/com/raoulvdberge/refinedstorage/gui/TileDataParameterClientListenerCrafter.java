@@ -7,9 +7,7 @@ public class TileDataParameterClientListenerCrafter implements TileDataParameter
     @Override
     public void onChanged(boolean initial, Boolean hasRoot) {
         if (!hasRoot) {
-            GuiBase.executeLater(GuiCrafter.class, gui -> {
-                gui.addSideButton(new SideButtonCrafterMode(gui));
-            });
+            GuiBase.executeLater(GuiCrafter.class, gui -> gui.addSideButton(new SideButtonCrafterMode(gui)));
         }
     }
 }

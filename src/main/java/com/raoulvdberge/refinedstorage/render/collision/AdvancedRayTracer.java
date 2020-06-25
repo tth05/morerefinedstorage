@@ -16,7 +16,9 @@ public final class AdvancedRayTracer {
     }
 
     public static Vec3d getEnd(EntityPlayer player) {
-        double reachDistance = player instanceof EntityPlayerMP ? player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue() : (player.capabilities.isCreativeMode ? 5.0D : 4.5D);
+        double reachDistance = player.capabilities.isCreativeMode ? 5.0D : 4.5D;
+        reachDistance = player instanceof EntityPlayerMP ?
+                player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue() : reachDistance;
 
         Vec3d lookVec = player.getLookVec();
         Vec3d start = getStart(player);
@@ -27,12 +29,12 @@ public final class AdvancedRayTracer {
     @Nullable
     public static AdvancedRayTraceResult<RayTraceResult> rayTrace(BlockPos pos, Vec3d start, Vec3d end, Collection<CollisionGroup> groups) {
         double minDistance = Double.POSITIVE_INFINITY;
-        AdvancedRayTraceResult hit = null;
+        AdvancedRayTraceResult<RayTraceResult> hit = null;
         int i = -1;
 
         for (CollisionGroup group : groups) {
             for (AxisAlignedBB aabb : group.getItems()) {
-                AdvancedRayTraceResult result = rayTrace(pos, start, end, aabb, i, group);
+                AdvancedRayTraceResult<RayTraceResult> result = rayTrace(pos, start, end, aabb, i, group);
 
                 if (result != null) {
                     double d = result.squareDistanceTo(start);
@@ -60,6 +62,6 @@ public final class AdvancedRayTracer {
         result = new RayTraceResult(RayTraceResult.Type.BLOCK, result.hitVec, result.sideHit, pos);
         result.subHit = subHit;
 
-        return new AdvancedRayTraceResult<>(group, bounds, result);
+        return new AdvancedRayTraceResult<>(group, result);
     }
 }

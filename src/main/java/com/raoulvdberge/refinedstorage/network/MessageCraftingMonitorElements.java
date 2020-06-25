@@ -1,8 +1,8 @@
 package com.raoulvdberge.refinedstorage.network;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.CraftingTaskReadException;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridTab;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
@@ -23,7 +23,7 @@ import java.util.function.Function;
 public class MessageCraftingMonitorElements implements IMessage, IMessageHandler<MessageCraftingMonitorElements, IMessage> {
     private ICraftingMonitor craftingMonitor;
 
-    private List<IGridTab> tasks = new ArrayList<>();
+    private final List<IGridTab> tasks = new ArrayList<>();
 
     public MessageCraftingMonitorElements() {
     }
@@ -37,7 +37,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
         int size = buf.readInt();
 
         for (int i = 0; i < size; ++i) {
-            UUID id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            UUID id = new UUID(buf.readLong(), buf.readLong());
 
             ICraftingRequestInfo requested = null;
             try {
@@ -71,8 +71,11 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
         buf.writeInt(craftingMonitor.getTasks().size());
 
         for (ICraftingTask task : craftingMonitor.getTasks()) {
-            ByteBufUtils.writeUTF8String(buf, task.getId().toString());
+            buf.writeLong(task.getId().getMostSignificantBits());
+            buf.writeLong(task.getId().getLeastSignificantBits());
+
             ByteBufUtils.writeTag(buf, task.getRequested().writeToNbt());
+
             buf.writeInt(task.getQuantity());
             buf.writeLong(task.getExecutionStarted());
             buf.writeInt(task.getCompletionPercentage());
@@ -91,7 +94,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
 
     @Override
     public IMessage onMessage(MessageCraftingMonitorElements message, MessageContext ctx) {
-        GuiBase.executeLater(GuiCraftingMonitor.class, craftingMonitor -> craftingMonitor.setTasks(message.tasks));
+        GuiBase.executeLater(GuiCraftingMonitor.class, monitor -> monitor.setTasks(message.tasks));
 
         return null;
     }

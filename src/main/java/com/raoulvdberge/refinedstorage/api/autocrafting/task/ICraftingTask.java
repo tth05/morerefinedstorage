@@ -1,7 +1,10 @@
 package com.raoulvdberge.refinedstorage.api.autocrafting.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
+import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import net.minecraft.item.ItemStack;
@@ -10,6 +13,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -27,10 +31,8 @@ public interface ICraftingTask {
     /**
      * Updates this task.
      * {@link ICraftingTask#calculate()} must be run before this!
-     *
-     * @return true if this crafting task is finished and can be deleted from the list, false otherwise
      */
-    boolean update();
+    boolean update(Map<ICraftingPatternContainer, Integer> updateCountMap);
 
     /**
      * Called when this task is cancelled.
@@ -58,15 +60,19 @@ public interface ICraftingTask {
      * Called when a stack is inserted into the system through {@link com.raoulvdberge.refinedstorage.api.network.INetwork#insertItemTracked(ItemStack, int)}.
      *
      * @param stack the stack
+     * @param trackedAmount the amount of the stack that already has been tracked
+     * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(ItemStack, int)}
      */
-    int onTrackedInsert(ItemStack stack, int size);
+    int onTrackedInsert(ItemStack stack, int trackedAmount);
 
     /**
      * Called when a stack is inserted into the system through {@link com.raoulvdberge.refinedstorage.api.network.INetwork#insertFluidTracked(FluidStack, int)}.
      *
      * @param stack the stack
+     * @param trackedAmount the amount of the stack that already has been tracked
+     * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(FluidStack, int)}
      */
-    int onTrackedInsert(FluidStack stack, int size);
+    int onTrackedInsert(FluidStack stack, int trackedAmount);
 
     /**
      * Writes this task to NBT.
@@ -88,7 +94,7 @@ public interface ICraftingTask {
      *
      * @return get a list of {@link ICraftingPreviewElement}s
      */
-    List<ICraftingPreviewElement> getPreviewStacks();
+    List<ICraftingPreviewElement<?>> getPreviewStacks();
 
     /**
      * @return the crafting pattern corresponding to this task
@@ -99,6 +105,11 @@ public interface ICraftingTask {
      * @return the time in ms when this task has started
      */
     long getExecutionStarted();
+
+    /**
+     * @return the time it took for the calculation to complete in ms or -1 if the calculation failed/hasn't completed.
+     */
+    long getCalculationTime();
 
     /**
      * @return the missing items
@@ -116,6 +127,16 @@ public interface ICraftingTask {
     default boolean hasMissing() {
         return !getMissing().isEmpty() || !getMissingFluids().isEmpty();
     }
+
+    void setCanUpdate(boolean canUpdate);
+
+    /**
+     * This is only false if a task hasn't actually been started. When a player requests a preview but hasn't started
+     * the task yet, then this will return false.
+     *
+     * @return whether or not this task is allowed to be updated
+     */
+    boolean canUpdate();
 
     /**
      * @return the id of this task

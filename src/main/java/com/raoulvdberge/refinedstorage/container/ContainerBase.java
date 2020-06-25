@@ -20,6 +20,7 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,15 +28,15 @@ import java.util.List;
 @InventoryContainer(showOptions = false)
 public abstract class ContainerBase extends Container {
     @Nullable
-    private TileBase tile;
+    private final TileBase tile;
     @Nullable
     private TileDataWatcher listener;
-    private EntityPlayer player;
+    private final EntityPlayer player;
 
-    protected TransferManager transferManager = new TransferManager(this);
+    protected final TransferManager transferManager = new TransferManager(this);
 
-    private List<SlotFilterFluid> fluidSlots = new ArrayList<>();
-    private List<FluidStack> fluids = new ArrayList<>();
+    private final List<SlotFilterFluid> fluidSlots = new ArrayList<>();
+    private final List<FluidStack> fluids = new ArrayList<>();
 
     public ContainerBase(@Nullable TileBase tile, EntityPlayer player) {
         this.tile = tile;
@@ -60,7 +61,7 @@ public abstract class ContainerBase extends Container {
         int disabledSlotNumber = getDisabledSlotNumber();
 
         int id = 9;
-        
+
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 9; x++) {
                 if (id == disabledSlotNumber) {
@@ -72,7 +73,7 @@ public abstract class ContainerBase extends Container {
                 id++;
             }
         }
-        
+
         id = 0;
 
         for (int i = 0; i < 9; i++) {
@@ -93,8 +94,9 @@ public abstract class ContainerBase extends Container {
         return fluidSlots;
     }
 
+    @Nonnull
     @Override
-    public ItemStack slotClick(int id, int dragType, ClickType clickType, EntityPlayer player) {
+    public ItemStack slotClick(int id, int dragType, @Nonnull ClickType clickType, @Nonnull EntityPlayer player) {
         Slot slot = id >= 0 ? getSlot(id) : null;
 
         int disabledSlotNumber = getDisabledSlotNumber();
@@ -149,18 +151,19 @@ public abstract class ContainerBase extends Container {
         return super.slotClick(id, dragType, clickType, player);
     }
 
+    @Nonnull
     @Override
-    public ItemStack transferStackInSlot(EntityPlayer player, int slotIndex) {
+    public ItemStack transferStackInSlot(@Nonnull EntityPlayer player, int slotIndex) {
         return transferManager.transfer(slotIndex);
     }
 
     @Override
-    public boolean canInteractWith(EntityPlayer player) {
+    public boolean canInteractWith(@Nonnull EntityPlayer player) {
         return true;
     }
 
     @Override
-    public boolean canMergeSlot(ItemStack stack, Slot slot) {
+    public boolean canMergeSlot(@Nonnull ItemStack stack, @Nonnull Slot slot) {
         if (slot instanceof SlotFilter || slot instanceof SlotFilterFluid || slot instanceof SlotLegacyFilter) {
             return false;
         }
@@ -172,8 +175,9 @@ public abstract class ContainerBase extends Container {
         return -1;
     }
 
+    @Nonnull
     @Override
-    protected Slot addSlotToContainer(Slot slot) {
+    protected Slot addSlotToContainer(@Nonnull Slot slot) {
         if (slot instanceof SlotFilterFluid) {
             fluids.add(null);
             fluidSlots.add((SlotFilterFluid) slot);
@@ -207,7 +211,7 @@ public abstract class ContainerBase extends Container {
     }
 
     @Override
-    public void onContainerClosed(EntityPlayer player) {
+    public void onContainerClosed(@Nonnull EntityPlayer player) {
         super.onContainerClosed(player);
 
         if (listener != null) {

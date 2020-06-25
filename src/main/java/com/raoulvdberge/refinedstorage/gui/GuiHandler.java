@@ -16,8 +16,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
-    private Container getContainer(int ID, EntityPlayer player, TileEntity tile) {
-        switch (ID) {
+    private Container getContainer(int id, EntityPlayer player, TileEntity tile) {
+        switch (id) {
             case RSGui.CONTROLLER:
                 return new ContainerController((TileController) tile, player);
             case RSGui.DISK_DRIVE:
@@ -68,71 +68,70 @@ public class GuiHandler implements IGuiHandler {
     }
 
     @Override
-    public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        if (ID == RSGui.FILTER) {
+    public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+        if (id == RSGui.FILTER) {
             return getFilterContainer(player, x);
-        } else if (ID == RSGui.WIRELESS_CRAFTING_MONITOR) {
+        } else if (id == RSGui.WIRELESS_CRAFTING_MONITOR) {
             return getCraftingMonitorContainer(player, x);
         }
 
-        return getContainer(ID, player, world.getTileEntity(new BlockPos(x, y, z)));
+        return getContainer(id, player, world.getTileEntity(new BlockPos(x, y, z)));
     }
 
     @Override
-    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+    public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
 
-        switch (ID) {
+        switch (id) {
             case RSGui.CONTROLLER:
-                return new GuiController((ContainerController) getContainer(ID, player, tile), (TileController) tile);
+                return new GuiController((ContainerController) getContainer(id, player, tile), (TileController) tile);
             case RSGui.DISK_DRIVE:
-                return new GuiStorage((ContainerDiskDrive) getContainer(ID, player, tile), ((TileDiskDrive) tile).getNode(), "gui/disk_drive.png");
+                return new GuiStorage((ContainerDiskDrive) getContainer(id, player, tile), ((TileDiskDrive) tile).getNode(), "gui/disk_drive.png");
             case RSGui.IMPORTER:
-                return new GuiImporter((ContainerImporter) getContainer(ID, player, tile));
+                return new GuiImporter((ContainerImporter) getContainer(id, player, tile));
             case RSGui.EXPORTER:
-                return new GuiExporter((ContainerExporter) getContainer(ID, player, tile));
+                return new GuiExporter((ContainerExporter) getContainer(id, player, tile));
             case RSGui.DETECTOR:
-                return new GuiDetector((ContainerDetector) getContainer(ID, player, tile));
+                return new GuiDetector((ContainerDetector) getContainer(id, player, tile));
             case RSGui.DESTRUCTOR:
-                return new GuiDestructor((ContainerDestructor) getContainer(ID, player, tile));
+                return new GuiDestructor((ContainerDestructor) getContainer(id, player, tile));
             case RSGui.CONSTRUCTOR:
-                return new GuiConstructor((ContainerConstructor) getContainer(ID, player, tile));
+                return new GuiConstructor((ContainerConstructor) getContainer(id, player, tile));
             case RSGui.STORAGE:
-                return new GuiStorage((ContainerStorage) getContainer(ID, player, tile), ((TileStorage) tile).getNode());
+                return new GuiStorage((ContainerStorage) getContainer(id, player, tile), ((TileStorage) tile).getNode());
             case RSGui.EXTERNAL_STORAGE:
-                return new GuiStorage((ContainerExternalStorage) getContainer(ID, player, tile), ((TileExternalStorage) tile).getNode());
+                return new GuiStorage((ContainerExternalStorage) getContainer(id, player, tile), ((TileExternalStorage) tile).getNode());
             case RSGui.RELAY:
-                return new GuiRelay((ContainerRelay) getContainer(ID, player, tile));
+                return new GuiRelay((ContainerRelay) getContainer(id, player, tile));
             case RSGui.INTERFACE:
-                return new GuiInterface((ContainerInterface) getContainer(ID, player, tile));
-            case RSGui.CRAFTING_MONITOR: {
+                return new GuiInterface((ContainerInterface) getContainer(id, player, tile));
+            case RSGui.CRAFTING_MONITOR:
                 NetworkNodeCraftingMonitor node = ((TileCraftingMonitor) tile).getNode();
                 GuiCraftingMonitor gui = new GuiCraftingMonitor(null, node);
                 gui.inventorySlots = new ContainerCraftingMonitor(node, (TileCraftingMonitor) tile, player);
                 return gui;
-            }
             case RSGui.WIRELESS_TRANSMITTER:
-                return new GuiWirelessTransmitter((ContainerWirelessTransmitter) getContainer(ID, player, tile));
+                return new GuiWirelessTransmitter((ContainerWirelessTransmitter) getContainer(id, player, tile));
             case RSGui.CRAFTER:
-                return new GuiCrafter((ContainerCrafter) getContainer(ID, player, tile));
+                return new GuiCrafter((ContainerCrafter) getContainer(id, player, tile));
             case RSGui.FILTER:
                 return new GuiFilter(getFilterContainer(player, x));
             case RSGui.NETWORK_TRANSMITTER:
-                return new GuiNetworkTransmitter((ContainerNetworkTransmitter) getContainer(ID, player, tile), (TileNetworkTransmitter) tile);
+                return new GuiNetworkTransmitter((ContainerNetworkTransmitter) getContainer(id, player, tile), (TileNetworkTransmitter) tile);
             case RSGui.FLUID_INTERFACE:
-                return new GuiFluidInterface((ContainerFluidInterface) getContainer(ID, player, tile));
+                return new GuiFluidInterface((ContainerFluidInterface) getContainer(id, player, tile));
             case RSGui.FLUID_STORAGE:
-                return new GuiStorage((ContainerFluidStorage) getContainer(ID, player, tile), ((TileFluidStorage) tile).getNode());
+                return new GuiStorage((ContainerFluidStorage) getContainer(id, player, tile), ((TileFluidStorage) tile).getNode());
             case RSGui.DISK_MANIPULATOR:
-                return new GuiDiskManipulator((ContainerDiskManipulator) getContainer(ID, player, tile));
+                return new GuiDiskManipulator((ContainerDiskManipulator) getContainer(id, player, tile));
             case RSGui.WIRELESS_CRAFTING_MONITOR:
                 return getWirelessCraftingMonitorGui(player, x);
             case RSGui.READER_WRITER:
-                return new GuiReaderWriter((ContainerReaderWriter) getContainer(ID, player, tile), (IGuiReaderWriter) ((TileNode) tile).getNode());
+                return new GuiReaderWriter((ContainerReaderWriter) getContainer(id, player, tile), (IGuiReaderWriter) ((TileNode) tile).getNode());
             case RSGui.SECURITY_MANAGER:
-                return new GuiSecurityManager((ContainerSecurityManager) getContainer(ID, player, tile), (TileSecurityManager) tile);
+                return new GuiSecurityManager((ContainerSecurityManager) getContainer(id, player, tile), (TileSecurityManager) tile);
             case RSGui.STORAGE_MONITOR:
-                return new GuiStorageMonitor((ContainerStorageMonitor) getContainer(ID, player, tile));
+                return new GuiStorageMonitor((ContainerStorageMonitor) getContainer(id, player, tile));
             case RSGui.CRAFTER_MANAGER:
                 GuiCrafterManager crafterManagerGui = new GuiCrafterManager(((TileCrafterManager) tile).getNode());
                 crafterManagerGui.setContainer(new ContainerCrafterManager((TileCrafterManager) tile, player, crafterManagerGui));

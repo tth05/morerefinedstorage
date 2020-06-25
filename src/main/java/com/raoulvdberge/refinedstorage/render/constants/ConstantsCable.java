@@ -39,7 +39,7 @@ public final class ConstantsCable {
             case EAST:
                 return CollisionUtils.getBounds(14, 0, 0, 16, 16, 16);
             default:
-                return null;
+                throw new IllegalArgumentException();
         }
     }
 
@@ -59,7 +59,7 @@ public final class ConstantsCable {
             case EAST:
                 return CollisionUtils.getBounds(10, 7, 7, 14, 9, 9);
             default:
-                return null;
+                throw new IllegalArgumentException();
         }
     }
 }

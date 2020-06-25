@@ -27,10 +27,10 @@ import java.util.UUID;
 public class NetworkNodeSecurityManager extends NetworkNode implements ISecurityCardContainer {
     public static final String ID = "security_manager";
 
-    private List<ISecurityCard> cards = new ArrayList<>();
+    private final List<ISecurityCard> cards = new ArrayList<>();
     private ISecurityCard globalCard;
 
-    private ItemHandlerBase cardsInv = new ItemHandlerBase(9 * 2, new ListenerNetworkNode(this), new ItemValidatorBasic(RSItems.SECURITY_CARD)) {
+    private final ItemHandlerBase cardsInv = new ItemHandlerBase(9 * 2, new ListenerNetworkNode(this), new ItemValidatorBasic(RSItems.SECURITY_CARD)) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -44,7 +44,7 @@ public class NetworkNodeSecurityManager extends NetworkNode implements ISecurity
             }
         }
     };
-    private ItemHandlerBase editCard = new ItemHandlerBase(1, new ListenerNetworkNode(this), new ItemValidatorBasic(RSItems.SECURITY_CARD));
+    private final ItemHandlerBase editCard = new ItemHandlerBase(1, new ListenerNetworkNode(this), new ItemValidatorBasic(RSItems.SECURITY_CARD));
 
     public NetworkNodeSecurityManager(World world, BlockPos pos) {
         super(world, pos);

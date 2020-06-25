@@ -10,6 +10,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class RecipeHollowCover extends IForgeRegistryEntry.Impl<IRecipe> implements IRecipe {
@@ -30,7 +31,7 @@ public class RecipeHollowCover extends IForgeRegistryEntry.Impl<IRecipe> impleme
     }
 
     @Override
-    public boolean matches(InventoryCrafting inv, World worldIn) {
+    public boolean matches(@Nonnull InventoryCrafting inv, @Nonnull World worldIn) {
         ItemStack previousValidSlot = null;
 
         for (int i = 0; i < 9; ++i) {
@@ -52,6 +53,7 @@ public class RecipeHollowCover extends IForgeRegistryEntry.Impl<IRecipe> impleme
         return true;
     }
 
+    @Nonnull
     @Override
     public ItemStack getCraftingResult(InventoryCrafting inv) {
         ItemStack stack = new ItemStack(RSItems.HOLLOW_COVER, 8);
@@ -66,6 +68,7 @@ public class RecipeHollowCover extends IForgeRegistryEntry.Impl<IRecipe> impleme
         return width == 3 && height == 3;
     }
 
+    @Nonnull
     @Override
     public ItemStack getRecipeOutput() {
         return ItemStack.EMPTY;

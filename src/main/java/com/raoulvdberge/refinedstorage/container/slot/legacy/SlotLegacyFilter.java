@@ -13,12 +13,12 @@ public class SlotLegacyFilter extends SlotLegacyBase {
     }
 
     @Override
-    public boolean canTakeStack(EntityPlayer player) {
+    public boolean canTakeStack(@Nonnull EntityPlayer player) {
         return false;
     }
 
     @Override
-    public boolean isItemValid(ItemStack stack) {
+    public boolean isItemValid(@Nonnull ItemStack stack) {
         return true;
     }
 

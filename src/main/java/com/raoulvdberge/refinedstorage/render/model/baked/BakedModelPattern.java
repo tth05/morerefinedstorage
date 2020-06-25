@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.model.TRSRTransformation;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nonnull;
 import javax.vecmath.Matrix4f;
 
 public class BakedModelPattern extends BakedModelDelegate {
@@ -22,18 +23,21 @@ public class BakedModelPattern extends BakedModelDelegate {
         super(base);
     }
 
+    @Nonnull
     @Override
-    public Pair<? extends IBakedModel, Matrix4f> handlePerspective(ItemCameraTransforms.TransformType cameraTransformType) {
+    public Pair<? extends IBakedModel, Matrix4f> handlePerspective(@Nonnull ItemCameraTransforms.TransformType cameraTransformType) {
         TRSRTransformation transform = RenderUtils.getDefaultItemTransforms().get(cameraTransformType);
 
         return Pair.of(this, transform == null ? RenderUtils.EMPTY_MATRIX_TRANSFORM : transform.getMatrix());
     }
 
+    @Nonnull
     @Override
     public ItemOverrideList getOverrides() {
         return new ItemOverrideList(base.getOverrides().getOverrides()) {
+            @Nonnull
             @Override
-            public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world, EntityLivingBase entity) {
+            public IBakedModel handleItemState(@Nonnull IBakedModel originalModel, @Nonnull ItemStack stack, World world, EntityLivingBase entity) {
                 CraftingPattern pattern = ItemPattern.getPatternFromCache(world, stack);
 
                 if (canDisplayOutput(stack, pattern)) {
@@ -56,9 +60,7 @@ public class BakedModelPattern extends BakedModelDelegate {
                 return true;
             }
 
-            if ("machine".equals(stack.getItem().delegate.name().getPath())) {
-                return true;
-            }
+            return "machine".equals(stack.getItem().delegate.name().getPath());
         }
         return false;
     }

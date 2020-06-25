@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.function.Predicate;
 
 public class GridFilterOreDict implements Predicate<IGridStack> {
-    private String oreName;
+    private final String oreName;
 
     public GridFilterOreDict(String oreName) {
         this.oreName = oreName.toLowerCase();
@@ -14,6 +14,6 @@ public class GridFilterOreDict implements Predicate<IGridStack> {
 
     @Override
     public boolean test(IGridStack stack) {
-        return Arrays.stream(stack.getOreIds()).anyMatch(oreName -> oreName.toLowerCase().contains(this.oreName));
+        return Arrays.stream(stack.getOreIds()).anyMatch(s -> s.toLowerCase().contains(this.oreName));
     }
 }

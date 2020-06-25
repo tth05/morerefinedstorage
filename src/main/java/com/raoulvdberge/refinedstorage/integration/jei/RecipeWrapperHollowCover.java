@@ -6,12 +6,13 @@ import mezz.jei.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RecipeWrapperHollowCover implements IShapedCraftingRecipeWrapper {
-    private ItemStack cover;
-    private ItemStack hollowCover;
+    private final ItemStack cover;
+    private final ItemStack hollowCover;
 
     public RecipeWrapperHollowCover(ItemStack cover, ItemStack hollowCover) {
         this.cover = ItemHandlerHelper.copyStackWithSize(cover, 1);
@@ -19,7 +20,7 @@ public class RecipeWrapperHollowCover implements IShapedCraftingRecipeWrapper {
     }
 
     @Override
-    public void getIngredients(IIngredients ingredients) {
+    public void getIngredients(@Nonnull IIngredients ingredients) {
         List<ItemStack> inputs = new ArrayList<>();
 
         for (int i = 0; i < 9; ++i) {

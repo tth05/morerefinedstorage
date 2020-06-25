@@ -22,7 +22,7 @@ import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 public class BlockDiskDrive extends BlockNode {
     public static final PropertyObject<Integer[]> DISK_STATE = new PropertyObject<>("disk_state", Integer[].class);
@@ -40,13 +40,13 @@ public class BlockDiskDrive extends BlockNode {
     }
 
     @Override
-    @Nullable
+    @Nonnull
     public BlockDirection getDirection() {
         return BlockDirection.HORIZONTAL;
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         return openNetworkGui(RSGui.DISK_DRIVE, player, world, pos, side);
     }
 
@@ -55,8 +55,9 @@ public class BlockDiskDrive extends BlockNode {
         return super.createBlockStateBuilder().add(DISK_STATE);
     }
 
+    @Nonnull
     @Override
-    public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
+    public IBlockState getExtendedState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         IBlockState s = super.getExtendedState(state, world, pos);
 
         TileEntity tile = world.getTileEntity(pos);

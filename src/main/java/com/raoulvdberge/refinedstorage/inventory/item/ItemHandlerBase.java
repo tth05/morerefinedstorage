@@ -6,24 +6,26 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
 public class ItemHandlerBase extends ItemStackHandler {
     @Nullable
-    private Consumer<Integer> listener;
+    private final IntConsumer listener;
 
     private boolean empty = true;
 
-    protected Predicate<ItemStack>[] validators;
+    protected final Predicate<ItemStack>[] validators;
 
-    public ItemHandlerBase(int size, @Nullable Consumer<Integer> listener, Predicate<ItemStack>... validators) {
+    @SafeVarargs
+    public ItemHandlerBase(int size, @Nullable IntConsumer listener, Predicate<ItemStack>... validators) {
         super(size);
 
         this.listener = listener;
         this.validators = validators;
     }
 
+    @SafeVarargs
     public ItemHandlerBase(int size, Predicate<ItemStack>... validators) {
         this(size, null, validators);
     }

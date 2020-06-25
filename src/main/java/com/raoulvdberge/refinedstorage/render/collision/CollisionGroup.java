@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CollisionGroup {
-    private List<AxisAlignedBB> items = new ArrayList<>();
+    private final List<AxisAlignedBB> items = new ArrayList<>();
     private boolean canAccessGui;
     @Nullable
     private EnumFacing direction;

@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 /**
  * Represents a network, usually is a controller.
  */
+//TODO: add system that ensures items don't get voided when inserting into full network -> basically keep them in memory
 public interface INetwork {
     /**
      * @return the energy usage per tick of this network
@@ -98,7 +99,7 @@ public interface INetwork {
      * @param action the action
      * @return null if the insert was successful, or a stack with the remainder
      */
-    @Nonnull
+    @Nullable
     ItemStack insertItem(@Nonnull ItemStack stack, int size, Action action);
 
     /**
@@ -108,15 +109,17 @@ public interface INetwork {
      * @param size  the amount of that prototype that has to be inserted
      * @return null if the insert was successful, or a stack with the remainder
      */
-    @Nonnull
+    @Nullable
     default ItemStack insertItemTracked(@Nonnull ItemStack stack, int size) {
-        int remainder = getCraftingManager().track(stack, size);
+        ItemStack stackCopy = stack.copy();
+        stackCopy.setCount(size);
+        getCraftingManager().track(stackCopy);
 
-        if (remainder == 0) {
+        if (stackCopy.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        return insertItem(stack, remainder, Action.PERFORM);
+        return insertItem(stack, stack.getCount(), Action.PERFORM);
     }
 
     /**
@@ -179,13 +182,15 @@ public interface INetwork {
      */
     @Nullable
     default FluidStack insertFluidTracked(@Nonnull FluidStack stack, int size) {
-        int remainder = getCraftingManager().track(stack, size);
+        FluidStack stackCopy = stack.copy();
+        stackCopy.amount = size;
+        getCraftingManager().track(stackCopy);
 
-        if (remainder == 0) {
+        if (stackCopy.amount < 1) {
             return null;
         }
 
-        return insertFluid(stack, remainder, Action.PERFORM);
+        return insertFluid(stack, stack.amount, Action.PERFORM);
     }
 
     /**

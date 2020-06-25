@@ -9,10 +9,12 @@ import com.raoulvdberge.refinedstorage.item.ItemHollowCover;
 import mezz.jei.api.recipe.*;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
 public class RecipeRegistryPluginHollowCover implements IRecipeRegistryPlugin {
+    @Nonnull
     @Override
     public <V> List<String> getRecipeCategoryUids(IFocus<V> focus) {
         if (focus.getValue() instanceof ItemStack) {
@@ -36,8 +38,9 @@ public class RecipeRegistryPluginHollowCover implements IRecipeRegistryPlugin {
         return Collections.emptyList();
     }
 
+    @Nonnull
     @Override
-    public <T extends IRecipeWrapper, V> List<T> getRecipeWrappers(IRecipeCategory<T> recipeCategory, IFocus<V> focus) {
+    public <T extends IRecipeWrapper, V> List<T> getRecipeWrappers(@Nonnull IRecipeCategory<T> recipeCategory, IFocus<V> focus) {
         if (focus.getValue() instanceof ItemStack) {
             ItemStack stack = (ItemStack) focus.getValue();
 
@@ -67,8 +70,9 @@ public class RecipeRegistryPluginHollowCover implements IRecipeRegistryPlugin {
         return Collections.emptyList();
     }
 
+    @Nonnull
     @Override
-    public <T extends IRecipeWrapper> List<T> getRecipeWrappers(IRecipeCategory<T> recipeCategory) {
+    public <T extends IRecipeWrapper> List<T> getRecipeWrappers(@Nonnull IRecipeCategory<T> recipeCategory) {
         return Collections.emptyList();
     }
 }

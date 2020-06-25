@@ -31,20 +31,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternContainer {
-    public enum CrafterMode {
-        IGNORE,
-        SIGNAL_UNLOCKS_AUTOCRAFTING,
-        SIGNAL_LOCKS_AUTOCRAFTING,
-        PULSE_INSERTS_NEXT_SET;
-
-        public static CrafterMode getById(int id) {
-            if (id >= 0 && id < values().length) {
-                return values()[id];
-            }
-
-            return IGNORE;
-        }
-    }
 
     public static final String ID = "crafter";
 
@@ -56,35 +42,34 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     private static final String NBT_LOCKED = "Locked";
     private static final String NBT_WAS_POWERED = "WasPowered";
 
-    private ItemHandlerBase patternsInventory = new ItemHandlerBase(9, new ListenerNetworkNode(this), s -> isValidPatternInSlot(world, s)) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            super.onContentsChanged(slot);
+    private final ItemHandlerBase patternsInventory =
+            new ItemHandlerBase(9, new ListenerNetworkNode(this), s -> isValidPatternInSlot(world, s)) {
+                @Override
+                protected void onContentsChanged(int slot) {
+                    super.onContentsChanged(slot);
 
-            if (!reading) {
-                if (!world.isRemote) {
-                    invalidate();
+                    if (reading)
+                        return;
+
+                    if (!world.isRemote) {
+                        invalidate();
+                    }
+
+                    if (network != null) {
+                        network.getCraftingManager().rebuild();
+                    }
                 }
 
-                if (network != null) {
-                    network.getCraftingManager().rebuild();
+                @Override
+                public int getSlotLimit(int slot) {
+                    return 1;
                 }
-            }
-        }
+            };
 
-        @Override
-        public int getSlotLimit(int slot) {
-            return 1;
-        }
-    };
+    private final List<ICraftingPattern> patterns = new ArrayList<>();
 
-    public static boolean isValidPatternInSlot(World world, ItemStack stack) {
-        return stack.getItem() instanceof ICraftingPatternProvider && ((ICraftingPatternProvider) stack.getItem()).create(world, stack, null).isValid();
-    }
-
-    private List<ICraftingPattern> patterns = new ArrayList<>();
-
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED);
+    private final ItemHandlerUpgrade upgrades =
+            new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED);
 
     // Used to prevent infinite recursion on getRootContainer() when there's e.g. two crafters facing each other.
     private boolean visited = false;
@@ -112,18 +97,14 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
             ItemStack patternStack = patternsInventory.getStackInSlot(i);
 
             if (!patternStack.isEmpty()) {
-                ICraftingPattern pattern = ((ICraftingPatternProvider) patternStack.getItem()).create(world, patternStack, this);
+                ICraftingPattern pattern =
+                        ((ICraftingPatternProvider) patternStack.getItem()).create(world, patternStack, this);
 
                 if (pattern.isValid()) {
                     patterns.add(pattern);
                 }
             }
         }
-    }
-
-    @Override
-    public int getEnergyUsage() {
-        return RS.INSTANCE.config.crafterUsage + upgrades.getEnergyUsage() + (RS.INSTANCE.config.crafterPerPatternUsage * patterns.size());
     }
 
     @Override
@@ -149,6 +130,22 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
+    public void onUsedForProcessing() {
+        Optional<ICraftingPatternContainer> root = getRootContainerNotSelf();
+        if (root.isPresent()) {
+            root.get().onUsedForProcessing();
+
+            return;
+        }
+
+        if (mode == CrafterMode.PULSE_INSERTS_NEXT_SET) {
+            this.locked = true;
+
+            markDirty();
+        }
+    }
+
+    @Override
     protected void onConnectedStateChange(INetwork network, boolean state) {
         super.onConnectedStateChange(network, state);
 
@@ -160,8 +157,8 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         super.onDisconnected(network);
 
         network.getCraftingManager().getTasks().stream()
-            .filter(task -> task.getPattern().getContainer().getPosition().equals(pos))
-            .forEach(task -> network.getCraftingManager().cancel(task.getId()));
+                .filter(task -> task.getPattern().getContainer().getPosition().equals(pos))
+                .forEach(task -> network.getCraftingManager().cancel(task.getId()));
     }
 
     @Override
@@ -212,11 +209,6 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
-    public String getId() {
-        return ID;
-    }
-
-    @Override
     public NBTTagCompound write(NBTTagCompound tag) {
         super.write(tag);
 
@@ -239,28 +231,133 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
-    public int getUpdateInterval() {
-        switch (upgrades.getUpgradeCount(ItemUpgrade.TYPE_SPEED)) {
-            case 0:
-                return 10;
-            case 1:
-                return 8;
-            case 2:
-                return 6;
-            case 3:
-                return 4;
-            case 4:
-                return 2;
-            default:
-                return 0;
+    public boolean hasConnectivityState() {
+        return true;
+    }
+
+    public static boolean isValidPatternInSlot(World world, ItemStack stack) {
+        return stack.getItem() instanceof ICraftingPatternProvider &&
+                ((ICraftingPatternProvider) stack.getItem()).create(world, stack, null).isValid();
+    }
+
+    @Override
+    public void unlock() {
+        this.locked = false;
+    }
+
+    @Override
+    public boolean isLocked() {
+        Optional<ICraftingPatternContainer> root = getRootContainerNotSelf();
+        if (root.isPresent()) {
+            return root.get().isLocked();
         }
+
+        switch (mode) {
+            case SIGNAL_LOCKS_AUTOCRAFTING:
+                return world.isBlockPowered(pos);
+            case SIGNAL_UNLOCKS_AUTOCRAFTING:
+                return !world.isBlockPowered(pos);
+            case PULSE_INSERTS_NEXT_SET:
+                return locked;
+            default:
+                return false;
+        }
+    }
+
+    public void setDisplayName(@Nullable String displayName) {
+        this.displayName = displayName;
+    }
+
+    public void setMode(CrafterMode mode) {
+        this.mode = mode;
+        this.wasPowered = false;
+        this.locked = false;
+
+        this.markDirty();
+    }
+
+    @Override
+    public CrafterMode getCrafterMode() {
+        return this.mode;
+    }
+
+    public Optional<ICraftingPatternContainer> getRootContainerNotSelf() {
+        ICraftingPatternContainer root = getRootContainer();
+
+        if (root != null && root != this) {
+            return Optional.of(root);
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public UUID getUuid() {
+        if (this.uuid == null) {
+            this.uuid = UUID.randomUUID();
+
+            markDirty();
+        }
+
+        return uuid;
+    }
+
+    @Override
+    @Nullable
+    public ICraftingPatternContainer getRootContainer() {
+        if (visited) {
+            return null;
+        }
+
+        INetworkNode facing = API.instance().getNetworkNodeManager(world).getNode(pos.offset(getDirection()));
+        if (!(facing instanceof ICraftingPatternContainer) || facing.getNetwork() != network) {
+            return this;
+        }
+
+        visited = true;
+        ICraftingPatternContainer facingContainer = ((ICraftingPatternContainer) facing).getRootContainer();
+        visited = false;
+
+        return facingContainer;
+    }
+
+    @Override
+    public int getEnergyUsage() {
+        return RS.INSTANCE.config.crafterUsage + upgrades.getEnergyUsage() +
+                (RS.INSTANCE.config.crafterPerPatternUsage * patterns.size());
+    }
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public String getName() {
+        if (displayName != null) {
+            return displayName;
+        }
+
+        TileEntity facing = getConnectedTile();
+
+        if (facing instanceof IWorldNameable) {
+            return ((IWorldNameable) facing).getName();
+        }
+
+        if (facing != null) {
+            return world.getBlockState(facing.getPos()).getBlock().getTranslationKey() + ".name";
+        }
+
+        return DEFAULT_NAME;
+    }
+
+    public IItemHandler getUpgrades() {
+        return upgrades;
     }
 
     @Override
     public int getMaximumSuccessfulCraftingUpdates() {
         switch (upgrades.getUpgradeCount(ItemUpgrade.TYPE_SPEED)) {
-            case 0:
-                return 1;
             case 1:
                 return 2;
             case 2:
@@ -283,6 +380,24 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         }
 
         return WorldUtils.getItemHandler(proxy.getFacingTile(), proxy.getDirection().getOpposite());
+    }
+
+    @Override
+    public int getUpdateInterval() {
+        switch (upgrades.getUpgradeCount(ItemUpgrade.TYPE_SPEED)) {
+            case 0:
+                return 10;
+            case 1:
+                return 8;
+            case 2:
+                return 6;
+            case 3:
+                return 4;
+            case 4:
+                return 2;
+            default:
+                return 0;
+        }
     }
 
     @Nullable
@@ -308,42 +423,14 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
-    public List<ICraftingPattern> getPatterns() {
-        return patterns;
-    }
-
-    @Override
     @Nullable
     public IItemHandlerModifiable getPatternInventory() {
         return patternsInventory;
     }
 
     @Override
-    public String getName() {
-        if (displayName != null) {
-            return displayName;
-        }
-
-        TileEntity facing = getConnectedTile();
-
-        if (facing instanceof IWorldNameable && ((IWorldNameable) facing).getName() != null) {
-            return ((IWorldNameable) facing).getName();
-        }
-
-        if (facing != null) {
-            return world.getBlockState(facing.getPos()).getBlock().getTranslationKey() + ".name";
-        }
-
-        return DEFAULT_NAME;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    @Nullable
-    public String getDisplayName() {
-        return displayName;
+    public List<ICraftingPattern> getPatterns() {
+        return patterns;
     }
 
     @Override
@@ -355,106 +442,17 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         return mode;
     }
 
-    public void setMode(CrafterMode mode) {
-        this.mode = mode;
-        this.wasPowered = false;
-        this.locked = false;
-
-        this.markDirty();
-    }
-
     public IItemHandler getPatternItems() {
-        return patternsInventory;
+        return getPatternInventory();
     }
 
-    public IItemHandler getUpgrades() {
-        return upgrades;
+    @Nullable
+    public String getDisplayName() {
+        return displayName;
     }
 
     @Override
     public IItemHandler getDrops() {
         return new CombinedInvWrapper(patternsInventory, upgrades);
-    }
-
-    @Override
-    public boolean hasConnectivityState() {
-        return true;
-    }
-
-    @Override
-    @Nullable
-    public ICraftingPatternContainer getRootContainer() {
-        if (visited) {
-            return null;
-        }
-
-        INetworkNode facing = API.instance().getNetworkNodeManager(world).getNode(pos.offset(getDirection()));
-        if (!(facing instanceof ICraftingPatternContainer) || facing.getNetwork() != network) {
-            return this;
-        }
-
-        visited = true;
-        ICraftingPatternContainer facingContainer = ((ICraftingPatternContainer) facing).getRootContainer();
-        visited = false;
-
-        return facingContainer;
-    }
-
-    public Optional<ICraftingPatternContainer> getRootContainerNotSelf() {
-        ICraftingPatternContainer root = getRootContainer();
-
-        if (root != null && root != this) {
-            return Optional.of(root);
-        }
-
-        return Optional.empty();
-    }
-
-    @Override
-    public UUID getUuid() {
-        if (this.uuid == null) {
-            this.uuid = UUID.randomUUID();
-
-            markDirty();
-        }
-
-        return uuid;
-    }
-
-    @Override
-    public boolean isLocked() {
-        Optional<ICraftingPatternContainer> root = getRootContainerNotSelf();
-        if (root.isPresent()) {
-            return root.get().isLocked();
-        }
-
-        switch (mode) {
-            case IGNORE:
-                return false;
-            case SIGNAL_LOCKS_AUTOCRAFTING:
-                return world.isBlockPowered(pos);
-            case SIGNAL_UNLOCKS_AUTOCRAFTING:
-                return !world.isBlockPowered(pos);
-            case PULSE_INSERTS_NEXT_SET:
-                return locked;
-            default:
-                return false;
-        }
-    }
-
-    @Override
-    public void onUsedForProcessing() {
-        Optional<ICraftingPatternContainer> root = getRootContainerNotSelf();
-        if (root.isPresent()) {
-            root.get().onUsedForProcessing();
-
-            return;
-        }
-
-        if (mode == CrafterMode.PULSE_INSERTS_NEXT_SET) {
-            this.locked = true;
-
-            markDirty();
-        }
     }
 }

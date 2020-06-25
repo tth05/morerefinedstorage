@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class GridFilterFilter implements Predicate<IGridStack> {
-    private List<IFilter> filters;
+    private final List<IFilter<?>> filters;
 
-    public GridFilterFilter(List<IFilter> filters) {
+    public GridFilterFilter(List<IFilter<?>> filters) {
         this.filters = filters;
     }
 
@@ -27,7 +27,7 @@ public class GridFilterFilter implements Predicate<IGridStack> {
 
         int lastMode = IFilter.MODE_WHITELIST;
 
-        for (IFilter filter : filters) {
+        for (IFilter<?> filter : filters) {
             lastMode = filter.getMode();
 
             if (stack instanceof GridStackItem && filter.getStack() instanceof ItemStack) {

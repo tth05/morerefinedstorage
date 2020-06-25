@@ -30,7 +30,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
 
     private static final String NBT_COMPARE = "Compare";
 
-    private ItemHandlerBase itemFilter = new ItemHandlerBase(1, new ListenerNetworkNode(this)) {
+    private final ItemHandlerBase itemFilter = new ItemHandlerBase(1, new ListenerNetworkNode(this)) {
         @Override
         public void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -39,7 +39,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
         }
     };
 
-    private Map<String, Pair<ItemStack, Long>> deposits = new HashMap<>();
+    private final Map<String, Pair<ItemStack, Long>> deposits = new HashMap<>();
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
 
@@ -131,10 +131,8 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
         if (!filter.isEmpty()) {
             ItemStack result = network.extractItem(filter, toExtract, compare, Action.PERFORM);
 
-            if (result != null) {
-                if (!player.inventory.addItemStackToInventory(result.copy())) {
-                    InventoryHelper.spawnItemStack(world, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), result);
-                }
+            if (!result.isEmpty() && !player.inventory.addItemStackToInventory(result.copy())) {
+                InventoryHelper.spawnItemStack(world, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), result);
             }
         }
     }

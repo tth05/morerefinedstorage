@@ -8,10 +8,10 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.task.v5.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.network.NetworkNodeListener;
 import com.raoulvdberge.refinedstorage.apiimpl.network.grid.factory.*;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
@@ -68,8 +68,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -78,12 +78,13 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 
 public class ProxyCommon {
-    protected List<Item> itemsToRegister = new LinkedList<>();
-    protected List<BlockBase> blocksToRegister = new LinkedList<>();
+    protected final List<Item> itemsToRegister = new LinkedList<>();
+    protected final List<BlockBase> blocksToRegister = new LinkedList<>();
 
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(this);
@@ -100,14 +101,13 @@ public class ProxyCommon {
         WirelessCraftingGrid.ID = API.instance().getGridManager().add(new GridFactoryWirelessCraftingGrid());
 
         API.instance().getCraftingTaskRegistry().add(CraftingTaskFactory.ID, new CraftingTaskFactory());
-        RS.registerFactoryV6();
 
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID,
                 buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readInt(), buf.readInt(),
-                        buf.readInt(), buf.readInt(), buf.readInt()));
+                        buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID,
-                buf -> new CraftingMonitorElementFluidRender(StackUtils.readFluidGridStack(buf).getStack(),
-                        buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
+                buf -> new CraftingMonitorElementFluidRender(FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf)),
+                        buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementError.ID, buf -> {
             String id = ByteBufUtils.readUTF8String(buf);
             String message = ByteBufUtils.readUTF8String(buf);
@@ -186,7 +186,7 @@ public class ProxyCommon {
         RS.INSTANCE.network
                 .registerMessage(MessageGridPatternCreate.class, MessageGridPatternCreate.class, id++, Side.SERVER);
         RS.INSTANCE.network
-                .registerMessage(MessageCraftingMonitorCancel.class, MessageCraftingMonitorCancel.class, id++,
+                .registerMessage(MessageCraftingCancel.class, MessageCraftingCancel.class, id++,
                         Side.SERVER);
         RS.INSTANCE.network
                 .registerMessage(MessageCraftingMonitorElements.class, MessageCraftingMonitorElements.class, id++,
@@ -346,10 +346,6 @@ public class ProxyCommon {
         }
     }
 
-    public void postInit(FMLPostInitializationEvent e) {
-        // NO OP
-    }
-
     @SubscribeEvent
     public void registerBlocks(RegistryEvent.Register<Block> e) {
         blocksToRegister.forEach(e.getRegistry()::register);
@@ -445,12 +441,12 @@ public class ProxyCommon {
         GameRegistry.registerTileEntity(clazz, info.getId());
 
         try {
-            TileBase tileInstance = clazz.newInstance();
+            TileBase tileInstance = clazz.getDeclaredConstructor().newInstance();
 
             if (tileInstance instanceof TileNode) {
                 API.instance().getNetworkNodeRegistry()
-                        .add(((TileNode) tileInstance).getNodeId(), (tag, world, pos) -> {
-                            NetworkNode node = ((TileNode) tileInstance).createNode(world, pos);
+                        .add(((TileNode<?>) tileInstance).getNodeId(), (tag, world, pos) -> {
+                            NetworkNode node = ((TileNode<?>) tileInstance).createNode(world, pos);
 
                             node.read(tag);
 
@@ -459,7 +455,7 @@ public class ProxyCommon {
             }
 
             tileInstance.getDataManager().getParameters().forEach(TileDataManager::registerParameter);
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }

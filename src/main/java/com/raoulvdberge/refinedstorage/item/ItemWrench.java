@@ -1,8 +1,10 @@
 package com.raoulvdberge.refinedstorage.item;
 
 import com.raoulvdberge.refinedstorage.RS;
+import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.ICoverable;
+import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.Cover;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.block.BlockCable;
 import com.raoulvdberge.refinedstorage.item.info.ItemInfo;
@@ -26,6 +28,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public class ItemWrench extends ItemBase {
     public ItemWrench() {
         super(new ItemInfo(RS.ID, "wrench"));
@@ -39,8 +43,9 @@ public class ItemWrench extends ItemBase {
         modelRegistration.setModel(this, 0, new ModelResourceLocation(info.getId(), "inventory"));
     }
 
+    @Nonnull
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public EnumActionResult onItemUse(EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (!player.isSneaking()) {
             return EnumActionResult.FAIL;
         }
@@ -51,21 +56,29 @@ public class ItemWrench extends ItemBase {
 
         TileEntity tile = world.getTileEntity(pos);
 
-        if (tile instanceof TileNode && ((TileNode) tile).getNode().getNetwork() != null && !((TileNode) tile).getNode().getNetwork().getSecurityManager().hasPermission(Permission.BUILD, player)) {
+        IBlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
+
+        if(!(tile instanceof TileNode<?>)) {
+            block.rotateBlock(world, pos, player.getHorizontalFacing().getOpposite());
+
+            return EnumActionResult.SUCCESS;
+        }
+
+        INetworkNode node = ((TileNode<?>) tile).getNode();
+
+        if (node.getNetwork() != null &&
+                !node.getNetwork().getSecurityManager().hasPermission(Permission.BUILD, player)) {
             WorldUtils.sendNoPermissionMessage(player);
 
             return EnumActionResult.FAIL;
         }
 
-        IBlockState state = world.getBlockState(pos);
-
-        Block block = state.getBlock();
-
-        if (block instanceof BlockCable && tile instanceof TileNode && ((TileNode) tile).getNode() instanceof ICoverable) {
-            CoverManager manager = ((ICoverable) ((TileNode) tile).getNode()).getCoverManager();
+        if (block instanceof BlockCable && node instanceof ICoverable) {
+            CoverManager manager = ((ICoverable) ((TileNode<?>) tile).getNode()).getCoverManager();
 
             @SuppressWarnings("deprecation")
-            AdvancedRayTraceResult result = AdvancedRayTracer.rayTrace(
+            AdvancedRayTraceResult<?> result = AdvancedRayTracer.rayTrace(
                 pos,
                 AdvancedRayTracer.getStart(player),
                 AdvancedRayTracer.getEnd(player),
@@ -75,10 +88,11 @@ public class ItemWrench extends ItemBase {
             if (result != null && result.getGroup().getDirection() != null) {
                 EnumFacing facingSelected = result.getGroup().getDirection();
 
-                if (manager.hasCover(facingSelected)) {
-                    ItemStack cover = manager.getCover(facingSelected).getType().createStack();
+                Cover targetCover = manager.getCover(facingSelected);
+                if (targetCover != null) {
+                    ItemStack cover = targetCover.getType().createStack();
 
-                    ItemCover.setItem(cover, manager.getCover(facingSelected).getStack());
+                    ItemCover.setItem(cover, targetCover.getStack());
 
                     manager.setCover(facingSelected, null);
 
@@ -92,7 +106,6 @@ public class ItemWrench extends ItemBase {
         }
 
         block.rotateBlock(world, pos, player.getHorizontalFacing().getOpposite());
-
         return EnumActionResult.SUCCESS;
     }
 }

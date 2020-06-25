@@ -5,9 +5,11 @@ import com.raoulvdberge.refinedstorage.item.ItemPattern;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
+
 public class TileEntityItemStackRendererPattern extends TileEntityItemStackRenderer {
     @Override
-    public void renderByItem(ItemStack stack) {
+    public void renderByItem(@Nonnull ItemStack stack) {
         CraftingPattern pattern = ItemPattern.getPatternFromCache(null, stack);
         ItemStack outputStack = pattern.getOutputs().get(0);
 
@@ -15,7 +17,7 @@ public class TileEntityItemStackRendererPattern extends TileEntityItemStackRende
     }
 
     @Override
-    public void renderByItem(ItemStack stack, float partialTicks) {
+    public void renderByItem(@Nonnull ItemStack stack, float partialTicks) {
         CraftingPattern pattern = ItemPattern.getPatternFromCache(null, stack);
         ItemStack outputStack = pattern.getOutputs().get(0);
 

@@ -26,11 +26,11 @@ import java.util.function.Consumer;
 import static com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY;
 
 public class NetworkNodeGraph implements INetworkNodeGraph {
-    private INetwork network;
+    private final INetwork network;
     private Set<INetworkNode> nodes = Sets.newConcurrentHashSet();
-    private List<INetworkNodeGraphListener> listeners = new LinkedList<>();
+    private final List<INetworkNodeGraphListener> listeners = new LinkedList<>();
 
-    private Set<Consumer<INetwork>> actions = new HashSet<>();
+    private final Set<Consumer<INetwork>> actions = new HashSet<>();
 
     private boolean invalidating = false;
 
@@ -46,7 +46,8 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
 
         TileEntity tile = world.getTileEntity(origin);
         if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null)) {
-            INetworkNodeProxy proxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null);
+            INetworkNodeProxy<?> proxy =
+                    tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null);
 
             if (proxy != null) {
                 INetworkNode node = proxy.getNode();
@@ -85,7 +86,6 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public INetwork getNetworkForBCReasons() {
         OneSixMigrationHelper.removalHook();
 
@@ -123,30 +123,17 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
         return network.world();
     }
 
-    private void dropConflictingBlock(World world, BlockPos pos) {
-        if (!network.getPosition().equals(pos)) {
-            IBlockState state = world.getBlockState(pos);
-
-            NonNullList<ItemStack> drops = NonNullList.create();
-            state.getBlock().getDrops(drops, world, pos, state, 0);
-
-            world.setBlockToAir(pos);
-
-            for (ItemStack drop : drops) {
-                InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(), drop);
-            }
-        }
-    }
-
     private class Operator implements INetworkNodeVisitor.Operator {
-        private Set<INetworkNode> foundNodes = Sets.newConcurrentHashSet(); // All scanned nodes
+        private final Set<INetworkNode> foundNodes = Sets.newConcurrentHashSet(); // All scanned nodes
 
-        private Set<INetworkNode> newNodes = Sets.newConcurrentHashSet(); // All scanned new nodes, that didn't appear in the list before
-        private Set<INetworkNode> previousNodes = Sets.newConcurrentHashSet(nodes); // All unscanned nodes (nodes that were in the previous list, but not in the new list)
+        private final Set<INetworkNode> newNodes = Sets.newConcurrentHashSet();
+                // All scanned new nodes, that didn't appear in the list before
+        private final Set<INetworkNode> previousNodes = Sets.newConcurrentHashSet(nodes);
+                // All unscanned nodes (nodes that were in the previous list, but not in the new list)
 
-        private Queue<Visitor> toCheck = new ArrayDeque<>();
+        private final Queue<Visitor> toCheck = new ArrayDeque<>();
 
-        private Action action;
+        private final Action action;
 
         public Operator(Action action) {
             this.action = action;
@@ -157,7 +144,8 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
             TileEntity tile = world.getTileEntity(pos);
 
             if (tile != null && tile.hasCapability(NETWORK_NODE_PROXY_CAPABILITY, side)) {
-                INetworkNodeProxy otherNodeProxy = NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, side));
+                INetworkNodeProxy<?> otherNodeProxy =
+                        NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, side));
                 INetworkNode otherNode = otherNodeProxy.getNode();
 
                 if (otherNode.getNetwork() != null && !otherNode.getNetwork().equals(network)) {
@@ -183,13 +171,28 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
             }
         }
 
+        private void dropConflictingBlock(World world, BlockPos pos) {
+            if (!network.getPosition().equals(pos)) {
+                IBlockState state = world.getBlockState(pos);
+
+                NonNullList<ItemStack> drops = NonNullList.create();
+                state.getBlock().getDrops(drops, world, pos, state, 0);
+
+                world.setBlockToAir(pos);
+
+                for (ItemStack drop : drops) {
+                    InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(), drop);
+                }
+            }
+        }
+
         @Override
         public Action getAction() {
             return action;
         }
     }
 
-    private class Visitor implements INetworkNodeVisitor {
+    private static class Visitor implements INetworkNodeVisitor {
         private final INetworkNode node;
         private final World world;
         private final BlockPos pos;
@@ -210,15 +213,17 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
                 ((INetworkNodeVisitor) node).visit(operator);
             } else {
                 for (EnumFacing checkSide : EnumFacing.VALUES) {
-                    if (checkSide != side) { // Avoid going backward
-                        INetworkNodeProxy nodeOnSideProxy = NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, checkSide));
+                    if (checkSide == side)// Avoid going backwards
+                        continue;
 
-                        if (nodeOnSideProxy != null) {
-                            INetworkNode nodeOnSide = nodeOnSideProxy.getNode();
+                    INetworkNodeProxy<?> nodeOnSideProxy = NETWORK_NODE_PROXY_CAPABILITY
+                            .cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, checkSide));
 
-                            if (nodeOnSide == node) {
-                                operator.apply(world, pos.offset(checkSide), checkSide.getOpposite());
-                            }
+                    if (nodeOnSideProxy != null) {
+                        INetworkNode nodeOnSide = nodeOnSideProxy.getNode();
+
+                        if (nodeOnSide == node) {
+                            operator.apply(world, pos.offset(checkSide), checkSide.getOpposite());
                         }
                     }
                 }

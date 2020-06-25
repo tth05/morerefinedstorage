@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
 import java.util.function.Predicate;
 
 public class GridFilterTooltip implements Predicate<IGridStack> {
-    private String tooltip;
+    private final String tooltip;
 
     public GridFilterTooltip(String tooltip) {
         this.tooltip = tooltip.toLowerCase();

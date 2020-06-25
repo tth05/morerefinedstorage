@@ -28,7 +28,9 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.items.IItemHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
@@ -54,6 +56,7 @@ public abstract class BlockBase extends Block {
     public void registerModels(IModelRegistration modelRegistration) {
     }
 
+    @Nonnull
     @Override
     public String getTranslationKey() {
         return "block." + info.getId().toString();
@@ -69,6 +72,7 @@ public abstract class BlockBase extends Block {
         return builder;
     }
 
+    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return createBlockStateBuilder().build();
@@ -78,6 +82,7 @@ public abstract class BlockBase extends Block {
         return new ItemBlockBase(this, false);
     }
 
+    @Nonnull
     @Override
     @SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta) {
@@ -85,13 +90,14 @@ public abstract class BlockBase extends Block {
     }
 
     @Override
-    public int getMetaFromState(IBlockState state) {
+    public int getMetaFromState(@Nonnull IBlockState state) {
         return 0;
     }
 
+    @Nonnull
     @Override
     @SuppressWarnings("deprecation")
-    public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
+    public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         if (getDirection() != null) {
             TileEntity tile = world.getTileEntity(pos);
 
@@ -104,12 +110,12 @@ public abstract class BlockBase extends Block {
     }
 
     @Override
-    public int damageDropped(IBlockState state) {
+    public int damageDropped(@Nonnull IBlockState state) {
         return getMetaFromState(state);
     }
 
     @Override
-    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis) {
+    public boolean rotateBlock(World world, @Nonnull BlockPos pos, @Nonnull EnumFacing axis) {
         if (!world.isRemote && getDirection() != null) {
             TileBase tile = (TileBase) world.getTileEntity(pos);
 
@@ -126,7 +132,7 @@ public abstract class BlockBase extends Block {
     }
 
     @Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+    public void breakBlock(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
         dropContents(world, pos);
         removeTile(world, pos, state);
     }
@@ -139,31 +145,35 @@ public abstract class BlockBase extends Block {
 
     void dropContents(World world, BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);
+        if(!(tile instanceof TileBase))
+            return;
 
-        if (tile instanceof TileBase && ((TileBase) tile).getDrops() != null) {
-            WorldUtils.dropInventory(world, pos, ((TileBase) tile).getDrops());
-        }
+        IItemHandler drops = ((TileBase) tile).getDrops();
+        if (drops == null)
+            return;
+
+        WorldUtils.dropInventory(world, pos, drops);
     }
 
     @Override
-    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player, boolean willHarvest) {
-        return willHarvest || super.removedByPlayer(state, world, pos, player, willHarvest);
+    public boolean removedByPlayer(@Nonnull IBlockState state, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EntityPlayer player, boolean willHarvest) {
+        return willHarvest || super.removedByPlayer(state, world, pos, player, false);
     }
 
     @Override
-    public void harvestBlock(World world, EntityPlayer player, BlockPos pos, IBlockState state, TileEntity tile, ItemStack stack) {
+    public void harvestBlock(@Nonnull World world, @Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState state, TileEntity tile, @Nonnull ItemStack stack) {
         super.harvestBlock(world, player, pos, state, tile, stack);
 
         world.setBlockToAir(pos);
     }
 
     @Override
-    public final boolean hasTileEntity(IBlockState state) {
+    public final boolean hasTileEntity(@Nonnull IBlockState state) {
         return info.hasTileEntity();
     }
 
     @Override
-    public final TileEntity createTileEntity(World world, IBlockState state) {
+    public final TileEntity createTileEntity(@Nonnull World world, @Nonnull IBlockState state) {
         return info.createTileEntity();
     }
 
@@ -198,7 +208,7 @@ public abstract class BlockBase extends Block {
 
     @Override
     @SuppressWarnings("deprecation")
-    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, Entity entityIn, boolean isActualState) {
+    public void addCollisionBoxToList(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos, @Nonnull AxisAlignedBB entityBox, @Nonnull List<AxisAlignedBB> collidingBoxes, Entity entityIn, boolean isActualState) {
         for (CollisionGroup group : getCollisions(world.getTileEntity(pos), this.getActualState(state, world, pos))) {
             for (AxisAlignedBB aabb : group.getItems()) {
                 addCollisionBoxToList(pos, entityBox, collidingBoxes, aabb);
@@ -208,8 +218,8 @@ public abstract class BlockBase extends Block {
 
     @Override
     @SuppressWarnings("deprecation")
-    public RayTraceResult collisionRayTrace(IBlockState state, World world, BlockPos pos, Vec3d start, Vec3d end) {
-        AdvancedRayTraceResult result = AdvancedRayTracer.rayTrace(pos, start, end, getCollisions(world.getTileEntity(pos), this.getActualState(state, world, pos)));
+    public RayTraceResult collisionRayTrace(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos, @Nonnull Vec3d start, @Nonnull Vec3d end) {
+        AdvancedRayTraceResult<RayTraceResult> result = AdvancedRayTracer.rayTrace(pos, start, end, getCollisions(world.getTileEntity(pos), this.getActualState(state, world, pos)));
 
         return result != null ? result.getHit() : null;
     }

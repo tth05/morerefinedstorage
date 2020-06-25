@@ -2,12 +2,13 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandler;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingPreviewResponse;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingStartResponse;
@@ -26,7 +27,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 public class FluidGridHandler implements IFluidGridHandler {
-    private INetwork network;
+    private final INetwork network;
 
     public FluidGridHandler(INetwork network) {
         this.network = network;
@@ -36,7 +37,8 @@ public class FluidGridHandler implements IFluidGridHandler {
     public void onExtract(EntityPlayerMP player, UUID id, boolean shift) {
         FluidStack stack = network.getFluidStorageCache().getList().get(id);
 
-        if (stack == null || stack.amount < Fluid.BUCKET_VOLUME || !network.getSecurityManager().hasPermission(Permission.EXTRACT, player)) {
+        if (stack == null || stack.amount < Fluid.BUCKET_VOLUME ||
+                !network.getSecurityManager().hasPermission(Permission.EXTRACT, player)) {
             return;
         }
 
@@ -59,8 +61,9 @@ public class FluidGridHandler implements IFluidGridHandler {
                 bucket = network.extractItem(StackUtils.EMPTY_BUCKET, 1, Action.PERFORM);
             }
 
-            if (bucket != null) {
-                IFluidHandlerItem fluidHandler = bucket.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+            if (!bucket.isEmpty()) {
+                IFluidHandlerItem fluidHandler =
+                        bucket.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
 
                 network.getFluidStorageTracker().changed(player, stack.copy());
 
@@ -68,7 +71,8 @@ public class FluidGridHandler implements IFluidGridHandler {
 
                 if (shift) {
                     if (!player.inventory.addItemStackToInventory(fluidHandler.getContainer().copy())) {
-                        InventoryHelper.spawnItemStack(player.getEntityWorld(), player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), fluidHandler.getContainer());
+                        InventoryHelper.spawnItemStack(player.getEntityWorld(), player.getPosition().getX(),
+                                player.getPosition().getY(), player.getPosition().getZ(), fluidHandler.getContainer());
                     }
                 } else {
                     player.inventory.setItemStack(fluidHandler.getContainer());
@@ -89,7 +93,8 @@ public class FluidGridHandler implements IFluidGridHandler {
 
         Pair<ItemStack, FluidStack> result = StackUtils.getFluid(container, true);
 
-        if (result.getValue() != null && network.insertFluid(result.getValue(), result.getValue().amount, Action.SIMULATE) == null) {
+        if (result.getValue() != null &&
+                network.insertFluid(result.getValue(), result.getValue().amount, Action.SIMULATE) == null) {
             network.getFluidStorageTracker().changed(player, result.getValue().copy());
 
             result = StackUtils.getFluid(container, false);
@@ -124,7 +129,7 @@ public class FluidGridHandler implements IFluidGridHandler {
         FluidStack stack = network.getFluidStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            Thread calculationThread = new Thread(() -> {
+            CraftingManager.CALCULATION_THREAD_POOL.execute(() -> {
                 ICraftingTask task = network.getCraftingManager().create(stack, quantity);
                 if (task == null) {
                     return;
@@ -132,18 +137,26 @@ public class FluidGridHandler implements IFluidGridHandler {
 
                 ICraftingTaskError error = task.calculate();
 
-                if (error != null) {
-                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(Collections.singletonList(new CraftingPreviewElementError(error.getType(), error.getRecursedPattern() == null ? ItemStack.EMPTY : error.getRecursedPattern().getStack())), id, quantity, true), player);
-                } else if (noPreview && !task.hasMissing()) {
+                if (error == null)
                     network.getCraftingManager().add(task);
+
+                if (error != null) {
+                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
+                                    Collections
+                                            .singletonList(new CraftingPreviewElementError(ItemStack.EMPTY)),
+                                    task.getId(),
+                                    task.getCalculationTime(), quantity, true),
+                            player);
+                } else if (noPreview && !task.hasMissing()) {
+                    task.setCanUpdate(true);
 
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingStartResponse(), player);
                 } else {
-                    RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), id, quantity, true), player);
+                    RS.INSTANCE.network
+                            .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
+                                    task.getCalculationTime(), quantity, true), player);
                 }
-            }, "RS crafting preview calculation");
-
-            calculationThread.start();
+            });
         }
     }
 
@@ -153,18 +166,8 @@ public class FluidGridHandler implements IFluidGridHandler {
             return;
         }
 
-        FluidStack stack = network.getFluidStorageCache().getCraftablesList().get(id);
-
-        if (stack != null) {
-            ICraftingTask task = network.getCraftingManager().create(stack, quantity);
-            if (task == null) {
-                return;
-            }
-
-            ICraftingTaskError error = task.calculate();
-            if (error == null && !task.hasMissing()) {
-                network.getCraftingManager().add(task);
-            }
-        }
+        ICraftingTask task = network.getCraftingManager().getTask(id);
+        if (task != null)
+            task.setCanUpdate(true);
     }
 }

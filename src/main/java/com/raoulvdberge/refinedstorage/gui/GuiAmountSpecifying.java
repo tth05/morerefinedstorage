@@ -8,17 +8,18 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.input.Keyboard;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public abstract class GuiAmountSpecifying extends GuiBase {
     protected GuiTextField amountField;
 
-    private GuiBase parent;
+    private final GuiBase parent;
 
     protected GuiButton okButton;
     private GuiButton cancelButton;
 
-    private GuiButton[] incrementButtons = new GuiButton[6];
+    private final GuiButton[] incrementButtons = new GuiButton[6];
 
     public GuiAmountSpecifying(GuiBase parent, Container container, int width, int height) {
         super(container, width, height);
@@ -55,7 +56,9 @@ public abstract class GuiAmountSpecifying extends GuiBase {
         okButton = addButton(x + pos.getLeft(), y + pos.getRight(), 50, 20, getOkButtonText());
         cancelButton = addButton(x + pos.getLeft(), y + pos.getRight() + 24, 50, 20, t("gui.cancel"));
 
-        amountField = new GuiTextField(0, fontRenderer, x + getAmountPos().getLeft(), y + getAmountPos().getRight(), 69 - 6, fontRenderer.FONT_HEIGHT);
+        amountField =
+                new GuiTextField(0, fontRenderer, x + getAmountPos().getLeft(), y + getAmountPos().getRight(), 69 - 6,
+                        fontRenderer.FONT_HEIGHT);
         amountField.setEnableBackgroundDrawing(false);
         amountField.setVisible(true);
         amountField.setText(String.valueOf(getDefaultAmount()));
@@ -116,21 +119,19 @@ public abstract class GuiAmountSpecifying extends GuiBase {
 
     @Override
     protected void keyTyped(char character, int keyCode) throws IOException {
-        if (!checkHotbarKeys(keyCode) && amountField.textboxKeyTyped(character, keyCode)) {
-            // NO OP
+        if (!checkHotbarKeys(keyCode) && amountField.textboxKeyTyped(character, keyCode))
+            return;
+        if (keyCode == Keyboard.KEY_RETURN) {
+            onOkButtonPressed(isShiftKeyDown());
+        } else if (keyCode == Keyboard.KEY_ESCAPE) {
+            close();
         } else {
-            if (keyCode == Keyboard.KEY_RETURN) {
-                onOkButtonPressed(isShiftKeyDown());
-            } else if (keyCode == Keyboard.KEY_ESCAPE) {
-                close();
-            } else {
-                super.keyTyped(character, keyCode);
-            }
+            super.keyTyped(character, keyCode);
         }
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button.id == okButton.id) {

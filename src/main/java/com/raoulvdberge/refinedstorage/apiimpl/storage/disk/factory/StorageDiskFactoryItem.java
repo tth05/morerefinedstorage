@@ -26,6 +26,8 @@ public class StorageDiskFactoryItem implements IStorageDiskFactory<ItemStack> {
             }
         }
 
+        disk.calculateStoredAmount();
+
         return disk;
     }
 

@@ -7,7 +7,6 @@ import com.raoulvdberge.refinedstorage.tile.craftingmonitor.WirelessCraftingMoni
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.UUID;
@@ -27,7 +26,7 @@ public class MessageWirelessCraftingMonitorSettings extends MessageHandlerPlayer
     @Override
     public void fromBytes(ByteBuf buf) {
         if (buf.readBoolean()) {
-            tabSelected = Optional.of(UUID.fromString(ByteBufUtils.readUTF8String(buf)));
+            tabSelected = Optional.of(new UUID(buf.readLong(), buf.readLong()));
         }
 
         tabPage = buf.readInt();
@@ -36,8 +35,9 @@ public class MessageWirelessCraftingMonitorSettings extends MessageHandlerPlayer
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeBoolean(tabSelected.isPresent());
-        if (tabSelected.isPresent()) {
-            ByteBufUtils.writeUTF8String(buf, tabSelected.get().toString());
+        if(tabSelected.isPresent()) {
+            buf.writeLong(tabSelected.get().getMostSignificantBits());
+            buf.writeLong(tabSelected.get().getLeastSignificantBits());
         }
 
         buf.writeInt(tabPage);

@@ -5,6 +5,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 public enum BlockDirection {
@@ -18,6 +19,7 @@ public enum BlockDirection {
         this.property = PropertyDirection.create("direction", Arrays.asList(allowed));
     }
 
+    @Nonnull
     public PropertyDirection getProperty() {
         return property;
     }

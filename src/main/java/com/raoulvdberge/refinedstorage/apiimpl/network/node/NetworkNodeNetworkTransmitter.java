@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 public class NetworkNodeNetworkTransmitter extends NetworkNode {
     public static final String ID = "network_transmitter";
 
-    private ItemHandlerBase networkCard = new ItemHandlerBase(1, new ListenerNetworkNode(this), new ItemValidatorBasic(RSItems.NETWORK_CARD)) {
+    private final ItemHandlerBase networkCard = new ItemHandlerBase(1, new ListenerNetworkNode(this), new ItemValidatorBasic(RSItems.NETWORK_CARD)) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -79,7 +79,7 @@ public class NetworkNodeNetworkTransmitter extends NetworkNode {
 
     @Override
     public IItemHandler getDrops() {
-        return networkCard;
+        return getNetworkCard();
     }
 
     @Nullable

@@ -20,10 +20,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class StorageExternalItem implements IStorageExternal<ItemStack> {
-    private IExternalStorageContext context;
-    private Supplier<IItemHandler> handlerSupplier;
-    private boolean connectedToInterface;
-    private ExternalStorageCacheItem cache = new ExternalStorageCacheItem();
+    private final IExternalStorageContext context;
+    private final Supplier<IItemHandler> handlerSupplier;
+    private final boolean connectedToInterface;
+    private final ExternalStorageCacheItem cache = new ExternalStorageCacheItem();
 
     public StorageExternalItem(IExternalStorageContext context, Supplier<IItemHandler> handlerSupplier, boolean connectedToInterface) {
         this.context = context;
@@ -45,17 +45,17 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         IItemHandler handler = handlerSupplier.get();
 
         if (handler == null) {
             return 0;
         }
 
-        int capacity = 0;
+        long capacity = 0;
 
         for (int i = 0; i < handler.getSlots(); ++i) {
-            capacity += Math.min(handler.getSlotLimit(i), handler.getStackInSlot(i).getMaxStackSize());
+            capacity += handler.getSlotLimit(i);
         }
 
         return capacity;

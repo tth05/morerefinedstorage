@@ -48,8 +48,8 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
     private static final String NBT_COVERS = "Covers";
     private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
     private int priority = 0;
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
@@ -58,10 +58,10 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int networkTicks;
 
-    private CoverManager coverManager = new CoverManager(this);
+    private final CoverManager coverManager = new CoverManager(this);
 
-    private List<IStorageExternal<ItemStack>> itemStorages = new CopyOnWriteArrayList<>();
-    private List<IStorageExternal<FluidStack>> fluidStorages = new CopyOnWriteArrayList<>();
+    private final List<IStorageExternal<ItemStack>> itemStorages = new CopyOnWriteArrayList<>();
+    private final List<IStorageExternal<FluidStack>> fluidStorages = new CopyOnWriteArrayList<>();
 
     public NetworkNodeExternalStorage(World world, BlockPos pos) {
         super(world, pos);
@@ -232,7 +232,7 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
             if (type == IType.ITEMS) {
                 for (IExternalStorageProvider provider : API.instance().getExternalStorageProviders(StorageType.ITEM)) {
                     if (provider.canProvide(facing, getDirection())) {
-                        itemStorages.add(provider.provide(this, () -> getFacingTile(), getDirection()));
+                        itemStorages.add(provider.provide(this, this::getFacingTile, getDirection()));
 
                         break;
                     }
@@ -240,7 +240,7 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
             } else if (type == IType.FLUIDS) {
                 for (IExternalStorageProvider provider : API.instance().getExternalStorageProviders(StorageType.FLUID)) {
                     if (provider.canProvide(facing, getDirection())) {
-                        fluidStorages.add(provider.provide(this, () -> getFacingTile(), getDirection()));
+                        fluidStorages.add(provider.provide(this, this::getFacingTile, getDirection()));
 
                         break;
                     }

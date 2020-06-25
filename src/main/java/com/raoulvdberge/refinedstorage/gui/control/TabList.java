@@ -17,23 +17,21 @@ public class TabList {
         void onPageChanged(int page);
     }
 
-    private GuiBase gui;
-    private GuiBase.ElementDrawers drawers;
+    private final GuiBase gui;
+    private final GuiBase.ElementDrawers drawers;
 
-    private Supplier<List<IGridTab>> tabs;
+    private final Supplier<List<IGridTab>> tabs;
     private int tabHovering;
-    private int tabsPerPage;
-    private Supplier<Integer> pages;
-    private Supplier<Integer> page;
-    private Supplier<Integer> selected;
+    private final int tabsPerPage;
+    private final Supplier<Integer> pages;
+    private final Supplier<Integer> page;
+    private final Supplier<Integer> selected;
     private boolean hadTabs;
 
-    private List<ITabListListener> listeners = new LinkedList<>();
+    private final List<ITabListListener> listeners = new LinkedList<>();
 
     private GuiButton left;
     private GuiButton right;
-
-    private int width;
 
     public TabList(GuiBase gui, GuiBase.ElementDrawers drawers, Supplier<List<IGridTab>> tabs, Supplier<Integer> pages, Supplier<Integer> page, Supplier<Integer> selected, int tabsPerPage) {
         this.gui = gui;
@@ -46,7 +44,6 @@ public class TabList {
     }
 
     public void init(int width) {
-        this.width = width;
         this.left = gui.addButton(gui.getGuiLeft(), gui.getGuiTop() - 22, 20, 20, "<", true, pages.get() > 0);
         this.right = gui.addButton(gui.getGuiLeft() + width - 22, gui.getGuiTop() - 22, 20, 20, ">", true, pages.get() > 0);
     }

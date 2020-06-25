@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 public class StorageCacheFluid implements IStorageCache<FluidStack> {
     public static final Consumer<INetwork> INVALIDATE = n -> n.getFluidStorageCache().invalidate();
 
-    private INetwork network;
-    private CopyOnWriteArrayList<IStorage<FluidStack>> storages = new CopyOnWriteArrayList<>();
-    private IStackList<FluidStack> list = API.instance().createFluidStackList();
+    private final INetwork network;
+    private final CopyOnWriteArrayList<IStorage<FluidStack>> storages = new CopyOnWriteArrayList<>();
+    private final IStackList<FluidStack> list = API.instance().createFluidStackList();
     private final IStackList<FluidStack> craftables = API.instance().createFluidStackList();
-    private List<IStorageCacheListener<FluidStack>> listeners = new LinkedList<>();
-    private List<StackListResult<FluidStack>> batchedChanges = new ArrayList<>();
+    private final List<IStorageCacheListener<FluidStack>> listeners = new LinkedList<>();
+    private final List<StackListResult<FluidStack>> batchedChanges = new ArrayList<>();
 
     public StorageCacheFluid(INetwork network) {
         this.network = network;

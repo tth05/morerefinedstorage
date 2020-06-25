@@ -9,7 +9,7 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 
 public class BaublesCapabilities {
 	/**
-	 * Access to the baubles capability. 
+	 * Access to the baubles capability.
 	 */
 	@CapabilityInject(IBaublesItemHandler.class)
 	public static final Capability<IBaublesItemHandler> CAPABILITY_BAUBLES = null;
@@ -25,9 +25,11 @@ public class BaublesCapabilities {
 		}
 
 		@Override
-		public void readNBT (Capability<IBaublesItemHandler> capability, IBaublesItemHandler instance, EnumFacing side, NBTBase nbt){ }
+		public void readNBT (Capability<IBaublesItemHandler> capability, IBaublesItemHandler instance, EnumFacing side, NBTBase nbt){
+			//NO OP
+		}
 	}
-	
+
 	public static class CapabilityItemBaubleStorage implements IStorage<IBauble> {
 
 		@Override
@@ -37,7 +39,7 @@ public class BaublesCapabilities {
 
 		@Override
 		public void readNBT (Capability<IBauble> capability, IBauble instance, EnumFacing side, NBTBase nbt) {
-
+			//NO OP
 		}
 	}
 }

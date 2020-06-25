@@ -54,7 +54,7 @@ import java.util.Set;
 
 public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, IType {
     public static final String ID = "grid";
-    public static int FACTORY_ID = 0;
+    public static int FACTORY_ID;
 
     public static final String NBT_VIEW_TYPE = "ViewType";
     public static final String NBT_SORTING_DIRECTION = "SortingDirection";
@@ -68,29 +68,29 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     private static final String NBT_PROCESSING_TYPE = "ProcessingType";
     private static final String NBT_PROCESSING_MATRIX_FLUIDS = "ProcessingMatrixFluids";
 
-    private Container craftingContainer = new Container() {
+    private final Container craftingContainer = new Container() {
         @Override
-        public boolean canInteractWith(EntityPlayer player) {
+        public boolean canInteractWith(@Nonnull EntityPlayer player) {
             return false;
         }
 
         @Override
-        public void onCraftMatrixChanged(IInventory inventory) {
+        public void onCraftMatrixChanged(@Nonnull IInventory inventory) {
             if (!world.isRemote) {
                 onCraftingMatrixChanged();
             }
         }
     };
     private IRecipe currentRecipe;
-    private InventoryCrafting matrix = new InventoryCrafting(craftingContainer, 3, 3);
-    private InventoryCraftResult result = new InventoryCraftResult();
-    private ItemHandlerBase processingMatrix = new ItemHandlerBase(9 * 2, new ListenerNetworkNode(this));
-    private FluidInventory processingMatrixFluids =
+    private final InventoryCrafting matrix = new InventoryCrafting(craftingContainer, 3, 3);
+    private final InventoryCraftResult result = new InventoryCraftResult();
+    private final ItemHandlerBase processingMatrix = new ItemHandlerBase(9 * 2, new ListenerNetworkNode(this));
+    private final FluidInventory processingMatrixFluids =
             new FluidInventory(9 * 2, Fluid.BUCKET_VOLUME * 64, new ListenerNetworkNode(this));
 
-    private Set<IGridCraftingListener> craftingListeners = new HashSet<>();
+    private final Set<IGridCraftingListener> craftingListeners = new HashSet<>();
 
-    private ItemHandlerBase patterns =
+    private final ItemHandlerBase patterns =
             new ItemHandlerBase(2, new ListenerNetworkNode(this), new ItemValidatorBasic(RSItems.PATTERN)) {
                 @Override
                 protected void onContentsChanged(int slot) {
@@ -118,7 +118,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                                         StackUtils.nullToEmpty(ItemPattern.getInputSlot(pattern, i)));
                             }
                         }
-                        
+
                         setOredictPattern(ItemPattern.isOredict(pattern));
                         setProcessingPattern(isProcessing);
                         markDirty();
@@ -145,9 +145,9 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                     return stack;
                 }
             };
-    private List<IFilter> filters = new ArrayList<>();
-    private List<IGridTab> tabs = new ArrayList<>();
-    private ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, new ListenerNetworkNode(this));
+    private final List<IFilter<?>> filters = new ArrayList<>();
+    private final List<IGridTab> tabs = new ArrayList<>();
+    private final ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, new ListenerNetworkNode(this));
 
     private GridType type;
 
@@ -261,7 +261,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     }
 
     @Override
-    public IStorageCacheListener createListener(EntityPlayerMP player) {
+    public IStorageCacheListener<?> createListener(EntityPlayerMP player) {
         return type == GridType.FLUID ? new StorageCacheListenerGridFluid(player, network) :
                 new StorageCacheListenerGridItem(player, network);
     }
@@ -526,7 +526,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         if (type == null) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() == RSBlocks.GRID) {
-                type = (GridType) state.getValue(BlockGrid.TYPE);
+                type = state.getValue(BlockGrid.TYPE);
             }
         }
 
@@ -535,7 +535,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
     @Nullable
     @Override
-    public IStorageCache getStorageCache() {
+    public IStorageCache<?> getStorageCache() {
         return network != null ?
                 (type == GridType.FLUID ? network.getFluidStorageCache() : network.getItemStorageCache()) :
                 null;
@@ -577,7 +577,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     }
 
     @Override
-    public List<IFilter> getFilters() {
+    public List<IFilter<?>> getFilters() {
         return filters;
     }
 
@@ -656,12 +656,12 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
     @Override
     public IItemHandlerModifiable getItemFilters() {
-        return processingMatrix;
+        return getProcessingMatrix();
     }
 
     @Override
     public FluidInventory getFluidFilters() {
-        return processingMatrixFluids;
+        return getProcessingMatrixFluids();
     }
 
     @Override

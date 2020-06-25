@@ -26,8 +26,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
+
 public class BlockFluidStorage extends BlockNode {
-    public static final PropertyEnum TYPE = PropertyEnum.create("type", FluidStorageType.class);
+    public static final PropertyEnum<FluidStorageType> TYPE = PropertyEnum.create("type", FluidStorageType.class);
 
     public BlockFluidStorage() {
         super(BlockInfoBuilder.forId("fluid_storage").hardness(5.8F).tileEntity(TileFluidStorage::new).create());
@@ -44,12 +46,13 @@ public class BlockFluidStorage extends BlockNode {
     }
 
     @Override
-    public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> items) {
+    public void getSubBlocks(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
         for (int i = 0; i <= 4; ++i) {
             items.add(new ItemStack(this, 1, i));
         }
     }
 
+    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return createBlockStateBuilder()
@@ -57,18 +60,20 @@ public class BlockFluidStorage extends BlockNode {
             .build();
     }
 
+    @Nonnull
     @Override
+    @Deprecated
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, FluidStorageType.getById(meta));
     }
 
     @Override
-    public int getMetaFromState(IBlockState state) {
-        return ((FluidStorageType) state.getValue(TYPE)).getId();
+    public int getMetaFromState(@Nonnull IBlockState state) {
+        return state.getValue(TYPE).getId();
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
         return openNetworkGui(RSGui.FLUID_STORAGE, player, world, pos, side);
     }
 
@@ -78,7 +83,7 @@ public class BlockFluidStorage extends BlockNode {
     }
 
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase player, ItemStack stack) {
+    public void onBlockPlacedBy(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityLivingBase player, @Nonnull ItemStack stack) {
         if (!world.isRemote) {
             NetworkNodeFluidStorage storage = ((TileFluidStorage) world.getTileEntity(pos)).getNode();
 
@@ -94,7 +99,7 @@ public class BlockFluidStorage extends BlockNode {
     }
 
     @Override
-    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState state, int fortune) {
         TileFluidStorage storage = (TileFluidStorage) world.getTileEntity(pos);
 
         ItemStack stack = new ItemStack(this, 1, getMetaFromState(state));

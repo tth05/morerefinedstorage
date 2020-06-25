@@ -18,13 +18,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+
 public abstract class BlockNodeProxy extends BlockBase {
     public BlockNodeProxy(IBlockInfo info) {
         super(info);
     }
 
     @Override
-    public boolean canEntityDestroy(IBlockState state, IBlockAccess world, BlockPos pos, Entity entity) {
+    public boolean canEntityDestroy(@Nonnull IBlockState state, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull Entity entity) {
         TileEntity tile = world.getTileEntity(pos);
 
         if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null)) {
@@ -39,7 +41,7 @@ public abstract class BlockNodeProxy extends BlockBase {
     }
 
     @Override
-    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis) {
+    public boolean rotateBlock(World world, @Nonnull BlockPos pos, @Nonnull EnumFacing axis) {
         if (!world.isRemote && getDirection() != null) {
             TileBase tile = (TileBase) world.getTileEntity(pos);
 
@@ -73,7 +75,7 @@ public abstract class BlockNodeProxy extends BlockBase {
         TileEntity tile = world.getTileEntity(pos);
 
         if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing)) {
-            INetworkNodeProxy nodeProxy = CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing));
+            INetworkNodeProxy<?> nodeProxy = CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing));
             INetworkNode node = nodeProxy.getNode();
 
             if (node.getNetwork() != null) {

@@ -7,7 +7,6 @@ import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandle
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
-import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
@@ -28,13 +27,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketSetSlot;
 import net.minecraftforge.items.SlotItemHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class ContainerGrid extends ContainerBase implements IGridCraftingListener {
-    private IGrid grid;
+    private final IGrid grid;
     private IStorageCache cache;
     private IStorageCacheListener listener;
-    private IResizableDisplay display;
+    private final IResizableDisplay display;
 
     private SlotGridCraftingResult craftingResultSlot;
     private SlotLegacyBase patternResultSlot;
@@ -72,11 +72,14 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             if (!getPlayer().getEntityWorld().isRemote) {
                 Slot slot = inventorySlots.get(slotIndex);
 
+                if (grid instanceof IPortableGrid && slot instanceof SlotItemHandler &&
+                        ((SlotItemHandler) slot).getItemHandler().equals(((IPortableGrid) grid).getDisk())) {
+                    return ItemStack.EMPTY;
+                }
+
                 if (slot.getHasStack()) {
                     if (slot == craftingResultSlot) {
                         grid.onCraftedShift(getPlayer());
-
-                        detectAndSendChanges();
                     } else {
                         ItemStack stack = slot.getStack();
 
@@ -89,8 +92,7 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                         } else {
                             IItemGridHandler itemHandler = grid.getItemHandler();
 
-                            //make sure stack is not a disk, otherwise it gets inserted into itself
-                            if (itemHandler != null && !(stack.getItem() instanceof IStorageDiskProvider)) {
+                            if (itemHandler != null) {
                                 slot.putStack(itemHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
                             } else if (slot instanceof SlotGridCrafting &&
                                     mergeItemStack(stack, 14, 14 + (9 * 4), false)) {
@@ -103,8 +105,8 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                             }
                         }
 
-                        detectAndSendChanges();
                     }
+                    detectAndSendChanges();
                 }
             }
 
@@ -150,9 +152,9 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                 x = 26;
             }
         }
-
-        addSlotToContainer(craftingResultSlot =
-                new SlotGridCraftingResult(this, getPlayer(), grid, 0, 130 + 4, headerAndSlots + 22));
+        craftingResultSlot =
+                new SlotGridCraftingResult(this, getPlayer(), grid, 0, 130 + 4, headerAndSlots + 22);
+        addSlotToContainer(craftingResultSlot);
     }
 
     private void addPatternSlots() {
@@ -207,10 +209,9 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                 x = 26;
             }
         }
-
-        addSlotToContainer(patternResultSlot =
-                (new SlotLegacyDisabled(grid.getCraftingResult(), 0, 134, headerAndSlots + 22)
-                        .setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern())));
+        patternResultSlot = new SlotLegacyDisabled(grid.getCraftingResult(), 0, 134, headerAndSlots + 22)
+                .setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern());
+        addSlotToContainer(patternResultSlot);
     }
 
     public IGrid getGrid() {
@@ -223,10 +224,10 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             Slot slot = inventorySlots.get(i);
 
             if (slot instanceof SlotGridCrafting || slot == craftingResultSlot || slot == patternResultSlot) {
-                for (IContainerListener listener : listeners) {
+                for (IContainerListener iContainerListener : listeners) {
                     // @Volatile: We can't use IContainerListener#sendSlotContents since EntityPlayerMP blocks SlotCrafting changes...
-                    if (listener instanceof EntityPlayerMP) {
-                        ((EntityPlayerMP) listener).connection
+                    if (iContainerListener instanceof EntityPlayerMP) {
+                        ((EntityPlayerMP) iContainerListener).connection
                                 .sendPacket(new SPacketSetSlot(windowId, i, slot.getStack()));
                     }
                 }
@@ -259,7 +260,7 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
     }
 
     @Override
-    public void onContainerClosed(EntityPlayer player) {
+    public void onContainerClosed(@Nonnull EntityPlayer player) {
         super.onContainerClosed(player);
 
         if (!player.getEntityWorld().isRemote) {
@@ -274,7 +275,7 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
     }
 
     @Override
-    public boolean canMergeSlot(ItemStack stack, Slot slot) {
+    public boolean canMergeSlot(@Nonnull ItemStack stack, @Nonnull Slot slot) {
         if (slot == craftingResultSlot || slot == patternResultSlot) {
             return false;
         }

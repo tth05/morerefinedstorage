@@ -39,15 +39,15 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     private static final String NBT_COVERS = "Covers";
     private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING, ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_REGULATOR);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING, ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_REGULATOR);
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
     private int type = IType.ITEMS;
 
-    private CoverManager coverManager = new CoverManager(this);
+    private final CoverManager coverManager = new CoverManager(this);
 
     private int filterSlot;
 
@@ -64,7 +64,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     public void update() {
         super.update();
 
-        if (canUpdate() && ticks % upgrades.getSpeed() == 0) {
+        if (network != null && canUpdate() && ticks % upgrades.getSpeed() == 0) {
             if (type == IType.ITEMS) {
                 IItemHandler handler = WorldUtils.getItemHandler(getFacingTile(), getDirection().getOpposite());
 
@@ -171,8 +171,9 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
                             int needed = 0;
 
                             for (int i = 0; i < fluidFilters.getSlots(); ++i) {
-                                if (API.instance().getComparer().isEqual(stack, fluidFilters.getFluid(i), IComparer.COMPARE_NBT)) {
-                                    needed += fluidFilters.getFluid(i).amount;
+                                FluidStack fluid = fluidFilters.getFluid(i);
+                                if (API.instance().getComparer().isEqual(stack, fluid, IComparer.COMPARE_NBT)) {
+                                    needed += fluid.amount;
                                 }
                             }
 

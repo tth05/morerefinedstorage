@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RSConfig {
-    private Configuration config;
-    private RSConfig originalClientVersion;
+    private final Configuration config;
+    private final RSConfig originalClientVersion;
 
     //region Energy
     public int controllerBaseUsage;
@@ -126,7 +126,6 @@ public class RSConfig {
 
     //region Autocrafting
     public int calculationTimeoutMs;
-    public boolean useExperimentalAutocrafting;
     //endregion
 
     //region Categories
@@ -285,7 +284,6 @@ public class RSConfig {
 
         //region Autocrafting
         calculationTimeoutMs = config.getInt("calculationTimeoutMs", AUTOCRAFTING, 5000, 5000, Integer.MAX_VALUE, "The autocrafting calculation timeout in milliseconds, tasks taking longer than this to calculate (NOT execute) are cancelled to avoid server strain");
-        useExperimentalAutocrafting = config.getBoolean("useExperimentalAutocrafting", AUTOCRAFTING, false, "Whether the new experimental autocrafting engine should be used");
         //endregion
 
         if (config.hasChanged()) {
@@ -293,7 +291,6 @@ public class RSConfig {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<IConfigElement> getConfigElements() {
         List<IConfigElement> list = new ArrayList<>();
 

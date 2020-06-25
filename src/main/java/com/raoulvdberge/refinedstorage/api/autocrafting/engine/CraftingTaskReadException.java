@@ -1,4 +1,4 @@
-package com.raoulvdberge.refinedstorage.api.autocrafting.task;
+package com.raoulvdberge.refinedstorage.api.autocrafting.engine;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import net.minecraft.nbt.NBTTagCompound;

@@ -24,9 +24,9 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
     private INetwork network;
     private List<StackListResult<ItemStack>> deltas = new ArrayList<>();
 
-    private List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
+    private final List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
 
-    public MessageGridItemDelta(INetwork network, List<StackListResult<ItemStack>> deltas) {
+    public MessageGridItemDelta(@Nullable INetwork network, List<StackListResult<ItemStack>> deltas) {
         this.network = network;
         this.deltas = deltas;
     }
@@ -53,7 +53,7 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
             buf.writeInt(delta.getChange());
 
             StackListEntry<ItemStack> craftingEntry =
-                    network.getItemStorageCache().getCraftablesList().getEntry(delta.getStack(), IComparer.COMPARE_NBT);
+                    network.getItemStorageCache().getCraftablesList().getEntry(delta.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
 
             StackUtils.writeItemGridStack(buf, delta.getStack(), delta.getId(),
                     craftingEntry != null ? craftingEntry.getId() : null, false,

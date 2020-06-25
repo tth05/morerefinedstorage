@@ -10,9 +10,11 @@ import net.minecraft.world.World;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
+import javax.annotation.Nonnull;
+
 public class RecipeCover extends IForgeRegistryEntry.Impl<IRecipe> implements IRecipe {
     @Override
-    public boolean matches(InventoryCrafting inv, World world) {
+    public boolean matches(InventoryCrafting inv, @Nonnull World world) {
         boolean hadCuttingTool = false;
         boolean hadItem = false;
 
@@ -43,6 +45,7 @@ public class RecipeCover extends IForgeRegistryEntry.Impl<IRecipe> implements IR
         return hadCuttingTool && hadItem;
     }
 
+    @Nonnull
     @Override
     public ItemStack getCraftingResult(InventoryCrafting inv) {
         for (int i = 0; i < inv.getSizeInventory(); ++i) {
@@ -65,6 +68,7 @@ public class RecipeCover extends IForgeRegistryEntry.Impl<IRecipe> implements IR
         return true;
     }
 
+    @Nonnull
     @Override
     public ItemStack getRecipeOutput() {
         return ItemStack.EMPTY;

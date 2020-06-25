@@ -63,11 +63,13 @@ public final class StackUtils {
         writeItemStack(buf, stack);
 
         buf.writeBoolean(craftable);
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+        buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
 
         buf.writeBoolean(otherId != null);
         if (otherId != null) {
-            ByteBufUtils.writeUTF8String(buf, otherId.toString());
+            buf.writeLong(otherId.getMostSignificantBits());
+            buf.writeLong(otherId.getLeastSignificantBits());
         }
 
         if (entry == null) {
@@ -84,11 +86,11 @@ public final class StackUtils {
         ItemStack stack = readItemStack(buf);
 
         boolean craftable = buf.readBoolean();
-        UUID id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        UUID id = new UUID(buf.readLong(), buf.readLong());
 
         UUID otherId = null;
         if (buf.readBoolean()) {
-            otherId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            otherId = new UUID(buf.readLong(), buf.readLong());
         }
 
         StorageTrackerEntry entry = null;
@@ -103,11 +105,14 @@ public final class StackUtils {
         ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
 
         buf.writeBoolean(craftable);
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+
+        buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
 
         buf.writeBoolean(otherId != null);
         if (otherId != null) {
-            ByteBufUtils.writeUTF8String(buf, otherId.toString());
+            buf.writeLong(otherId.getMostSignificantBits());
+            buf.writeLong(otherId.getLeastSignificantBits());
         }
 
         if (entry == null) {
@@ -123,11 +128,11 @@ public final class StackUtils {
     public static GridStackFluid readFluidGridStack(ByteBuf buf) {
         FluidStack stack = FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf));
         boolean craftable = buf.readBoolean();
-        UUID id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        UUID id = new UUID(buf.readLong(), buf.readLong());
 
         UUID otherId = null;
         if (buf.readBoolean()) {
-            otherId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            otherId = new UUID(buf.readLong(), buf.readLong());
         }
 
         StorageTrackerEntry entry = null;
@@ -143,8 +148,8 @@ public final class StackUtils {
     }
 
     @Nullable
-    public static ItemStack emptyToNull(@Nonnull ItemStack stack) {
-        return stack.isEmpty() ? null : stack;
+    public static ItemStack emptyToNull(@Nullable ItemStack stack) {
+        return stack == null || stack.isEmpty() ? null : stack;
     }
 
     @SuppressWarnings("unchecked")
@@ -257,10 +262,6 @@ public final class StackUtils {
         FluidStack copy = stack.copy();
         copy.amount = size;
         return copy;
-    }
-
-    public static FluidStack copy(@Nullable FluidStack stack) {
-        return stack == null ? null : stack.copy();
     }
 
     public static Pair<ItemStack, FluidStack> getFluid(ItemStack stack, boolean simulate) {

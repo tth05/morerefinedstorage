@@ -17,17 +17,17 @@ import net.minecraftforge.items.ItemHandlerHelper;
 public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<ItemStack> {
     public static final String ID = "item_renderer";
 
-    private ItemStack stack;
-    private int available;
+    private final ItemStack stack;
+    private long available;
     private boolean missing;
     // If missing is true then toCraft is the missing amount
-    private int toCraft;
+    private long toCraft;
 
     public CraftingPreviewElementItemStack(ItemStack stack) {
         this.stack = ItemHandlerHelper.copyStackWithSize(stack, 1);
     }
 
-    public CraftingPreviewElementItemStack(ItemStack stack, int available, boolean missing, int toCraft) {
+    public CraftingPreviewElementItemStack(ItemStack stack, long available, boolean missing, long toCraft) {
         this.stack = stack;
         this.available = available;
         this.missing = missing;
@@ -39,18 +39,18 @@ public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<
         buf.writeInt(Item.getIdFromItem(stack.getItem()));
         buf.writeInt(stack.getMetadata());
         ByteBufUtils.writeTag(buf, stack.getTagCompound());
-        buf.writeInt(available);
+        buf.writeLong(available);
         buf.writeBoolean(missing);
-        buf.writeInt(toCraft);
+        buf.writeLong(toCraft);
     }
 
     public static CraftingPreviewElementItemStack fromByteBuf(ByteBuf buf) {
         Item item = Item.getItemById(buf.readInt());
         int meta = buf.readInt();
         NBTTagCompound tag = ByteBufUtils.readTag(buf);
-        int available = buf.readInt();
+        long available = buf.readLong();
         boolean missing = buf.readBoolean();
-        int toCraft = buf.readInt();
+        long toCraft = buf.readLong();
 
         ItemStack stack = new ItemStack(item, 1, meta);
         stack.setTagCompound(tag);
@@ -83,34 +83,39 @@ public class CraftingPreviewElementItemStack implements ICraftingPreviewElement<
         GlStateManager.scale(scale, scale, 1);
 
         if (getToCraft() > 0) {
-            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" : "gui.refinedstorage:crafting_preview.to_craft";
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t(format, getToCraft()));
+            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" :
+                    "gui.refinedstorage:crafting_preview.to_craft";
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t(format, getToCraft()));
 
             y += 7;
         }
 
         if (getAvailable() > 0) {
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t("gui.refinedstorage:crafting_preview.available", getAvailable()));
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t("gui.refinedstorage:crafting_preview.available", getAvailable()));
         }
 
         GlStateManager.popMatrix();
     }
 
-    public void addAvailable(int amount) {
+    public void addAvailable(long amount) {
         this.available += amount;
     }
 
     @Override
-    public int getAvailable() {
+    public long getAvailable() {
         return available;
     }
 
-    public void addToCraft(int amount) {
+    public void addToCraft(long amount) {
         this.toCraft += amount;
     }
 
     @Override
-    public int getToCraft() {
+    public long getToCraft() {
         return this.toCraft;
     }
 

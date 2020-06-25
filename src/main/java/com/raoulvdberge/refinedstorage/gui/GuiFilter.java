@@ -13,15 +13,16 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public class GuiFilter extends GuiBase {
-    private ItemStack stack;
+    private final ItemStack stack;
 
     private int compare;
     private int mode;
     private boolean modFilter;
-    private String name;
+    private final String name;
     private int type;
 
     private GuiCheckBox compareDamage;
@@ -74,6 +75,7 @@ public class GuiFilter extends GuiBase {
 
     @Override
     public void update(int x, int y) {
+        //NO OP
     }
 
     @Override
@@ -108,7 +110,7 @@ public class GuiFilter extends GuiBase {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button == compareDamage) {

@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridTab;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawer;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
@@ -14,7 +14,7 @@ import com.raoulvdberge.refinedstorage.container.ContainerCraftingMonitor;
 import com.raoulvdberge.refinedstorage.gui.control.Scrollbar;
 import com.raoulvdberge.refinedstorage.gui.control.SideButtonRedstoneMode;
 import com.raoulvdberge.refinedstorage.gui.control.TabList;
-import com.raoulvdberge.refinedstorage.network.MessageCraftingMonitorCancel;
+import com.raoulvdberge.refinedstorage.network.MessageCraftingCancel;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.ICraftingMonitor;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
 import net.minecraft.client.gui.FontRenderer;
@@ -25,6 +25,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collections;
@@ -33,13 +34,13 @@ import java.util.UUID;
 
 public class GuiCraftingMonitor extends GuiBase {
     public class CraftingMonitorElementDrawers extends ElementDrawers {
-        private IElementDrawer<Integer> overlayDrawer = (x, y, color) -> {
+        private final IElementDrawer<Integer> overlayDrawer = (x, y, color) -> {
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.disableLighting();
             drawRect(x, y, x + ITEM_WIDTH, y + ITEM_HEIGHT, color);
         };
 
-        private IElementDrawer errorDrawer = (x, y, nothing) -> {
+        private final IElementDrawer<?> errorDrawer = (x, y, nothing) -> {
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.disableLighting();
 
@@ -54,20 +55,21 @@ public class GuiCraftingMonitor extends GuiBase {
         }
 
         @Override
-        public IElementDrawer getErrorDrawer() {
+        public IElementDrawer<?> getErrorDrawer() {
             return errorDrawer;
         }
     }
 
     public static class CraftingMonitorTask implements IGridTab {
-        private UUID id;
-        private ICraftingRequestInfo requested;
-        private int qty;
-        private long executionStarted;
-        private int completionPercentage;
-        private List<ICraftingMonitorElement> elements;
+        private final UUID id;
+        private final ICraftingRequestInfo requested;
+        private final int qty;
+        private final long executionStarted;
+        private final int completionPercentage;
+        private final List<ICraftingMonitorElement> elements;
 
-        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, int qty, long executionStarted, int completionPercentage, List<ICraftingMonitorElement> elements) {
+        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, int qty, long executionStarted,
+                                   int completionPercentage, List<ICraftingMonitorElement> elements) {
             this.id = id;
             this.requested = requested;
             this.qty = qty;
@@ -77,28 +79,39 @@ public class GuiCraftingMonitor extends GuiBase {
         }
 
         @Override
-        public List<IFilter> getFilters() {
+        @Nullable
+        public List<IFilter<?>> getFilters() {
             return null;
         }
 
         @Override
         public void drawTooltip(int x, int y, int screenWidth, int screenHeight, FontRenderer fontRenderer) {
-            List<String> textLines = Lists.newArrayList(requested.getItem() != null ? requested.getItem().getDisplayName() : requested.getFluid().getLocalizedName());
+            List<String> textLines = Lists.newArrayList(
+                    requested.getItem() != null ? requested.getItem().getDisplayName() :
+                            requested.getFluid().getLocalizedName());
             List<String> smallTextLines = Lists.newArrayList();
 
             int totalSecs = (int) (System.currentTimeMillis() - executionStarted) / 1000;
             int minutes = (totalSecs % 3600) / 60;
             int seconds = totalSecs % 60;
 
-            smallTextLines.add(I18n.format("gui.refinedstorage:crafting_monitor.tooltip.requested", requested.getFluid() != null ? API.instance().getQuantityFormatter().formatInBucketForm(qty) : API.instance().getQuantityFormatter().format(qty)));
-            smallTextLines.add(String.format("%02d:%02d", minutes, seconds));
-            smallTextLines.add(String.format("%d%%", completionPercentage));
+            smallTextLines.add(I18n.format("gui.refinedstorage:crafting_monitor.tooltip.requested",
+                    requested.getFluid() != null ? API.instance().getQuantityFormatter().formatInBucketForm(qty) :
+                            API.instance().getQuantityFormatter().format(qty)));
+            if (executionStarted == -1) {
+                smallTextLines.add("Pending");
+            } else {
+                smallTextLines.add(String.format("%02d:%02d", minutes, seconds));
+                smallTextLines.add(String.format("%d%%", completionPercentage));
+            }
 
-            RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, true, ItemStack.EMPTY, x, y, screenWidth, screenHeight, fontRenderer);
+            RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, true, ItemStack.EMPTY, x, y, screenWidth,
+                    screenHeight, fontRenderer);
         }
 
         @Override
-        public void drawIcon(int x, int y, IElementDrawer<ItemStack> itemDrawer, IElementDrawer<FluidStack> fluidDrawer) {
+        public void drawIcon(int x, int y, IElementDrawer<ItemStack> itemDrawer,
+                             IElementDrawer<FluidStack> fluidDrawer) {
             if (requested.getItem() != null) {
                 RenderHelper.enableGUIStandardItemLighting();
 
@@ -119,19 +132,21 @@ public class GuiCraftingMonitor extends GuiBase {
     private GuiButton cancelButton;
     private GuiButton cancelAllButton;
 
-    private ICraftingMonitor craftingMonitor;
+    private final ICraftingMonitor craftingMonitor;
 
     private List<IGridTab> tasks = Collections.emptyList();
-    private TabList tabs;
+    private final TabList tabs;
 
-    private IElementDrawers drawers = new CraftingMonitorElementDrawers();
+    private final IElementDrawers drawers = new CraftingMonitorElementDrawers();
 
     public GuiCraftingMonitor(ContainerCraftingMonitor container, ICraftingMonitor craftingMonitor) {
         super(container, 254, 201);
 
         this.craftingMonitor = craftingMonitor;
 
-        this.tabs = new TabList(this, new ElementDrawers(), () -> tasks, () -> (int) Math.floor((float) Math.max(0, tasks.size() - 1) / (float) ICraftingMonitor.TABS_PER_PAGE), craftingMonitor::getTabPage, () -> {
+        this.tabs = new TabList(this, new ElementDrawers(), () -> tasks,
+                () -> (int) Math.floor((float) Math.max(0, tasks.size() - 1) / (float) ICraftingMonitor.TABS_PER_PAGE),
+                craftingMonitor::getTabPage, () -> {
             IGridTab tab = getCurrentTab();
 
             if (tab == null) {
@@ -191,7 +206,9 @@ public class GuiCraftingMonitor extends GuiBase {
         int cancelAllButtonWidth = 14 + fontRenderer.getStringWidth(cancelAll);
 
         this.cancelButton = addButton(x + 7, y + 201 - 20 - 7, cancelButtonWidth, 20, cancel, false, true);
-        this.cancelAllButton = addButton(x + 7 + cancelButtonWidth + 4, y + 201 - 20 - 7, cancelAllButtonWidth, 20, cancelAll, false, true);
+        this.cancelAllButton =
+                addButton(x + 7 + cancelButtonWidth + 4, y + 201 - 20 - 7, cancelAllButtonWidth, 20, cancelAll, false,
+                        true);
     }
 
     private void updateScrollbar() {
@@ -216,7 +233,7 @@ public class GuiCraftingMonitor extends GuiBase {
         }
 
         if (cancelAllButton != null) {
-            cancelAllButton.enabled = tasks.size() > 0;
+            cancelAllButton.enabled = !tasks.isEmpty();
         }
     }
 
@@ -268,6 +285,7 @@ public class GuiCraftingMonitor extends GuiBase {
         int item = scrollbar != null ? scrollbar.getOffset() * 3 : 0;
 
         RenderHelper.enableGUIStandardItemLighting();
+        GlStateManager.enableDepth();
 
         int x = 7;
         int y = 20;
@@ -303,15 +321,18 @@ public class GuiCraftingMonitor extends GuiBase {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         tabs.actionPerformed(button);
 
+        if(getCurrentTab() == null)
+            return;
+
         if (button == cancelButton && hasValidTabSelected()) {
-            RS.INSTANCE.network.sendToServer(new MessageCraftingMonitorCancel(((CraftingMonitorTask) getCurrentTab()).id));
-        } else if (button == cancelAllButton && tasks.size() > 0) {
-            RS.INSTANCE.network.sendToServer(new MessageCraftingMonitorCancel(null));
+            RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(((CraftingMonitorTask) getCurrentTab()).id));
+        } else if (button == cancelAllButton && !tasks.isEmpty()) {
+            RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(null));
         }
     }
 

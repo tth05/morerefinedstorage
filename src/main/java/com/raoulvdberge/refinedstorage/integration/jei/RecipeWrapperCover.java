@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RecipeWrapperCover implements ICraftingRecipeWrapper {
-    private ItemStack stack;
-    private ItemStack cover;
+    private final ItemStack stack;
+    private final ItemStack cover;
 
     public RecipeWrapperCover(ItemStack stack, ItemStack cover) {
         this.stack = ItemHandlerHelper.copyStackWithSize(stack, 1);

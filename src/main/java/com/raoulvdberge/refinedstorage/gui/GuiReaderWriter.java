@@ -14,6 +14,7 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.input.Keyboard;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +31,7 @@ public class GuiReaderWriter extends GuiBase {
     private GuiButton add;
     private GuiButton remove;
     private GuiTextField name;
-    private IGuiReaderWriter readerWriter;
+    private final IGuiReaderWriter readerWriter;
 
     private int itemSelected = -1;
     private int itemSelectedX = -1;
@@ -167,15 +168,13 @@ public class GuiReaderWriter extends GuiBase {
             onRemove();
         } else if (name.isFocused() && keyCode == Keyboard.KEY_RETURN) {
             onAdd();
-        } else if (!checkHotbarKeys(keyCode) && name.textboxKeyTyped(character, keyCode)) {
-            // NO OP
-        } else {
+        } else if (checkHotbarKeys(keyCode) || !name.textboxKeyTyped(character, keyCode)) {
             super.keyTyped(character, keyCode);
         }
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button == add) {
@@ -186,18 +185,18 @@ public class GuiReaderWriter extends GuiBase {
     }
 
     private void onAdd() {
-        String name = this.name.getText().trim();
+        String trimmedName = this.name.getText().trim();
 
-        if (!name.isEmpty()) {
-            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelAdd(name));
+        if (!trimmedName.isEmpty()) {
+            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelAdd(trimmedName));
         }
     }
 
     private void onRemove() {
-        String name = this.name.getText().trim();
+        String trimmedName = this.name.getText().trim();
 
-        if (!name.isEmpty()) {
-            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelRemove(name));
+        if (!trimmedName.isEmpty()) {
+            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelRemove(trimmedName));
         }
     }
 

@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
 import java.util.function.Predicate;
 
 public class GridFilterName implements Predicate<IGridStack> {
-    private String name;
+    private final String name;
 
     public GridFilterName(String name) {
         this.name = name.toLowerCase();

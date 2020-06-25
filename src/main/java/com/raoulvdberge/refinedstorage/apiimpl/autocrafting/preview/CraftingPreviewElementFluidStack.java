@@ -18,17 +18,17 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class CraftingPreviewElementFluidStack implements ICraftingPreviewElement<FluidStack> {
     public static final String ID = "fluid_renderer";
 
-    private FluidStack stack;
-    private int available;
+    private final FluidStack stack;
+    private long available;
     private boolean missing;
     // If missing is true then toCraft is the missing amount
-    private int toCraft;
+    private long toCraft;
 
     public CraftingPreviewElementFluidStack(FluidStack stack) {
         this.stack = stack.copy();
     }
 
-    public CraftingPreviewElementFluidStack(FluidStack stack, int available, boolean missing, int toCraft) {
+    public CraftingPreviewElementFluidStack(FluidStack stack, long available, boolean missing, long toCraft) {
         this.stack = stack.copy();
         this.available = available;
         this.missing = missing;
@@ -39,17 +39,17 @@ public class CraftingPreviewElementFluidStack implements ICraftingPreviewElement
     public void writeToByteBuf(ByteBuf buf) {
         ByteBufUtils.writeUTF8String(buf, FluidRegistry.getFluidName(stack));
         ByteBufUtils.writeTag(buf, stack.tag);
-        buf.writeInt(available);
+        buf.writeLong(available);
         buf.writeBoolean(missing);
-        buf.writeInt(toCraft);
+        buf.writeLong(toCraft);
     }
 
     public static CraftingPreviewElementFluidStack fromByteBuf(ByteBuf buf) {
         Fluid fluid = FluidRegistry.getFluid(ByteBufUtils.readUTF8String(buf));
         NBTTagCompound tag = ByteBufUtils.readTag(buf);
-        int available = buf.readInt();
+        long available = buf.readLong();
         boolean missing = buf.readBoolean();
-        int toCraft = buf.readInt();
+        long toCraft = buf.readLong();
 
         return new CraftingPreviewElementFluidStack(new FluidStack(fluid, 1, tag), available, missing, toCraft);
     }
@@ -79,34 +79,40 @@ public class CraftingPreviewElementFluidStack implements ICraftingPreviewElement
         GlStateManager.scale(scale, scale, 1);
 
         if (getToCraft() > 0) {
-            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" : "gui.refinedstorage:crafting_preview.to_craft";
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t(format, API.instance().getQuantityFormatter().formatInBucketForm(getToCraft())));
+            String format = hasMissing() ? "gui.refinedstorage:crafting_preview.missing" :
+                    "gui.refinedstorage:crafting_preview.to_craft";
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t(format, API.instance().getQuantityFormatter().formatInBucketForm(getToCraft())));
 
             y += 7;
         }
 
         if (getAvailable() > 0) {
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale), GuiBase.t("gui.refinedstorage:crafting_preview.available", API.instance().getQuantityFormatter().formatInBucketForm(getAvailable())));
+            drawers.getStringDrawer()
+                    .draw(RenderUtils.getOffsetOnScale(x + 23, scale), RenderUtils.getOffsetOnScale(y, scale),
+                            GuiBase.t("gui.refinedstorage:crafting_preview.available",
+                                    API.instance().getQuantityFormatter().formatInBucketForm(getAvailable())));
         }
 
         GlStateManager.popMatrix();
     }
 
-    public void addAvailable(int amount) {
+    public void addAvailable(long amount) {
         this.available += amount;
     }
 
     @Override
-    public int getAvailable() {
+    public long getAvailable() {
         return available;
     }
 
-    public void addToCraft(int amount) {
+    public void addToCraft(long amount) {
         this.toCraft += amount;
     }
 
     @Override
-    public int getToCraft() {
+    public long getToCraft() {
         return this.toCraft;
     }
 

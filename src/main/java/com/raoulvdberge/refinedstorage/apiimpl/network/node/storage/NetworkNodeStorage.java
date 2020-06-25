@@ -44,7 +44,7 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
     private static final String NBT_MODE = "Mode";
     public static final String NBT_ID = "Id";
 
-    private ItemHandlerBase filters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase filters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
 
     private ItemStorageType type;
 
@@ -114,14 +114,15 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
     }
 
     public void loadStorage() {
-        IStorageDisk disk = API.instance().getStorageDiskManager(world).get(storageId);
+        IStorageDisk<?> disk = API.instance().getStorageDiskManager(world).get(storageId);
 
         if (disk == null) {
-            API.instance().getStorageDiskManager(world).set(storageId, disk = API.instance().createDefaultItemDisk(world, getType().getCapacity()));
+            disk = API.instance().createDefaultItemDisk(world, getType().getCapacity());
+            API.instance().getStorageDiskManager(world).set(storageId, disk);
             API.instance().getStorageDiskManager(world).markForSaving();
         }
 
-        this.storage = new StorageDiskItemStorageWrapper(this, disk);
+        this.storage = new StorageDiskItemStorageWrapper(this, (IStorageDisk<ItemStack>) disk);
     }
 
     public void setStorageId(UUID id) {
@@ -180,7 +181,7 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
         if (type == null && world != null) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() == RSBlocks.STORAGE) {
-                type = (ItemStorageType) state.getValue(BlockStorage.TYPE);
+                type = state.getValue(BlockStorage.TYPE);
             }
         }
 

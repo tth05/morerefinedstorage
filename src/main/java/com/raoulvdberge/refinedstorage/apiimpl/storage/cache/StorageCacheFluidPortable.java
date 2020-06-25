@@ -15,9 +15,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
-    private IPortableGrid portableGrid;
+    private final IPortableGrid portableGrid;
     private final IStackList<FluidStack> list = API.instance().createFluidStackList();
-    private List<IStorageCacheListener<FluidStack>> listeners = new LinkedList<>();
+    private final List<IStorageCacheListener<FluidStack>> listeners = new LinkedList<>();
 
 
     public StorageCacheFluidPortable(IPortableGrid portableGrid) {

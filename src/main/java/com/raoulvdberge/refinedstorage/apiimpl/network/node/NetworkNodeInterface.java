@@ -27,14 +27,14 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
 
     private static final String NBT_COMPARE = "Compare";
 
-    private ItemHandlerBase importItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase importItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
 
-    private ItemHandlerBase exportFilterItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private ItemHandlerBase exportItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase exportFilterItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase exportItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
 
-    private IItemHandler items = new ItemHandlerProxy(importItems, exportItems);
+    private final IItemHandler items = new ItemHandlerProxy(importItems, exportItems);
 
-    private ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_CRAFTING);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_CRAFTING);
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
 
@@ -53,7 +53,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
     public void update() {
         super.update();
 
-        if (!canUpdate()) {
+        if (network == null || !canUpdate()) {
             return;
         }
 
@@ -106,7 +106,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
                         return !(s instanceof StorageExternalItem) || !((StorageExternalItem) s).isConnectedToInterface();
                     });
 
-                    if (result != null) {
+                    if (!result.isEmpty()) {
                         if (exportItems.getStackInSlot(i).isEmpty()) {
                             exportItems.setStackInSlot(i, result);
                         } else {
@@ -116,7 +116,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
 
                     // Example: our delta is 5, we extracted 3 items.
                     // That means we still have to autocraft 2 items.
-                    delta -= result == null ? 0 : result.getCount();
+                    delta -= result.isEmpty() ? 0 : result.getCount();
 
                     if (delta > 0 && upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
                         network.getCraftingManager().request(new SlottedCraftingRequest(this, i), wanted, delta);

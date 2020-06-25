@@ -44,7 +44,7 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
     private static final String NBT_FILTERS = "Filters";
     public static final String NBT_ID = "Id";
 
-    private FluidInventory filters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final FluidInventory filters = new FluidInventory(9, new ListenerNetworkNode(this));
 
     private FluidStorageType type;
 
@@ -114,14 +114,15 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
     }
 
     public void loadStorage() {
-        IStorageDisk disk = API.instance().getStorageDiskManager(world).get(storageId);
+        IStorageDisk<?> disk = API.instance().getStorageDiskManager(world).get(storageId);
 
         if (disk == null) {
-            API.instance().getStorageDiskManager(world).set(storageId, disk = API.instance().createDefaultFluidDisk(world, getType().getCapacity()));
+            disk = API.instance().createDefaultFluidDisk(world, getType().getCapacity());
+            API.instance().getStorageDiskManager(world).set(storageId, disk);
             API.instance().getStorageDiskManager(world).markForSaving();
         }
 
-        this.storage = new StorageDiskFluidStorageWrapper(this, disk);
+        this.storage = new StorageDiskFluidStorageWrapper(this, (IStorageDisk<FluidStack>) disk);
     }
 
     public void setStorageId(UUID id) {
@@ -181,7 +182,7 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
         if (type == null && world != null) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() == RSBlocks.FLUID_STORAGE) {
-                type = (FluidStorageType) state.getValue(BlockFluidStorage.TYPE);
+                type = state.getValue(BlockFluidStorage.TYPE);
             }
         }
 

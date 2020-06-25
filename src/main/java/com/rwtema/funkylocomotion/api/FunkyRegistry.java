@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 public abstract class FunkyRegistry {
     @Nullable
-    public static FunkyRegistry INSTANCE = null;
+    public static final FunkyRegistry INSTANCE = null;
 
     public abstract void registerMoveFactoryBlock(Block b, IMoveFactory factory);
 

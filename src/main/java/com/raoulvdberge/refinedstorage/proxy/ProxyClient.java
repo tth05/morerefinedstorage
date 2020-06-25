@@ -38,10 +38,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public class ProxyClient extends ProxyCommon implements IModelRegistration {
-    private Map<ResourceLocation, Function<IBakedModel, IBakedModel>> bakedModelOverrides = new HashMap<>();
-    private List<Pair<Item, IItemColor>> itemColors = new LinkedList<>();
+    private final Map<ResourceLocation, Function<IBakedModel, IBakedModel>> bakedModelOverrides = new HashMap<>();
+    private final List<Pair<Item, IItemColor>> itemColors = new LinkedList<>();
 
     @Override
     public void preInit(FMLPreInitializationEvent e) {
@@ -87,7 +88,7 @@ public class ProxyClient extends ProxyCommon implements IModelRegistration {
     }
 
     @Override
-    public void addBakedModelOverride(ResourceLocation resource, Function<IBakedModel, IBakedModel> override) {
+    public void addBakedModelOverride(ResourceLocation resource, UnaryOperator<IBakedModel> override) {
         bakedModelOverrides.put(resource, override);
     }
 

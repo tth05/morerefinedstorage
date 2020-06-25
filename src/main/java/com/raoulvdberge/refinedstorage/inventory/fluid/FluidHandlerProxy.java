@@ -9,9 +9,9 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import javax.annotation.Nullable;
 
 public class FluidHandlerProxy implements IFluidHandler {
-    private FluidTank insertHandler;
-    private FluidTank extractHandler;
-    private IFluidTankProperties[] properties;
+    private final FluidTank insertHandler;
+    private final FluidTank extractHandler;
+    private final IFluidTankProperties[] properties;
 
     public FluidHandlerProxy(FluidTank insertHandler, FluidTank extractHandler) {
         this.insertHandler = insertHandler;

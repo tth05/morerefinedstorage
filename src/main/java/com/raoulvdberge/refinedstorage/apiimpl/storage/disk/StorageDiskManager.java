@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
@@ -28,7 +29,7 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
     private boolean canReadDisks;
     private NBTTagList disksTag;
 
-    private ConcurrentHashMap<UUID, IStorageDisk> disks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, IStorageDisk<?>> disks = new ConcurrentHashMap<>();
 
     public StorageDiskManager(String name) {
         super(name);
@@ -36,13 +37,13 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
 
     @Override
     @Nullable
-    public IStorageDisk get(UUID id) {
+    public IStorageDisk<?> get(UUID id) {
         return disks.get(id);
     }
 
     @Nullable
     @Override
-    public IStorageDisk getByStack(ItemStack disk) {
+    public IStorageDisk<?> getByStack(ItemStack disk) {
         if (!(disk.getItem() instanceof IStorageDiskProvider)) {
             return null;
         }
@@ -57,12 +58,12 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
     }
 
     @Override
-    public Map<UUID, IStorageDisk> getAll() {
+    public Map<UUID, IStorageDisk<?>> getAll() {
         return disks;
     }
 
     @Override
-    public void set(UUID id, IStorageDisk disk) {
+    public void set(UUID id, IStorageDisk<?> disk) {
         if (id == null) {
             throw new IllegalArgumentException("Id cannot be null");
         }
@@ -111,7 +112,7 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
                 NBTTagCompound data = diskTag.getCompoundTag(NBT_DISK_DATA);
                 String type = diskTag.getString(NBT_DISK_TYPE);
 
-                IStorageDiskFactory factory = API.instance().getStorageDiskRegistry().get(type);
+                IStorageDiskFactory<?> factory = API.instance().getStorageDiskRegistry().get(type);
                 if (factory != null) {
                     disks.put(id, factory.createFromNbt(world, data));
                 }
@@ -119,21 +120,22 @@ public class StorageDiskManager extends WorldSavedData implements IStorageDiskMa
         }
     }
 
+    @Nonnull
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        NBTTagList disks = new NBTTagList();
+    public NBTTagCompound writeToNBT(@Nonnull NBTTagCompound tag) {
+        NBTTagList tagList = new NBTTagList();
 
-        for (Map.Entry<UUID, IStorageDisk> entry : this.disks.entrySet()) {
+        for (Map.Entry<UUID, IStorageDisk<?>> entry : this.disks.entrySet()) {
             NBTTagCompound diskTag = new NBTTagCompound();
 
             diskTag.setUniqueId(NBT_DISK_ID, entry.getKey());
             diskTag.setTag(NBT_DISK_DATA, entry.getValue().writeToNbt());
             diskTag.setString(NBT_DISK_TYPE, entry.getValue().getId());
 
-            disks.appendTag(diskTag);
+            tagList.appendTag(diskTag);
         }
 
-        tag.setTag(NBT_DISKS, disks);
+        tag.setTag(NBT_DISKS, tagList);
 
         return tag;
     }

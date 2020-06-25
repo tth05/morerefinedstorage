@@ -6,7 +6,7 @@ import net.minecraft.item.ItemStack;
 
 public class BaubleItem implements IBauble
 {
-	private BaubleType baubleType;
+	private final BaubleType baubleType;
 
 	public BaubleItem(BaubleType type) {
 		baubleType = type;

@@ -19,7 +19,7 @@ public class MessageGridTransfer extends MessageHandlerPlayerToServer<MessageGri
     private Map<Integer, ? extends IGuiIngredient<ItemStack>> inputs;
     private List<Slot> slots;
 
-    private ItemStack[][] recipe = new ItemStack[9][];
+    private final ItemStack[][] recipe = new ItemStack[9][];
 
     public MessageGridTransfer() {
     }
@@ -31,9 +31,9 @@ public class MessageGridTransfer extends MessageHandlerPlayerToServer<MessageGri
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        int slots = buf.readInt();
+        int slotCount = buf.readInt();
 
-        for (int i = 0; i < slots; ++i) {
+        for (int i = 0; i < slotCount; ++i) {
             int ingredients = buf.readInt();
 
             recipe[i] = new ItemStack[ingredients];

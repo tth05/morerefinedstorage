@@ -19,26 +19,31 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHandler<MessageGridCraftingPreviewResponse, IMessage> {
-    private List<ICraftingPreviewElement> stacks;
+public class MessageGridCraftingPreviewResponse
+        implements IMessage, IMessageHandler<MessageGridCraftingPreviewResponse, IMessage> {
+    private List<ICraftingPreviewElement<?>> stacks;
     private UUID id;
     private int quantity;
+    private long calculationTime;
     private boolean fluids;
 
     public MessageGridCraftingPreviewResponse() {
     }
 
-    public MessageGridCraftingPreviewResponse(List<ICraftingPreviewElement> stacks, UUID id, int quantity, boolean fluids) {
+    public MessageGridCraftingPreviewResponse(List<ICraftingPreviewElement<?>> stacks, UUID id, long calculationTime,
+                                              int quantity, boolean fluids) {
         this.stacks = stacks;
         this.id = id;
         this.quantity = quantity;
+        this.calculationTime = calculationTime;
         this.fluids = fluids;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        this.id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        this.id = new UUID(buf.readLong(), buf.readLong());
         this.quantity = buf.readInt();
+        this.calculationTime = buf.readLong();
         this.fluids = buf.readBoolean();
 
         this.stacks = new LinkedList<>();
@@ -46,19 +51,22 @@ public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHan
         int size = buf.readInt();
 
         for (int i = 0; i < size; i++) {
-            this.stacks.add(API.instance().getCraftingPreviewElementRegistry().get(ByteBufUtils.readUTF8String(buf)).apply(buf));
+            String type = ByteBufUtils.readUTF8String(buf);
+            this.stacks.add(API.instance().getCraftingPreviewElementRegistry().get(type).apply(buf));
         }
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+        buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
         buf.writeInt(quantity);
+        buf.writeLong(calculationTime);
         buf.writeBoolean(fluids);
 
         buf.writeInt(stacks.size());
 
-        for (ICraftingPreviewElement stack : stacks) {
+        for (ICraftingPreviewElement<?> stack : stacks) {
             ByteBufUtils.writeUTF8String(buf, stack.getId());
             stack.writeToByteBuf(buf);
         }
@@ -74,7 +82,9 @@ public class MessageGridCraftingPreviewResponse implements IMessage, IMessageHan
                 screen = ((GuiGridCraftingSettings) screen).getParent();
             }
 
-            FMLCommonHandler.instance().showGuiScreen(new GuiCraftingPreview(screen, message.stacks, message.id, message.quantity, message.fluids));
+            FMLCommonHandler.instance().showGuiScreen(
+                    new GuiCraftingPreview(screen, message.stacks, message.id, message.calculationTime,
+                            message.quantity, message.fluids));
         });
 
         return null;

@@ -21,7 +21,7 @@ public class MessagePortableGridItemUpdate implements IMessage,
 
     private IPortableGrid portableGrid;
 
-    private List<IGridStack> stacks = new ArrayList<>();
+    private final List<IGridStack> stacks = new ArrayList<>();
 
     public MessagePortableGridItemUpdate() {
     }

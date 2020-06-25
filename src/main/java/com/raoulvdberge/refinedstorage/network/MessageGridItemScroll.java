@@ -8,7 +8,6 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.UUID;
@@ -20,7 +19,8 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
     private boolean up;
     private boolean ctrl;
 
-    public MessageGridItemScroll() {}
+    public MessageGridItemScroll() {
+    }
 
     public MessageGridItemScroll(UUID id, boolean shift, boolean ctrl, boolean up) {
         this.id = id;
@@ -31,7 +31,7 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        id = new UUID(buf.readLong(), buf.readLong());
         shift = buf.readBoolean();
         ctrl = buf.readBoolean();
         up = buf.readBoolean();
@@ -39,7 +39,8 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, id.toString());
+        buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
         buf.writeBoolean(shift);
         buf.writeBoolean(ctrl);
         buf.writeBoolean(up);
@@ -47,47 +48,48 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
 
     @Override
     protected void handle(MessageGridItemScroll message, EntityPlayerMP player) {
-        if (player != null) {
-            Container container = player.openContainer;
+        if (player == null)
+            return;
+        Container container = player.openContainer;
 
-            if (container instanceof ContainerGrid) {
-                IGrid grid = ((ContainerGrid) container).getGrid();
+        if (!(container instanceof ContainerGrid))
+            return;
+        IGrid grid = ((ContainerGrid) container).getGrid();
 
-                if (grid.getItemHandler() != null) {
-                    int flags = ItemGridHandler.EXTRACT_SINGLE;
-                    if (!message.id.equals(new UUID(0, 0))) { //isOverStack
-                        if (message.shift && !message.ctrl) { //shift
-                            flags |= ItemGridHandler.EXTRACT_SHIFT;
-                            if (message.up) { //scroll up
-                                StorageCacheItem cache = (StorageCacheItem) grid.getStorageCache();
-                                if (cache != null) {
-                                    ItemStack stack = cache.getList().get(message.id);
-                                    if (stack != null) {
-                                        int slot = player.inventory.getSlotFor(stack);
-                                        if (slot != -1) {
-                                            grid.getItemHandler()
-                                                    .onInsert(player, player.inventory.getStackInSlot(slot), true);
-                                            return;
-                                        }
-                                    }
-                                }
-                            } else { //scroll down
-                                grid.getItemHandler().onExtract(player, message.id, -1, flags);
-                                return;
-                            }
-                        } else { //ctrl
-                            if (!message.up) { //scroll down
-                                grid.getItemHandler().onExtract(player, message.id, -1, flags);
-                                return;
-                            }
-                        }
+        if (grid.getItemHandler() == null)
+            return;
+        int flags = ItemGridHandler.EXTRACT_SINGLE;
+        if (!message.id.equals(new UUID(0, 0))) { //isOverStack
+            if (message.shift && !message.ctrl) { //shift
+                flags |= ItemGridHandler.EXTRACT_SHIFT;
+                if (message.up) { //scroll up
+                    StorageCacheItem cache = (StorageCacheItem) grid.getStorageCache();
+                    if (cache == null)
+                        return;
+
+                    ItemStack stack = cache.getList().get(message.id);
+                    if (stack == null)
+                        return;
+
+                    int slot = player.inventory.storeItemStack(stack);
+                    if (slot != -1) {
+                        grid.getItemHandler()
+                                .onInsert(player, player.inventory.getStackInSlot(slot), true);
+                        return;
                     }
-                    if (message.up) { //scroll up
-                        grid.getItemHandler().onInsert(player, player.inventory.getItemStack(), true);
-                        player.updateHeldItem();
-                    }
+                } else { //scroll down
+                    grid.getItemHandler().onExtract(player, message.id, -1, flags);
+                    return;
                 }
+            } else if (!message.up) { //scroll down
+                grid.getItemHandler().onExtract(player, message.id, -1, flags);
+                return;
             }
+        }
+
+        if (message.up) { //scroll up
+            grid.getItemHandler().onInsert(player, player.inventory.getItemStack(), true);
+            player.updateHeldItem();
         }
     }
 }

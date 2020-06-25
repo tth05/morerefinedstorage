@@ -11,7 +11,7 @@ public final class Energy implements IEnergy {
     private static final UUID DEFAULT_UUID = new UUID(0L, 0L);
 
     protected int capacity;
-    protected int energy;
+    protected int energyStored;
 
     private final Map<UUID, Integer> storages;
 
@@ -45,10 +45,10 @@ public final class Energy implements IEnergy {
             return 0;
         }
 
-        int extracted = Math.min(energy, maxExtract);
+        int extracted = Math.min(energyStored, maxExtract);
 
         if (action == Action.PERFORM) {
-            energy -= extracted;
+            energyStored -= extracted;
         }
 
         return extracted;
@@ -61,7 +61,7 @@ public final class Energy implements IEnergy {
 
     @Override
     public int getStored() {
-        return this.energy;
+        return this.energyStored;
     }
 
     @Override
@@ -81,10 +81,10 @@ public final class Energy implements IEnergy {
             return 0;
         }
 
-        int inserted = Math.min(capacity - energy, maxReceive);
+        int inserted = Math.min(capacity - energyStored, maxReceive);
 
         if (action == Action.PERFORM) {
-            energy += inserted;
+            energyStored += inserted;
         }
 
         return inserted;
@@ -92,6 +92,6 @@ public final class Energy implements IEnergy {
 
     @Override
     public void setStored(int amount) {
-        this.energy = Math.min(amount, this.capacity);
+        this.energyStored = Math.min(amount, this.capacity);
     }
 }

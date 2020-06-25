@@ -3,8 +3,8 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node.cover;
 import net.minecraft.item.ItemStack;
 
 public class Cover {
-    private ItemStack stack;
-    private CoverType type;
+    private final ItemStack stack;
+    private final CoverType type;
 
     public Cover(ItemStack stack, CoverType type) {
         this.stack = stack;

@@ -16,59 +16,65 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 public class NetworkNodeListener {
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent e) {
-        if (!e.world.isRemote) {
-            if (e.phase == TickEvent.Phase.END) {
-                e.world.profiler.startSection("network node ticking");
+        if (e.world.isRemote || e.phase != TickEvent.Phase.END)
+            return;
 
-                for (INetworkNode node : API.instance().getNetworkNodeManager(e.world).all()) {
-                    node.update();
-                }
+        e.world.profiler.startSection("network node ticking");
 
-                e.world.profiler.endSection();
-            }
+        for (INetworkNode node : API.instance().getNetworkNodeManager(e.world).all()) {
+            node.update();
         }
+
+        e.world.profiler.endSection();
     }
 
     @SubscribeEvent
     public void onBlockPlace(BlockEvent.EntityPlaceEvent e) {
-        if (!e.getWorld().isRemote && e.getEntity() instanceof EntityPlayer) {
-            TileEntity placed = e.getWorld().getTileEntity(e.getPos());
+        if (e.getWorld().isRemote || !(e.getEntity() instanceof EntityPlayer))
+            return;
 
-            if (placed != null && placed.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null)) {
-                for (EnumFacing facing : EnumFacing.VALUES) {
-                    TileEntity side = e.getWorld().getTileEntity(e.getBlockSnapshot().getPos().offset(facing));
+        TileEntity placed = e.getWorld().getTileEntity(e.getPos());
 
-                    if (side != null && side.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite())) {
-                        INetworkNodeProxy nodeProxy = side.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite());
-                        INetworkNode node = nodeProxy.getNode();
+        if (placed == null || !placed.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null))
+            return;
 
-                        if (node.getNetwork() != null && !node.getNetwork().getSecurityManager().hasPermission(Permission.BUILD, (EntityPlayer) e.getEntity())) {
-                            WorldUtils.sendNoPermissionMessage((EntityPlayer) e.getEntity());
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            TileEntity side = e.getWorld().getTileEntity(e.getBlockSnapshot().getPos().offset(facing));
 
-                            e.setCanceled(true);
+            if (side != null && side.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY,
+                    facing.getOpposite())) {
+                INetworkNodeProxy<?> nodeProxy = side.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite());
+                INetworkNode node = nodeProxy.getNode();
 
-                            return;
-                        }
-                    }
-                }
+                if (node.getNetwork() == null || node.getNetwork().getSecurityManager()
+                        .hasPermission(Permission.BUILD, (EntityPlayer) e.getEntity()))
+                    continue;
+                WorldUtils.sendNoPermissionMessage((EntityPlayer) e.getEntity());
+
+                e.setCanceled(true);
+
+                return;
             }
         }
     }
 
     @SubscribeEvent
     public void onBlockBreak(BlockEvent.BreakEvent e) {
-        if (!e.getWorld().isRemote) {
-            TileEntity tile = e.getWorld().getTileEntity(e.getPos());
+        if (e.getWorld().isRemote)
+            return;
 
-            if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null)) {
-                INetworkNodeProxy nodeProxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null);
-                INetworkNode node = nodeProxy.getNode();
+        TileEntity tile = e.getWorld().getTileEntity(e.getPos());
 
-                if (node.getNetwork() != null && !node.getNetwork().getSecurityManager().hasPermission(Permission.BUILD, e.getPlayer())) {
-                    WorldUtils.sendNoPermissionMessage(e.getPlayer());
+        if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null)) {
+            INetworkNodeProxy<?> nodeProxy =
+                    tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, null);
+            INetworkNode node = nodeProxy.getNode();
 
-                    e.setCanceled(true);
-                }
+            if (node.getNetwork() != null &&
+                    !node.getNetwork().getSecurityManager().hasPermission(Permission.BUILD, e.getPlayer())) {
+                WorldUtils.sendNoPermissionMessage(e.getPlayer());
+
+                e.setCanceled(true);
             }
         }
     }

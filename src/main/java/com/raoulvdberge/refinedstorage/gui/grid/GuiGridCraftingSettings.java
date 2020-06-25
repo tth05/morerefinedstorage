@@ -12,7 +12,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fluids.Fluid;
 
 public class GuiGridCraftingSettings extends GuiAmountSpecifying {
-    private IGridStack stack;
+    private final IGridStack stack;
 
     public GuiGridCraftingSettings(GuiBase parent, EntityPlayer player, IGridStack stack) {
         super(parent, new ContainerCraftingSettings(player, stack), 172, 99);
@@ -65,7 +65,9 @@ public class GuiGridCraftingSettings extends GuiAmountSpecifying {
         return Integer.MAX_VALUE;
     }
 
+    @Override
     protected void onOkButtonPressed(boolean shiftDown) {
+        //noinspection UnstableApiUsage
         Integer quantity = Ints.tryParse(amountField.getText());
 
         if (quantity != null && quantity > 0) {

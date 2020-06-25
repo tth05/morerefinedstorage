@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.gui.control.SideButtonRedstoneMode;
 import com.raoulvdberge.refinedstorage.tile.TileNetworkTransmitter;
 
 public class GuiNetworkTransmitter extends GuiBase {
-    private TileNetworkTransmitter networkTransmitter;
+    private final TileNetworkTransmitter networkTransmitter;
 
     public GuiNetworkTransmitter(ContainerNetworkTransmitter container, TileNetworkTransmitter networkTransmitter) {
         super(container, 176, 137);
@@ -20,6 +20,7 @@ public class GuiNetworkTransmitter extends GuiBase {
 
     @Override
     public void update(int x, int y) {
+        //NO OP
     }
 
     @Override

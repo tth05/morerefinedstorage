@@ -118,6 +118,12 @@ public interface ICraftingPatternContainer {
     UUID getUuid();
 
     /**
+     * Unlocks this container if it is locked
+     */
+    default void unlock() {
+    }
+
+    /**
      * @return true if the connected inventory is locked for processing patterns, false otherwise
      */
     default boolean isLocked() {
@@ -128,5 +134,27 @@ public interface ICraftingPatternContainer {
      * Called when this container is used by a processing pattern to insert items or fluids in the connected inventory.
      */
     default void onUsedForProcessing() {
+    }
+
+    /**
+     * @return the current crafter mode, used by autocrafting
+     */
+    default CrafterMode getCrafterMode() {
+        return CrafterMode.IGNORE;
+    }
+
+    enum CrafterMode {
+        IGNORE,
+        SIGNAL_UNLOCKS_AUTOCRAFTING,
+        SIGNAL_LOCKS_AUTOCRAFTING,
+        PULSE_INSERTS_NEXT_SET;
+
+        public static CrafterMode getById(int id) {
+            if (id >= 0 && id < values().length) {
+                return values()[id];
+            }
+
+            return IGNORE;
+        }
     }
 }

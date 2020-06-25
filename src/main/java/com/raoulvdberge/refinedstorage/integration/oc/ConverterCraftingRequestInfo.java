@@ -1,6 +1,6 @@
 package com.raoulvdberge.refinedstorage.integration.oc;
 
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import li.cil.oc.api.driver.Converter;
 
 import java.util.Map;

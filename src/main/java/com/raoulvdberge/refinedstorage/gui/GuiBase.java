@@ -38,12 +38,12 @@ import java.util.function.Consumer;
 
 public abstract class GuiBase extends GuiContainer {
     private static final Map<String, ResourceLocation> TEXTURE_CACHE = new HashMap<>();
-    private static final Map<Class, Queue<Consumer>> RUNNABLES = new HashMap<>();
+    private static final Map<Class<?>, Queue<Consumer<?>>> RUNNABLES = new HashMap<>();
 
     public static final RenderUtils.FluidRenderer FLUID_RENDERER = new RenderUtils.FluidRenderer(-1, 16, 16);
 
     public class ElementDrawers implements IElementDrawers {
-        private IElementDrawer<FluidStack> fluidDrawer = (x, y, element) -> FLUID_RENDERER.draw(GuiBase.this.mc, x, y, element);
+        private final IElementDrawer<FluidStack> fluidDrawer = (x, y, element) -> FLUID_RENDERER.draw(GuiBase.this.mc, x, y, element);
 
         @Override
         public IElementDrawer<ItemStack> getItemDrawer() {
@@ -71,7 +71,7 @@ public abstract class GuiBase extends GuiContainer {
 
     private String hoveringFluid = null;
 
-    protected int screenWidth;
+    protected final int screenWidth;
     protected int screenHeight;
 
     protected Scrollbar scrollbar;
@@ -88,11 +88,11 @@ public abstract class GuiBase extends GuiContainer {
     }
 
     private void runRunnables() {
-        Queue<Consumer> queue = RUNNABLES.get(getClass());
+        Queue<Consumer<?>> queue = RUNNABLES.get(getClass());
 
         if (queue != null && !queue.isEmpty()) {
-            Consumer callback;
-            while ((callback = queue.poll()) != null) {
+            Consumer<GuiBase> callback;
+            while ((callback = (Consumer<GuiBase>) queue.poll()) != null) {
                 callback.accept(this);
             }
         }
@@ -100,8 +100,8 @@ public abstract class GuiBase extends GuiContainer {
         queue = RUNNABLES.get(GuiContainer.class);
 
         if (queue != null && !queue.isEmpty()) {
-            Consumer callback;
-            while ((callback = queue.poll()) != null) {
+            Consumer<GuiBase> callback;
+            while ((callback = (Consumer<GuiBase>) queue.poll()) != null) {
                 callback.accept(this);
             }
         }
@@ -238,9 +238,7 @@ public abstract class GuiBase extends GuiContainer {
 
         String sideButtonTooltip = null;
 
-        for (int i = 0; i < buttonList.size(); ++i) {
-            GuiButton button = buttonList.get(i);
-
+        for (GuiButton button : buttonList) {
             if (button instanceof SideButton && ((SideButton) button).isHovered()) {
                 sideButtonTooltip = ((SideButton) button).getTooltip();
             }
@@ -254,7 +252,7 @@ public abstract class GuiBase extends GuiContainer {
     }
 
     @Override
-    protected void handleMouseClick(Slot slot, int slotId, int mouseButton, ClickType type) {
+    protected void handleMouseClick(@Nonnull Slot slot, int slotId, int mouseButton, @Nonnull ClickType type) {
         boolean valid = type != ClickType.QUICK_MOVE && Minecraft.getMinecraft().player.inventory.getItemStack().isEmpty();
 
         if (valid && slot instanceof SlotFilter && slot.isEnabled() && ((SlotFilter) slot).isSizeAllowed()) {
@@ -298,7 +296,7 @@ public abstract class GuiBase extends GuiContainer {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button instanceof SideButton) {
@@ -372,7 +370,7 @@ public abstract class GuiBase extends GuiContainer {
 
         try {
             itemRender.renderItemIntoGUI(stack, x, y);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // NO OP
         }
 
@@ -387,7 +385,7 @@ public abstract class GuiBase extends GuiContainer {
     public void drawItemOverlay(ItemStack stack, @Nullable String text, int x, int y) {
         try {
             itemRender.renderItemOverlayIntoGUI(fontRenderer, stack, x, y, "");
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // NO OP
         }
 
@@ -413,7 +411,7 @@ public abstract class GuiBase extends GuiContainer {
         GlStateManager.blendFunc(770, 771);
         GlStateManager.disableDepth();
 
-        fontRenderer.drawStringWithShadow(qty, (large ? 16 : 30) - fontRenderer.getStringWidth(qty), large ? 8 : 22, 16777215);
+        fontRenderer.drawStringWithShadow(qty, (large ? 16f : 30f) - fontRenderer.getStringWidth(qty), large ? 8 : 22, 16777215);
 
         GlStateManager.enableDepth();
         GlStateManager.enableTexture2D();
@@ -463,22 +461,18 @@ public abstract class GuiBase extends GuiContainer {
 
     public abstract void drawForeground(int mouseX, int mouseY);
 
+    @Override
     public int getGuiLeft() {
         return guiLeft;
     }
 
+    @Override
     public int getGuiTop() {
         return guiTop;
     }
 
     public static <T> void executeLater(Class<T> clazz, Consumer<T> callback) {
-        Queue<Consumer> queue = RUNNABLES.get(clazz);
-
-        if (queue == null) {
-            RUNNABLES.put(clazz, queue = new ArrayDeque<>());
-        }
-
-        queue.add(callback);
+        RUNNABLES.computeIfAbsent(clazz, k -> new ArrayDeque<>()).add(callback);
     }
 
     public static void executeLater(Consumer<GuiContainer> callback) {

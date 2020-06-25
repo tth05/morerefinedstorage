@@ -10,6 +10,7 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,15 +46,16 @@ public final class RSSerializers {
             return null;
         }
 
+        @Nonnull
         @Override
-        public List<ClientNode> copyValue(List<ClientNode> value) {
+        public List<ClientNode> copyValue(@Nonnull List<ClientNode> value) {
             return value;
         }
     };
 
     public static final DataSerializer<FluidStack> FLUID_STACK_SERIALIZER = new DataSerializer<FluidStack>() {
         @Override
-        public void write(PacketBuffer buf, FluidStack value) {
+        public void write(@Nonnull PacketBuffer buf, @Nonnull FluidStack value) {
             if (value == null) {
                 buf.writeBoolean(false);
             } else {
@@ -82,8 +84,9 @@ public final class RSSerializers {
             return null;
         }
 
+        @Nonnull
         @Override
-        public FluidStack copyValue(FluidStack value) {
+        public FluidStack copyValue(@Nonnull FluidStack value) {
             return value;
         }
     };
@@ -94,6 +97,7 @@ public final class RSSerializers {
             buf.writeInt(value.getId());
         }
 
+        @Nonnull
         @Override
         public AccessType read(PacketBuffer buf) {
             return AccessTypeUtils.getAccessType(buf.readInt());
@@ -104,20 +108,21 @@ public final class RSSerializers {
             return null;
         }
 
+        @Nonnull
         @Override
-        public AccessType copyValue(AccessType value) {
+        public AccessType copyValue(@Nonnull AccessType value) {
             return value;
         }
     };
 
     public static final DataSerializer<Long> LONG_SERIALIZER = new DataSerializer<Long>() {
         @Override
-        public void write(PacketBuffer buf, Long value) {
+        public void write(PacketBuffer buf, @Nonnull Long value) {
             buf.writeLong(value);
         }
 
         @Override
-        public Long read(PacketBuffer buf) throws IOException {
+        public Long read(PacketBuffer buf) {
             return buf.readLong();
         }
 
@@ -126,8 +131,9 @@ public final class RSSerializers {
             return null;
         }
 
+        @Nonnull
         @Override
-        public Long copyValue(Long value) {
+        public Long copyValue(@Nonnull Long value) {
             return value;
         }
     };

@@ -9,18 +9,19 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public class GuiStorage extends GuiBase {
-    private IGuiStorage gui;
-    private String texture;
+    private final IGuiStorage gui;
+    private final String texture;
 
     private GuiButton priorityButton;
 
-    private int barX = 8;
-    private int barY = 54;
-    private int barWidth = 16;
-    private int barHeight = 70;
+    private static final int BAR_X = 8;
+    private static final int BAR_Y = 54;
+    private static final int BAR_WIDTH = 16;
+    private static final int BAR_HEIGHT = 70;
 
     public GuiStorage(ContainerBase container, IGuiStorage gui, String texture) {
         super(container, 176, 223);
@@ -63,6 +64,7 @@ public class GuiStorage extends GuiBase {
 
     @Override
     public void update(int x, int y) {
+        //NO OP
     }
 
     @Override
@@ -71,9 +73,9 @@ public class GuiStorage extends GuiBase {
 
         drawTexture(x, y, 0, 0, screenWidth, screenHeight);
 
-        int barHeightNew = (int) ((float) gui.getStored() / (float) gui.getCapacity() * (float) barHeight);
+        int barHeightNew = (int) ((float) gui.getStored() / (float) gui.getCapacity() * (float) BAR_HEIGHT);
 
-        drawTexture(x + barX, y + barY + barHeight - barHeightNew, 179, barHeight - barHeightNew, barWidth, barHeightNew);
+        drawTexture(x + BAR_X, y + BAR_Y + BAR_HEIGHT - barHeightNew, 179, BAR_HEIGHT - barHeightNew, BAR_WIDTH, barHeightNew);
     }
 
     @Override
@@ -90,7 +92,7 @@ public class GuiStorage extends GuiBase {
 
         drawString(7, 129, t("container.inventory"));
 
-        if (inBounds(barX, barY, barWidth, barHeight, mouseX, mouseY)) {
+        if (inBounds(BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, mouseX, mouseY)) {
             int full = 0;
 
             if (gui.getCapacity() >= 0) {
@@ -105,7 +107,7 @@ public class GuiStorage extends GuiBase {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(@Nonnull GuiButton button) throws IOException {
         super.actionPerformed(button);
 
         if (button == priorityButton) {

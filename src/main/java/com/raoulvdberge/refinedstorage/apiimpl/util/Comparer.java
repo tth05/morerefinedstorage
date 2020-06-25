@@ -21,22 +21,18 @@ public class Comparer implements IComparer {
             return false;
         }
 
-        if ((flags & COMPARE_DAMAGE) == COMPARE_DAMAGE && left.getItemDamage() != OreDictionary.WILDCARD_VALUE && right.getItemDamage() != OreDictionary.WILDCARD_VALUE) {
-            if (left.getItemDamage() != right.getItemDamage()) {
-                return false;
-            }
+        if ((flags & COMPARE_DAMAGE) == COMPARE_DAMAGE && left.getItemDamage() != OreDictionary.WILDCARD_VALUE &&
+                right.getItemDamage() != OreDictionary.WILDCARD_VALUE &&
+                left.getItemDamage() != right.getItemDamage()) {
+            return false;
         }
 
-        if ((flags & COMPARE_NBT) == COMPARE_NBT) {
-            if (!isEqualNbt(left, right)) {
-                return false;
-            }
+        if ((flags & COMPARE_NBT) == COMPARE_NBT && !isEqualNbt(left, right)) {
+            return false;
         }
 
         if ((flags & COMPARE_QUANTITY) == COMPARE_QUANTITY) {
-            if (left.getCount() != right.getCount()) {
-                return false;
-            }
+            return left.getCount() == right.getCount();
         }
 
         return true;
@@ -48,7 +44,7 @@ public class Comparer implements IComparer {
             return true;
         }
 
-        if ((left == null && right != null) || (left != null && right == null)) {
+        if (left == null || right == null) {
             return false;
         }
 
@@ -63,9 +59,7 @@ public class Comparer implements IComparer {
         }
 
         if ((flags & COMPARE_NBT) == COMPARE_NBT) {
-            if (left.tag != null && !left.tag.equals(right.tag)) {
-                return false;
-            }
+            return left.tag == null || left.tag.equals(right.tag);
         }
 
         return true;
@@ -84,11 +78,7 @@ public class Comparer implements IComparer {
                 return true;
             } else if (!left.hasTagCompound() && right.hasTagCompound() && right.getTagCompound().isEmpty()) {
                 return true;
-            } else if (!left.hasTagCompound() && !right.hasTagCompound()) {
-                return true;
-            }
-
-            return false;
+            } else return !left.hasTagCompound() && !right.hasTagCompound();
         }
 
         return true;
@@ -99,7 +89,7 @@ public class Comparer implements IComparer {
             return EnumActionResult.SUCCESS;
         }
 
-        if ((left == null && right != null) || (left != null && right == null)) {
+        if (left == null || right == null) {
             return EnumActionResult.FAIL;
         }
 
@@ -110,7 +100,7 @@ public class Comparer implements IComparer {
             return EnumActionResult.SUCCESS;
         }
 
-        if ((leftEmpty && !rightEmpty) || (!leftEmpty && rightEmpty)) {
+        if (leftEmpty || rightEmpty) {
             return EnumActionResult.FAIL;
         }
 

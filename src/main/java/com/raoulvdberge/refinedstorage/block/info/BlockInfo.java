@@ -17,7 +17,7 @@ public class BlockInfo implements IBlockInfo {
     @Nullable
     private final Supplier<TileBase> tileSupplier;
 
-    public BlockInfo(Material material, SoundType soundType, float hardness, String id, String modId, Object modObject, Supplier<TileBase> tileSupplier) {
+    public BlockInfo(Material material, SoundType soundType, float hardness, String id, String modId, Object modObject, @Nullable Supplier<TileBase> tileSupplier) {
         this.material = material;
         this.soundType = soundType;
         this.hardness = hardness;
@@ -54,6 +54,8 @@ public class BlockInfo implements IBlockInfo {
     @Nullable
     @Override
     public TileBase createTileEntity() {
+        if(tileSupplier == null)
+            return null;
         return tileSupplier.get();
     }
 

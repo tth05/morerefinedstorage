@@ -9,9 +9,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public class GuiAmount extends GuiAmountSpecifying {
-    private int containerSlot;
-    private ItemStack stack;
-    private int maxAmount;
+    private final int containerSlot;
+    private final ItemStack stack;
+    private final int maxAmount;
 
     public GuiAmount(GuiBase parent, EntityPlayer player, int containerSlot, ItemStack stack, int maxAmount) {
         super(parent, new ContainerAmount(player, stack), 172, 99);

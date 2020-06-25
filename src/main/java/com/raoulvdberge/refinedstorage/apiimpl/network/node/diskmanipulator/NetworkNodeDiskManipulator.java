@@ -56,10 +56,10 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     private int type = IType.ITEMS;
     private int ioMode = IO_MODE_INSERT;
 
-    private IStorageDisk<ItemStack>[] itemDisks = new IStorageDisk[6];
-    private IStorageDisk<FluidStack>[] fluidDisks = new IStorageDisk[6];
+    private final IStorageDisk<ItemStack>[] itemDisks = new IStorageDisk[6];
+    private final IStorageDisk<FluidStack>[] fluidDisks = new IStorageDisk[6];
 
-    private ItemHandlerUpgrade upgrades =
+    private final ItemHandlerUpgrade upgrades =
             new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK) {
                 @Override
                 public int getItemInteractCount() {
@@ -73,7 +73,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 }
             };
 
-    private ItemHandlerBase inputDisks =
+    private final ItemHandlerBase inputDisks =
             new ItemHandlerBase(3, new ListenerNetworkNode(this), NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
                 @Override
                 protected void onContentsChanged(int slot) {
@@ -95,7 +95,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 }
             };
 
-    private ItemHandlerBase outputDisks =
+    private final ItemHandlerBase outputDisks =
             new ItemHandlerBase(3, new ListenerNetworkNode(this), NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
                 @Override
                 protected void onContentsChanged(int slot) {
@@ -117,14 +117,14 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 }
             };
 
-    private ItemHandlerProxy disks = new ItemHandlerProxy(inputDisks, outputDisks);
+    private final ItemHandlerProxy disks = new ItemHandlerProxy(inputDisks, outputDisks);
 
     public NetworkNodeDiskManipulator(World world, BlockPos pos) {
         super(world, pos);
     }
 
-    private ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
+    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
     @Override
     public int getEnergyUsage() {
@@ -157,7 +157,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
             IStorageDisk<ItemStack> storage = itemDisks[slot];
 
             if (ioMode == IO_MODE_INSERT) {
-                insertItemIntoNetwork(storage, slot);
+                insertItemIntoNetwork(storage);
             } else if (ioMode == IO_MODE_EXTRACT) {
                 extractItemFromNetwork(storage, slot);
             }
@@ -180,11 +180,12 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         }
     }
 
-    private void insertItemIntoNetwork(IStorageDisk<ItemStack> storage, int slot) {
-        List<ItemStack> stacks = new ArrayList<>(storage.getStacks());
-        for (int i = 0; i < stacks.size(); ++i) {
-            ItemStack stack = stacks.get(i);
+    private void insertItemIntoNetwork(IStorageDisk<ItemStack> storage) {
+        if(network == null)
+            return;
 
+        List<ItemStack> stacks = new ArrayList<>(storage.getStacks());
+        for (ItemStack stack : stacks) {
             ItemStack extracted = storage.extract(stack, upgrades.getItemInteractCount(), compare, Action.PERFORM);
             if (extracted == null) {
                 continue;
@@ -209,18 +210,17 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         }
 
         // In Extract mode, we just need to check if the disk is full or not.
-        if (ioMode == IO_MODE_EXTRACT)
+        if (ioMode == IO_MODE_EXTRACT) {
             if (storage.getStored() == storage.getCapacity()) {
                 moveDriveToOutput(slot);
                 return true;
             } else {
                 return false;
             }
+        }
 
         List<ItemStack> stacks = new ArrayList<>(storage.getStacks());
-        for (int i = 0; i < stacks.size(); ++i) {
-            ItemStack stack = stacks.get(i);
-
+        for (ItemStack stack : stacks) {
             ItemStack extracted = storage.extract(stack, upgrades.getItemInteractCount(), compare, Action.SIMULATE);
             if (extracted == null) {
                 continue;
@@ -235,6 +235,9 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     private void extractItemFromNetwork(IStorageDisk<ItemStack> storage, int slot) {
+        if(network == null)
+            return;
+
         ItemStack extracted = null;
         int i = 0;
 
@@ -280,6 +283,9 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     private void insertFluidIntoNetwork(IStorageDisk<FluidStack> storage, int slot) {
+        if(network == null)
+            return;
+
         List<FluidStack> stacks = new ArrayList<>(storage.getStacks());
 
         FluidStack extracted = null;
@@ -310,18 +316,17 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         }
 
         //In Extract mode, we just need to check if the disk is full or not.
-        if (ioMode == IO_MODE_EXTRACT)
+        if (ioMode == IO_MODE_EXTRACT) {
             if (storage.getStored() == storage.getCapacity()) {
                 moveDriveToOutput(slot);
                 return true;
             } else {
                 return false;
             }
+        }
 
         List<FluidStack> stacks = new ArrayList<>(storage.getStacks());
-        for (int i = 0; i < stacks.size(); ++i) {
-            FluidStack stack = stacks.get(i);
-
+        for (FluidStack stack : stacks) {
             FluidStack extracted = storage.extract(stack, upgrades.getItemInteractCount(), compare, Action.SIMULATE);
             if (extracted == null) {
                 continue;
@@ -336,6 +341,9 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     private void extractFluidFromNetwork(IStorageDisk<FluidStack> storage, int slot) {
+        if(network == null)
+            return;
+
         FluidStack extracted = null;
         int i = 0;
 
@@ -462,11 +470,11 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         return upgrades;
     }
 
-    public IStorageDisk[] getItemDisks() {
+    public IStorageDisk<ItemStack>[] getItemDisks() {
         return itemDisks;
     }
 
-    public IStorageDisk[] getFluidDisks() {
+    public IStorageDisk<FluidStack>[] getFluidDisks() {
         return fluidDisks;
     }
 

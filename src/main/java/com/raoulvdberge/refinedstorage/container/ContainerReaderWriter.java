@@ -9,8 +9,10 @@ import com.raoulvdberge.refinedstorage.tile.TileBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
+import javax.annotation.Nonnull;
+
 public class ContainerReaderWriter extends ContainerBase implements IReaderWriterListener {
-    private IGuiReaderWriter readerWriter;
+    private final IGuiReaderWriter readerWriter;
     private boolean addedListener;
 
     public ContainerReaderWriter(IGuiReaderWriter readerWriter, TileBase tile, EntityPlayer player) {
@@ -42,7 +44,7 @@ public class ContainerReaderWriter extends ContainerBase implements IReaderWrite
     }
 
     @Override
-    public void onContainerClosed(EntityPlayer player) {
+    public void onContainerClosed(@Nonnull EntityPlayer player) {
         super.onContainerClosed(player);
 
         IReaderWriterManager manager = readerWriter.getNetwork() == null ? null : readerWriter.getNetwork().getReaderWriterManager();

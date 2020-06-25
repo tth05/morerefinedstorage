@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NetworkItemHandler implements INetworkItemHandler {
-    private INetwork network;
+    private final INetwork network;
 
-    private Map<EntityPlayer, INetworkItem> items = new ConcurrentHashMap<>();
+    private final Map<EntityPlayer, INetworkItem> items = new ConcurrentHashMap<>();
 
     public NetworkItemHandler(INetwork network) {
         this.network = network;

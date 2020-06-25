@@ -9,12 +9,13 @@ import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StorageCacheListenerGridPortableItem implements IStorageCacheListener<ItemStack> {
-    private IPortableGrid portableGrid;
-    private EntityPlayerMP player;
+    private final IPortableGrid portableGrid;
+    private final EntityPlayerMP player;
 
     public StorageCacheListenerGridPortableItem(IPortableGrid portableGrid, EntityPlayerMP player) {
         this.portableGrid = portableGrid;
@@ -32,7 +33,7 @@ public class StorageCacheListenerGridPortableItem implements IStorageCacheListen
     }
 
     @Override
-    public void onChanged(StackListResult<ItemStack> delta) {
+    public void onChanged(@Nonnull StackListResult<ItemStack> delta) {
         List<StackListResult<ItemStack>> deltas = new ArrayList<>();
 
         deltas.add(delta);
@@ -41,7 +42,7 @@ public class StorageCacheListenerGridPortableItem implements IStorageCacheListen
     }
 
     @Override
-    public void onChangedBulk(List<StackListResult<ItemStack>> storageCacheDeltas) {
+    public void onChangedBulk(@Nonnull List<StackListResult<ItemStack>> storageCacheDeltas) {
         RS.INSTANCE.network.sendTo(new MessagePortableGridItemDelta(portableGrid, storageCacheDeltas), player);
     }
 }

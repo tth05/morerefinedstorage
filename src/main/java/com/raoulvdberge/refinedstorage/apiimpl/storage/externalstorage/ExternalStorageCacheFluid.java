@@ -48,11 +48,11 @@ public class ExternalStorageCacheFluid {
                 continue;
             }
 
-            if (actual == null && cached != null) { // REMOVED
+            if (actual == null) { // REMOVED
                 network.getFluidStorageCache().remove(cached, cached.amount, true);
 
                 cache.set(i, null);
-            } else if (actual != null && cached == null) { // ADDED
+            } else if (cached == null) { // ADDED
                 network.getFluidStorageCache().add(actual, actual.amount, false, true);
 
                 cache.set(i, actual.copy());

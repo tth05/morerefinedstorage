@@ -14,8 +14,8 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 public class StorageDiskItemPortable implements IStorageDisk<ItemStack> {
-    private IStorageDisk<ItemStack> parent;
-    private IPortableGrid portableGrid;
+    private final IStorageDisk<ItemStack> parent;
+    private final IPortableGrid portableGrid;
 
     public StorageDiskItemPortable(IStorageDisk<ItemStack> parent, IPortableGrid portableGrid) {
         this.parent = parent;

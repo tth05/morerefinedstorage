@@ -22,13 +22,13 @@ import java.util.Collections;
 import java.util.UUID;
 
 public class WirelessCraftingMonitor implements ICraftingMonitor {
-    private ItemStack stack;
+    private final ItemStack stack;
 
-    private int networkDimension;
-    private BlockPos network;
+    private final int networkDimension;
+    private final BlockPos network;
     private int tabPage;
     private Optional<UUID> tabSelected;
-    private int slotId;
+    private final int slotId;
 
     public WirelessCraftingMonitor(ItemStack stack, int slotId) {
         this.stack = stack;

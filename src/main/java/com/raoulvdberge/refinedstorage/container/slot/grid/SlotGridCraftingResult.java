@@ -9,10 +9,11 @@ import net.minecraft.item.ItemStack;
 import javax.annotation.Nonnull;
 
 public class SlotGridCraftingResult extends SlotCrafting {
-    private ContainerGrid container;
-    private IGrid grid;
+    private final ContainerGrid container;
+    private final IGrid grid;
 
     public SlotGridCraftingResult(ContainerGrid container, EntityPlayer player, IGrid grid, int inventoryIndex, int x, int y) {
+        //noinspection ConstantConditions
         super(player, grid.getCraftingMatrix(), grid.getCraftingResult(), inventoryIndex, x, y);
 
         this.container = container;

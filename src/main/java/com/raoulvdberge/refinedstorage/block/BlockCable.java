@@ -36,6 +36,7 @@ import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,6 +90,7 @@ public class BlockCable extends BlockNode {
         return false;
     }
 
+    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return super.createBlockStateBuilder()
@@ -107,9 +109,10 @@ public class BlockCable extends BlockNode {
             .build();
     }
 
+    @Nonnull
     @Override
-    @SuppressWarnings("deprecation")
-    public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
+    @Deprecated
+    public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);
 
         state = super.getActualState(state, world, pos)
@@ -123,19 +126,21 @@ public class BlockCable extends BlockNode {
         return state;
     }
 
+    @Nonnull
     @Override
-    public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
+    public IBlockState getExtendedState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         IBlockState s = super.getExtendedState(state, world, pos);
 
         TileEntity tile = world.getTileEntity(pos);
 
-        if (tile instanceof TileNode && ((TileNode) tile).getNode() instanceof ICoverable) {
-            s = ((IExtendedBlockState) s).withProperty(COVER_NORTH, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.NORTH));
-            s = ((IExtendedBlockState) s).withProperty(COVER_EAST, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.EAST));
-            s = ((IExtendedBlockState) s).withProperty(COVER_SOUTH, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.SOUTH));
-            s = ((IExtendedBlockState) s).withProperty(COVER_WEST, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.WEST));
-            s = ((IExtendedBlockState) s).withProperty(COVER_UP, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.UP));
-            s = ((IExtendedBlockState) s).withProperty(COVER_DOWN, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.DOWN));
+        if (tile instanceof TileNode && ((TileNode<?>) tile).getNode() instanceof ICoverable) {
+            ICoverable cover = ((ICoverable) ((TileNode<?>) tile).getNode());
+            s = ((IExtendedBlockState) s).withProperty(COVER_NORTH, cover.getCoverManager().getCover(EnumFacing.NORTH));
+            s = ((IExtendedBlockState) s).withProperty(COVER_EAST, cover.getCoverManager().getCover(EnumFacing.EAST));
+            s = ((IExtendedBlockState) s).withProperty(COVER_SOUTH, cover.getCoverManager().getCover(EnumFacing.SOUTH));
+            s = ((IExtendedBlockState) s).withProperty(COVER_WEST, cover.getCoverManager().getCover(EnumFacing.WEST));
+            s = ((IExtendedBlockState) s).withProperty(COVER_UP, cover.getCoverManager().getCover(EnumFacing.UP));
+            s = ((IExtendedBlockState) s).withProperty(COVER_DOWN, cover.getCoverManager().getCover(EnumFacing.DOWN));
         }
 
         return s;
@@ -146,7 +151,7 @@ public class BlockCable extends BlockNode {
             return false;
         }
 
-        INetworkNode node = ((TileNode) tile).getNode();
+        INetworkNode node = ((TileNode<?>) tile).getNode();
 
         if (node instanceof ICoverable) {
             Cover cover = ((ICoverable) node).getCoverManager().getCover(direction);
@@ -169,11 +174,7 @@ public class BlockCable extends BlockNode {
         if (otherTile != null && otherTile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, direction.getOpposite())) {
             // Prevent the block adding connections in itself
             // For example: importer cable connection on the importer face
-            if (block.getDirection() != null && ((TileBase) tile).getDirection() == direction) {
-                return false;
-            }
-
-            return true;
+            return block.getDirection() == null || ((TileBase) tile).getDirection() != direction;
         }
 
         return false;
@@ -297,18 +298,19 @@ public class BlockCable extends BlockNode {
 
     @Override
     @SuppressWarnings("deprecation")
-    public boolean isOpaqueCube(IBlockState state) {
+    public boolean isOpaqueCube(@Nonnull IBlockState state) {
         return false;
     }
     @Override
     @SuppressWarnings("deprecation")
-    public boolean isFullCube(IBlockState state) {
+    public boolean isFullCube(@Nonnull IBlockState state) {
         return false;
     }
 
+    @Nonnull
     @Override
     @SuppressWarnings("deprecation")
-    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase entity) {
+    public IBlockState getStateForPlacement(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ, int meta, @Nonnull EntityLivingBase entity) {
         IBlockState state = super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, entity);
 
         if (getDirection() != null) {
@@ -318,14 +320,16 @@ public class BlockCable extends BlockNode {
         return state;
     }
 
+    @Nonnull
     @Override
     public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 
+    @Nonnull
     @Override
     @SuppressWarnings("deprecation")
-    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) {
+    public BlockFaceShape getBlockFaceShape(@Nonnull IBlockAccess worldIn, @Nonnull IBlockState state, @Nonnull BlockPos pos, @Nonnull EnumFacing face) {
         return BlockFaceShape.UNDEFINED;
     }
 }

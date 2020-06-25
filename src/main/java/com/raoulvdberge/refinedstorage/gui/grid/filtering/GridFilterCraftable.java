@@ -5,7 +5,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
 import java.util.function.Predicate;
 
 public class GridFilterCraftable implements Predicate<IGridStack> {
-    private boolean craftable;
+    private final boolean craftable;
 
     public GridFilterCraftable(boolean craftable) {
         this.craftable = craftable;

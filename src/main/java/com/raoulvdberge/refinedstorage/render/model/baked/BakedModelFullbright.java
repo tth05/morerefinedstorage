@@ -14,15 +14,16 @@ import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 import net.minecraftforge.client.model.pipeline.VertexLighterFlat;
 import net.minecraftforge.common.property.IExtendedBlockState;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
 public class BakedModelFullbright extends BakedModelDelegate {
-    private class CacheKey {
-        private IBakedModel base;
-        private Set<String> textures;
-        private IBlockState state;
-        private EnumFacing side;
+    private static class CacheKey {
+        private final IBakedModel base;
+        private final Set<String> textures;
+        private final IBlockState state;
+        private final EnumFacing side;
 
         public CacheKey(IBakedModel base, Set<String> textures, IBlockState state, EnumFacing side) {
             this.base = base;
@@ -47,11 +48,7 @@ public class BakedModelFullbright extends BakedModelDelegate {
                 return false;
             }
 
-            if (!state.equals(cacheKey.state)) {
-                return false;
-            }
-
-            return true;
+            return state.equals(cacheKey.state);
         }
 
         @Override
@@ -62,12 +59,12 @@ public class BakedModelFullbright extends BakedModelDelegate {
 
     private static final LoadingCache<CacheKey, List<BakedQuad>> CACHE = CacheBuilder.newBuilder().build(new CacheLoader<CacheKey, List<BakedQuad>>() {
         @Override
-        public List<BakedQuad> load(CacheKey key) {
+        public List<BakedQuad> load(@Nonnull CacheKey key) {
             return transformQuads(key.base.getQuads(key.state, key.side, 0), key.textures);
         }
     });
 
-    private Set<String> textures;
+    private final Set<String> textures;
     private boolean cacheDisabled = false;
 
     public BakedModelFullbright(IBakedModel base, String... textures) {
@@ -82,17 +79,19 @@ public class BakedModelFullbright extends BakedModelDelegate {
         return this;
     }
 
+    @Nonnull
     @Override
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         if (state == null) {
-            return base.getQuads(state, side, rand);
+            return base.getQuads(null, side, rand);
         }
 
         if (cacheDisabled) {
             return transformQuads(base.getQuads(state, side, 0), textures);
         }
 
-        return CACHE.getUnchecked(new CacheKey(base, textures, state instanceof IExtendedBlockState ? ((IExtendedBlockState) state).getClean() : state, side));
+        return CACHE.getUnchecked(new CacheKey(base, textures,
+                state instanceof IExtendedBlockState ? ((IExtendedBlockState) state).getClean() : state, side));
     }
 
     private static List<BakedQuad> transformQuads(List<BakedQuad> oldQuads, Set<String> textures) {
@@ -120,7 +119,7 @@ public class BakedModelFullbright extends BakedModelDelegate {
 
         VertexLighterFlat trans = new VertexLighterFlat(Minecraft.getMinecraft().getBlockColors()) {
             @Override
-            protected void updateLightmap(float[] normal, float[] lightmap, float x, float y, float z) {
+            protected void updateLightmap(@Nonnull float[] normal, float[] lightmap, float x, float y, float z) {
                 lightmap[0] = light;
                 lightmap[1] = light;
             }

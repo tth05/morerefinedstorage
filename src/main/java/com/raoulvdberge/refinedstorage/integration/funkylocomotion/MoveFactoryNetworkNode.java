@@ -29,7 +29,7 @@ public class MoveFactoryNetworkNode implements IMoveFactory {
 
         INetworkNode node = manager.getNode(pos);
 
-        TileNode tile = (TileNode) world.getTileEntity(pos);
+        TileNode<?> tile = (TileNode<?>) world.getTileEntity(pos);
 
         NBTTagCompound tag = new NBTTagCompound();
 
@@ -65,7 +65,7 @@ public class MoveFactoryNetworkNode implements IMoveFactory {
 
         TileEntity tile = world.getTileEntity(pos);
         if (tile instanceof TileNode) {
-            ((TileNode) tile).setDirection(EnumFacing.byIndex(tag.getInteger(NBT_DIRECTION)));
+            ((TileNode<?>) tile).setDirection(EnumFacing.byIndex(tag.getInteger(NBT_DIRECTION)));
 
             tile.markDirty();
         }

@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementAttributeHolder;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
@@ -15,25 +16,23 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 
-public class CraftingMonitorElementFluidRender implements ICraftingMonitorElement {
+public class CraftingMonitorElementFluidRender implements ICraftingMonitorElement,
+        ICraftingMonitorElementAttributeHolder {
     private static final int COLOR_PROCESSING = 0xFFD9EDF7;
-    private static final int COLOR_MISSING = 0xFFF2DEDE;
     private static final int COLOR_SCHEDULED = 0xFFE8E5CA;
     private static final int COLOR_CRAFTING = 0xFFADDBC6;
 
     public static final String ID = "fluid_render";
 
-    private FluidStack stack;
+    private final FluidStack stack;
     private int stored;
-    private int missing;
     private int processing;
     private int scheduled;
     private int crafting;
 
-    public CraftingMonitorElementFluidRender(FluidStack stack, int stored, int missing, int processing, int scheduled, int crafting) {
+    public CraftingMonitorElementFluidRender(FluidStack stack, int stored, int processing, int scheduled, int crafting) {
         this.stack = stack;
         this.stored = stored;
-        this.missing = missing;
         this.processing = processing;
         this.scheduled = scheduled;
         this.crafting = crafting;
@@ -42,9 +41,7 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
     @Override
     @SideOnly(Side.CLIENT)
     public void draw(int x, int y, IElementDrawers drawers) {
-        if (missing > 0) {
-            drawers.getOverlayDrawer().draw(x, y, COLOR_MISSING);
-        } else if (processing > 0) {
+        if (processing > 0) {
             drawers.getOverlayDrawer().draw(x, y, COLOR_PROCESSING);
         } else if (scheduled > 0) {
             drawers.getOverlayDrawer().draw(x, y, COLOR_SCHEDULED);
@@ -67,12 +64,6 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
             yy += 7;
         }
 
-        if (missing > 0) {
-            drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 25, scale), RenderUtils.getOffsetOnScale(yy, scale), I18n.format("gui.refinedstorage:crafting_monitor.missing", API.instance().getQuantityFormatter().formatInBucketForm(missing)));
-
-            yy += 7;
-        }
-
         if (processing > 0) {
             drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 25, scale), RenderUtils.getOffsetOnScale(yy, scale), I18n.format("gui.refinedstorage:crafting_monitor.processing", API.instance().getQuantityFormatter().formatInBucketForm(processing)));
 
@@ -85,7 +76,8 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
             yy += 7;
         }
 
-        if (crafting > 0) {
+        //do not draw crafting if scheduled is present
+        if (crafting > 0 && scheduled < 1) {
             drawers.getStringDrawer().draw(RenderUtils.getOffsetOnScale(x + 25, scale), RenderUtils.getOffsetOnScale(yy, scale), I18n.format("gui.refinedstorage:crafting_monitor.crafting", API.instance().getQuantityFormatter().formatInBucketForm(crafting)));
         }
 
@@ -109,10 +101,29 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
     }
 
     @Override
+    public int getStored() {
+        return stored;
+    }
+
+    @Override
+    public int getProcessing() {
+        return processing;
+    }
+
+    @Override
+    public int getScheduled() {
+        return scheduled;
+    }
+
+    @Override
+    public int getCrafting() {
+        return crafting;
+    }
+
+    @Override
     public void write(ByteBuf buf) {
         ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
         buf.writeInt(stored);
-        buf.writeInt(missing);
         buf.writeInt(processing);
         buf.writeInt(scheduled);
         buf.writeInt(crafting);
@@ -122,7 +133,6 @@ public class CraftingMonitorElementFluidRender implements ICraftingMonitorElemen
     public boolean merge(ICraftingMonitorElement element) {
         if (element.getId().equals(getId()) && elementHashCode() == element.elementHashCode()) {
             this.stored += ((CraftingMonitorElementFluidRender) element).stored;
-            this.missing += ((CraftingMonitorElementFluidRender) element).missing;
             this.processing += ((CraftingMonitorElementFluidRender) element).processing;
             this.scheduled += ((CraftingMonitorElementFluidRender) element).scheduled;
             this.crafting += ((CraftingMonitorElementFluidRender) element).crafting;

@@ -16,8 +16,8 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 public class StorageDiskFluidDriveWrapper implements IStorageDisk<FluidStack> {
-    private NetworkNodeDiskDrive diskDrive;
-    private IStorageDisk<FluidStack> parent;
+    private final NetworkNodeDiskDrive diskDrive;
+    private final IStorageDisk<FluidStack> parent;
     private int lastState;
 
     public StorageDiskFluidDriveWrapper(NetworkNodeDiskDrive diskDrive, IStorageDisk<FluidStack> parent) {

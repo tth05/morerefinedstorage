@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.util;
 
+import com.raoulvdberge.refinedstorage.api.storage.StorageType;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
 import com.raoulvdberge.refinedstorage.api.util.Action;
@@ -92,23 +93,19 @@ public class OneSixMigrationHelper implements IOneSixMigrationHelper {
     public boolean migrateDisk(World world, ItemStack disk) {
         IStorageDiskProvider provider = (IStorageDiskProvider) disk.getItem();
 
-        switch (provider.getType()) {
-            case ITEM:
-                if (disk.hasTagCompound() && disk.getTagCompound().hasKey(NBT_ITEMS)) {
-                    provider.setId(disk, createItemDisk(world, provider.getCapacity(disk), disk.getTagCompound()));
+        StorageType type = provider.getType();
+        if (type == StorageType.ITEM) {
+            if (disk.hasTagCompound() && disk.getTagCompound().hasKey(NBT_ITEMS)) {
+                provider.setId(disk, createItemDisk(world, provider.getCapacity(disk), disk.getTagCompound()));
 
-                    return true;
-                }
+                return true;
+            }
+        } else if (type == StorageType.FLUID) {
+            if (disk.hasTagCompound() && disk.getTagCompound().hasKey(NBT_FLUIDS)) {
+                provider.setId(disk, createFluidDisk(world, provider.getCapacity(disk), disk.getTagCompound()));
 
-                break;
-            case FLUID:
-                if (disk.hasTagCompound() && disk.getTagCompound().hasKey(NBT_FLUIDS)) {
-                    provider.setId(disk, createFluidDisk(world, provider.getCapacity(disk), disk.getTagCompound()));
-
-                    return true;
-                }
-
-                break;
+                return true;
+            }
         }
 
         return false;
@@ -121,13 +118,11 @@ public class OneSixMigrationHelper implements IOneSixMigrationHelper {
         for (int i = 0; i < handler.getSlots(); ++i) {
             ItemStack disk = handler.getStackInSlot(i);
 
-            if (!disk.isEmpty() && disk.getItem() instanceof IStorageDiskProvider) {
-                if (migrateDisk(world, disk)) {
-                    handler.setStackInSlot(i, disk); // Trigger a onContentsChanged
+            if (disk.isEmpty() || !(disk.getItem() instanceof IStorageDiskProvider) || !migrateDisk(world, disk))
+                continue;
+            handler.setStackInSlot(i, disk); // Trigger a onContentsChanged
 
-                    migrated = true;
-                }
-            }
+            migrated = true;
         }
 
         return migrated;

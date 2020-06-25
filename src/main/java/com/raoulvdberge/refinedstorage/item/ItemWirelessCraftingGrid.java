@@ -28,6 +28,7 @@ public class ItemWirelessCraftingGrid extends ItemWirelessGrid {
     }
 
     @Nonnull
+    @Override
     public INetworkItem provide(final INetworkItemHandler handler, final EntityPlayer player, final ItemStack stack, final int slotId) {
         return new NetworkItemWirelessCraftingGrid(handler, player, stack, slotId);
     }

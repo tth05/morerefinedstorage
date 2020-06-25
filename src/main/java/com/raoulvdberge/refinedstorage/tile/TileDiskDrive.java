@@ -16,6 +16,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
     public static final TileDataParameter<Integer, TileDiskDrive> PRIORITY = IPrioritizable.createParameter();
@@ -68,7 +69,7 @@ public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
 
     private static final String NBT_DISK_STATE = "DiskState_%d";
 
-    private Integer[] diskState = new Integer[8];
+    private final Integer[] diskState = new Integer[8];
 
     public TileDiskDrive() {
         dataManager.addWatchedParameter(PRIORITY);
@@ -128,9 +129,7 @@ public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
     }
 
     public static void initDiskState(Integer[] diskState) {
-        for (int i = 0; i < diskState.length; ++i) {
-            diskState[i] = ConstantsDisk.DISK_STATE_NONE;
-        }
+        Arrays.fill(diskState, ConstantsDisk.DISK_STATE_NONE);
     }
 
     @Override

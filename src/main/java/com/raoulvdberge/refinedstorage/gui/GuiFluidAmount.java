@@ -8,9 +8,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fluids.FluidStack;
 
 public class GuiFluidAmount extends GuiAmountSpecifying {
-    private int containerSlot;
-    private FluidStack stack;
-    private int maxAmount;
+    private final int containerSlot;
+    private final FluidStack stack;
+    private final int maxAmount;
 
     public GuiFluidAmount(GuiBase parent, EntityPlayer player, int containerSlot, FluidStack stack, int maxAmount) {
         super(parent, new ContainerFluidAmount(player, stack), 172, 99);

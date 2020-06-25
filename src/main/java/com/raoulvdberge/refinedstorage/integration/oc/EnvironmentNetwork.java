@@ -2,7 +2,7 @@ package com.raoulvdberge.refinedstorage.integration.oc;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
@@ -35,6 +35,8 @@ import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_NBT;
 public class EnvironmentNetwork extends AbstractManagedEnvironment {
     protected final INetworkNode node;
 
+    private static final String ERROR_NOT_CONNECTED = "not connected";
+
     public EnvironmentNetwork(INetworkNode node) {
         this.node = node;
 
@@ -49,7 +51,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function():number -- Gets the energy usage of this network.")
     public Object[] getEnergyUsage(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         return new Object[]{node.getNetwork().getEnergyUsage()};
@@ -58,7 +60,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function():table -- Gets the crafting tasks of this network.")
     public Object[] getTasks(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         return new Object[]{node.getNetwork().getCraftingManager().getTasks()};
@@ -67,7 +69,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table):table -- Get one pattern of this network.")
     public Object[] getPattern(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         ItemStack stack = args.checkItemStack(0);
@@ -77,7 +79,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table):table -- Get one fluid pattern of this network.")
     public Object[] getFluidPattern(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         FluidStack stack = checkFluid(args.checkTable(0), 1000);
@@ -87,7 +89,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function():table -- Gets the patterns of this network.")
     public Object[] getPatterns(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         List<ItemStack> patterns = new LinkedList<>();
@@ -103,7 +105,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function():table -- Gets the fluid patterns of this network.")
     public Object[] getFluidPatterns(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         List<FluidStack> patterns = new LinkedList<>();
@@ -119,7 +121,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table):boolean -- Whether a crafting pattern exists for this item.")
     public Object[] hasPattern(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         ItemStack stack = args.checkItemStack(0);
@@ -130,7 +132,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table):boolean -- Whether a crafting pattern exists for this fluid.")
     public Object[] hasFluidPattern(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         FluidStack stack = checkFluid(args.checkTable(0), 1000);
@@ -141,7 +143,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table[, count: number[, canSchedule: boolean]]):table -- Schedules a crafting task.")
     public Object[] scheduleTask(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{"not connected"};
+            return new Object[]{ERROR_NOT_CONNECTED};
         }
 
         ItemStack stack = args.checkItemStack(0);
@@ -164,7 +166,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table[, count: number[, canSchedule: boolean]]):table -- Schedules a fluid crafting task.")
     public Object[] scheduleFluidTask(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{"not connected"};
+            return new Object[]{ERROR_NOT_CONNECTED};
         }
 
         FluidStack stack = checkFluid(args.checkTable(0), args.optInteger(1, Fluid.BUCKET_VOLUME));
@@ -186,7 +188,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table):number -- Cancels a task and returns the amount of tasks cancelled.")
     public Object[] cancelTask(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         ItemStack stack = args.checkItemStack(0);
@@ -208,7 +210,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table):number -- Cancels a fluid task and returns the amount of tasks cancelled.")
     public Object[] cancelFluidTask(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         FluidStack stack = checkFluid(args.checkTable(0), 1000);
@@ -230,7 +232,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table[, amount:number[, direction:number]]):table -- Extracts a fluid from the network.")
     public Object[] extractFluid(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         // First and second argument: fluid and amount.
@@ -273,7 +275,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table):table -- Gets a fluid from the network.")
     public Object[] getFluid(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         FluidStack needle = checkFluid(args.checkTable(0), 1000);
@@ -284,7 +286,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function():table -- Gets a list of all fluids in this network.")
     public Object[] getFluids(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         return new Object[]{node.getNetwork().getFluidStorageCache().getList().getStacks()};
@@ -293,7 +295,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table[, count:number[, direction:number]]):table -- Extracts an item from the network.")
     public Object[] extractItem(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         // First argument: the itemstack to extract
@@ -316,7 +318,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         // Simulate extracting the item and get the amount of items that can be extracted
         ItemStack extracted = node.getNetwork().extractItem(stack, count, Action.SIMULATE);
-        if (extracted == null) {
+        if (extracted.isEmpty()) {
             return new Object[]{null, "could not extract the specified item"};
         }
 
@@ -336,7 +338,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         // Actually do it and return how many items we've inserted
         extracted = node.getNetwork().extractItem(stack, transferableAmount, Action.PERFORM);
-        if (extracted != null) {
+        if (!extracted.isEmpty()) {
             remainder = ItemHandlerHelper.insertItemStacked(handler, extracted, false);
 
             if (!remainder.isEmpty()) {
@@ -350,7 +352,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function(stack:table[, compareMeta:boolean[, compareNBT:boolean]]):table -- Gets an item from the network.")
     public Object[] getItem(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         ItemStack stack = args.checkItemStack(0);
@@ -373,7 +375,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     @Callback(doc = "function():table -- Gets a list of all items in this network.")
     public Object[] getItems(final Context context, final Arguments args) {
         if (node.getNetwork() == null) {
-            return new Object[]{null, "not connected"};
+            return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
         return new Object[]{node.getNetwork().getItemStorageCache().getList().getStacks()};
@@ -387,14 +389,14 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         int totalFluidStored = 0;
         int totalFluidCapacity = 0;
 
-        List<HashMap<String, Object>> devices = new ArrayList<>();
+        List<Map<String, Object>> devices = new ArrayList<>();
 
         if (node.getNetwork() != null) {
-            for (IStorage s : node.getNetwork().getItemStorageCache().getStorages()) {
+            for (IStorage<?> s : node.getNetwork().getItemStorageCache().getStorages()) {
                 if (s instanceof IStorageDisk) {
-                    IStorageDisk disk = (IStorageDisk) s;
+                    IStorageDisk<?> disk = (IStorageDisk<?>) s;
 
-                    HashMap<String, Object> data = new HashMap<>();
+                    Map<String, Object> data = new HashMap<>();
 
                     data.put("type", "item");
                     data.put("usage", disk.getStored());
@@ -407,11 +409,11 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
                 }
             }
 
-            for (IStorage s : node.getNetwork().getFluidStorageCache().getStorages()) {
+            for (IStorage<?> s : node.getNetwork().getFluidStorageCache().getStorages()) {
                 if (s instanceof IStorageDisk) {
-                    IStorageDisk disk = (IStorageDisk) s;
+                    IStorageDisk<?> disk = (IStorageDisk<?>) s;
 
-                    HashMap<String, Object> data = new HashMap<>();
+                    Map<String, Object> data = new HashMap<>();
 
                     data.put("type", "fluid");
                     data.put("usage", disk.getStored());
@@ -425,19 +427,19 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             }
         }
 
-        HashMap<String, Integer> itemTotals = new HashMap<>();
+        Map<String, Integer> itemTotals = new HashMap<>();
         itemTotals.put("usage", totalItemStored);
         itemTotals.put("capacity", totalItemCapacity);
 
-        HashMap<String, Integer> fluidTotals = new HashMap<>();
+        Map<String, Integer> fluidTotals = new HashMap<>();
         fluidTotals.put("usage", totalFluidStored);
         fluidTotals.put("capacity", totalFluidCapacity);
 
-        HashMap<String, Object> totals = new HashMap<>();
+        Map<String, Object> totals = new HashMap<>();
         totals.put("item", itemTotals);
         totals.put("fluid", fluidTotals);
 
-        HashMap<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         response.put("total", totals);
         response.put("devices", devices);
 

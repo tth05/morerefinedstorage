@@ -53,13 +53,13 @@ public interface IGrid {
      * @param player the player to create a listener for
      * @return a listener for this grid, will be attached to the storage cache in {@link #getStorageCache()}
      */
-    IStorageCacheListener createListener(EntityPlayerMP player);
+    IStorageCacheListener<?> createListener(EntityPlayerMP player);
 
     /**
      * @return the storage cache for this grid, or null if this grid is unavailable
      */
     @Nullable
-    IStorageCache getStorageCache();
+    IStorageCache<?> getStorageCache();
 
     /**
      * @return the item grid handler, or null if there is no handler available
@@ -168,7 +168,7 @@ public interface IGrid {
     /**
      * @return the filters
      */
-    List<IFilter> getFilters();
+    List<IFilter<?>> getFilters();
 
     /**
      * @return the tabs

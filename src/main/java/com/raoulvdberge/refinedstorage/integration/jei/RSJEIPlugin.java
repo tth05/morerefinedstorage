@@ -5,6 +5,8 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.IModRegistry;
 import mezz.jei.api.JEIPlugin;
 
+import javax.annotation.Nonnull;
+
 @JEIPlugin
 public class RSJEIPlugin implements IModPlugin {
     public static RSJEIPlugin INSTANCE;
@@ -27,7 +29,7 @@ public class RSJEIPlugin implements IModPlugin {
     }
 
     @Override
-    public void onRuntimeAvailable(IJeiRuntime runtime) {
+    public void onRuntimeAvailable(@Nonnull IJeiRuntime runtime) {
         this.runtime = runtime;
     }
 

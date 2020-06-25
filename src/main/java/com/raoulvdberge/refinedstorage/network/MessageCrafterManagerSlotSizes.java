@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class MessageCrafterManagerSlotSizes implements IMessage, IMessageHandler<MessageCrafterManagerSlotSizes, IMessage> {
     private Map<String, List<IItemHandlerModifiable>> containerData;
-    private Map<String, Integer> containerDataClient = new LinkedHashMap<>();
+    private final Map<String, Integer> containerDataClient = new LinkedHashMap<>();
 
     public MessageCrafterManagerSlotSizes(Map<String, List<IItemHandlerModifiable>> containerData) {
         this.containerData = containerData;
