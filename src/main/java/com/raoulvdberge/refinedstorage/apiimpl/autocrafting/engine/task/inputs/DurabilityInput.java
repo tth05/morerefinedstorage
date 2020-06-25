@@ -20,10 +20,8 @@ public class DurabilityInput extends Input {
 
     private static final String NBT_MAX_DURABILITY = "MaxDurability";
 
-    /**
-     * The max durability of the item that this input represents. Or in other words: the max iterations that can be done
-     * with the {@link ItemStack} that represents this input if it had no damage.
-     */
+    /** The max durability of the item that this input represents. Or in other words: the max iterations that can be done
+     * with the {@link ItemStack} that represents this input if it had no damage. */
     private final int maxDurability;
     private final ItemStack compareableItemStack;
 

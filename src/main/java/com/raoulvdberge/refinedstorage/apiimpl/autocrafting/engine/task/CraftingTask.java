@@ -33,9 +33,7 @@ public class CraftingTask extends Task {
 
     private static final String NBT_REMAINDER_ITEM = "RemainderItem";
 
-    /**
-     * Saves the remainder from previous crafting attempts to make sure this doesn't get lost
-     */
+    /** Saves the remainder from previous crafting attempts to make sure this doesn't get lost */
     @Nonnull
     private ItemStack remainder = ItemStack.EMPTY;
 

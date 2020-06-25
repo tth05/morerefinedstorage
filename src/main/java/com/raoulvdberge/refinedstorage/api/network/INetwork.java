@@ -111,10 +111,11 @@ public interface INetwork {
      */
     @Nullable
     default ItemStack insertItemTracked(@Nonnull ItemStack stack, int size) {
-        stack.setCount(size);
-        getCraftingManager().track(stack);
+        ItemStack stackCopy = stack.copy();
+        stackCopy.setCount(size);
+        getCraftingManager().track(stackCopy);
 
-        if (stack.isEmpty()) {
+        if (stackCopy.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
@@ -181,10 +182,11 @@ public interface INetwork {
      */
     @Nullable
     default FluidStack insertFluidTracked(@Nonnull FluidStack stack, int size) {
-        stack.amount = size;
-        getCraftingManager().track(stack);
+        FluidStack stackCopy = stack.copy();
+        stackCopy.amount = size;
+        getCraftingManager().track(stackCopy);
 
-        if (stack.amount < 1) {
+        if (stackCopy.amount < 1) {
             return null;
         }
 
