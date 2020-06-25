@@ -9,7 +9,7 @@ This mod not only adds storage solutions, but also devices that can be used to m
 # More Refined Storage
 
 This fork mainly focuses on performance improvements and useful feature additions to make your life easier.
-Currently, in progress is a new autocrafting engine (V8 engine) which will be the fastest and smartest that the world has ever seen.
+Most notable additions are a completely new crafting engine, re-written from scratch with only performance and reliability in mind (it also comes closer to minecrafts actual crafting behavior than the old version) and new code for shift crafting in a crafting grid to make the server not crash anymore on big systems.
 
 Builds can be found in the release section on github.
 
