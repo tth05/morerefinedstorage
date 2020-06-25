@@ -35,10 +35,11 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Shift clicking upgrades doesn't put the upgrades into the filter slots anymore
-          - Improved grid sorting performance
-          - Added scrolling support to grid (supports different combinations of Shift and Ctrl
-          - Added Baubles integration for wireless items
+          - Completely new, lightweight and fast auto-crafting engine
+          - Increased Disk Manipulator speed by 25
+          - Fixed Portable Grid inserting disks into themselves if the players inventory is full
+          - Fixed dupe in filter slots when using Inventory Tweaks Reborn
+          - Other small bug fixes
         draft: false
         prerelease: false
     - name: Upload jars to release
