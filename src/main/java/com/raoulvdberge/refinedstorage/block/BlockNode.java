@@ -34,7 +34,7 @@ public abstract class BlockNode extends BlockNodeProxy {
             TileEntity tile = world.getTileEntity(pos);
 
             if (tile instanceof TileNode && placer instanceof EntityPlayer) {
-                ((TileNode) tile).getNode().setOwner(((EntityPlayer) placer).getGameProfile().getId());
+                ((TileNode<?>) tile).getNode().setOwner(((EntityPlayer) placer).getGameProfile().getId());
             }
 
             API.instance().discoverNode(world, pos);
@@ -78,6 +78,7 @@ public abstract class BlockNode extends BlockNodeProxy {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         state = super.getActualState(state, world, pos);
 
@@ -85,7 +86,7 @@ public abstract class BlockNode extends BlockNodeProxy {
             TileEntity tile = world.getTileEntity(pos);
 
             if (tile instanceof TileNode) {
-                return state.withProperty(CONNECTED, ((TileNode) tile).getNode().isActive());
+                return state.withProperty(CONNECTED, ((TileNode<?>) tile).getNode().isActive());
             }
         }
 

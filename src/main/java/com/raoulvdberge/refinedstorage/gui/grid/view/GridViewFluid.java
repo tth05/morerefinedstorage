@@ -17,11 +17,6 @@ public class GridViewFluid extends GridViewBase {
         map.clear();
 
         for (IGridStack stack : stacks) {
-            // Don't let a craftable stack override a normal stack
-//            if (stack.doesDisplayCraftText() && map.containsKey(stack.getId())) {
-//                continue;
-//            }
-
             map.put(stack.getId(), stack);
         }
     }

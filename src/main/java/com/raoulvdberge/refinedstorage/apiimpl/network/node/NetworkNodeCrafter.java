@@ -443,7 +443,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     public IItemHandler getPatternItems() {
-        return patternsInventory;
+        return getPatternInventory();
     }
 
     @Nullable

@@ -154,7 +154,7 @@ public class BakedModelCover extends BakedModelCableCover {
 
     @Nonnull
     @Override
-    @SuppressWarnings("deprecation")
+    @Deprecated
     public ItemCameraTransforms getItemCameraTransforms() {
         return ItemCameraTransforms.DEFAULT;
     }

@@ -52,17 +52,15 @@ public class MessageGridItemInventoryScroll extends MessageHandlerPlayerToServer
 
         if (grid.getItemHandler() == null || !message.shift)
             return;
-        
-        int flags = ItemGridHandler.EXTRACT_SINGLE;
-        int slot = message.slot;
-        ItemStack stackInSlot = player.inventory.getStackInSlot(slot);
 
-        flags |= ItemGridHandler.EXTRACT_SHIFT;
+        int flags = ItemGridHandler.EXTRACT_SINGLE | ItemGridHandler.EXTRACT_SHIFT;
+        ItemStack stackInSlot = player.inventory.getStackInSlot(message.slot);
+
         if (message.up) { // scroll up
-            player.inventory.setInventorySlotContents(slot,
+            player.inventory.setInventorySlotContents(message.slot,
                     StackUtils.nullToEmpty(grid.getItemHandler().onInsert(player, stackInSlot, true)));
         } else { // scroll down
-            grid.getItemHandler().onExtract(player, stackInSlot, slot, flags);
+            grid.getItemHandler().onExtract(player, stackInSlot, message.slot, flags);
         }
     }
 }

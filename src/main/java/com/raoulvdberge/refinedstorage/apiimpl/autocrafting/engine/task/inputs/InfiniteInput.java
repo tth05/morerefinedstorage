@@ -17,7 +17,7 @@ public class InfiniteInput extends Input {
 
     private boolean containsItem;
 
-    public InfiniteInput(@Nonnull ItemStack itemStack, boolean oredict) {
+    public InfiniteInput(@Nonnull ItemStack itemStack) {
         super(NonNullList.from(ItemStack.EMPTY, itemStack), 1);
     }
 
@@ -83,5 +83,21 @@ public class InfiniteInput extends Input {
 
     public void setContainsItem(boolean containsItem) {
         this.containsItem = containsItem;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        InfiniteInput that = (InfiniteInput) o;
+
+        return containsItem == that.containsItem;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode() * (containsItem ? 2 : 1);
     }
 }

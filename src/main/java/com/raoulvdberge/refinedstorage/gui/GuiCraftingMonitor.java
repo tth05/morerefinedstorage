@@ -40,7 +40,7 @@ public class GuiCraftingMonitor extends GuiBase {
             drawRect(x, y, x + ITEM_WIDTH, y + ITEM_HEIGHT, color);
         };
 
-        private final IElementDrawer errorDrawer = (x, y, nothing) -> {
+        private final IElementDrawer<?> errorDrawer = (x, y, nothing) -> {
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.disableLighting();
 
@@ -55,7 +55,7 @@ public class GuiCraftingMonitor extends GuiBase {
         }
 
         @Override
-        public IElementDrawer getErrorDrawer() {
+        public IElementDrawer<?> getErrorDrawer() {
             return errorDrawer;
         }
     }
@@ -79,7 +79,8 @@ public class GuiCraftingMonitor extends GuiBase {
         }
 
         @Override
-        public List<IFilter> getFilters() {
+        @Nullable
+        public List<IFilter<?>> getFilters() {
             return null;
         }
 
@@ -232,7 +233,7 @@ public class GuiCraftingMonitor extends GuiBase {
         }
 
         if (cancelAllButton != null) {
-            cancelAllButton.enabled = tasks.size() > 0;
+            cancelAllButton.enabled = !tasks.isEmpty();
         }
     }
 
@@ -325,9 +326,12 @@ public class GuiCraftingMonitor extends GuiBase {
 
         tabs.actionPerformed(button);
 
+        if(getCurrentTab() == null)
+            return;
+
         if (button == cancelButton && hasValidTabSelected()) {
             RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(((CraftingMonitorTask) getCurrentTab()).id));
-        } else if (button == cancelAllButton && tasks.size() > 0) {
+        } else if (button == cancelAllButton && !tasks.isEmpty()) {
             RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(null));
         }
     }

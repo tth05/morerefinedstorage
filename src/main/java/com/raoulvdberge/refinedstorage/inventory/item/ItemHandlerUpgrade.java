@@ -5,10 +5,10 @@ import com.raoulvdberge.refinedstorage.inventory.item.validator.ItemValidatorBas
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 
 import javax.annotation.Nullable;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public class ItemHandlerUpgrade extends ItemHandlerBase {
-    public ItemHandlerUpgrade(int size, @Nullable Consumer<Integer> listener, int... supportedUpgrades) {
+    public ItemHandlerUpgrade(int size, @Nullable IntConsumer listener, int... supportedUpgrades) {
         super(size, listener, new ItemValidatorBasic[supportedUpgrades.length]);
 
         for (int i = 0; i < supportedUpgrades.length; ++i) {

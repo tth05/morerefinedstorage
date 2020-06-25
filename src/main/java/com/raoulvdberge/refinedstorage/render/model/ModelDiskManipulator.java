@@ -53,7 +53,8 @@ public class ModelDiskManipulator implements IModel {
     @Nonnull
     @Override
     public IBakedModel bake(@Nonnull IModelState state, @Nonnull VertexFormat format, @Nonnull Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
-        IModel baseModelConnected, baseModelDisconnected;
+        IModel baseModelConnected;
+        IModel baseModelDisconnected;
         IModel diskModel;
         IModel diskModelNearCapacity;
         IModel diskModelFull;

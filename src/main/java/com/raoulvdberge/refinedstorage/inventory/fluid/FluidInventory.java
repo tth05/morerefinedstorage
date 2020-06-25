@@ -4,7 +4,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public class FluidInventory {
     private static final String NBT_SLOT = "Slot_%d";
@@ -14,15 +14,15 @@ public class FluidInventory {
     private boolean empty = true;
 
     @Nullable
-    protected Consumer<Integer> listener;
+    protected IntConsumer listener;
 
-    public FluidInventory(int size, int maxAmount, @Nullable Consumer<Integer> listener) {
+    public FluidInventory(int size, int maxAmount, @Nullable IntConsumer listener) {
         this.fluids = new FluidStack[size];
         this.maxAmount = maxAmount;
         this.listener = listener;
     }
 
-    public FluidInventory(int size, @Nullable Consumer<Integer> listener) {
+    public FluidInventory(int size, @Nullable IntConsumer listener) {
         this(size, Integer.MAX_VALUE, listener);
     }
 

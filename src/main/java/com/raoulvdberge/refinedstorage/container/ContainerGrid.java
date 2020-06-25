@@ -72,11 +72,11 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             if (!getPlayer().getEntityWorld().isRemote) {
                 Slot slot = inventorySlots.get(slotIndex);
 
-                if (grid instanceof IPortableGrid && slot instanceof SlotItemHandler) {
-                    if (((SlotItemHandler) slot).getItemHandler().equals(((IPortableGrid) grid).getDisk())) {
-                        return ItemStack.EMPTY;
-                    }
+                if (grid instanceof IPortableGrid && slot instanceof SlotItemHandler &&
+                        ((SlotItemHandler) slot).getItemHandler().equals(((IPortableGrid) grid).getDisk())) {
+                    return ItemStack.EMPTY;
                 }
+
                 if (slot.getHasStack()) {
                     if (slot == craftingResultSlot) {
                         grid.onCraftedShift(getPlayer());
@@ -152,9 +152,9 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                 x = 26;
             }
         }
-
-        addSlotToContainer(craftingResultSlot =
-                new SlotGridCraftingResult(this, getPlayer(), grid, 0, 130 + 4, headerAndSlots + 22));
+        craftingResultSlot =
+                new SlotGridCraftingResult(this, getPlayer(), grid, 0, 130 + 4, headerAndSlots + 22);
+        addSlotToContainer(craftingResultSlot);
     }
 
     private void addPatternSlots() {
@@ -209,10 +209,9 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                 x = 26;
             }
         }
-
-        addSlotToContainer(patternResultSlot =
-                (new SlotLegacyDisabled(grid.getCraftingResult(), 0, 134, headerAndSlots + 22)
-                        .setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern())));
+        patternResultSlot = new SlotLegacyDisabled(grid.getCraftingResult(), 0, 134, headerAndSlots + 22)
+                .setEnableHandler(() -> !((NetworkNodeGrid) grid).isProcessingPattern());
+        addSlotToContainer(patternResultSlot);
     }
 
     public IGrid getGrid() {
@@ -225,10 +224,10 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             Slot slot = inventorySlots.get(i);
 
             if (slot instanceof SlotGridCrafting || slot == craftingResultSlot || slot == patternResultSlot) {
-                for (IContainerListener listener : listeners) {
+                for (IContainerListener iContainerListener : listeners) {
                     // @Volatile: We can't use IContainerListener#sendSlotContents since EntityPlayerMP blocks SlotCrafting changes...
-                    if (listener instanceof EntityPlayerMP) {
-                        ((EntityPlayerMP) listener).connection
+                    if (iContainerListener instanceof EntityPlayerMP) {
+                        ((EntityPlayerMP) iContainerListener).connection
                                 .sendPacket(new SPacketSetSlot(windowId, i, slot.getStack()));
                     }
                 }

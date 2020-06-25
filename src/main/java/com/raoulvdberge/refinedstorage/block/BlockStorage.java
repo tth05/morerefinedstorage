@@ -62,6 +62,7 @@ public class BlockStorage extends BlockNode {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, ItemStorageType.getById(meta));
     }

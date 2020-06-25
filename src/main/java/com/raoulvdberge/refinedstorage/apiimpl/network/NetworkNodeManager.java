@@ -14,6 +14,7 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NetworkNodeManager extends WorldSavedData implements INetworkNodeManager {
@@ -27,7 +28,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
     private boolean canReadNodes;
     private NBTTagList nodesTag;
 
-    private final ConcurrentHashMap<BlockPos, INetworkNode> nodes = new ConcurrentHashMap<>();
+    private final Map<BlockPos, INetworkNode> nodes = new ConcurrentHashMap<>();
 
     public NetworkNodeManager(String name) {
         super(name);
@@ -87,7 +88,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
                 nodeTag.setTag(NBT_NODE_DATA, node.write(new NBTTagCompound()));
 
                 list.appendTag(nodeTag);
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 t.printStackTrace();
             }
         }

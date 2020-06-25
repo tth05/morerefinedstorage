@@ -33,7 +33,9 @@ public class CraftingTask extends Task {
 
     private static final String NBT_REMAINDER_ITEM = "RemainderItem";
 
-    /** Saves the remainder from previous crafting attempts to make sure this doesn't get lost */
+    /**
+     * Saves the remainder from previous crafting attempts to make sure this doesn't get lost
+     */
     @Nonnull
     private ItemStack remainder = ItemStack.EMPTY;
 
@@ -95,7 +97,8 @@ public class CraftingTask extends Task {
     public int update(@Nonnull INetwork network, @Nonnull ICraftingPatternContainer container, int toCraft) {
         //don't update if there's any remainder left from the previous update
         if (!this.remainder.isEmpty()) {
-            this.remainder = network.insertItem(this.remainder, this.remainder.getCount(), Action.PERFORM);
+            this.remainder = StackUtils
+                    .nullToEmpty(network.insertItem(this.remainder, this.remainder.getCount(), Action.PERFORM));
             return 0;
         }
 
@@ -118,7 +121,7 @@ public class CraftingTask extends Task {
 
         //notify inputs
         for (Input input : this.inputs) {
-            input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
+            input.decreaseInputAmount((long) toCraft * input.getQuantityPerCraft());
         }
 
         //generate output item

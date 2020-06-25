@@ -6,7 +6,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
-import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 
@@ -20,8 +19,10 @@ public class DurabilityInput extends Input {
 
     private static final String NBT_MAX_DURABILITY = "MaxDurability";
 
-    /** The max durability of the item that this input represents. Or in other words: the max iterations that can be done
-     * with the {@link ItemStack} that represents this input if it had no damage. */
+    /**
+     * The max durability of the item that this input represents. Or in other words: the max iterations that can be done
+     * with the {@link ItemStack} that represents this input if it had no damage.
+     */
     private final int maxDurability;
     private final ItemStack compareableItemStack;
 
@@ -32,11 +33,6 @@ public class DurabilityInput extends Input {
         this.compareableItemStack = itemStack;
         this.quantityPerCraft = 1;
         this.maxDurability = compareableItemStack.getMaxDamage() + 1;
-    }
-
-    private DurabilityInput(@Nonnull FluidStack fluidStack, long amountNeeded) {
-        super(fluidStack, amountNeeded);
-        throw new IllegalArgumentException("FluidStacks are no supported for durability inputs");
     }
 
     public DurabilityInput(@Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
@@ -147,5 +143,13 @@ public class DurabilityInput extends Input {
 
         return API.instance().getComparer().isEqual(this.getCompareableItemStack(), input.getCompareableItemStack(),
                 IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = maxDurability;
+        result = 31 * result +
+                (compareableItemStack != null ? API.instance().getItemStackHashCode(compareableItemStack) : 0);
+        return result;
     }
 }

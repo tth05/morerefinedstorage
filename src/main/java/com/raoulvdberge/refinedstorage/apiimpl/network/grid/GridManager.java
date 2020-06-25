@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid;
 
 import com.raoulvdberge.refinedstorage.RS;
+import com.raoulvdberge.refinedstorage.api.network.grid.GridFactoryType;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridFactory;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridManager;
@@ -94,13 +95,11 @@ public class GridManager implements IGridManager {
         IGrid grid = null;
         TileEntity tile = factory.getRelevantTile(player.world, pos);
 
-        switch (factory.getType()) {
-            case STACK:
-                grid = factory.createFromStack(player, stack, slotId);
-                break;
-            case BLOCK:
-                grid = factory.createFromBlock(player, pos);
-                break;
+        GridFactoryType type = factory.getType();
+        if (type == GridFactoryType.STACK) {
+            grid = factory.createFromStack(player, stack, slotId);
+        } else if (type == GridFactoryType.BLOCK) {
+            grid = factory.createFromBlock(player, pos);
         }
 
         if (grid == null) {

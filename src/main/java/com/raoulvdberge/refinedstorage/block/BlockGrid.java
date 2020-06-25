@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class BlockGrid extends BlockNode {
-    public static final PropertyEnum TYPE = PropertyEnum.create("type", GridType.class);
+    public static final PropertyEnum<GridType> TYPE = PropertyEnum.create("type", GridType.class);
 
     public BlockGrid() {
         super(BlockInfoBuilder.forId("grid").tileEntity(TileGrid::new).create());
@@ -84,6 +84,7 @@ public class BlockGrid extends BlockNode {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, meta == 0 ? GridType.NORMAL : (meta == 1 ? GridType.CRAFTING : (meta == 2 ? GridType.PATTERN : GridType.FLUID)));
     }

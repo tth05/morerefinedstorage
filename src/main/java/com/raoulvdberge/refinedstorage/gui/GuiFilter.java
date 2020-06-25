@@ -75,6 +75,7 @@ public class GuiFilter extends GuiBase {
 
     @Override
     public void update(int x, int y) {
+        //NO OP
     }
 
     @Override

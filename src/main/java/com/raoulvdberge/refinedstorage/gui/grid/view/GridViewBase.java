@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterParser;
 import com.raoulvdberge.refinedstorage.gui.grid.sorting.GridSorterDirection;
 import com.raoulvdberge.refinedstorage.gui.grid.sorting.IGridSorter;
 import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -40,10 +41,10 @@ public abstract class GridViewBase implements IGridView {
 
     @Override
     public void sort() {
-        List<IGridStack> stacks = new ArrayList<>();
+        List<IGridStack> gridStacks = new ObjectArrayList<>();
 
         if (gui.getGrid().isActive()) {
-            stacks.addAll(map.values());
+            gridStacks.addAll(map.values());
 
             IGrid grid = gui.getGrid();
 
@@ -54,7 +55,7 @@ public abstract class GridViewBase implements IGridView {
                             grid.getTabs().get(grid.getTabSelected()).getFilters() : grid.getFilters()
             );
 
-            stacks.removeIf(stack -> {
+            gridStacks.removeIf(stack -> {
 
                 // If this is a crafting stack,
                 // and there is a regular matching stack in the view too,
@@ -79,16 +80,16 @@ public abstract class GridViewBase implements IGridView {
                     grid.getSortingDirection() == IGrid.SORTING_DIRECTION_DESCENDING ? GridSorterDirection.DESCENDING :
                             GridSorterDirection.ASCENDING;
 
-            stacks.sort((left, right) -> defaultSorter.compare(left, right, sortingDirection));
+            gridStacks.sort((left, right) -> defaultSorter.compare(left, right, sortingDirection));
 
             for (IGridSorter sorter : sorters) {
                 if (sorter.isApplicable(grid)) {
-                    stacks.sort((left, right) -> sorter.compare(left, right, sortingDirection));
+                    gridStacks.sort((left, right) -> sorter.compare(left, right, sortingDirection));
                 }
             }
         }
 
-        this.stacks = stacks;
+        this.stacks = gridStacks;
 
         this.gui.updateScrollbar();
     }

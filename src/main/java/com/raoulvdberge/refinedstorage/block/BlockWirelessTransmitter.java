@@ -85,7 +85,7 @@ public class BlockWirelessTransmitter extends BlockNode {
         TileEntity tile = world.getTileEntity(pos.offset(EnumFacing.DOWN));
 
         if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, EnumFacing.UP)) {
-            INetworkNodeProxy proxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, EnumFacing.UP);
+            INetworkNodeProxy<?> proxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, EnumFacing.UP);
 
             if (proxy != null && proxy.getNode() instanceof INetworkNodeCable) {
                 return true;

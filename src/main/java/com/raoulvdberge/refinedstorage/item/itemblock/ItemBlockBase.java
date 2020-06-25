@@ -14,14 +14,14 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 
 public class ItemBlockBase extends ItemBlock {
-    private final BlockBase block;
+    private final BlockBase blockBase;
 
-    public ItemBlockBase(BlockBase block, boolean subtypes) {
-        super(block);
+    public ItemBlockBase(BlockBase blockBase, boolean subtypes) {
+        super(blockBase);
 
-        this.block = block;
+        this.blockBase = blockBase;
 
-        setRegistryName(block.getInfo().getId());
+        setRegistryName(blockBase.getInfo().getId());
 
         if (subtypes) {
             setMaxDamage(0);
@@ -48,11 +48,11 @@ public class ItemBlockBase extends ItemBlock {
     public boolean placeBlockAt(@Nonnull ItemStack stack, @Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ, @Nonnull IBlockState newState) {
         boolean result = super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, newState);
 
-        if (result && block.getDirection() != null) {
+        if (result && blockBase.getDirection() != null) {
             TileEntity tile = world.getTileEntity(pos);
 
             if (tile instanceof TileBase) {
-                ((TileBase) tile).setDirection(block.getDirection().getFrom(side, pos, player));
+                ((TileBase) tile).setDirection(blockBase.getDirection().getFrom(side, pos, player));
             }
         }
 

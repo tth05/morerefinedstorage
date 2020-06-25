@@ -53,6 +53,7 @@ public class BlockDetector extends BlockNode {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         return super.getActualState(state, world, pos)
             .withProperty(POWERED, ((TileDetector) world.getTileEntity(pos)).getNode().isPowered());

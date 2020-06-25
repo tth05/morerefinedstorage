@@ -22,7 +22,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 public class CoverManager {
@@ -30,7 +30,7 @@ public class CoverManager {
     private static final String NBT_ITEM = "Item";
     private static final String NBT_TYPE = "Type";
 
-    private final Map<EnumFacing, Cover> covers = new HashMap<>();
+    private final Map<EnumFacing, Cover> covers = new EnumMap<>(EnumFacing.class);
     private final NetworkNode node;
 
     public CoverManager(NetworkNode node) {
@@ -43,7 +43,8 @@ public class CoverManager {
             return false;
         }
 
-        INetworkNode neighbor = API.instance().getNetworkNodeManager(node.getWorld()).getNode(node.getPos().offset(direction));
+        INetworkNode neighbor =
+                API.instance().getNetworkNodeManager(node.getWorld()).getNode(node.getPos().offset(direction));
         if (neighbor instanceof ICoverable) {
             cover = ((ICoverable) neighbor).getCoverManager().getCover(direction.getOpposite());
 
@@ -64,10 +65,9 @@ public class CoverManager {
 
     public boolean setCover(EnumFacing facing, @Nullable Cover cover) {
         if (cover == null || (isValidCover(cover.getStack()) && !hasCover(facing))) {
-            if (cover != null) {
-                if (facing == node.getDirection() && !(node instanceof NetworkNodeCable) && cover.getType() != CoverType.HOLLOW) {
-                    return false;
-                }
+            if (cover != null && facing == node.getDirection() && !(node instanceof NetworkNodeCable) &&
+                    cover.getType() != CoverType.HOLLOW) {
+                return false;
             }
 
             if (cover == null) {
@@ -79,7 +79,8 @@ public class CoverManager {
             node.markDirty();
 
             if (node.getNetwork() != null) {
-                node.getNetwork().getNodeGraph().invalidate(Action.PERFORM, node.getNetwork().world(), node.getNetwork().getPosition());
+                node.getNetwork().getNodeGraph()
+                        .invalidate(Action.PERFORM, node.getNetwork().world(), node.getNetwork().getPosition());
             }
 
             return true;
@@ -152,7 +153,10 @@ public class CoverManager {
 
         IBlockState state = getBlockState(item);
 
-        return block != null && state != null && ((isModelSupported(state) && block.isTopSolid(state) && !block.getTickRandomly() && !block.hasTileEntity(state)) || block instanceof BlockGlass || block instanceof BlockStainedGlass);
+        return block != null && state != null &&
+                ((isModelSupported(state) && block.isTopSolid(state) && !block.getTickRandomly() &&
+                        !block.hasTileEntity(state)) || block instanceof BlockGlass ||
+                        block instanceof BlockStainedGlass);
     }
 
     private static boolean isModelSupported(IBlockState state) {

@@ -30,6 +30,7 @@ public class NetworkItemWirelessCraftingGrid extends NetworkItemWirelessGrid {
         this.slotId = slotId;
     }
 
+    @Override
     public boolean onOpen(final INetwork network) {
         if (RS.INSTANCE.config.wirelessCraftingGridUsesEnergy && this.stack.getItemDamage() != ItemEnergyItem.TYPE_CREATIVE && this.stack.getCapability(CapabilityEnergy.ENERGY, null).getEnergyStored() <= RS.INSTANCE.config.wirelessCraftingGridOpenUsage) {
             return false;
@@ -43,6 +44,7 @@ public class NetworkItemWirelessCraftingGrid extends NetworkItemWirelessGrid {
         return true;
     }
 
+    @Override
     public void drainEnergy(final int energy) {
         if (RS.INSTANCE.config.wirelessCraftingGridUsesEnergy && this.stack.getItemDamage() != ItemEnergyItem.TYPE_CREATIVE) {
             IEnergyStorage energyStorage = this.stack.getCapability(CapabilityEnergy.ENERGY, null);

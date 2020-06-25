@@ -62,6 +62,7 @@ public class BlockFluidStorage extends BlockNode {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, FluidStorageType.getById(meta));
     }

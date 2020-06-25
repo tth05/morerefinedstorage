@@ -107,12 +107,12 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
     public int getEnergyUsage() {
         int usage = RS.INSTANCE.config.diskDriveUsage;
 
-        for (IStorage storage : itemDisks) {
+        for (IStorage<?> storage : itemDisks) {
             if (storage != null) {
                 usage += RS.INSTANCE.config.diskDrivePerDiskUsage;
             }
         }
-        for (IStorage storage : fluidDisks) {
+        for (IStorage<?> storage : fluidDisks) {
             if (storage != null) {
                 usage += RS.INSTANCE.config.diskDrivePerDiskUsage;
             }

@@ -6,6 +6,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -18,7 +19,8 @@ public interface IGridTab {
     /**
      * @return the filters
      */
-    List<IFilter> getFilters();
+    @Nullable
+    List<IFilter<?>> getFilters();
 
     /**
      * Draws the tooltip of this tab at the given position.

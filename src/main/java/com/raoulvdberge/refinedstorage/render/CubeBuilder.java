@@ -11,7 +11,7 @@ import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -32,24 +32,24 @@ public class CubeBuilder {
     }
 
     public static class Face {
-        private final EnumFacing face;
+        private final EnumFacing enumFacing;
         private final TextureAtlasSprite sprite;
         private int light;
         private UvRotation uvRotation = UvRotation.CLOCKWISE_0;
 
-        public Face(EnumFacing face, TextureAtlasSprite sprite) {
-            this.face = face;
+        public Face(EnumFacing enumFacing, TextureAtlasSprite sprite) {
+            this.enumFacing = enumFacing;
             this.sprite = sprite;
         }
 
-        public Face(EnumFacing face, TextureAtlasSprite sprite, UvRotation uvRotation) {
-            this(face, sprite);
+        public Face(EnumFacing enumFacing, TextureAtlasSprite sprite, UvRotation uvRotation) {
+            this(enumFacing, sprite);
 
             this.uvRotation = uvRotation;
         }
 
-        public Face(EnumFacing face, TextureAtlasSprite sprite, UvRotation uvRotation, int light) {
-            this(face, sprite, uvRotation);
+        public Face(EnumFacing enumFacing, TextureAtlasSprite sprite, UvRotation uvRotation, int light) {
+            this(enumFacing, sprite, uvRotation);
 
             this.light = light;
         }
@@ -58,7 +58,7 @@ public class CubeBuilder {
     private Vector3f from;
     private Vector3f to;
     private VertexFormat format = DefaultVertexFormats.ITEM;
-    private final Map<EnumFacing, Face> faces = new HashMap<>();
+    private final Map<EnumFacing, Face> faces = new EnumMap<>(EnumFacing.class);
     private int color = 0xFFFFFFFF;
 
     public CubeBuilder from(float x, float y, float z) {
@@ -94,7 +94,7 @@ public class CubeBuilder {
     }
 
     public CubeBuilder addFace(Face face) {
-        faces.put(face.face, face);
+        faces.put(face.enumFacing, face);
 
         return this;
     }
@@ -315,17 +315,17 @@ public class CubeBuilder {
     }
 
     private void addVertex(UnpackedBakedQuad.Builder builder, Face face, float x, float y, float z, float u, float v) {
-        VertexFormat format = builder.getVertexFormat();
+        VertexFormat vertexFormat = builder.getVertexFormat();
 
-        for (int i = 0; i < format.getElementCount(); i++) {
-            VertexFormatElement e = format.getElement(i);
+        for (int i = 0; i < vertexFormat.getElementCount(); i++) {
+            VertexFormatElement e = vertexFormat.getElement(i);
 
             switch (e.getUsage()) {
                 case POSITION:
                     builder.put(i, x, y, z);
                     break;
                 case NORMAL:
-                    builder.put(i, face.face.getXOffset(), face.face.getYOffset(), face.face.getZOffset());
+                    builder.put(i, face.enumFacing.getXOffset(), face.enumFacing.getYOffset(), face.enumFacing.getZOffset());
                     break;
                 case COLOR:
                     float r = (color >> 16 & 0xFF) / 255F;

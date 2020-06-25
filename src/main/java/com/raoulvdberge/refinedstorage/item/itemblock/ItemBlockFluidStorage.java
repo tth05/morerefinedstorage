@@ -62,7 +62,7 @@ public class ItemBlockFluidStorage extends ItemBlockBase {
 
         if (!world.isRemote && player.isSneaking() && storageStack.getMetadata() != ItemFluidStorageDisk.TYPE_CREATIVE) {
             UUID diskId = null;
-            IStorageDisk disk = null;
+            IStorageDisk<?> disk = null;
 
             if (isValid(storageStack)) {
                 diskId = getId(storageStack);

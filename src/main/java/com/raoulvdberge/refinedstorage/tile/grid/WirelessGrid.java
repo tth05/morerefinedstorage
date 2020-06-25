@@ -49,7 +49,7 @@ public class WirelessGrid implements IGridNetworkAware {
     private int tabPage;
     private int size;
 
-    private final List<IFilter> filters = new ArrayList<>();
+    private final List<IFilter<?>> filters = new ArrayList<>();
     private final List<IGridTab> tabs = new ArrayList<>();
     private final ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, null) {
         @Override
@@ -108,13 +108,13 @@ public class WirelessGrid implements IGridNetworkAware {
     }
 
     @Override
-    public IStorageCacheListener createListener(EntityPlayerMP player) {
+    public IStorageCacheListener<?> createListener(EntityPlayerMP player) {
         return new StorageCacheListenerGridItem(player, getNetwork());
     }
 
     @Nullable
     @Override
-    public IStorageCache getStorageCache() {
+    public IStorageCache<?> getStorageCache() {
         INetwork network = getNetwork();
 
         return network != null ? network.getItemStorageCache() : null;
@@ -253,7 +253,7 @@ public class WirelessGrid implements IGridNetworkAware {
     }
 
     @Override
-    public List<IFilter> getFilters() {
+    public List<IFilter<?>> getFilters() {
         return filters;
     }
 

@@ -21,7 +21,7 @@ public class MessageStorageDiskSizeRequest extends MessageHandlerPlayerToServer<
 
     @Override
     protected void handle(MessageStorageDiskSizeRequest message, EntityPlayerMP player) {
-        IStorageDisk disk = API.instance().getStorageDiskManager(player.getEntityWorld()).get(message.id);
+        IStorageDisk<?> disk = API.instance().getStorageDiskManager(player.getEntityWorld()).get(message.id);
 
         if (disk != null) {
             RS.INSTANCE.network.sendTo(new MessageStorageDiskSizeResponse(message.id, disk.getStored(), disk.getCapacity()), player);

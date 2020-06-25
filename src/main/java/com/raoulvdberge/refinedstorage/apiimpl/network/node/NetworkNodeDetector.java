@@ -120,18 +120,18 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
             switch (mode) {
                 case MODE_UNDER:
                     return size < amount;
-                case MODE_EQUAL:
-                    return size == amount;
                 case MODE_ABOVE:
                     return size > amount;
+                case MODE_EQUAL:
+                    return size == amount;
+                default:
+                    return false;
             }
         } else {
             if (mode == MODE_UNDER && amount != 0) {
                 return true;
             } else return mode == MODE_EQUAL && amount == 0;
         }
-
-        return false;
     }
 
     @Override

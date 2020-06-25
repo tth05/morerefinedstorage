@@ -497,7 +497,7 @@ public class ProcessingTask extends Task {
             //copy current input counts
             List<Long> oldInputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
 
-            input.decreaseInputAmount(toCraft * input.getQuantityPerCraft());
+            input.decreaseInputAmount((long) toCraft * input.getQuantityPerCraft());
 
             if (input.isFluid()) {
                 FluidStack newStack = input.getFluidStack().copy();
@@ -706,9 +706,9 @@ public class ProcessingTask extends Task {
             case MACHINE_DOES_NOT_ACCEPT:
                 return new CraftingMonitorElementError(base,
                         "gui.refinedstorage:crafting_monitor.machine_does_not_accept");
+            default:
+                return null;
         }
-
-        return null;
     }
 
     @Override

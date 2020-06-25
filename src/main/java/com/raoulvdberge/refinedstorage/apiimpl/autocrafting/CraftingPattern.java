@@ -134,7 +134,7 @@ public class CraftingPattern implements ICraftingPattern {
                         outputs.add(output);
 
                         if (oredict) {
-                            if (recipe.getIngredients().size() > 0) {
+                            if (!recipe.getIngredients().isEmpty()) {
                                 inputs.clear();
 
                                 for (int i = 0; i < recipe.getIngredients().size(); ++i) {
@@ -322,15 +322,15 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         for (int i = 0; i < inputs.size(); ++i) {
-            List<ItemStack> inputs = this.inputs.get(i);
+            List<ItemStack> inputPossibilities = this.inputs.get(i);
             List<ItemStack> otherInputs = other.getInputs().get(i);
 
-            if (inputs.size() != otherInputs.size()) {
+            if (inputPossibilities.size() != otherInputs.size()) {
                 return false;
             }
 
-            for (int j = 0; j < inputs.size(); ++j) {
-                if (!API.instance().getComparer().isEqual(inputs.get(j), otherInputs.get(j))) {
+            for (int j = 0; j < inputPossibilities.size(); ++j) {
+                if (!API.instance().getComparer().isEqual(inputPossibilities.get(j), otherInputs.get(j))) {
                     return false;
                 }
             }
@@ -373,8 +373,8 @@ public class CraftingPattern implements ICraftingPattern {
 
         result = 31 * result + (oredict ? 1 : 0);
 
-        for (List<ItemStack> inputs : this.inputs) {
-            for (ItemStack input : inputs) {
+        for (List<ItemStack> inputPossibilities : this.inputs) {
+            for (ItemStack input : inputPossibilities) {
                 result = 31 * result + API.instance().getItemStackHashCode(input);
             }
         }

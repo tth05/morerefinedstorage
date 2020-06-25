@@ -21,16 +21,14 @@ public class Comparer implements IComparer {
             return false;
         }
 
-        if ((flags & COMPARE_DAMAGE) == COMPARE_DAMAGE && left.getItemDamage() != OreDictionary.WILDCARD_VALUE && right.getItemDamage() != OreDictionary.WILDCARD_VALUE) {
-            if (left.getItemDamage() != right.getItemDamage()) {
-                return false;
-            }
+        if ((flags & COMPARE_DAMAGE) == COMPARE_DAMAGE && left.getItemDamage() != OreDictionary.WILDCARD_VALUE &&
+                right.getItemDamage() != OreDictionary.WILDCARD_VALUE &&
+                left.getItemDamage() != right.getItemDamage()) {
+            return false;
         }
 
-        if ((flags & COMPARE_NBT) == COMPARE_NBT) {
-            if (!isEqualNbt(left, right)) {
-                return false;
-            }
+        if ((flags & COMPARE_NBT) == COMPARE_NBT && !isEqualNbt(left, right)) {
+            return false;
         }
 
         if ((flags & COMPARE_QUANTITY) == COMPARE_QUANTITY) {

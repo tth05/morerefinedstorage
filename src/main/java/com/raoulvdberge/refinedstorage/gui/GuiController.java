@@ -16,10 +16,10 @@ public class GuiController extends GuiBase {
 
     private final TileController controller;
 
-    private final int barX = 8;
-    private final int barY = 20;
-    private final int barWidth = 16;
-    private final int barHeight = 59;
+    private static final int BAR_X = 8;
+    private static final int BAR_Y = 20;
+    private static final int BAR_WIDTH = 16;
+    private static final int BAR_HEIGHT = 59;
 
     public GuiController(ContainerController container, TileController controller) {
         super(container, 176, 181);
@@ -48,9 +48,10 @@ public class GuiController extends GuiBase {
 
         drawTexture(x, y, 0, 0, screenWidth, screenHeight);
 
-        int barHeightNew = TileController.getEnergyScaled(TileController.ENERGY_STORED.getValue(), TileController.ENERGY_CAPACITY.getValue(), barHeight);
+        int barHeightNew = TileController.getEnergyScaled(TileController.ENERGY_STORED.getValue(), TileController.ENERGY_CAPACITY.getValue(),
+                BAR_HEIGHT);
 
-        drawTexture(x + barX, y + barY + barHeight - barHeightNew, 178, barHeight - barHeightNew, barWidth, barHeightNew);
+        drawTexture(x + BAR_X, y + BAR_Y + BAR_HEIGHT - barHeightNew, 178, BAR_HEIGHT - barHeightNew, BAR_WIDTH, barHeightNew);
     }
 
     @Override
@@ -104,7 +105,7 @@ public class GuiController extends GuiBase {
             drawTooltip(mouseX, mouseY, t("misc.refinedstorage:energy_usage_minimal", nodeHovering.getEnergyUsage()));
         }
 
-        if (inBounds(barX, barY, barWidth, barHeight, mouseX, mouseY)) {
+        if (inBounds(BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, mouseX, mouseY)) {
             drawTooltip(mouseX, mouseY, t("misc.refinedstorage:energy_usage", TileController.ENERGY_USAGE.getValue()) + "\n" + t("misc.refinedstorage:energy_stored", TileController.ENERGY_STORED.getValue(), TileController.ENERGY_CAPACITY.getValue()));
         }
     }

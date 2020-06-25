@@ -9,6 +9,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class MessageGridClear extends MessageHandlerPlayerToServer<MessageGridClear> implements IMessage {
     public MessageGridClear() {
+        //NO OP
     }
 
     @Override

@@ -60,7 +60,7 @@ public class CommandCreateDisk extends CommandBase {
                 throw new CommandException("commands.refinedstorage.createdisk.error.notADisk");
             }
 
-            IStorageDisk disk = API.instance().getStorageDiskManager(sender.getEntityWorld()).get(id);
+            IStorageDisk<?> disk = API.instance().getStorageDiskManager(sender.getEntityWorld()).get(id);
             if (disk == null) {
                 throw new CommandException("commands.refinedstorage.createdisk.error.diskNotFound", args[3]);
             }

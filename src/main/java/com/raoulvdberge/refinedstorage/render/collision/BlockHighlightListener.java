@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -36,7 +37,7 @@ public class BlockHighlightListener {
 
         IBlockState state = block.getActualState(block.getDefaultState(), player.getEntityWorld(), pos);
 
-        AdvancedRayTraceResult result = AdvancedRayTracer.rayTrace(
+        AdvancedRayTraceResult<RayTraceResult> result = AdvancedRayTracer.rayTrace(
             pos,
             AdvancedRayTracer.getStart(player),
             AdvancedRayTracer.getEnd(player),

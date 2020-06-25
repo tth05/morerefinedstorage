@@ -92,7 +92,7 @@ public abstract class Task {
                         //find item in by products and check if one damage was used up. this means that damage = uses
                         if (API.instance().getComparer().isEqual(itemStack, remainder)) {
                             //item was found in remainder staying exactly the same -> infinite input
-                            newInput = new InfiniteInput(itemStack, pattern.isOredict());
+                            newInput = new InfiniteInput(itemStack);
                             break;
                         }
                     }

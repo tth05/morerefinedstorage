@@ -19,13 +19,13 @@ import net.minecraftforge.fml.relauncher.Side;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public class ItemHandlerFilter extends ItemHandlerBase {
-    private final List<IFilter> filters;
+    private final List<IFilter<?>> filters;
     private final List<IGridTab> tabs;
 
-    public ItemHandlerFilter(List<IFilter> filters, List<IGridTab> tabs, @Nullable Consumer<Integer> listener) {
+    public ItemHandlerFilter(List<IFilter<?>> filters, List<IGridTab> tabs, @Nullable IntConsumer listener) {
         super(4, listener, new ItemValidatorBasic(RSItems.FILTER));
 
         this.filters = filters;
@@ -57,7 +57,7 @@ public class ItemHandlerFilter extends ItemHandlerBase {
         int mode = ItemFilter.getMode(filter);
         boolean modFilter = ItemFilter.isModFilter(filter);
 
-        List<IFilter> filters = new ArrayList<>();
+        List<IFilter<?>> filterList = new ArrayList<>();
 
         ItemHandlerFilterItems items = new ItemHandlerFilterItems(filter);
 
@@ -65,23 +65,23 @@ public class ItemHandlerFilter extends ItemHandlerBase {
             if (stack.getItem() == RSItems.FILTER) {
                 addFilter(stack);
             } else if (!stack.isEmpty()) {
-                filters.add(new FilterItem(stack, compare, mode, modFilter));
+                filterList.add(new FilterItem(stack, compare, mode, modFilter));
             }
         }
 
         FluidInventoryFilter fluids = new FluidInventoryFilter(filter);
 
         for (FluidStack stack : fluids.getFilteredFluids()) {
-            filters.add(new FilterFluid(stack, compare, mode, modFilter));
+            filterList.add(new FilterFluid(stack, compare, mode, modFilter));
         }
 
         ItemStack icon = ItemFilter.getIcon(filter);
         FluidStack fluidIcon = ItemFilter.getFluidIcon(filter);
 
         if (icon.isEmpty() && fluidIcon == null) {
-            this.filters.addAll(filters);
+            this.filters.addAll(filterList);
         } else {
-            tabs.add(new GridTab(filters, ItemFilter.getName(filter), icon, fluidIcon));
+            tabs.add(new GridTab(filterList, ItemFilter.getName(filter), icon, fluidIcon));
         }
     }
 }

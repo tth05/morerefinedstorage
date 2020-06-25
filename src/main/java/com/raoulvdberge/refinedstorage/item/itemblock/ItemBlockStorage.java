@@ -61,7 +61,7 @@ public class ItemBlockStorage extends ItemBlockBase {
 
         if (!world.isRemote && player.isSneaking() && storageStack.getMetadata() != ItemStorageDisk.TYPE_CREATIVE) {
             UUID diskId = null;
-            IStorageDisk disk = null;
+            IStorageDisk<?> disk = null;
 
             if (isValid(storageStack)) {
                 diskId = getId(storageStack);

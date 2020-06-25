@@ -27,15 +27,16 @@ public class MessageSlotFilterSetFluid extends MessageHandlerPlayerToServer<Mess
     protected void handle(MessageSlotFilterSetFluid message, EntityPlayerMP player) {
         Container container = player.openContainer;
 
-        if (container != null) {
-            if (message.containerSlot >= 0 && message.containerSlot < container.inventorySlots.size()) {
-                Slot slot = container.getSlot(message.containerSlot);
+        if (container == null)
+            return;
 
-                if (slot instanceof SlotFilterFluid) {
-                    ((SlotFilterFluid) slot).getFluidInventory().setFluid(slot.getSlotIndex(), message.stack);
-                }
-            }
-        }
+        if (message.containerSlot < 0 || message.containerSlot >= container.inventorySlots.size())
+            return;
+        Slot slot = container.getSlot(message.containerSlot);
+
+        if (!(slot instanceof SlotFilterFluid))
+            return;
+        ((SlotFilterFluid) slot).getFluidInventory().setFluid(slot.getSlotIndex(), message.stack);
     }
 
     @Override

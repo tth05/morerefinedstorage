@@ -142,46 +142,46 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                     getFakePlayer()
                 );
 
-                if (!frontStack.isEmpty()) {
-                    if (IFilterable.acceptsItem(itemFilters, mode, compare, frontStack) && frontBlockState.getBlockHardness(world, front) != -1.0) {
-                        NonNullList<ItemStack> drops = NonNullList.create();
+                if (!frontStack.isEmpty() && IFilterable.acceptsItem(itemFilters, mode, compare, frontStack) &&
+                        frontBlockState.getBlockHardness(world, front) != -1.0) {
+                    NonNullList<ItemStack> drops = NonNullList.create();
 
-                        if (frontBlock instanceof BlockShulkerBox) {
-                            drops.add(((BlockShulkerBox) frontBlock).getItem(world, front, frontBlockState));
+                    if (frontBlock instanceof BlockShulkerBox) {
+                        drops.add(((BlockShulkerBox) frontBlock).getItem(world, front, frontBlockState));
 
-                            TileEntity shulkerBoxTile = world.getTileEntity(front);
+                        TileEntity shulkerBoxTile = world.getTileEntity(front);
 
-                            if (shulkerBoxTile instanceof TileEntityShulkerBox) {
-                                // Avoid dropping the shulker box when Block#breakBlock is called
-                                ((TileEntityShulkerBox) shulkerBoxTile).setDestroyedByCreativePlayer(true);
-                                ((TileEntityShulkerBox) shulkerBoxTile).clear();
-                            }
-                        } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_SILK_TOUCH) && frontBlock.canSilkHarvest(world, front, frontBlockState, null)) {
-                            drops.add(frontStack);
-                        } else {
-                            frontBlock.getDrops(drops, world, front, frontBlockState, upgrades.getFortuneLevel());
+                        if (shulkerBoxTile instanceof TileEntityShulkerBox) {
+                            // Avoid dropping the shulker box when Block#breakBlock is called
+                            ((TileEntityShulkerBox) shulkerBoxTile).setDestroyedByCreativePlayer(true);
+                            ((TileEntityShulkerBox) shulkerBoxTile).clear();
                         }
+                    } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_SILK_TOUCH) &&
+                            frontBlock.canSilkHarvest(world, front, frontBlockState, null)) {
+                        drops.add(frontStack);
+                    } else {
+                        frontBlock.getDrops(drops, world, front, frontBlockState, upgrades.getFortuneLevel());
+                    }
+
+                    for (ItemStack drop : drops) {
+                        if (network.insertItem(drop, drop.getCount(), Action.SIMULATE) != null) {
+                            return;
+                        }
+                    }
+
+                    BlockEvent.BreakEvent e = new BlockEvent.BreakEvent(world, front, frontBlockState, getFakePlayer());
+
+                    if (!MinecraftForge.EVENT_BUS.post(e)) {
+                        world.playEvent(null, 2001, front, Block.getStateId(frontBlockState));
+                        world.setBlockToAir(front);
 
                         for (ItemStack drop : drops) {
-                            if (network.insertItem(drop, drop.getCount(), Action.SIMULATE) != null) {
-                                return;
-                            }
-                        }
-
-                        BlockEvent.BreakEvent e = new BlockEvent.BreakEvent(world, front, frontBlockState, getFakePlayer());
-
-                        if (!MinecraftForge.EVENT_BUS.post(e)) {
-                            world.playEvent(null, 2001, front, Block.getStateId(frontBlockState));
-                            world.setBlockToAir(front);
-
-                            for (ItemStack drop : drops) {
-                                // We check if the controller isn't null here because when a destructor faces a node and removes it
-                                // it will essentially remove this block itself from the network without knowing
-                                if (network == null) {
-                                    InventoryHelper.spawnItemStack(world, front.getX(), front.getY(), front.getZ(), drop);
-                                } else {
-                                    network.insertItemTracked(drop, drop.getCount());
-                                }
+                            // We check if the controller isn't null here because when a destructor faces a node and removes it
+                            // it will essentially remove this block itself from the network without knowing
+                            if (network == null) {
+                                InventoryHelper.spawnItemStack(world, front.getX(), front.getY(), front.getZ(), drop);
+                            } else {
+                                network.insertItemTracked(drop, drop.getCount());
                             }
                         }
                     }

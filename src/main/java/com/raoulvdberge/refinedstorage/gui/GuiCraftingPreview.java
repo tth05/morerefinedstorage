@@ -48,7 +48,7 @@ public class GuiCraftingPreview extends GuiBase {
 
     private static final int VISIBLE_ROWS = 5;
 
-    private final List<ICraftingPreviewElement> stacks;
+    private final List<ICraftingPreviewElement<?>> stacks;
     private final GuiScreen parent;
 
     private final UUID craftingTaskId;
@@ -65,7 +65,7 @@ public class GuiCraftingPreview extends GuiBase {
 
     private final boolean fluids;
 
-    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement> stacks, UUID craftingTaskId,
+    public GuiCraftingPreview(GuiScreen parent, List<ICraftingPreviewElement<?>> stacks, UUID craftingTaskId,
                               long calculationTime,
                               int quantity, boolean fluids) {
         super(new Container() {
@@ -159,7 +159,7 @@ public class GuiCraftingPreview extends GuiBase {
 
             for (int i = 0; i < 3 * 5; ++i) {
                 if (slot < stacks.size()) {
-                    ICraftingPreviewElement stack = stacks.get(slot);
+                    ICraftingPreviewElement<?> stack = stacks.get(slot);
 
                     stack.draw(x, y + 5, drawers);
 

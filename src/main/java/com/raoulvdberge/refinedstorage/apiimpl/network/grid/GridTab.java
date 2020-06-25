@@ -16,14 +16,14 @@ import java.util.Collections;
 import java.util.List;
 
 public class GridTab implements IGridTab {
-    private final List<IFilter> filters;
+    private final List<IFilter<?>> filters;
     private final String name;
     @Nonnull
     private final ItemStack icon;
     @Nullable
     private final FluidStack fluidIcon;
 
-    public GridTab(List<IFilter> filters, String name, @Nonnull ItemStack icon, @Nullable FluidStack fluidIcon) {
+    public GridTab(List<IFilter<?>> filters, String name, @Nonnull ItemStack icon, @Nullable FluidStack fluidIcon) {
         this.filters = filters;
         this.name = name;
         this.icon = icon;
@@ -31,7 +31,8 @@ public class GridTab implements IGridTab {
     }
 
     @Override
-    public List<IFilter> getFilters() {
+    @Nullable
+    public List<IFilter<?>> getFilters() {
         return filters;
     }
 

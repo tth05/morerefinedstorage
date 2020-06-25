@@ -62,9 +62,9 @@ public class BakedModelDiskManipulator extends BakedModelDelegate {
         }
     }
 
-    private final Map<EnumFacing, IBakedModel> modelsConnected = new HashMap<>();
-    private final Map<EnumFacing, IBakedModel> modelsDisconnected = new HashMap<>();
-    private final Map<EnumFacing, Map<Integer, List<IBakedModel>>> disks = new HashMap<>();
+    private final Map<EnumFacing, IBakedModel> modelsConnected = new EnumMap<>(EnumFacing.class);
+    private final Map<EnumFacing, IBakedModel> modelsDisconnected = new EnumMap<>(EnumFacing.class);
+    private final Map<EnumFacing, Map<Integer, List<IBakedModel>>> disks = new EnumMap<>(EnumFacing.class);
 
     private final LoadingCache<CacheKey, List<BakedQuad>> cache = CacheBuilder.newBuilder().build(new CacheLoader<CacheKey, List<BakedQuad>>() {
         @Override
@@ -109,7 +109,7 @@ public class BakedModelDiskManipulator extends BakedModelDelegate {
             for (int y = 0; y < 3; ++y) {
                 BakedModelTRSR model = new BakedModelTRSR(disk, facing);
 
-                Vector3f trans = model.transformation.getTranslation();
+                Vector3f trans = model.getTransformation().getTranslation();
 
                 if (facing == EnumFacing.NORTH || facing == EnumFacing.SOUTH) {
                     trans.x += (2F / 16F + ((float) x * 7F) / 16F) * (facing == EnumFacing.NORTH ? -1 : 1);
@@ -119,7 +119,9 @@ public class BakedModelDiskManipulator extends BakedModelDelegate {
 
                 trans.y -= (6F / 16F) + (3F * y) / 16F;
 
-                model.transformation = new TRSRTransformation(trans, model.transformation.getLeftRot(), model.transformation.getScale(), model.transformation.getRightRot());
+                model.setTransformation(
+                        new TRSRTransformation(trans, model.getTransformation().getLeftRot(), model.getTransformation().getScale(), model
+                                .getTransformation().getRightRot()));
 
                 disks.get(facing).get(type).add(model);
             }

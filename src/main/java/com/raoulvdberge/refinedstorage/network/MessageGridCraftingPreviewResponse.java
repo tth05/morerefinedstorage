@@ -21,7 +21,7 @@ import java.util.UUID;
 
 public class MessageGridCraftingPreviewResponse
         implements IMessage, IMessageHandler<MessageGridCraftingPreviewResponse, IMessage> {
-    private List<ICraftingPreviewElement> stacks;
+    private List<ICraftingPreviewElement<?>> stacks;
     private UUID id;
     private int quantity;
     private long calculationTime;
@@ -30,7 +30,7 @@ public class MessageGridCraftingPreviewResponse
     public MessageGridCraftingPreviewResponse() {
     }
 
-    public MessageGridCraftingPreviewResponse(List<ICraftingPreviewElement> stacks, UUID id, long calculationTime,
+    public MessageGridCraftingPreviewResponse(List<ICraftingPreviewElement<?>> stacks, UUID id, long calculationTime,
                                               int quantity, boolean fluids) {
         this.stacks = stacks;
         this.id = id;
@@ -66,7 +66,7 @@ public class MessageGridCraftingPreviewResponse
 
         buf.writeInt(stacks.size());
 
-        for (ICraftingPreviewElement stack : stacks) {
+        for (ICraftingPreviewElement<?> stack : stacks) {
             ByteBufUtils.writeUTF8String(buf, stack.getId());
             stack.writeToByteBuf(buf);
         }

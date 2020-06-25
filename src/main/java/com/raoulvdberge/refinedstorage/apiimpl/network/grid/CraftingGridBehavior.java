@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
+import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
@@ -192,7 +193,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (cachedPair != null) {
                 itemCountInNetwork = cachedPair.getRight();
             } else {
-                ItemStack networkItem = (ItemStack) grid.getStorageCache().getList().get(slot);
+                ItemStack networkItem = ((StorageCacheItem)grid.getStorageCache()).getList().get(slot);
                 itemCountInNetwork = networkItem == null ? 0 : networkItem.getCount();
                 networkCountCache.add(Pair.of(slot, itemCountInNetwork));
             }

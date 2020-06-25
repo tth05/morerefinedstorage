@@ -83,7 +83,9 @@ public class BaublesInventoryWrapper implements IInventory {
 	}
 
 	@Override
-	public void markDirty() { }
+	public void markDirty() {
+		//NO OP
+	}
 
 	@Override
 	public boolean isUsableByPlayer(@Nonnull EntityPlayer player) {
@@ -91,10 +93,14 @@ public class BaublesInventoryWrapper implements IInventory {
 	}
 
 	@Override
-	public void openInventory(@Nonnull EntityPlayer player) { }
+	public void openInventory(@Nonnull EntityPlayer player) {
+		//NO OP
+	}
 
 	@Override
-	public void closeInventory(@Nonnull EntityPlayer player) { }
+	public void closeInventory(@Nonnull EntityPlayer player) {
+		//NO OP
+	}
 
 	@Override
 	public boolean isItemValidForSlot(int index, @Nonnull ItemStack stack) {
@@ -107,7 +113,9 @@ public class BaublesInventoryWrapper implements IInventory {
 	}
 
 	@Override
-	public void setField(int id, int value) {}
+	public void setField(int id, int value) {
+		//NO OP
+	}
 
 	@Override
 	public int getFieldCount() {

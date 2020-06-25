@@ -335,8 +335,8 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
-    public List<ICraftingPreviewElement> getPreviewStacks() {
-        List<ICraftingPreviewElement> elements = new ArrayList<>(50);
+    public List<ICraftingPreviewElement<?>> getPreviewStacks() {
+        List<ICraftingPreviewElement<?>> elements = new ArrayList<>(50);
 
         //Output
         if (this.info.getItem() != null)

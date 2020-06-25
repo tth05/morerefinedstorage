@@ -185,18 +185,18 @@ public class GuiReaderWriter extends GuiBase {
     }
 
     private void onAdd() {
-        String name = this.name.getText().trim();
+        String trimmedName = this.name.getText().trim();
 
-        if (!name.isEmpty()) {
-            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelAdd(name));
+        if (!trimmedName.isEmpty()) {
+            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelAdd(trimmedName));
         }
     }
 
     private void onRemove() {
-        String name = this.name.getText().trim();
+        String trimmedName = this.name.getText().trim();
 
-        if (!name.isEmpty()) {
-            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelRemove(name));
+        if (!trimmedName.isEmpty()) {
+            RS.INSTANCE.network.sendToServer(new MessageReaderWriterChannelRemove(trimmedName));
         }
     }
 

@@ -45,25 +45,25 @@ public class GhostIngredientHandler implements IGhostIngredientHandler<GuiBase> 
                         public void accept(@Nonnull I ingredient) {
                             slot.putStack((ItemStack) ingredient);
 
-                            RS.INSTANCE.network.sendToServer(new MessageSlotFilterSet(slot.slotNumber, (ItemStack) ingredient));
+                            RS.INSTANCE.network
+                                    .sendToServer(new MessageSlotFilterSet(slot.slotNumber, (ItemStack) ingredient));
                         }
                     });
                 }
-            } else if (ingredient instanceof FluidStack) {
-                if (slot instanceof SlotFilterFluid) {
-                    targets.add(new Target<I>() {
-                        @Nonnull
-                        @Override
-                        public Rectangle getArea() {
-                            return bounds;
-                        }
+            } else if (ingredient instanceof FluidStack && slot instanceof SlotFilterFluid) {
+                targets.add(new Target<I>() {
+                    @Nonnull
+                    @Override
+                    public Rectangle getArea() {
+                        return bounds;
+                    }
 
-                        @Override
-                        public void accept(@Nonnull I ingredient) {
-                            RS.INSTANCE.network.sendToServer(new MessageSlotFilterSetFluid(slot.slotNumber, StackUtils.copy((FluidStack) ingredient, Fluid.BUCKET_VOLUME)));
-                        }
-                    });
-                }
+                    @Override
+                    public void accept(@Nonnull I ingredient) {
+                        RS.INSTANCE.network.sendToServer(new MessageSlotFilterSetFluid(slot.slotNumber,
+                                StackUtils.copy((FluidStack) ingredient, Fluid.BUCKET_VOLUME)));
+                    }
+                });
             }
         }
 

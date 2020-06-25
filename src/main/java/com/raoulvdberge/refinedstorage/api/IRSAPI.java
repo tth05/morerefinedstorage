@@ -155,13 +155,13 @@ public interface IRSAPI {
      * @param type     the storage type
      * @param provider the external storage provider
      */
-    void addExternalStorageProvider(StorageType type, IExternalStorageProvider provider);
+    void addExternalStorageProvider(StorageType type, IExternalStorageProvider<?> provider);
 
     /**
      * @param type the type
      * @return a set of external storage providers
      */
-    Set<IExternalStorageProvider> getExternalStorageProviders(StorageType type);
+    Set<IExternalStorageProvider<?>> getExternalStorageProviders(StorageType type);
 
     /**
      * @param world    the world

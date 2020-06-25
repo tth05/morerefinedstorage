@@ -65,7 +65,9 @@ public class GuiGridCraftingSettings extends GuiAmountSpecifying {
         return Integer.MAX_VALUE;
     }
 
+    @Override
     protected void onOkButtonPressed(boolean shiftDown) {
+        //noinspection UnstableApiUsage
         Integer quantity = Ints.tryParse(amountField.getText());
 
         if (quantity != null && quantity > 0) {

@@ -62,15 +62,14 @@ public class ItemBlockPortableGrid extends ItemBlockEnergyItem {
 
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-        if (oldStack.getItem() == newStack.getItem()) {
-            if (ItemWirelessGrid.getSortingDirection(oldStack) == ItemWirelessGrid.getSortingDirection(newStack) &&
+        if (oldStack.getItem() == newStack.getItem() &&
+                ItemWirelessGrid.getSortingDirection(oldStack) == ItemWirelessGrid.getSortingDirection(newStack) &&
                 ItemWirelessGrid.getSortingType(oldStack) == ItemWirelessGrid.getSortingType(newStack) &&
                 ItemWirelessGrid.getSearchBoxMode(oldStack) == ItemWirelessGrid.getSearchBoxMode(newStack) &&
                 ItemWirelessGrid.getTabSelected(oldStack) == ItemWirelessGrid.getTabSelected(newStack) &&
                 ItemWirelessGrid.getTabPage(oldStack) == ItemWirelessGrid.getTabPage(newStack) &&
                 ItemWirelessGrid.getSize(oldStack) == ItemWirelessGrid.getSize(newStack)) {
                 return false;
-            }
         }
 
         return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);

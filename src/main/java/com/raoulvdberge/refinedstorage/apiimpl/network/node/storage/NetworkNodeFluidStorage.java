@@ -114,14 +114,15 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
     }
 
     public void loadStorage() {
-        IStorageDisk disk = API.instance().getStorageDiskManager(world).get(storageId);
+        IStorageDisk<?> disk = API.instance().getStorageDiskManager(world).get(storageId);
 
         if (disk == null) {
-            API.instance().getStorageDiskManager(world).set(storageId, disk = API.instance().createDefaultFluidDisk(world, getType().getCapacity()));
+            disk = API.instance().createDefaultFluidDisk(world, getType().getCapacity());
+            API.instance().getStorageDiskManager(world).set(storageId, disk);
             API.instance().getStorageDiskManager(world).markForSaving();
         }
 
-        this.storage = new StorageDiskFluidStorageWrapper(this, disk);
+        this.storage = new StorageDiskFluidStorageWrapper(this, (IStorageDisk<FluidStack>) disk);
     }
 
     public void setStorageId(UUID id) {

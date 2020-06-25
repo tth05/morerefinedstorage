@@ -219,7 +219,7 @@ public abstract class BlockBase extends Block {
     @Override
     @SuppressWarnings("deprecation")
     public RayTraceResult collisionRayTrace(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos, @Nonnull Vec3d start, @Nonnull Vec3d end) {
-        AdvancedRayTraceResult result = AdvancedRayTracer.rayTrace(pos, start, end, getCollisions(world.getTileEntity(pos), this.getActualState(state, world, pos)));
+        AdvancedRayTraceResult<RayTraceResult> result = AdvancedRayTracer.rayTrace(pos, start, end, getCollisions(world.getTileEntity(pos), this.getActualState(state, world, pos)));
 
         return result != null ? result.getHit() : null;
     }

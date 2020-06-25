@@ -79,6 +79,7 @@ public class BlockController extends BlockNodeProxy {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, meta == 0 ? ControllerType.NORMAL : ControllerType.CREATIVE);
     }
@@ -90,6 +91,7 @@ public class BlockController extends BlockNodeProxy {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         return super.getActualState(state, world, pos)
             .withProperty(ENERGY_TYPE, ((TileController) world.getTileEntity(pos)).getEnergyType());

@@ -83,7 +83,7 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
             if (GuiScreen.isShiftKeyDown() || isProcessing(stack)) {
                 tooltip.add(TextFormatting.YELLOW + I18n.format("misc.refinedstorage:pattern.inputs") + TextFormatting.RESET);
 
-                RenderUtils.addCombinedItemsToTooltip(tooltip, true, pattern.getInputs().stream().map(i -> i.size() > 0 ? i.get(0) : ItemStack.EMPTY).collect(Collectors.toList()));
+                RenderUtils.addCombinedItemsToTooltip(tooltip, true, pattern.getInputs().stream().map(i -> !i.isEmpty() ? i.get(0) : ItemStack.EMPTY).collect(Collectors.toList()));
                 RenderUtils.addCombinedFluidsToTooltip(tooltip, true, pattern.getFluidInputs());
 
                 tooltip.add(TextFormatting.YELLOW + I18n.format("misc.refinedstorage:pattern.outputs") + TextFormatting.RESET);

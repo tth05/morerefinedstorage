@@ -81,13 +81,12 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
                     grid.getItemHandler().onExtract(player, message.id, -1, flags);
                     return;
                 }
-            } else { //ctrl
-                if (!message.up) { //scroll down
-                    grid.getItemHandler().onExtract(player, message.id, -1, flags);
-                    return;
-                }
+            } else if (!message.up) { //scroll down
+                grid.getItemHandler().onExtract(player, message.id, -1, flags);
+                return;
             }
         }
+
         if (message.up) { //scroll up
             grid.getItemHandler().onInsert(player, player.inventory.getItemStack(), true);
             player.updateHeldItem();

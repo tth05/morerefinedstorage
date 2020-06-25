@@ -78,6 +78,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -440,12 +441,12 @@ public class ProxyCommon {
         GameRegistry.registerTileEntity(clazz, info.getId());
 
         try {
-            TileBase tileInstance = clazz.newInstance();
+            TileBase tileInstance = clazz.getDeclaredConstructor().newInstance();
 
             if (tileInstance instanceof TileNode) {
                 API.instance().getNetworkNodeRegistry()
-                        .add(((TileNode) tileInstance).getNodeId(), (tag, world, pos) -> {
-                            NetworkNode node = ((TileNode) tileInstance).createNode(world, pos);
+                        .add(((TileNode<?>) tileInstance).getNodeId(), (tag, world, pos) -> {
+                            NetworkNode node = ((TileNode<?>) tileInstance).createNode(world, pos);
 
                             node.read(tag);
 
@@ -454,7 +455,7 @@ public class ProxyCommon {
             }
 
             tileInstance.getDataManager().getParameters().forEach(TileDataManager::registerParameter);
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }

@@ -127,7 +127,7 @@ public class ItemStorageDisk extends ItemBase implements IStorageDiskProvider {
         ItemStack diskStack = player.getHeldItem(hand);
 
         if (!world.isRemote && player.isSneaking() && diskStack.getMetadata() != TYPE_CREATIVE) {
-            IStorageDisk disk = API.instance().getStorageDiskManager(world).getByStack(diskStack);
+            IStorageDisk<?> disk = API.instance().getStorageDiskManager(world).getByStack(diskStack);
 
             if (disk != null && disk.getStored() == 0) {
                 ItemStack storagePart = new ItemStack(RSItems.STORAGE_PART, diskStack.getCount(), diskStack.getMetadata());

@@ -104,6 +104,7 @@ public class BlockPortableGrid extends BlockBase {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         TilePortableGrid portableGrid = (TilePortableGrid) world.getTileEntity(pos);
 
@@ -124,6 +125,7 @@ public class BlockPortableGrid extends BlockBase {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(TYPE, meta == 0 ? PortableGridType.NORMAL : PortableGridType.CREATIVE);
     }

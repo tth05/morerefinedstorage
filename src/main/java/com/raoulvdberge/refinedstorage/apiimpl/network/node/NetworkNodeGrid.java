@@ -54,7 +54,7 @@ import java.util.Set;
 
 public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, IType {
     public static final String ID = "grid";
-    public static int FACTORY_ID = 0;
+    public static int FACTORY_ID;
 
     public static final String NBT_VIEW_TYPE = "ViewType";
     public static final String NBT_SORTING_DIRECTION = "SortingDirection";
@@ -145,7 +145,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
                     return stack;
                 }
             };
-    private final List<IFilter> filters = new ArrayList<>();
+    private final List<IFilter<?>> filters = new ArrayList<>();
     private final List<IGridTab> tabs = new ArrayList<>();
     private final ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, new ListenerNetworkNode(this));
 
@@ -261,7 +261,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     }
 
     @Override
-    public IStorageCacheListener createListener(EntityPlayerMP player) {
+    public IStorageCacheListener<?> createListener(EntityPlayerMP player) {
         return type == GridType.FLUID ? new StorageCacheListenerGridFluid(player, network) :
                 new StorageCacheListenerGridItem(player, network);
     }
@@ -526,7 +526,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         if (type == null) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() == RSBlocks.GRID) {
-                type = (GridType) state.getValue(BlockGrid.TYPE);
+                type = state.getValue(BlockGrid.TYPE);
             }
         }
 
@@ -535,7 +535,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
     @Nullable
     @Override
-    public IStorageCache getStorageCache() {
+    public IStorageCache<?> getStorageCache() {
         return network != null ?
                 (type == GridType.FLUID ? network.getFluidStorageCache() : network.getItemStorageCache()) :
                 null;
@@ -577,7 +577,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     }
 
     @Override
-    public List<IFilter> getFilters() {
+    public List<IFilter<?>> getFilters() {
         return filters;
     }
 
@@ -656,12 +656,12 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
     @Override
     public IItemHandlerModifiable getItemFilters() {
-        return processingMatrix;
+        return getProcessingMatrix();
     }
 
     @Override
     public FluidInventory getFluidFilters() {
-        return processingMatrixFluids;
+        return getProcessingMatrixFluids();
     }
 
     @Override

@@ -27,6 +27,7 @@ public class BaublesApi {
 
     /**
      * Retrieves the baubles capability handler wrapped as a IInventory for the supplied player
+     * @deprecated use {@link #getBaublesHandler(EntityPlayer)}
      */
     @Deprecated
     public static IInventory getBaubles(EntityPlayer player)

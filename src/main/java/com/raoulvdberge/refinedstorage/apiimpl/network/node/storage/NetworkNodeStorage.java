@@ -114,14 +114,15 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
     }
 
     public void loadStorage() {
-        IStorageDisk disk = API.instance().getStorageDiskManager(world).get(storageId);
+        IStorageDisk<?> disk = API.instance().getStorageDiskManager(world).get(storageId);
 
         if (disk == null) {
-            API.instance().getStorageDiskManager(world).set(storageId, disk = API.instance().createDefaultItemDisk(world, getType().getCapacity()));
+            disk = API.instance().createDefaultItemDisk(world, getType().getCapacity());
+            API.instance().getStorageDiskManager(world).set(storageId, disk);
             API.instance().getStorageDiskManager(world).markForSaving();
         }
 
-        this.storage = new StorageDiskItemStorageWrapper(this, disk);
+        this.storage = new StorageDiskItemStorageWrapper(this, (IStorageDisk<ItemStack>) disk);
     }
 
     public void setStorageId(UUID id) {

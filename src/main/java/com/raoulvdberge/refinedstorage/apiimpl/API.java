@@ -70,7 +70,8 @@ public class API implements IRSAPI {
     private final IStorageDiskRegistry storageDiskRegistry = new StorageDiskRegistry();
     private final IStorageDiskSync storageDiskSync = new StorageDiskSync();
     private final IOneSixMigrationHelper oneSixMigrationHelper = new OneSixMigrationHelper();
-    private final Map<StorageType, TreeSet<IExternalStorageProvider>> externalStorageProviders = new HashMap<>();
+    private final Map<StorageType, TreeSet<IExternalStorageProvider<?>>> externalStorageProviders =
+            new EnumMap<>(StorageType.class);
     private final List<ICraftingPatternRenderHandler> patternRenderHandlers = new LinkedList<>();
 
     public static IRSAPI instance() {
@@ -84,14 +85,15 @@ public class API implements IRSAPI {
 
         for (ASMDataTable.ASMData asmData : asmDataSet) {
             try {
-                Class clazz = Class.forName(asmData.getClassName());
+                Class<?> clazz = Class.forName(asmData.getClassName());
                 Field field = clazz.getField(asmData.getObjectName());
 
                 if (field.getType() == IRSAPI.class) {
                     field.set(null, INSTANCE);
                 }
             } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-                throw new RuntimeException("Failed to set: {}" + asmData.getClassName() + "." + asmData.getObjectName(), e);
+                throw new RuntimeException("Failed to set: {}" + asmData.getClassName() + "." + asmData.getObjectName(),
+                        e);
             }
         }
     }
@@ -121,7 +123,8 @@ public class API implements IRSAPI {
         }
 
         MapStorage storage = world.getPerWorldStorage();
-        NetworkNodeManager instance = (NetworkNodeManager) storage.getOrLoadData(NetworkNodeManager.class, NetworkNodeManager.NAME);
+        NetworkNodeManager instance =
+                (NetworkNodeManager) storage.getOrLoadData(NetworkNodeManager.class, NetworkNodeManager.NAME);
 
         if (instance == null) {
             instance = new NetworkNodeManager(NetworkNodeManager.NAME);
@@ -208,7 +211,8 @@ public class API implements IRSAPI {
         }
 
         MapStorage storage = world.getMapStorage();
-        StorageDiskManager instance = (StorageDiskManager) storage.getOrLoadData(StorageDiskManager.class, StorageDiskManager.NAME);
+        StorageDiskManager instance =
+                (StorageDiskManager) storage.getOrLoadData(StorageDiskManager.class, StorageDiskManager.NAME);
 
         if (instance == null) {
             instance = new StorageDiskManager(StorageDiskManager.NAME);
@@ -228,13 +232,15 @@ public class API implements IRSAPI {
     }
 
     @Override
-    public void addExternalStorageProvider(StorageType type, IExternalStorageProvider provider) {
-        externalStorageProviders.computeIfAbsent(type, k -> new TreeSet<>((a, b) -> Integer.compare(b.getPriority(), a.getPriority()))).add(provider);
+    public void addExternalStorageProvider(StorageType type, IExternalStorageProvider<?> provider) {
+        externalStorageProviders
+                .computeIfAbsent(type, k -> new TreeSet<>((a, b) -> Integer.compare(b.getPriority(), a.getPriority())))
+                .add(provider);
     }
 
     @Override
-    public Set<IExternalStorageProvider> getExternalStorageProviders(StorageType type) {
-        TreeSet<IExternalStorageProvider> providers = externalStorageProviders.get(type);
+    public Set<IExternalStorageProvider<?>> getExternalStorageProviders(StorageType type) {
+        TreeSet<IExternalStorageProvider<?>> providers = externalStorageProviders.get(type);
 
         return providers == null ? Collections.emptySet() : providers;
     }
@@ -287,15 +293,19 @@ public class API implements IRSAPI {
         for (EnumFacing facing : EnumFacing.VALUES) {
             TileEntity tile = world.getTileEntity(pos.offset(facing));
 
-            if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite())) {
-                INetworkNodeProxy nodeProxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite());
+            if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY,
+                    facing.getOpposite())) {
+                INetworkNodeProxy<?> nodeProxy = tile.getCapability(
+                        CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY,
+                                facing.getOpposite());
                 INetworkNode node = nodeProxy.getNode();
 
-                if (node.getNetwork() != null) {
-                    node.getNetwork().getNodeGraph().invalidate(Action.PERFORM, node.getNetwork().world(), node.getNetwork().getPosition());
+                if (node.getNetwork() == null)
+                    continue;
 
-                    return;
-                }
+                node.getNetwork().getNodeGraph()
+                        .invalidate(Action.PERFORM, node.getNetwork().world(), node.getNetwork().getPosition());
+                return;
             }
         }
     }

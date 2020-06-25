@@ -19,7 +19,7 @@ public class ExternalStorageProviderItem implements IExternalStorageProvider<Ite
     @Override
     public boolean canProvide(TileEntity tile, EnumFacing direction) {
         boolean isNode = tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, direction.getOpposite());
-        INetworkNodeProxy nodeProxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, direction.getOpposite());
+        INetworkNodeProxy<?> nodeProxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, direction.getOpposite());
 
         if (!(isNode && nodeProxy.getNode() instanceof IStorageProvider)) {
             return WorldUtils.getItemHandler(tile, direction.getOpposite()) != null;

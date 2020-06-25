@@ -12,11 +12,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ICustomModelLoader;
 
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public interface IModelRegistration {
-    void addBakedModelOverride(ResourceLocation resource, Function<IBakedModel, IBakedModel> override);
+    void addBakedModelOverride(ResourceLocation resource, UnaryOperator<IBakedModel> override);
 
     void setModel(Block block, int meta, ModelResourceLocation resource);
 

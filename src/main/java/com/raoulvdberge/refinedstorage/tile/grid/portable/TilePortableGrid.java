@@ -131,7 +131,7 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
 
     private GridType clientGridType;
 
-    private final List<IFilter> filters = new ArrayList<>();
+    private final List<IFilter<?>> filters = new ArrayList<>();
     private final List<IGridTab> tabs = new ArrayList<>();
     private final ItemHandlerFilter filter = new ItemHandlerFilter(filters, tabs, new ListenerTile(this));
     private final ItemHandlerBase disk = new ItemHandlerBase(1, new ListenerTile(this), NetworkNodeDiskDrive.VALIDATOR_STORAGE_DISK) {
@@ -177,20 +177,17 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
             this.storage = null;
             this.cache = null;
         } else {
-            IStorageDisk disk = API.instance().getStorageDiskManager(world).getByStack(getDisk().getStackInSlot(0));
+            IStorageDisk<?> storageDisk = API.instance().getStorageDiskManager(world).getByStack(getDisk().getStackInSlot(0));
 
-            if (disk != null) {
-                StorageType type = ((IStorageDiskProvider) getDisk().getStackInSlot(0).getItem()).getType();
+            if (storageDisk != null) {
+                StorageType storageType = ((IStorageDiskProvider) getDisk().getStackInSlot(0).getItem()).getType();
 
-                switch (type) {
-                    case ITEM:
-                        this.storage = new StorageDiskItemPortable(disk, this);
-                        this.cache = new StorageCacheItemPortable(this);
-                        break;
-                    case FLUID:
-                        this.storage = new StorageDiskFluidPortable(disk, this);
-                        this.cache = new StorageCacheFluidPortable(this);
-                        break;
+                if (storageType == StorageType.ITEM) {
+                    this.storage = new StorageDiskItemPortable((IStorageDisk<ItemStack>) storageDisk, this);
+                    this.cache = new StorageCacheItemPortable(this);
+                } else if (storageType == StorageType.FLUID) {
+                    this.storage = new StorageDiskFluidPortable((IStorageDisk<FluidStack>) storageDisk, this);
+                    this.cache = new StorageCacheFluidPortable(this);
                 }
 
                 this.storage.setSettings(TilePortableGrid.this::checkIfDiskStateChanged, TilePortableGrid.this);
@@ -452,7 +449,7 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
     }
 
     @Override
-    public List<IFilter> getFilters() {
+    public List<IFilter<?>> getFilters() {
         return filters;
     }
 

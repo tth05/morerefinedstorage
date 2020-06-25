@@ -157,7 +157,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
             IStorageDisk<ItemStack> storage = itemDisks[slot];
 
             if (ioMode == IO_MODE_INSERT) {
-                insertItemIntoNetwork(storage, slot);
+                insertItemIntoNetwork(storage);
             } else if (ioMode == IO_MODE_EXTRACT) {
                 extractItemFromNetwork(storage, slot);
             }
@@ -180,7 +180,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         }
     }
 
-    private void insertItemIntoNetwork(IStorageDisk<ItemStack> storage, int slot) {
+    private void insertItemIntoNetwork(IStorageDisk<ItemStack> storage) {
         if(network == null)
             return;
 
@@ -210,13 +210,14 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         }
 
         // In Extract mode, we just need to check if the disk is full or not.
-        if (ioMode == IO_MODE_EXTRACT)
+        if (ioMode == IO_MODE_EXTRACT) {
             if (storage.getStored() == storage.getCapacity()) {
                 moveDriveToOutput(slot);
                 return true;
             } else {
                 return false;
             }
+        }
 
         List<ItemStack> stacks = new ArrayList<>(storage.getStacks());
         for (ItemStack stack : stacks) {
@@ -315,13 +316,14 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         }
 
         //In Extract mode, we just need to check if the disk is full or not.
-        if (ioMode == IO_MODE_EXTRACT)
+        if (ioMode == IO_MODE_EXTRACT) {
             if (storage.getStored() == storage.getCapacity()) {
                 moveDriveToOutput(slot);
                 return true;
             } else {
                 return false;
             }
+        }
 
         List<FluidStack> stacks = new ArrayList<>(storage.getStacks());
         for (FluidStack stack : stacks) {

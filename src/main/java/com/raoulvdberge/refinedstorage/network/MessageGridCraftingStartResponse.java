@@ -12,6 +12,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class MessageGridCraftingStartResponse implements IMessage, IMessageHandler<MessageGridCraftingStartResponse, IMessage> {
     public MessageGridCraftingStartResponse() {
+        //NO OP
     }
 
     @Override

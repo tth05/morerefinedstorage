@@ -5,9 +5,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 
 public class DirectionHandlerNetworkNode implements IDirectionHandler {
-    private final TileNode tile;
+    private final TileNode<?> tile;
 
-    public DirectionHandlerNetworkNode(TileNode tile) {
+    public DirectionHandlerNetworkNode(TileNode<?> tile) {
         this.tile = tile;
     }
 

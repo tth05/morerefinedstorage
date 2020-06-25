@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class BakedModelTRSR implements IBakedModel {
     protected final IBakedModel original;
-    public TRSRTransformation transformation;
+    private TRSRTransformation transformation;
     private final TRSROverride override;
     private final int faceOffset;
 
@@ -70,7 +70,7 @@ public class BakedModelTRSR implements IBakedModel {
                     side = EnumFacing.byHorizontalIndex((side.getHorizontalIndex() + faceOffset) % 4);
                 }
                 for (BakedQuad quad : original.getQuads(state, side, rand)) {
-                    Transformer transformer = new Transformer(transformation, quad.getFormat());
+                    Transformer transformer = new Transformer(getTransformation(), quad.getFormat());
                     quad.pipe(transformer);
                     quads.add(transformer.build());
                 }
@@ -116,6 +116,14 @@ public class BakedModelTRSR implements IBakedModel {
         return override;
     }
 
+    public TRSRTransformation getTransformation() {
+        return transformation;
+    }
+
+    public void setTransformation(TRSRTransformation transformation) {
+        this.transformation = transformation;
+    }
+
     private static class TRSROverride extends ItemOverrideList {
         private final BakedModelTRSR model;
 
@@ -130,7 +138,7 @@ public class BakedModelTRSR implements IBakedModel {
         public IBakedModel handleItemState(@Nonnull IBakedModel originalModel, @Nonnull ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
             IBakedModel baked = model.original.getOverrides().handleItemState(originalModel, stack, world, entity);
 
-            return new BakedModelTRSR(baked, model.transformation);
+            return new BakedModelTRSR(baked, model.getTransformation());
         }
     }
 

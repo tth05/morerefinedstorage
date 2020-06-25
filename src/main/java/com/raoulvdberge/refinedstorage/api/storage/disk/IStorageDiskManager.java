@@ -17,7 +17,7 @@ public interface IStorageDiskManager {
      * @return the storage disk, or null if no storage disk is found
      */
     @Nullable
-    IStorageDisk get(UUID id);
+    IStorageDisk<?> get(UUID id);
 
     /**
      * Gets a storage disk by disk stack (a {@link IStorageDiskProvider}).
@@ -26,12 +26,12 @@ public interface IStorageDiskManager {
      * @return the storage disk, or null if no storage disk is found
      */
     @Nullable
-    IStorageDisk getByStack(ItemStack disk);
+    IStorageDisk<?> getByStack(ItemStack disk);
 
     /**
      * @return a map of all storage disks
      */
-    Map<UUID, IStorageDisk> getAll();
+    Map<UUID, IStorageDisk<?>> getAll();
 
     /**
      * Sets a storage disk.
@@ -39,7 +39,7 @@ public interface IStorageDiskManager {
      * @param id   the id
      * @param disk the disk
      */
-    void set(UUID id, IStorageDisk disk);
+    void set(UUID id, IStorageDisk<?> disk);
 
     /**
      * Removes a storage disk.

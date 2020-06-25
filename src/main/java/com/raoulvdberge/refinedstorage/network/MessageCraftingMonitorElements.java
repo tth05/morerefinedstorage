@@ -94,7 +94,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
 
     @Override
     public IMessage onMessage(MessageCraftingMonitorElements message, MessageContext ctx) {
-        GuiBase.executeLater(GuiCraftingMonitor.class, craftingMonitor -> craftingMonitor.setTasks(message.tasks));
+        GuiBase.executeLater(GuiCraftingMonitor.class, monitor -> monitor.setTasks(message.tasks));
 
         return null;
     }

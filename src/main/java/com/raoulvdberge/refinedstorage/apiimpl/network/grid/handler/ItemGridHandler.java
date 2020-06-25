@@ -103,12 +103,11 @@ public class ItemGridHandler implements IItemGridHandler {
                             took.setCount(remainder.getCount());
                         }
                     }
-                    if (!took.isEmpty()) {
-                        if (ItemHandlerHelper.insertItemStacked(playerInventory, took, true).isEmpty()) {
-                            took = network.extractItem(item, size, Action.PERFORM);
+                    if (!took.isEmpty() &&
+                            ItemHandlerHelper.insertItemStacked(playerInventory, took, true).isEmpty()) {
+                        took = network.extractItem(item, size, Action.PERFORM);
 
-                            ItemHandlerHelper.insertItemStacked(playerInventory, took, false);
-                        }
+                        ItemHandlerHelper.insertItemStacked(playerInventory, took, false);
                     }
                 }
             } else {

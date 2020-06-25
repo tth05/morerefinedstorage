@@ -111,6 +111,7 @@ public class BlockCable extends BlockNode {
 
     @Nonnull
     @Override
+    @Deprecated
     public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);
 
@@ -132,13 +133,14 @@ public class BlockCable extends BlockNode {
 
         TileEntity tile = world.getTileEntity(pos);
 
-        if (tile instanceof TileNode && ((TileNode) tile).getNode() instanceof ICoverable) {
-            s = ((IExtendedBlockState) s).withProperty(COVER_NORTH, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.NORTH));
-            s = ((IExtendedBlockState) s).withProperty(COVER_EAST, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.EAST));
-            s = ((IExtendedBlockState) s).withProperty(COVER_SOUTH, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.SOUTH));
-            s = ((IExtendedBlockState) s).withProperty(COVER_WEST, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.WEST));
-            s = ((IExtendedBlockState) s).withProperty(COVER_UP, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.UP));
-            s = ((IExtendedBlockState) s).withProperty(COVER_DOWN, ((ICoverable) ((TileNode) tile).getNode()).getCoverManager().getCover(EnumFacing.DOWN));
+        if (tile instanceof TileNode && ((TileNode<?>) tile).getNode() instanceof ICoverable) {
+            ICoverable cover = ((ICoverable) ((TileNode<?>) tile).getNode());
+            s = ((IExtendedBlockState) s).withProperty(COVER_NORTH, cover.getCoverManager().getCover(EnumFacing.NORTH));
+            s = ((IExtendedBlockState) s).withProperty(COVER_EAST, cover.getCoverManager().getCover(EnumFacing.EAST));
+            s = ((IExtendedBlockState) s).withProperty(COVER_SOUTH, cover.getCoverManager().getCover(EnumFacing.SOUTH));
+            s = ((IExtendedBlockState) s).withProperty(COVER_WEST, cover.getCoverManager().getCover(EnumFacing.WEST));
+            s = ((IExtendedBlockState) s).withProperty(COVER_UP, cover.getCoverManager().getCover(EnumFacing.UP));
+            s = ((IExtendedBlockState) s).withProperty(COVER_DOWN, cover.getCoverManager().getCover(EnumFacing.DOWN));
         }
 
         return s;
@@ -149,7 +151,7 @@ public class BlockCable extends BlockNode {
             return false;
         }
 
-        INetworkNode node = ((TileNode) tile).getNode();
+        INetworkNode node = ((TileNode<?>) tile).getNode();
 
         if (node instanceof ICoverable) {
             Cover cover = ((ICoverable) node).getCoverManager().getCover(direction);

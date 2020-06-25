@@ -55,7 +55,7 @@ public class GridStackItem implements IGridStack {
     @Nullable
     static String getModNameByModId(String modId) {
         ModContainer container = Loader.instance().getActiveModList().stream()
-            .filter(m -> m.getModId().toLowerCase().equals(modId))
+            .filter(m -> m.getModId().equalsIgnoreCase(modId))
             .findFirst()
             .orElse(null);
 
@@ -83,7 +83,7 @@ public class GridStackItem implements IGridStack {
             }
 
             return cachedName;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             return "";
         }
     }
@@ -132,7 +132,7 @@ public class GridStackItem implements IGridStack {
         if (tooltip == null) {
             try {
                 tooltip = String.join("\n", RenderUtils.getItemTooltip(stack));
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 tooltip = "";
             }
         }
@@ -165,7 +165,7 @@ public class GridStackItem implements IGridStack {
 
     @Override
     public Object getIngredient() {
-        return stack;
+        return getStack();
     }
 
     @Nullable
