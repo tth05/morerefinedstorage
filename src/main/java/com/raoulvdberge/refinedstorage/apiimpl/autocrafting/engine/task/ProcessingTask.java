@@ -53,10 +53,8 @@ public class ProcessingTask extends Task {
 
     private final List<Pair<Input, Integer>> generatedPairs = new ObjectArrayList<>(this.inputs.size());
 
-    /**
-     * Reference to the container that left behind the remainder. Ensures that all remainder is inserted into the
-     * correct container.
-     */
+    /** Reference to the container that left behind the remainder. Ensures that all remainder is inserted into the
+     * correct container. */
     private ICraftingPatternContainer remainderContainer;
 
     private ProcessingState state = ProcessingState.READY;
@@ -244,8 +242,14 @@ public class ProcessingTask extends Task {
 
             //only track what hasn't been tracked
             if (stack.getCount() > trackedAmount) {
+                //limit by amount that this task thinks is in the machine, this stops us from tracking outputs before we
+                // we've inserted anything. This is unlikely but still makes the code more robust
+                int trackableAmount = Math.min(stack.getCount() - trackedAmount, this.inputs.stream()
+                        .mapToInt(input -> (int) (input.getProcessingAmount() / input.getQuantityPerCraft())).min()
+                        .orElseThrow(IllegalStateException::new));
+
                 long processingAmount = matchingOutput.getProcessingAmount();
-                trackAndUpdate(matchingOutput, stack.getCount() - trackedAmount);
+                trackAndUpdate(matchingOutput, trackableAmount);
                 trackedAmount += (int) (processingAmount - matchingOutput.getProcessingAmount());
             }
 
@@ -294,8 +298,14 @@ public class ProcessingTask extends Task {
 
             //only track what hasn't been tracked
             if (stack.amount > trackedAmount) {
+                //limit by amount that this task thinks is in the machine, this stops us from tracking outputs before we
+                // we've inserted anything. This is unlikely but still makes the code more robust
+                int trackableAmount = Math.min(stack.amount - trackedAmount, this.inputs.stream()
+                        .mapToInt(input -> (int) (input.getProcessingAmount() / input.getQuantityPerCraft())).min()
+                        .orElseThrow(IllegalStateException::new));
+
                 long processingAmount = matchingOutput.getProcessingAmount();
-                trackAndUpdate(matchingOutput, stack.amount - trackedAmount);
+                trackAndUpdate(matchingOutput, trackableAmount);
                 trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
             }
 
@@ -368,8 +378,8 @@ public class ProcessingTask extends Task {
         }
 
         for (int i = 0; i < dest.getSlots(); ++i) {
-            // .copy() is mandatory!
-            stack = dest.insertItem(i, stack.copy(), simulate);
+            // .copy() is mandatory! <- looks like all handlers copy the item as well ¯\_(ツ)_/¯
+            stack = dest.insertItem(i, simulate ? stack : stack.copy(), simulate);
 
             if (stack.isEmpty())
                 break;
@@ -419,7 +429,8 @@ public class ProcessingTask extends Task {
                 long tempAmount = amount;
                 //copy current input counts
                 List<Long> newInputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
-                //generate new input counts
+                //generate new input counts. copied from Input#decreaseInputAmount
+                //noinspection DuplicatedCode
                 for (int i = 0; i < newInputCounts.size(); i++) {
                     Long currentInputCount = newInputCounts.get(i);
                     if (currentInputCount == 0)
@@ -678,6 +689,13 @@ public class ProcessingTask extends Task {
         return this.remainingFluids;
     }
 
+    /**
+     * Converts the given element in to an error element if this task has any error.
+     *
+     * @param base the base to wrap
+     * @return if the state of this {@link ProcessingTask} is not {@link ProcessingState#READY}, then a
+     * {@link CraftingMonitorElementError} wrapping the given {@code base} is returned; {@code null} otherwise
+     */
     @Nullable
     private CraftingMonitorElementError getErrorElement(ICraftingMonitorElement base) {
         switch (this.state) {
@@ -698,6 +716,9 @@ public class ProcessingTask extends Task {
         return this.finished;
     }
 
+    /**
+     * Defines the current processing state of a processing task
+     */
     private enum ProcessingState {
         READY,
         MACHINE_NONE,
