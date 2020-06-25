@@ -1,5 +1,8 @@
 # More Refined Storage Changelog
 
+### 2.0.3
+- Items are now properly stacked when extracting
+
 ### 2.0.2
 - Completely new, lightweight and fast auto-crafting engine
 - Increased Disk Manipulator speed by 25
