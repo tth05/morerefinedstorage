@@ -42,28 +42,27 @@ public class MessageGridItemInventoryScroll extends MessageHandlerPlayerToServer
 
     @Override
     protected void handle(MessageGridItemInventoryScroll message, EntityPlayerMP player) {
-        if (player != null) {
-            Container container = player.openContainer;
+        if (player == null)
+            return;
+        Container container = player.openContainer;
 
-            if (container instanceof ContainerGrid) {
-                IGrid grid = ((ContainerGrid) container).getGrid();
+        if (!(container instanceof ContainerGrid))
+            return;
+        IGrid grid = ((ContainerGrid) container).getGrid();
 
-                if (grid.getItemHandler() != null) {
-                    int flags = ItemGridHandler.EXTRACT_SINGLE;
-                    int slot = message.slot;
-                    ItemStack stackInSlot = player.inventory.getStackInSlot(slot);
+        if (grid.getItemHandler() == null || !message.shift)
+            return;
+        
+        int flags = ItemGridHandler.EXTRACT_SINGLE;
+        int slot = message.slot;
+        ItemStack stackInSlot = player.inventory.getStackInSlot(slot);
 
-                    if (message.shift) { // shift
-                        flags |= ItemGridHandler.EXTRACT_SHIFT;
-                        if (message.up) { // scroll up
-                            player.inventory.setInventorySlotContents(slot,
-                                    StackUtils.nullToEmpty(grid.getItemHandler().onInsert(player, stackInSlot, true)));
-                        } else { // scroll down
-                            grid.getItemHandler().onExtract(player, stackInSlot, slot, flags);
-                        }
-                    }
-                }
-            }
+        flags |= ItemGridHandler.EXTRACT_SHIFT;
+        if (message.up) { // scroll up
+            player.inventory.setInventorySlotContents(slot,
+                    StackUtils.nullToEmpty(grid.getItemHandler().onInsert(player, stackInSlot, true)));
+        } else { // scroll down
+            grid.getItemHandler().onExtract(player, stackInSlot, slot, flags);
         }
     }
 }
