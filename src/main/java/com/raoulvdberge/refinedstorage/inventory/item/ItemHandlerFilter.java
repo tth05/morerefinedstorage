@@ -19,13 +19,13 @@ import net.minecraftforge.fml.relauncher.Side;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntConsumer;
+import java.util.function.Consumer;
 
 public class ItemHandlerFilter extends ItemHandlerBase {
     private final List<IFilter<?>> filters;
     private final List<IGridTab> tabs;
 
-    public ItemHandlerFilter(List<IFilter<?>> filters, List<IGridTab> tabs, @Nullable IntConsumer listener) {
+    public ItemHandlerFilter(List<IFilter<?>> filters, List<IGridTab> tabs, @Nullable Consumer<Integer> listener) {
         super(4, listener, new ItemValidatorBasic(RSItems.FILTER));
 
         this.filters = filters;

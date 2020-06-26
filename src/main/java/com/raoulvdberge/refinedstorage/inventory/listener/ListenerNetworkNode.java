@@ -2,9 +2,9 @@ package com.raoulvdberge.refinedstorage.inventory.listener;
 
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 
-import java.util.function.IntConsumer;
+import java.util.function.Consumer;
 
-public class ListenerNetworkNode implements IntConsumer {
+public class ListenerNetworkNode implements Consumer<Integer> {
     private final INetworkNode node;
 
     public ListenerNetworkNode(INetworkNode node) {
@@ -12,7 +12,7 @@ public class ListenerNetworkNode implements IntConsumer {
     }
 
     @Override
-    public void accept(int slot) {
+    public void accept(Integer slot) {
         node.markDirty();
     }
 }

@@ -2,9 +2,9 @@ package com.raoulvdberge.refinedstorage.inventory.listener;
 
 import net.minecraft.tileentity.TileEntity;
 
-import java.util.function.IntConsumer;
+import java.util.function.Consumer;
 
-public class ListenerTile implements IntConsumer {
+public class ListenerTile implements Consumer<Integer> {
     private final TileEntity tile;
 
     public ListenerTile(TileEntity tile) {
@@ -12,7 +12,7 @@ public class ListenerTile implements IntConsumer {
     }
 
     @Override
-    public void accept(int slot) {
+    public void accept(Integer slot) {
         tile.markDirty();
     }
 }

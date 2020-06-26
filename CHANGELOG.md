@@ -2,10 +2,13 @@
 
 ### 2.0.3
 - Items are now properly stacked when extracting
+- Fixed RebornStorage compatibility
+- Fixed Grid not updating when typing
 
 ### 2.0.2
 - Completely new, lightweight and fast auto-crafting engine
 - Increased Disk Manipulator speed by 25
+- Backported scrolling support for grid (hold shift/ctrl)
 - Fixed Portable Grid inserting disks into themselves if the players inventory is full
 - Fixed dupe in filter slots when using Inventory Tweaks Reborn
 - Other small bug fixes

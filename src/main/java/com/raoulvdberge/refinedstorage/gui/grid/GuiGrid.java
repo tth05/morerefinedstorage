@@ -109,7 +109,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         if (searchField == null) {
             searchField = new TextFieldSearch(0, fontRenderer, sx, sy, 88 - 6);
-            searchField.addListener(this.getView()::sort);
+            searchField.addListener(() -> this.getView().sort());
             searchField.setMode(grid.getSearchBoxMode());
         } else {
             searchField.x = sx;
@@ -457,8 +457,8 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         } else if (button == processingPattern) {
             // Rebuild the inventory slots before the slot change packet arrives.
             TileGrid.PROCESSING_PATTERN.setValue(false, processingPattern.isChecked());
-            ((NetworkNodeGrid) grid)
-                    .clearMatrix(); // The server does this but let's do it earlier so the client doesn't notice.
+            // The server does this but let's do it earlier so the client doesn't notice.
+            ((NetworkNodeGrid) grid).clearMatrix();
             ((ContainerGrid) this.inventorySlots).initSlots();
 
             TileDataManager.setParameter(TileGrid.PROCESSING_PATTERN, processingPattern.isChecked());
