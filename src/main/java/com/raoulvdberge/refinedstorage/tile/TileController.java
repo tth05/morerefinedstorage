@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.RSBlocks;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.energy.IEnergy;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.INetworkNodeGraph;
@@ -524,6 +525,10 @@ public class TileController extends TileBase
         super.invalidate();
 
         if (world != null && !world.isRemote) {
+            for (ICraftingTask task : this.craftingManager.getTasks()) {
+                task.onCancelled();
+            }
+
             nodeGraph.disconnectAll();
         }
     }
