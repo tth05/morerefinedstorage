@@ -52,7 +52,12 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             // Only if we are a crafting grid. Pattern grids can just be emptied.
             if (!slot.isEmpty() && grid.getGridType() == GridType.CRAFTING) {
                 // try to insert into network.
-                giveToPlayerOrNetwork(slot, player, network);
+                ItemStack remainder = network.insertItem(slot, slot.getCount(), Action.PERFORM);
+                if(remainder != null) {
+                    //give to player otherwise
+                    giveToPlayerOrNetwork(slot, player, null);
+                }
+
                 grid.getCraftingMatrix().setInventorySlotContents(i, ItemStack.EMPTY);
             }
         }
