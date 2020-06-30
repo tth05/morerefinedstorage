@@ -43,6 +43,7 @@ public class ContainerCraftingMonitor extends ContainerBase implements ICrafting
     @Override
     public void onContainerClosed(@Nonnull EntityPlayer player) {
         super.onContainerClosed(player);
+        craftingMonitor.onClosed(player);
 
         ICraftingManager manager = craftingMonitor.getCraftingManager();
         if (!player.getEntityWorld().isRemote && manager != null && addedListener) {
