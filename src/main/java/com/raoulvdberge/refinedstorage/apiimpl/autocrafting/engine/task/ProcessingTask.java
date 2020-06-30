@@ -53,8 +53,10 @@ public class ProcessingTask extends Task {
 
     private final List<Pair<Input, Integer>> generatedPairs = new ObjectArrayList<>(this.inputs.size());
 
-    /** Reference to the container that left behind the remainder. Ensures that all remainder is inserted into the
-     * correct container. */
+    /**
+     * Reference to the container that left behind the remainder. Ensures that all remainder is inserted into the
+     * correct container.
+     */
     private ICraftingPatternContainer remainderContainer;
 
     private ProcessingState state = ProcessingState.READY;
@@ -242,15 +244,8 @@ public class ProcessingTask extends Task {
 
             //only track what hasn't been tracked
             if (stack.getCount() > trackedAmount) {
-                //limit by amount that this task thinks is in the machine, this stops us from tracking outputs before we
-                // we've inserted anything. This is unlikely but still makes the code more robust
-                int trackableAmount = Math.min(stack.getCount() - trackedAmount, this.inputs.stream()
-                        .mapToInt(input -> (int) (input.getProcessingAmount() / input.getQuantityPerCraft())).min()
-                        .orElseThrow(IllegalStateException::new));
-
-                long processingAmount = matchingOutput.getProcessingAmount();
-                trackAndUpdate(matchingOutput, trackableAmount);
-                trackedAmount += (int) (processingAmount - matchingOutput.getProcessingAmount());
+                //limit param using the already tracked amount
+                trackedAmount += trackAndUpdate(matchingOutput, stack.getCount() - trackedAmount);
             }
 
             //subtract amount that was given to input
@@ -298,15 +293,8 @@ public class ProcessingTask extends Task {
 
             //only track what hasn't been tracked
             if (stack.amount > trackedAmount) {
-                //limit by amount that this task thinks is in the machine, this stops us from tracking outputs before we
-                // we've inserted anything. This is unlikely but still makes the code more robust
-                int trackableAmount = Math.min(stack.amount - trackedAmount, this.inputs.stream()
-                        .mapToInt(input -> (int) (input.getProcessingAmount() / input.getQuantityPerCraft())).min()
-                        .orElseThrow(IllegalStateException::new));
-
-                long processingAmount = matchingOutput.getProcessingAmount();
-                trackAndUpdate(matchingOutput, trackableAmount);
-                trackedAmount = (int) (processingAmount - matchingOutput.getProcessingAmount());
+                //limit param using the already tracked amount
+                trackedAmount += trackAndUpdate(matchingOutput, stack.amount - trackedAmount);
             }
 
             //subtract amount that was given to input
@@ -326,17 +314,47 @@ public class ProcessingTask extends Task {
     }
 
     /**
-     * Updates the processing amount of all outputs. Also check if any new amount of sets are completed and notifies the
-     * inputs accordingly.
+     * Updates the processing amount of the given output. How much of the given {@code trackableAmount} can be used is
+     * very precisely calculated. Also checks if any new amount of sets are completed and notifies the inputs
+     * accordingly.
      *
-     * @param output the output
-     * @param amount the amount that was imported for the given output
+     * @param output          the output
+     * @param trackableAmount the amount that was imported for the given output
+     * @return how much of the given {@code trackableAmount} was used up
      */
-    private void trackAndUpdate(Output output, long amount) {
+    private int trackAndUpdate(Output output, long trackableAmount) {
+        long outputProcessingAmount = output.getProcessingAmount();
+
+        //amount of sets that have been inserted for all inputs
+        int insertedInputSets = this.inputs.stream()
+                .mapToInt(input -> (int) (input.getProcessingAmount() / input.getQuantityPerCraft())).min()
+                .orElseThrow(IllegalStateException::new);
+
+        //if there's at least one set inserted
+        if (insertedInputSets > 0) {
+            int remainder = (int) (outputProcessingAmount % output.getQuantityPerCraft());
+
+            if (insertedInputSets == 1) { //only one set inserted
+                //limit by the remainder or one full set
+                trackableAmount = Math.min(trackableAmount,
+                        remainder == 0 ? output.getQuantityPerCraft() : remainder);
+            } else {
+                //allow for [sets - 1] full batches and then add the same calculation as above
+                trackableAmount = Math.min(trackableAmount,
+                        (insertedInputSets - 1) * output.getQuantityPerCraft() +
+                                (remainder == 0 ? output.getQuantityPerCraft() : remainder));
+            }
+
+            if (trackableAmount < 1)
+                return 0;
+        } else {
+            return 0;
+        }
+
         //every time we pass something to the parents, check if one full set is done
         //the following code is just meant for tracking and does not use up the amount in any way
         long oldCompletedSets = output.getCompletedSets();
-        output.setProcessingAmount(output.getProcessingAmount() - amount);
+        output.setProcessingAmount(output.getProcessingAmount() - trackableAmount);
 
         if (output.getProcessingAmount() < 1) { //ceil if output is done to complete final set
             output.setCompletedSets(
@@ -362,6 +380,8 @@ public class ProcessingTask extends Task {
                 input.setProcessingAmount(
                         input.getProcessingAmount() - input.getQuantityPerCraft() * newlyCompletedSets);
         }
+
+        return (int) (outputProcessingAmount - output.getProcessingAmount());
     }
 
     /**
