@@ -66,144 +66,156 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
 
         if (network != null && canUpdate() && ticks % upgrades.getSpeed() == 0) {
             if (type == IType.ITEMS) {
-                IItemHandler handler = WorldUtils.getItemHandler(getFacingTile(), getDirection().getOpposite());
-
-                if (handler != null) {
-                    while (filterSlot + 1 < itemFilters.getSlots() && itemFilters.getStackInSlot(filterSlot).isEmpty()) {
-                        filterSlot++;
-                    }
-
-                    // We jump out of the loop above if we reach the maximum slot. If the maximum slot is empty,
-                    // we waste a tick with doing nothing because it's empty. Hence this check. If we are at the last slot
-                    // and it's empty, go back to slot 0.
-                    // We also handle if we exceeded the maximum slot in general.
-                    if ((filterSlot == itemFilters.getSlots() - 1 && itemFilters.getStackInSlot(filterSlot).isEmpty()) || (filterSlot >= itemFilters.getSlots())) {
-                        filterSlot = 0;
-                    }
-
-                    ItemStack slot = itemFilters.getStackInSlot(filterSlot);
-
-                    if (!slot.isEmpty()) {
-                        int stackSize = upgrades.getItemInteractCount();
-
-                        if (upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
-                            int found = 0;
-
-                            for (int i = 0; i < handler.getSlots(); i++) {
-                                ItemStack stackInConnectedHandler = handler.getStackInSlot(i);
-
-                                if (API.instance().getComparer().isEqual(slot, stackInConnectedHandler, compare)) {
-                                    found += stackInConnectedHandler.getCount();
-                                }
-                            }
-
-                            int needed = 0;
-
-                            for (int i = 0; i < itemFilters.getSlots(); ++i) {
-                                if (API.instance().getComparer().isEqualNoQuantity(slot, itemFilters.getStackInSlot(i))) {
-                                    needed += itemFilters.getStackInSlot(i).getCount();
-                                }
-                            }
-
-                            stackSize = Math.min(stackSize, needed - found);
-                        }
-
-                        if(stackSize > 0) {
-                            ItemStack took =
-                                    network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize), compare,
-                                            Action.SIMULATE);
-
-                            if (took.isEmpty()) {
-                                if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
-                                    network.getCraftingManager()
-                                            .request(new SlottedCraftingRequest(this, filterSlot), slot, stackSize);
-                                }
-                            } else {
-                                ItemStack remainder = ItemHandlerHelper.insertItem(handler, took, true);
-
-                                int correctedStackSize = took.getCount() - remainder.getCount();
-
-                                if (correctedStackSize > 0) {
-                                    took = network.extractItem(slot, correctedStackSize, compare, Action.PERFORM);
-
-                                    ItemHandlerHelper.insertItem(handler, took, false);
-                                }
-                            }
-                        }
-                    }
-
-                    filterSlot++;
-                }
+                updateItemMode();
             } else if (type == IType.FLUIDS) {
-                FluidStack[] fluids = fluidFilters.getFluids();
+                updateFluidMode();
+            }
+        }
+    }
 
-                while (filterSlot + 1 < fluids.length && fluids[filterSlot] == null) {
-                    filterSlot++;
+    private void updateItemMode() {
+        IItemHandler handler = WorldUtils.getItemHandler(getFacingTile(), getDirection().getOpposite());
+
+        if (handler != null) {
+            while (filterSlot + 1 < itemFilters.getSlots() && itemFilters.getStackInSlot(filterSlot).isEmpty()) {
+                filterSlot++;
+            }
+
+            // We jump out of the loop above if we reach the maximum slot. If the maximum slot is empty,
+            // we waste a tick with doing nothing because it's empty. Hence this check. If we are at the last slot
+            // and it's empty, go back to slot 0.
+            // We also handle if we exceeded the maximum slot in general.
+            if ((filterSlot == itemFilters.getSlots() - 1 && itemFilters.getStackInSlot(filterSlot).isEmpty()) || (filterSlot >= itemFilters.getSlots())) {
+                filterSlot = 0;
+            }
+
+            ItemStack slot = itemFilters.getStackInSlot(filterSlot);
+
+            if (!slot.isEmpty()) {
+                int stackSize = upgrades.getItemInteractCount();
+
+                if (upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
+                    stackSize = getStackInteractCountForRegulator(handler, slot, stackSize);
                 }
 
-                // We jump out of the loop above if we reach the maximum slot. If the maximum slot is empty,
-                // we waste a tick with doing nothing because it's empty. Hence this check. If we are at the last slot
-                // and it's empty, go back to slot 0.
-                // We also handle if we exceeded the maximum slot in general.
-                if ((filterSlot == fluids.length - 1 && fluids[filterSlot] == null) || (filterSlot >= fluids.length)) {
-                    filterSlot = 0;
-                }
+                if(stackSize > 0) {
+                    ItemStack took =
+                            network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize), compare,
+                                    Action.SIMULATE);
 
-                IFluidHandler handler = WorldUtils.getFluidHandler(getFacingTile(), getDirection().getOpposite());
-
-                if (handler != null) {
-                    FluidStack stack = fluids[filterSlot];
-
-                    if (stack != null) {
-                        int toExtract = Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount();
-
-                        if (upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
-                            int found = 0;
-
-                            for (int i = 0; i < handler.getTankProperties().length; i++) {
-                                FluidStack stackInConnectedHandler = handler.getTankProperties()[i].getContents();
-
-                                if (API.instance().getComparer().isEqual(stack, stackInConnectedHandler, compare)) {
-                                    found += stackInConnectedHandler.amount;
-                                }
-                            }
-
-                            int needed = 0;
-
-                            for (int i = 0; i < fluidFilters.getSlots(); ++i) {
-                                FluidStack fluid = fluidFilters.getFluid(i);
-                                if (API.instance().getComparer().isEqual(stack, fluid, IComparer.COMPARE_NBT)) {
-                                    needed += fluid.amount;
-                                }
-                            }
-
-                            toExtract = Math.min(toExtract, needed - found);
+                    if (took.isEmpty()) {
+                        if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
+                            network.getCraftingManager()
+                                    .request(new SlottedCraftingRequest(this, filterSlot), slot, stackSize);
                         }
+                    } else {
+                        ItemStack remainder = ItemHandlerHelper.insertItem(handler, took, true);
 
-                        FluidStack stackInStorage = network.getFluidStorageCache().getList().get(stack, compare);
+                        int correctedStackSize = took.getCount() - remainder.getCount();
 
-                        if (stackInStorage != null) {
-                            toExtract = Math.min(toExtract, stackInStorage.amount);
+                        if (correctedStackSize > 0) {
+                            took = network.extractItem(slot, correctedStackSize, compare, Action.PERFORM);
 
-                            FluidStack took = network.extractFluid(stack, toExtract, compare, Action.SIMULATE);
-
-                            if (took != null) {
-                                int filled = handler.fill(took, false);
-
-                                if (filled > 0) {
-                                    took = network.extractFluid(stack, filled, compare, Action.PERFORM);
-
-                                    handler.fill(took, true);
-                                }
-                            }
-                        } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
-                            network.getCraftingManager().request(this, stack, toExtract);
+                            ItemHandlerHelper.insertItem(handler, took, false);
                         }
                     }
-
-                    filterSlot++;
                 }
             }
+
+            filterSlot++;
+        }
+    }
+
+    private int getStackInteractCountForRegulator(IItemHandler handler, ItemStack slot, int stackSize) {
+        int found = 0;
+
+        for (int i = 0; i < handler.getSlots(); i++) {
+            ItemStack stackInConnectedHandler = handler.getStackInSlot(i);
+
+            if (API.instance().getComparer().isEqual(slot, stackInConnectedHandler, compare)) {
+                found += stackInConnectedHandler.getCount();
+            }
+        }
+
+        int needed = 0;
+
+        for (int i = 0; i < itemFilters.getSlots(); ++i) {
+            if (API.instance().getComparer().isEqualNoQuantity(slot, itemFilters.getStackInSlot(i))) {
+                needed += itemFilters.getStackInSlot(i).getCount();
+            }
+        }
+
+        return Math.min(stackSize, needed - found);
+    }
+
+    private void updateFluidMode() {
+        FluidStack[] fluids = fluidFilters.getFluids();
+
+        while (filterSlot + 1 < fluids.length && fluids[filterSlot] == null) {
+            filterSlot++;
+        }
+
+        // We jump out of the loop above if we reach the maximum slot. If the maximum slot is empty,
+        // we waste a tick with doing nothing because it's empty. Hence this check. If we are at the last slot
+        // and it's empty, go back to slot 0.
+        // We also handle if we exceeded the maximum slot in general.
+        if ((filterSlot == fluids.length - 1 && fluids[filterSlot] == null) || (filterSlot >= fluids.length)) {
+            filterSlot = 0;
+        }
+
+        IFluidHandler handler = WorldUtils.getFluidHandler(getFacingTile(), getDirection().getOpposite());
+
+        if (handler != null) {
+            FluidStack stack = fluids[filterSlot];
+
+            if (stack != null) {
+                int toExtract = Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount();
+
+                if (upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
+                    int found = 0;
+
+                    for (int i = 0; i < handler.getTankProperties().length; i++) {
+                        FluidStack stackInConnectedHandler = handler.getTankProperties()[i].getContents();
+
+                        if (API.instance().getComparer().isEqual(stack, stackInConnectedHandler, compare)) {
+                            found += stackInConnectedHandler.amount;
+                        }
+                    }
+
+                    int needed = 0;
+
+                    for (int i = 0; i < fluidFilters.getSlots(); ++i) {
+                        FluidStack fluid = fluidFilters.getFluid(i);
+                        if (API.instance().getComparer().isEqual(stack, fluid, IComparer.COMPARE_NBT)) {
+                            needed += fluid.amount;
+                        }
+                    }
+
+                    toExtract = Math.min(toExtract, needed - found);
+                }
+
+                FluidStack stackInStorage = network.getFluidStorageCache().getList().get(stack, compare);
+
+                if (stackInStorage != null) {
+                    toExtract = Math.min(toExtract, stackInStorage.amount);
+
+                    FluidStack took = network.extractFluid(stack, toExtract, compare, Action.SIMULATE);
+
+                    if (took != null) {
+                        int filled = handler.fill(took, false);
+
+                        if (filled > 0) {
+                            took = network.extractFluid(stack, filled, compare, Action.PERFORM);
+
+                            handler.fill(took, true);
+                        }
+                    }
+                } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
+                    network.getCraftingManager().request(this, stack, toExtract);
+                }
+            }
+
+            filterSlot++;
         }
     }
 

@@ -4,6 +4,10 @@
 - Items are now properly stacked when extracting
 - Fixed RebornStorage compatibility
 - Fixed Grid not updating when typing
+- Fixed auto-crafting tasks tracking more than allowed
+- Fixed wireless crafting monitor not closing properly
+- Fixed controller using energy even when turned off
+- Fixed internal crafting inventory not being returned when controller is broken
 
 ### 2.0.2
 - Completely new, lightweight and fast auto-crafting engine

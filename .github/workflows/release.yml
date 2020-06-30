@@ -35,11 +35,13 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Completely new, lightweight and fast auto-crafting engine
-          - Increased Disk Manipulator speed by 25
-          - Fixed Portable Grid inserting disks into themselves if the players inventory is full
-          - Fixed dupe in filter slots when using Inventory Tweaks Reborn
-          - Other small bug fixes
+          - Items are now properly stacked when extracting
+          - Fixed RebornStorage compatibility
+          - Fixed Grid not updating when typing
+          - Fixed auto-crafting tasks tracking more than allowed
+          - Fixed wireless crafting monitor not closing properly
+          - Fixed controller using energy even when turned off
+          - Fixed internal crafting inventory not being returned when controller is broken
         draft: false
         prerelease: false
     - name: Upload jars to release
