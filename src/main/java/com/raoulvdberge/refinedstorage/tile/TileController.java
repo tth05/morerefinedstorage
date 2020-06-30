@@ -72,7 +72,9 @@ import java.util.function.Predicate;
 import static com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY;
 
 // TODO: Change INetwork to be offloaded from the tile.
-public class TileController extends TileBase implements ITickable, INetwork, IRedstoneConfigurable, INetworkNode, INetworkNodeProxy<TileController>, INetworkNodeVisitor {
+public class TileController extends TileBase
+        implements ITickable, INetwork, IRedstoneConfigurable, INetworkNode, INetworkNodeProxy<TileController>,
+        INetworkNodeVisitor {
     private static final Comparator<ClientNode> CLIENT_NODE_COMPARATOR = (left, right) -> {
         if (left.getEnergyUsage() == right.getEnergyUsage()) {
             return 0;
@@ -82,36 +84,40 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     };
 
     public static final TileDataParameter<Integer, TileController> REDSTONE_MODE = RedstoneMode.createParameter();
-    public static final TileDataParameter<Integer, TileController> ENERGY_USAGE = new TileDataParameter<>(DataSerializers.VARINT, 0, TileController::getEnergyUsage);
-    public static final TileDataParameter<Integer, TileController> ENERGY_STORED = new TileDataParameter<>(DataSerializers.VARINT, 0, t -> t.getEnergy().getStored());
-    public static final TileDataParameter<Integer, TileController> ENERGY_CAPACITY = new TileDataParameter<>(DataSerializers.VARINT, 0, t -> t.getEnergy().getCapacity());
-    public static final TileDataParameter<List<ClientNode>, TileController> NODES = new TileDataParameter<>(RSSerializers.CLIENT_NODE_SERIALIZER, new ArrayList<>(), t -> {
-        List<ClientNode> nodes = new ArrayList<>();
+    public static final TileDataParameter<Integer, TileController> ENERGY_USAGE =
+            new TileDataParameter<>(DataSerializers.VARINT, 0, TileController::getEnergyUsage);
+    public static final TileDataParameter<Integer, TileController> ENERGY_STORED =
+            new TileDataParameter<>(DataSerializers.VARINT, 0, t -> t.getEnergy().getStored());
+    public static final TileDataParameter<Integer, TileController> ENERGY_CAPACITY =
+            new TileDataParameter<>(DataSerializers.VARINT, 0, t -> t.getEnergy().getCapacity());
+    public static final TileDataParameter<List<ClientNode>, TileController> NODES =
+            new TileDataParameter<>(RSSerializers.CLIENT_NODE_SERIALIZER, new ArrayList<>(), t -> {
+                List<ClientNode> nodes = new ArrayList<>();
 
-        for (INetworkNode node : t.nodeGraph.all()) {
-            if (node.canUpdate()) {
-                ItemStack stack = node.getItemStack();
+                for (INetworkNode node : t.nodeGraph.all()) {
+                    if (node.canUpdate()) {
+                        ItemStack stack = node.getItemStack();
 
-                if (stack.isEmpty()) {
-                    continue;
+                        if (stack.isEmpty()) {
+                            continue;
+                        }
+
+                        ClientNode clientNode = new ClientNode(stack, 1, node.getEnergyUsage());
+
+                        if (nodes.contains(clientNode)) {
+                            ClientNode other = nodes.get(nodes.indexOf(clientNode));
+
+                            other.setAmount(other.getAmount() + 1);
+                        } else {
+                            nodes.add(clientNode);
+                        }
+                    }
                 }
 
-                ClientNode clientNode = new ClientNode(stack, 1, node.getEnergyUsage());
+                nodes.sort(CLIENT_NODE_COMPARATOR);
 
-                if (nodes.contains(clientNode)) {
-                    ClientNode other = nodes.get(nodes.indexOf(clientNode));
-
-                    other.setAmount(other.getAmount() + 1);
-                } else {
-                    nodes.add(clientNode);
-                }
-            }
-        }
-
-        nodes.sort(CLIENT_NODE_COMPARATOR);
-
-        return nodes;
-    });
+                return nodes;
+            });
 
     private static final int THROTTLE_INACTIVE_TO_ACTIVE = 20;
     private static final int THROTTLE_ACTIVE_TO_INACTIVE = 4;
@@ -188,10 +194,12 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             }
 
             if (getType() == ControllerType.NORMAL) {
+                int energyUsage = getEnergyUsage();
+
                 if (!RS.INSTANCE.config.controllerUsesEnergy) {
                     this.energy.setStored(this.energy.getCapacity());
-                } else if (this.energy.extract(getEnergyUsage(), Action.SIMULATE) >= 0) {
-                    this.energy.extract(getEnergyUsage(), Action.PERFORM);
+                } else if (this.energy.extract(energyUsage, Action.SIMULATE) >= 0) {
+                    this.energy.extract(energyUsage, Action.PERFORM);
                 } else {
                     this.energy.setStored(0);
                 }
@@ -204,7 +212,8 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
             if (couldRun != canRun) {
                 ++ticksSinceUpdateChanged;
 
-                if ((canRun ? (ticksSinceUpdateChanged > THROTTLE_INACTIVE_TO_ACTIVE) : (ticksSinceUpdateChanged > THROTTLE_ACTIVE_TO_INACTIVE)) || throttlingDisabled) {
+                if ((canRun ? (ticksSinceUpdateChanged > THROTTLE_INACTIVE_TO_ACTIVE) :
+                        (ticksSinceUpdateChanged > THROTTLE_ACTIVE_TO_INACTIVE)) || throttlingDisabled) {
                     ticksSinceUpdateChanged = 0;
                     couldRun = canRun;
                     throttlingDisabled = false;
@@ -286,7 +295,8 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
     @Nonnull
     @Override
-    public ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action, Predicate<IStorage<ItemStack>> filter) {
+    public ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action,
+                                 Predicate<IStorage<ItemStack>> filter) {
         int received = 0;
 
         int extractedExternally = 0;
@@ -383,7 +393,8 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     }
 
     @Override
-    public FluidStack extractFluid(@Nonnull FluidStack stack, int size, int flags, Action action, Predicate<IStorage<FluidStack>> filter) {
+    public FluidStack extractFluid(@Nonnull FluidStack stack, int size, int flags, Action action,
+                                   Predicate<IStorage<FluidStack>> filter) {
         int received = 0;
 
         int extractedExternally = 0;
@@ -494,10 +505,12 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
             // Little hack to support not conducting through covers (if the cover is right next to the controller).
             if (tile != null && tile.hasCapability(NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite())) {
-                INetworkNodeProxy otherNodeProxy = NETWORK_NODE_PROXY_CAPABILITY.cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite()));
+                INetworkNodeProxy otherNodeProxy = NETWORK_NODE_PROXY_CAPABILITY
+                        .cast(tile.getCapability(NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite()));
                 INetworkNode otherNode = otherNodeProxy.getNode();
 
-                if (otherNode instanceof ICoverable && ((ICoverable) otherNode).getCoverManager().hasCover(facing.getOpposite())) {
+                if (otherNode instanceof ICoverable &&
+                        ((ICoverable) otherNode).getCoverManager().hasCover(facing.getOpposite())) {
                     continue;
                 }
             }
@@ -540,8 +553,8 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
     @Override
     public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
         return capability == CapabilityEnergy.ENERGY
-            || capability == CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY
-            || super.hasCapability(capability, facing);
+                || capability == CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY
+                || super.hasCapability(capability, facing);
     }
 
     @Override
@@ -565,8 +578,7 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
     @Nonnull
     @Override
-    public World getWorld()
-    {
+    public World getWorld() {
         // This is provided by net.minecraft.TileEntity - and needed as a part of INetworkNode
         // After obfuscation - these two methods will not be the same - so we have to redefine this here
         return this.world;
@@ -609,7 +621,10 @@ public class TileController extends TileBase implements ITickable, INetwork, IRe
 
     @Override
     public int getEnergyUsage() {
-        int usage = redstoneMode.isEnabled(world, pos) ? RS.INSTANCE.config.controllerBaseUsage : 0;
+        if (!redstoneMode.isEnabled(world, pos))
+            return 0;
+
+        int usage = RS.INSTANCE.config.controllerBaseUsage;
 
         for (INetworkNode node : nodeGraph.all()) {
             if (node.canUpdate()) {
