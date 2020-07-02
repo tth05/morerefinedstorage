@@ -2,6 +2,7 @@
 
 ### 2.0.4
 - The crafting grid now automatically refills buckets
+- Fixed crash when using a fluid external storage
 
 ### 2.0.3
 - Items are now properly stacked when extracting
