@@ -92,7 +92,12 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
     @Override
     public FluidStack insert(@Nonnull FluidStack stack, int size, Action action) {
         if (context.acceptsFluid(stack)) {
-            int filled = handlerSupplier.get().fill(StackUtils.copy(stack, size), action == Action.PERFORM);
+            IFluidHandler handler = handlerSupplier.get();
+
+            if(handler == null)
+                return StackUtils.copy(stack, size);
+
+            int filled = handler.fill(StackUtils.copy(stack, size), action == Action.PERFORM);
 
             if (filled == size) {
                 return null;
