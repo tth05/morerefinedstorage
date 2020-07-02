@@ -1,5 +1,8 @@
 # More Refined Storage Changelog
 
+### 2.0.4
+- The crafting grid now automatically refills buckets
+
 ### 2.0.3
 - Items are now properly stacked when extracting
 - Fixed RebornStorage compatibility

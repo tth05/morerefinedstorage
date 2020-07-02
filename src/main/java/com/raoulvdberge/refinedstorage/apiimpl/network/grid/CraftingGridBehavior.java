@@ -22,6 +22,7 @@ import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -53,7 +54,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (!slot.isEmpty() && grid.getGridType() == GridType.CRAFTING) {
                 // try to insert into network.
                 ItemStack remainder = network.insertItem(slot, slot.getCount(), Action.PERFORM);
-                if(remainder != null) {
+                if (remainder != null) {
                     //give to player otherwise
                     giveToPlayerOrNetwork(slot, player, null);
                 }
@@ -118,10 +119,21 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
         INetwork network = grid.getNetwork();
 
         InventoryCrafting matrix = grid.getCraftingMatrix();
-        if (matrix == null)
+        if (matrix == null || network == null)
             return;
 
-        NonNullList<ItemStack> remainder = recipe.getRemainingItems(matrix);
+        //create a clone of the matrix because this call messes up buckets somehow and converts them to normal buckets
+        // which then causes the recipe to be broken
+        InventoryCrafting fakeMatrix = new InventoryCrafting(new Container() {
+            @Override
+            public boolean canInteractWith(@Nonnull EntityPlayer ignored) {
+                return false;
+            }
+        }, matrix.getWidth(), matrix.getHeight());
+        for (int i = 0; i < matrix.getSizeInventory(); i++)
+            fakeMatrix.setInventorySlotContents(i, matrix.getStackInSlot(i).copy());
+
+        NonNullList<ItemStack> remainder = recipe.getRemainingItems(fakeMatrix);
 
         for (int i = 0; i < grid.getCraftingMatrix().getSizeInventory(); ++i) {
             ItemStack slot = matrix.getStackInSlot(i);
@@ -134,13 +146,25 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
 
                     matrix.decrStackSize(i, 1);
                 } else {
-                    //Replace item with remainder
-                    matrix.setInventorySlotContents(i, remainder.get(i).copy());
+                    if (remainder.get(i).hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
+                        //refill one item so the slot is never empty if possible
+                        ItemStack refill = network.extractItem(slot, 1, Action.PERFORM);
+
+                        if (refill.isEmpty()) {
+                            //replace item with remainder
+                            matrix.setInventorySlotContents(i, remainder.get(i).copy());
+                        } else {
+                            network.getItemStorageTracker().changed(player, refill.copy());
+                        }
+                    } else {
+                        //replace item with remainder
+                        matrix.setInventorySlotContents(i, remainder.get(i).copy());
+                    }
                 }
             } else if (!slot.isEmpty()) {
-                if (slot.getCount() == 1 && network != null) {
-                    //Refill one item so the slot is never empty if possible
-                    ItemStack refill = StackUtils.nullToEmpty(network.extractItem(slot, 1, Action.PERFORM));
+                if (slot.getCount() == 1) {
+                    //refill one item so the slot is never empty if possible
+                    ItemStack refill = network.extractItem(slot, 1, Action.PERFORM);
 
                     matrix.setInventorySlotContents(i, refill);
 
@@ -173,7 +197,19 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             return;
 
         ItemStack result = grid.getCraftingResult().getStackInSlot(0);
-        NonNullList<ItemStack> remainder = recipeUsed.getRemainingItems(matrix);
+
+        //create a clone of the matrix because this call messes up buckets somehow and converts them to normal buckets
+        // which then causes the recipe to be broken
+        InventoryCrafting fakeMatrix = new InventoryCrafting(new Container() {
+            @Override
+            public boolean canInteractWith(@Nonnull EntityPlayer ignored) {
+                return false;
+            }
+        }, matrix.getWidth(), matrix.getHeight());
+        for (int i = 0; i < matrix.getSizeInventory(); i++)
+            fakeMatrix.setInventorySlotContents(i, matrix.getStackInSlot(i).copy());
+
+        NonNullList<ItemStack> remainder = recipeUsed.getRemainingItems(fakeMatrix);
 
         //the amount that can be crafted is limited by the stack size of the output at first
         int toCraft = result.getMaxStackSize() / result.getCount();
@@ -198,7 +234,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (cachedPair != null) {
                 itemCountInNetwork = cachedPair.getRight();
             } else {
-                ItemStack networkItem = ((StorageCacheItem)grid.getStorageCache()).getList().get(slot);
+                ItemStack networkItem = ((StorageCacheItem) grid.getStorageCache()).getList().get(slot);
                 itemCountInNetwork = networkItem == null ? 0 : networkItem.getCount();
                 networkCountCache.add(Pair.of(slot, itemCountInNetwork));
             }
@@ -281,9 +317,11 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             commonSlots.add(MutablePair.of(correspondingSlots, false));
 
             //if the max stack size is 1, ignore it
-            if (slot.getMaxStackSize() == 1)
+            if (slot.getMaxStackSize() == 1 &&
+                    !slot.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
                 continue;
-            if (missingCount <= toSplitUp) {
+            if (missingCount <= toSplitUp &&
+                    !slot.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
                 //fill up slot copies to maximum amount, otherwise the remainder simulation won't work
                 for (Pair<ItemStack, Integer> correspondingSlot : correspondingSlots)
                     correspondingSlot.getLeft().setCount(correspondingSlot.getLeft().getMaxStackSize());
@@ -306,7 +344,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
 
         NonNullList<ItemStack> finalRemainder;
         //if there is any remainder, then simulate the max iterations that can be done
-        if (foundDamageableItemStack || remainder.stream().anyMatch(item -> !item.isEmpty())) {
+        if (foundDamageableItemStack || remainder.stream().anyMatch(item -> !item.isEmpty() &&
+                !item.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))) {
             //create new matrix made up of the common slots
             InventoryCrafting matrixClone = new InventoryCrafting(new Container() {
                 @Override
@@ -348,12 +387,14 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 if (realStackCount - toCraft < 1)
                     refillAmount++;
                 //this means that the remainder gets placed into the slot and therefore the slot should not be
-                // re-filled, nor should anything be extracted
+                // re-filled, nor should anything be extracted. This does not happen for buckets
                 ItemStack correspondingRemainder = remainder.get(commonSlotEntry.getRight());
                 ItemStack correspondingFinalRemainder = finalRemainder.get(commonSlotEntry.getRight());
                 if (realStackCount == 1 && correspondingRemainder.getCount() <= 1 &&
                         !correspondingRemainder.isEmpty() &&
-                        correspondingFinalRemainder.getCount() <= 1)
+                        correspondingFinalRemainder.getCount() <= 1 &&
+                        !correspondingRemainder
+                                .hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
                     break pairsLoop;
             }
 
@@ -384,7 +425,14 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (i < finalRemainder.size() && !remainderItem.isEmpty()) {
                 //Replace item with remainder if count is 1
                 if (slot.getCount() == 1 && remainderItem.getCount() == 1) {
-                    matrix.setInventorySlotContents(i, remainderItem);
+                    if (remainderItem.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
+                        ItemStack newItem = network.insertItem(remainderItem, remainderItem.getCount(), Action.PERFORM);
+
+                        if (newItem != null)
+                            giveToPlayerOrNetwork(newItem, player, null);
+                    } else {
+                        matrix.setInventorySlotContents(i, remainderItem);
+                    }
                 } else {
                     //split up remainder that shouldn't be stacked
                     do {
@@ -395,7 +443,9 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 }
             }
             //only do this if remainder didn't replace item
-            if (slot.getCount() != 1 || remainderItem.getCount() != 1) {
+            if (slot.getCount() != 1 ||
+                    (remainderItem.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null) ||
+                            remainderItem.getCount() != 1)) {
                 if (slot.getCount() - toCraft < 1) { //refill from system if possible
                     boolean hasRefilledAllSlots = true;
                     outer:
@@ -410,7 +460,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     }
 
                     if (!hasRefilledAllSlots) {
-                        ItemStack refill = StackUtils.nullToEmpty(network.extractItem(slot, 1, Action.PERFORM));
+                        ItemStack refill = network.extractItem(slot, 1, Action.PERFORM);
+
                         matrix.setInventorySlotContents(i, refill);
                         if (!refill.isEmpty())
                             network.getItemStorageTracker().changed(player, refill.copy());
@@ -428,8 +479,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
         craftedItem.setCount(toCraft * result.getCount());
         giveToPlayerOrNetwork(craftedItem, player, network);
 
-        grid.onCraftingMatrixChanged();
         FMLCommonHandler.instance().firePlayerCraftingEvent(player, craftedItem.copy(), grid.getCraftingMatrix());
+        grid.onCraftingMatrixChanged();
     }
 
     /**

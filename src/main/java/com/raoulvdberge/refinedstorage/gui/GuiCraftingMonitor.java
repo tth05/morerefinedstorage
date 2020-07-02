@@ -17,6 +17,7 @@ import com.raoulvdberge.refinedstorage.gui.control.TabList;
 import com.raoulvdberge.refinedstorage.network.MessageCraftingCancel;
 import com.raoulvdberge.refinedstorage.tile.craftingmonitor.ICraftingMonitor;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
@@ -89,7 +90,7 @@ public class GuiCraftingMonitor extends GuiBase {
             List<String> textLines = Lists.newArrayList(
                     requested.getItem() != null ? requested.getItem().getDisplayName() :
                             requested.getFluid().getLocalizedName());
-            List<String> smallTextLines = Lists.newArrayList();
+            List<String> smallTextLines = new ObjectArrayList<>();
 
             int totalSecs = (int) (System.currentTimeMillis() - executionStarted) / 1000;
             int minutes = (totalSecs % 3600) / 60;
