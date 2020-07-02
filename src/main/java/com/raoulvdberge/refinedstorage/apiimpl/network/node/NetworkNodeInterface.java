@@ -34,7 +34,9 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
 
     private final IItemHandler items = new ItemHandlerProxy(importItems, exportItems);
 
-    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_CRAFTING);
+    private final ItemHandlerUpgrade upgrades =
+            new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK,
+                    ItemUpgrade.TYPE_CRAFTING);
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
 
@@ -85,7 +87,8 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
 
             if (wanted.isEmpty()) {
                 if (!got.isEmpty()) {
-                    exportItems.setStackInSlot(i, StackUtils.nullToEmpty(network.insertItemTracked(got, got.getCount())));
+                    exportItems
+                            .setStackInSlot(i, StackUtils.nullToEmpty(network.insertItemTracked(got, got.getCount())));
                 }
             } else if (!got.isEmpty() && !API.instance().getComparer().isEqual(wanted, got, getCompare())) {
                 exportItems.setStackInSlot(i, StackUtils.nullToEmpty(network.insertItemTracked(got, got.getCount())));
@@ -103,23 +106,28 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
 
                         // If we are an interface acting as a storage, we don't want to extract from other interfaces to
                         // avoid stealing from each other.
-                        return !(s instanceof StorageExternalItem) || !((StorageExternalItem) s).isConnectedToInterface();
+                        return !(s instanceof StorageExternalItem) ||
+                                !((StorageExternalItem) s).isConnectedToInterface();
                     });
 
                     if (!result.isEmpty()) {
                         if (exportItems.getStackInSlot(i).isEmpty()) {
                             exportItems.setStackInSlot(i, result);
-                        } else {
+                        } else if (API.instance().getComparer()
+                                .isEqualNoQuantity(exportItems.getStackInSlot(i), result)) {
                             exportItems.getStackInSlot(i).grow(result.getCount());
+
+                            // Example: our delta is 5, we extracted 3 items.
+                            // That means we still have to autocraft 2 items.
+                            delta -= result.isEmpty() ? 0 : result.getCount();
+
+                            if (delta > 0 && upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
+                                network.getCraftingManager()
+                                        .request(new SlottedCraftingRequest(this, i), wanted, delta);
+                            }
+                        } else {
+                            network.insertItem(result, result.getCount(), Action.PERFORM);
                         }
-                    }
-
-                    // Example: our delta is 5, we extracted 3 items.
-                    // That means we still have to autocraft 2 items.
-                    delta -= result.isEmpty() ? 0 : result.getCount();
-
-                    if (delta > 0 && upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
-                        network.getCraftingManager().request(new SlottedCraftingRequest(this, i), wanted, delta);
                     }
                 } else if (delta < 0) {
                     ItemStack remainder = network.insertItemTracked(got, Math.abs(delta));
@@ -139,9 +147,9 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
             INetworkNode facingNode = API.instance().getNetworkNodeManager(world).getNode(pos.offset(facing));
 
             if (facingNode instanceof NetworkNodeExternalStorage &&
-                facingNode.canUpdate() &&
-                ((NetworkNodeExternalStorage) facingNode).getDirection() == facing.getOpposite() &&
-                ((NetworkNodeExternalStorage) facingNode).getType() == IType.ITEMS) {
+                    facingNode.canUpdate() &&
+                    ((NetworkNodeExternalStorage) facingNode).getDirection() == facing.getOpposite() &&
+                    ((NetworkNodeExternalStorage) facingNode).getType() == IType.ITEMS) {
                 return true;
             }
         }

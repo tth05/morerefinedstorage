@@ -119,7 +119,7 @@ public interface INetwork {
             return ItemStack.EMPTY;
         }
 
-        return insertItem(stack, stack.getCount(), Action.PERFORM);
+        return insertItem(stack, size, Action.PERFORM);
     }
 
     /**
@@ -190,7 +190,7 @@ public interface INetwork {
             return null;
         }
 
-        return insertFluid(stack, stack.amount, Action.PERFORM);
+        return insertFluid(stack, size, Action.PERFORM);
     }
 
     /**
