@@ -65,7 +65,8 @@ public abstract class ContainerBase extends Container {
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 9; x++) {
                 if (id == disabledSlotNumber) {
-                    addSlotToContainer(new SlotLegacyDisabled(player.inventory, id, xInventory + x * 18, yInventory + y * 18));
+                    addSlotToContainer(
+                            new SlotLegacyDisabled(player.inventory, id, xInventory + x * 18, yInventory + y * 18));
                 } else {
                     addSlotToContainer(new Slot(player.inventory, id, xInventory + x * 18, yInventory + y * 18));
                 }
@@ -97,6 +98,10 @@ public abstract class ContainerBase extends Container {
     @Nonnull
     @Override
     public ItemStack slotClick(int id, int dragType, @Nonnull ClickType clickType, @Nonnull EntityPlayer player) {
+        //prevent IOOB
+        if (id >= this.inventorySlots.size())
+            return ItemStack.EMPTY;
+
         Slot slot = id >= 0 ? getSlot(id) : null;
 
         int disabledSlotNumber = getDisabledSlotNumber();
@@ -201,10 +206,12 @@ public abstract class ContainerBase extends Container {
                 FluidStack cached = this.fluids.get(i);
                 FluidStack actual = slot.getFluidInventory().getFluid(slot.getSlotIndex());
 
-                if (!API.instance().getComparer().isEqual(cached, actual, IComparer.COMPARE_QUANTITY | IComparer.COMPARE_NBT)) {
+                if (!API.instance().getComparer()
+                        .isEqual(cached, actual, IComparer.COMPARE_QUANTITY | IComparer.COMPARE_NBT)) {
                     this.fluids.set(i, actual);
 
-                    RS.INSTANCE.network.sendTo(new MessageSlotFilterFluidUpdate(slot.slotNumber, actual), (EntityPlayerMP) this.getPlayer());
+                    RS.INSTANCE.network.sendTo(new MessageSlotFilterFluidUpdate(slot.slotNumber, actual),
+                            (EntityPlayerMP) this.getPlayer());
                 }
             }
         }
