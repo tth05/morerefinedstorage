@@ -35,13 +35,10 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Items are now properly stacked when extracting
-          - Fixed RebornStorage compatibility
-          - Fixed Grid not updating when typing
-          - Fixed auto-crafting tasks tracking more than allowed
-          - Fixed wireless crafting monitor not closing properly
-          - Fixed controller using energy even when turned off
-          - Fixed internal crafting inventory not being returned when controller is broken
+          - The crafting grid now automatically refills buckets
+          - Fixed two crashes involving an external fluid storage
+          - Fixed MouseTweaks crash
+          - Fixed interface being able to duplicate items
         draft: false
         prerelease: false
     - name: Upload jars to release

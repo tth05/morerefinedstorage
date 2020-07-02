@@ -2,7 +2,7 @@
 
 ### 2.0.4
 - The crafting grid now automatically refills buckets
-- Fixed crash when using a fluid external storage
+- Fixed two crashes involving an external fluid storage
 - Fixed MouseTweaks crash
 - Fixed interface being able to duplicate items
 
