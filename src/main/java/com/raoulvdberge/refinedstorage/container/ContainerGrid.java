@@ -69,7 +69,8 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
         }
 
         transferManager.setNotFoundHandler(slotIndex -> {
-            if (!getPlayer().getEntityWorld().isRemote) {
+            EntityPlayer player = getPlayer();
+            if (!player.getEntityWorld().isRemote) {
                 Slot slot = inventorySlots.get(slotIndex);
 
                 if (grid instanceof IPortableGrid && slot instanceof SlotItemHandler &&
@@ -81,7 +82,7 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                     return ItemStack.EMPTY;
 
                 if (slot == craftingResultSlot) {
-                    grid.onCraftedShift(getPlayer());
+                    grid.onCraftedShift(player);
                 } else {
                     ItemStack stack = slot.getStack();
 
@@ -89,13 +90,13 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                         IFluidGridHandler fluidHandler = grid.getFluidHandler();
 
                         if (fluidHandler != null) {
-                            slot.putStack(fluidHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
+                            slot.putStack(fluidHandler.onShiftClick((EntityPlayerMP) player, stack));
                         }
                     } else {
                         IItemGridHandler itemHandler = grid.getItemHandler();
 
                         if (itemHandler != null) {
-                            slot.putStack(itemHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
+                            slot.putStack(itemHandler.onShiftClick((EntityPlayerMP) player, stack));
                         } else if (slot instanceof SlotGridCrafting &&
                                 mergeItemStack(stack, 14, 14 + (9 * 4), false)) {
                             slot.onSlotChanged();

@@ -33,12 +33,14 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import yalter.mousetweaks.api.MouseTweaksDisableWheelTweak;
 
@@ -182,7 +184,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         Slot hoveredSlot = this.getSlotUnderMouse();
 
         if (delta != 0 && (isShiftKeyDown() || isCtrlKeyDown())) {
-            if (isOverInventory(mouseX - guiLeft, mouseY - guiTop)) {
+            if (isOverInventoryAndHotBar(mouseX - guiLeft, mouseY - guiTop)) {
                 if (grid.getGridType() != GridType.FLUID && hoveredSlot != null) {
                     RS.INSTANCE.network.sendToServer(
                             new MessageGridItemInventoryScroll(hoveredSlot.getSlotIndex(), isShiftKeyDown(),
@@ -197,8 +199,12 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         }
     }
 
-    private boolean isOverInventory(int x, int y) {
+    private boolean isOverInventoryAndHotBar(int x, int y) {
         return inBounds(8, getYPlayerInventory(), 9 * 18 - 2, 4 * 18 + 2, x, y);
+    }
+
+    private boolean isOverInventory(int x, int y) {
+        return inBounds(8, getYPlayerInventory(), 9 * 18 - 2, 3 * 18 + 2, x, y);
     }
 
     @Override
@@ -488,16 +494,18 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                 RS.INSTANCE.network.sendToServer(new MessageGridClear());
             }
 
-            ItemStack held = ((ContainerGrid) this.inventorySlots).getPlayer().inventory.getItemStack();
+            EntityPlayer player = ((ContainerGrid) this.inventorySlots).getPlayer();
+            ItemStack held = player.inventory.getItemStack();
 
             if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) && !held.isEmpty() &&
                     (clickedButton == 0 || clickedButton == 1)) {
                 RS.INSTANCE.network.sendToServer(
                         grid.getGridType() == GridType.FLUID ? new MessageGridFluidInsertHeld() :
                                 new MessageGridItemInsertHeld(clickedButton == 1));
-            }
-
-            if (isOverSlotWithStack()) {
+            } else if (grid.getGridType() != GridType.FLUID &&
+                    isOverInventory(mouseX - guiLeft, mouseY - guiTop) && Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+                RS.INSTANCE.network.sendToServer(new MessageGridItemInsertInventory());
+            } else if (isOverSlotWithStack()) {
                 boolean isMiddleClickPulling = !held.isEmpty() && clickedButton == 2;
                 boolean isPulling = held.isEmpty() || isMiddleClickPulling;
 
@@ -506,12 +514,12 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                 if (isPulling) {
                     if (stack.isCraftable() && view.canCraft()) {
                         FMLCommonHandler.instance().showGuiScreen(
-                                new GuiGridCraftingSettings(this, ((ContainerGrid) this.inventorySlots).getPlayer(),
+                                new GuiGridCraftingSettings(this, player,
                                         stack));
                     } else if (view.canCraft() && !stack.isCraftable() && stack.getOtherId() != null &&
                             GuiScreen.isShiftKeyDown() && GuiScreen.isCtrlKeyDown()) {
                         FMLCommonHandler.instance().showGuiScreen(
-                                new GuiGridCraftingSettings(this, ((ContainerGrid) this.inventorySlots).getPlayer(),
+                                new GuiGridCraftingSettings(this, player,
                                         view.get(stack.getOtherId())));
                     } else if (grid.getGridType() == GridType.FLUID && held.isEmpty()) {
                         RS.INSTANCE.network.sendToServer(
@@ -541,6 +549,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         if (clickedClear || clickedCreatePattern) {
             mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         }
+
     }
 
     @Override
