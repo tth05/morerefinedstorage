@@ -35,10 +35,8 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - The crafting grid now automatically refills buckets
-          - Fixed two crashes involving an external fluid storage
-          - Fixed MouseTweaks crash
-          - Fixed interface being able to duplicate items
+          - Fixed crafting grid duplicating items when not connected to a network
+          - Allow using space to insert whole inventory
         draft: false
         prerelease: false
     - name: Upload jars to release
