@@ -119,7 +119,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
         INetwork network = grid.getNetwork();
 
         InventoryCrafting matrix = grid.getCraftingMatrix();
-        if (matrix == null || network == null)
+        if (matrix == null)
             return;
 
         //create a clone of the matrix because this call messes up buckets somehow and converts them to normal buckets
@@ -146,7 +146,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
 
                     matrix.decrStackSize(i, 1);
                 } else {
-                    if (remainder.get(i).hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
+                    if (network != null && remainder.get(i)
+                            .hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
                         //refill one item so the slot is never empty if possible
                         ItemStack refill = network.extractItem(slot, 1, Action.PERFORM);
 
@@ -164,11 +165,12 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             } else if (!slot.isEmpty()) {
                 if (slot.getCount() == 1) {
                     //refill one item so the slot is never empty if possible
-                    ItemStack refill = network.extractItem(slot, 1, Action.PERFORM);
+                    ItemStack refill = network == null ? ItemStack.EMPTY : network.extractItem(slot, 1, Action.PERFORM);
 
                     matrix.setInventorySlotContents(i, refill);
 
                     if (!refill.isEmpty())
+                        //noinspection ConstantConditions
                         network.getItemStorageTracker().changed(player, refill.copy());
                 } else {
                     matrix.decrStackSize(i, 1);

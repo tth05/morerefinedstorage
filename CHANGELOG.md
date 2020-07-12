@@ -1,5 +1,8 @@
 # More Refined Storage Changelog
 
+### 2.0.5
+- Fixed crafting grid duplicating items when not connected to a network
+
 ### 2.0.4
 - The crafting grid now automatically refills buckets
 - Fixed two crashes involving an external fluid storage

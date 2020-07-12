@@ -77,37 +77,38 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
                     return ItemStack.EMPTY;
                 }
 
-                if (slot.getHasStack()) {
-                    if (slot == craftingResultSlot) {
-                        grid.onCraftedShift(getPlayer());
-                    } else {
-                        ItemStack stack = slot.getStack();
+                if (!slot.getHasStack())
+                    return ItemStack.EMPTY;
 
-                        if (grid.getGridType() == GridType.FLUID) {
-                            IFluidGridHandler fluidHandler = grid.getFluidHandler();
+                if (slot == craftingResultSlot) {
+                    grid.onCraftedShift(getPlayer());
+                } else {
+                    ItemStack stack = slot.getStack();
 
-                            if (fluidHandler != null) {
-                                slot.putStack(fluidHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
-                            }
-                        } else {
-                            IItemGridHandler itemHandler = grid.getItemHandler();
+                    if (grid.getGridType() == GridType.FLUID) {
+                        IFluidGridHandler fluidHandler = grid.getFluidHandler();
 
-                            if (itemHandler != null) {
-                                slot.putStack(itemHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
-                            } else if (slot instanceof SlotGridCrafting &&
-                                    mergeItemStack(stack, 14, 14 + (9 * 4), false)) {
-                                slot.onSlotChanged();
-
-                                // This is needed because when a grid is disconnected,
-                                // and a player shift clicks from the matrix to the inventory (this if case),
-                                // the crafting inventory isn't being notified.
-                                grid.onCraftingMatrixChanged();
-                            }
+                        if (fluidHandler != null) {
+                            slot.putStack(fluidHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
                         }
+                    } else {
+                        IItemGridHandler itemHandler = grid.getItemHandler();
 
+                        if (itemHandler != null) {
+                            slot.putStack(itemHandler.onShiftClick((EntityPlayerMP) getPlayer(), stack));
+                        } else if (slot instanceof SlotGridCrafting &&
+                                mergeItemStack(stack, 14, 14 + (9 * 4), false)) {
+                            slot.onSlotChanged();
+
+                            // This is needed because when a grid is disconnected,
+                            // and a player shift clicks from the matrix to the inventory (this if case),
+                            // the crafting inventory isn't being notified.
+                            grid.onCraftingMatrixChanged();
+                        }
                     }
-                    detectAndSendChanges();
+
                 }
+                detectAndSendChanges();
             }
 
             return ItemStack.EMPTY;
