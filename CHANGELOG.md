@@ -1,5 +1,8 @@
 # More Refined Storage Changelog
 
+### 2.0.6
+- Fixed OC integration #getItems and #getFluids
+
 ### 2.0.5
 - Fixed crafting grid duplicating items when not connected to a network
 - Allow using space to insert whole inventory

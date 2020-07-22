@@ -1,14 +1,16 @@
 package com.raoulvdberge.refinedstorage.integration.oc;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -28,6 +30,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_DAMAGE;
 import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_NBT;
@@ -289,7 +292,10 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
-        return new Object[]{node.getNetwork().getFluidStorageCache().getList().getStacks()};
+        return new Object[]{node.getNetwork().getFluidStorageCache().getList().getStacks()
+                .stream()
+                .map(StackListEntry::getStack).collect(Collectors.toList())
+        };
     }
 
     @Callback(doc = "function(stack:table[, count:number[, direction:number]]):table -- Extracts an item from the network.")
@@ -372,13 +378,20 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         return new Object[]{node.getNetwork().getItemStorageCache().getList().get(stack, flags)};
     }
 
+    //performance
+    private final List<ItemStack> list = new ObjectArrayList<>();
+
     @Callback(doc = "function():table -- Gets a list of all items in this network.")
     public Object[] getItems(final Context context, final Arguments args) {
+        list.clear();
         if (node.getNetwork() == null) {
             return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
-        return new Object[]{node.getNetwork().getItemStorageCache().getList().getStacks()};
+        for (StackListEntry<ItemStack> entry : node.getNetwork().getItemStorageCache().getList().getStacks())
+            list.add(entry.getStack());
+
+        return new Object[]{list};
     }
 
     @Callback(doc = "function():table -- Gets a list of all connected storage disks and blocks in this network.")
