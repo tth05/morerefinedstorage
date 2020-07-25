@@ -12,12 +12,23 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 public class MessageGridItemInsertInventory extends MessageHandlerPlayerToServer<MessageGridItemInsertInventory>
         implements IMessage {
 
+    private boolean hotbar;
+
+    public MessageGridItemInsertInventory() {
+    }
+
+    public MessageGridItemInsertInventory(boolean hotbar) {
+        this.hotbar = hotbar;
+    }
+
     @Override
     public void fromBytes(ByteBuf buf) {
+        this.hotbar = buf.readBoolean();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
+        buf.writeBoolean(this.hotbar);
     }
 
     @Override
@@ -32,10 +43,19 @@ public class MessageGridItemInsertInventory extends MessageHandlerPlayerToServer
         if (grid.getGridType() == GridType.FLUID || grid.getItemHandler() == null)
             return;
 
-        //transfer whole inventory
-        for (int i = 9; i < 36; i++) {
-            player.inventory.setInventorySlotContents(i, grid.getItemHandler()
-                    .onShiftClick(player, player.inventory.getStackInSlot(i)));
+        int index, bound;
+        if(message.hotbar) {
+            index = 0;
+            bound = 9;
+        } else {
+            index = 9;
+            bound = 36;
+        }
+
+        //transfer whole inventory or just hotbar
+        for (; index < bound; index++) {
+            player.inventory.setInventorySlotContents(index, grid.getItemHandler()
+                    .onShiftClick(player, player.inventory.getStackInSlot(index)));
         }
 
         ItemStack inHand = player.inventory.getItemStack();

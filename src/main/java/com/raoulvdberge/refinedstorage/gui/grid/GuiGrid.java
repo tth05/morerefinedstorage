@@ -204,7 +204,11 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     }
 
     private boolean isOverInventory(int x, int y) {
-        return inBounds(8, getYPlayerInventory(), 9 * 18 - 2, 3 * 18 + 2, x, y);
+        return inBounds(8, getYPlayerInventory(), 9 * 18 - 2, 4 * 18 + 2, x, y);
+    }
+
+    private boolean isOverHotBar(int x, int y) {
+        return inBounds(8, getYPlayerInventory() + (3 * 18 + 2), 9 * 18 - 2, 18 + 2, x, y);
     }
 
     @Override
@@ -473,7 +477,14 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int clickedButton) throws IOException {
-        super.mouseClicked(mouseX, mouseY, clickedButton);
+        if(Keyboard.isKeyDown(Keyboard.KEY_SPACE) && grid.isActive() && grid.getGridType() != GridType.FLUID &&
+                isOverInventory(mouseX - guiLeft, mouseY - guiTop)) {
+            RS.INSTANCE.network.sendToServer(
+                    new MessageGridItemInsertInventory(isOverHotBar(mouseX - guiLeft, mouseY - guiTop)));
+            return;
+        } else {
+            super.mouseClicked(mouseX, mouseY, clickedButton);
+        }
 
         tabs.mouseClicked();
 
@@ -489,9 +500,13 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
             RS.INSTANCE.network
                     .sendToServer(new MessageGridPatternCreate(gridPos.getX(), gridPos.getY(), gridPos.getZ()));
+
+            mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         } else if (grid.isActive()) {
             if (clickedClear && grid instanceof IGridNetworkAware) {
                 RS.INSTANCE.network.sendToServer(new MessageGridClear());
+                mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                return;
             }
 
             EntityPlayer player = ((ContainerGrid) this.inventorySlots).getPlayer();
@@ -502,9 +517,6 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                 RS.INSTANCE.network.sendToServer(
                         grid.getGridType() == GridType.FLUID ? new MessageGridFluidInsertHeld() :
                                 new MessageGridItemInsertHeld(clickedButton == 1));
-            } else if (grid.getGridType() != GridType.FLUID &&
-                    isOverInventory(mouseX - guiLeft, mouseY - guiTop) && Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
-                RS.INSTANCE.network.sendToServer(new MessageGridItemInsertInventory());
             } else if (isOverSlotWithStack()) {
                 boolean isMiddleClickPulling = !held.isEmpty() && clickedButton == 2;
                 boolean isPulling = held.isEmpty() || isMiddleClickPulling;
@@ -545,11 +557,6 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                 }
             }
         }
-
-        if (clickedClear || clickedCreatePattern) {
-            mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-        }
-
     }
 
     @Override
