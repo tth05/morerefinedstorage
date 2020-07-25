@@ -447,7 +447,7 @@ public class MasterCraftingTask implements ICraftingTask {
                 Output output = task.getOutputs().get(0);
                 //TODO remove cast
                 elements.add(new CraftingMonitorElementItemRender(output.getCompareableItemStack(), 0, 0, 0,
-                        (int) task.getAmountNeeded()));
+                        (int) task.getAmountNeeded() * output.getQuantityPerCraft()));
             }
 
             for (ICraftingMonitorElement craftingMonitorElement : task.getCraftingMonitorElements()) {
