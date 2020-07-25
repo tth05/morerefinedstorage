@@ -242,14 +242,17 @@ public class ProcessingTask extends Task {
 
         if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
+            int newlyTrackedAmount = 0;
+
             //only track what hasn't been tracked
             if (stack.getCount() > trackedAmount) {
                 //limit param using the already tracked amount
-                trackedAmount += trackAndUpdate(matchingOutput, stack.getCount() - trackedAmount);
+                newlyTrackedAmount = trackAndUpdate(matchingOutput, stack.getCount() - trackedAmount);
+                trackedAmount += newlyTrackedAmount;
             }
 
-            //subtract amount that was given to input
-            stack.setCount((int) inputRemainder);
+            //subtract amount that was given to input and only allow giving to the parent what was actually tracked
+            stack.setCount((int) Math.min(newlyTrackedAmount, inputRemainder));
 
             //distribute to parents
             if (!this.getParents().isEmpty()) {
@@ -291,14 +294,17 @@ public class ProcessingTask extends Task {
 
         if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
+            int newlyTrackedAmount = 0;
+
             //only track what hasn't been tracked
             if (stack.amount > trackedAmount) {
                 //limit param using the already tracked amount
-                trackedAmount += trackAndUpdate(matchingOutput, stack.amount - trackedAmount);
+                newlyTrackedAmount = trackAndUpdate(matchingOutput, stack.amount - trackedAmount);
+                trackedAmount += newlyTrackedAmount;
             }
 
             //subtract amount that was given to input
-            stack.amount = (int) inputRemainder;
+            stack.amount = (int) Math.min(newlyTrackedAmount, inputRemainder);
 
             //distribute to parents
             if (!this.getParents().isEmpty()) {

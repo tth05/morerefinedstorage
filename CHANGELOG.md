@@ -4,6 +4,7 @@
 - Fixed OC integration #getItems and #getFluids
 - Insertion using spacebar now feels more natural
 - Fixed crafting monitor showing wrong count for final item
+- Fixed processing tasks giving items to parents when not allowed
 
 ### 2.0.5
 - Fixed crafting grid duplicating items when not connected to a network
