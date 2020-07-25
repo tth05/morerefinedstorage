@@ -35,8 +35,10 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed crafting grid duplicating items when not connected to a network
-          - Allow using space to insert whole inventory
+          - Fixed OC integration #getItems and #getFluids
+          - Insertion using spacebar now feels more natural
+          - Fixed crafting monitor showing wrong count for final item
+          - Fixed processing tasks giving items to parents when not allowed
         draft: false
         prerelease: false
     - name: Upload jars to release
