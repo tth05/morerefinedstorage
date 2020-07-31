@@ -158,6 +158,9 @@ public abstract class Task {
             mergeIntoList(newOutput, (List<Input>) (List<?>) this.outputs);
         }
 
+        //need later when minimum stack size is calculated
+        List<Output> ignoredOutputs = new ObjectArrayList<>();
+
         //decrease output amounts if restockable input exists
         for (Input input : this.inputs) {
             if (!(input instanceof RestockableInput))
@@ -166,6 +169,8 @@ public abstract class Task {
             for (Output output : this.outputs) {
                 if (API.instance().getComparer()
                         .isEqualNoQuantity(output.getCompareableItemStack(), input.getCompareableItemStack())) {
+                    ignoredOutputs.add(output);
+
                     long remainder = output.applyRestockableInput((RestockableInput) input);
                     //input cannot be satisfied with the output, therefore the missing items have to be normally
                     // extracted or crafted.
@@ -191,7 +196,7 @@ public abstract class Task {
         int smallestOutputFluidStackSize = Integer.MAX_VALUE;
 
         for (Output output : this.outputs) {
-            if (output.getQuantityPerCraft() < 1)
+            if (output.getQuantityPerCraft() < 1 || ignoredOutputs.contains(output))
                 continue;
 
             if (!output.isFluid()) {

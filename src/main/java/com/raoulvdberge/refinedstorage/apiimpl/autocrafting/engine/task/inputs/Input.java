@@ -39,7 +39,7 @@ public class Input {
 
     private long toCraftAmount;
 
-    private long amountNeeded;
+    protected long amountNeeded;
     protected long processingAmount = 0;
     protected int quantityPerCraft;
 

@@ -374,7 +374,6 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         if (compareNBT) {
             flags |= IComparer.COMPARE_NBT;
         }
-
         return new Object[]{node.getNetwork().getItemStorageCache().getList().get(stack, flags)};
     }
 

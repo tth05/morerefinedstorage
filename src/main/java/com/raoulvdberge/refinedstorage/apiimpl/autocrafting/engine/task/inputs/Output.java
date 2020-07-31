@@ -36,20 +36,16 @@ public class Output extends Input {
 
     /**
      * Applies the given {@code input} to this output. Basically subtracting this outputs QPC with the given QPC.
+     * Does not actually modify the QPC of this output.
+     *
      * @param input the {@link RestockableInput} to apply
      * @return the amount that is still left of the restockable input because the input QPC is less than the output QPC;
      * 0 otherwise
      */
     public long applyRestockableInput(RestockableInput input) {
-        this.quantityPerCraft -= input.getQuantityPerCraft();
+        int fakeQuantityPerCraft = this.quantityPerCraft - input.getQuantityPerCraft();
 
-        if(this.quantityPerCraft < 0) {
-            long returns = this.quantityPerCraft;
-            this.quantityPerCraft = 0;
-            return -returns;
-        }
-
-        return 0;
+        return fakeQuantityPerCraft < 0 ? -(long) fakeQuantityPerCraft : 0;
     }
 
     @Nonnull

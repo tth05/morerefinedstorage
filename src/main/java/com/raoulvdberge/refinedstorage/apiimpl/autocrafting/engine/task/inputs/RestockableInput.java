@@ -28,7 +28,12 @@ public class RestockableInput extends Input {
 
     public void fixCounts(int quantityPerCraft) {
         this.quantityPerCraft = quantityPerCraft;
-        super.setAmountNeeded(quantityPerCraft);
+        this.amountNeeded = quantityPerCraft;
+    }
+
+    @Override
+    public void setAmountNeeded(long amountNeeded) {
+        //NO OP
     }
 
     @Nonnull

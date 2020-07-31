@@ -362,10 +362,9 @@ public class ProcessingTask extends Task {
         long oldCompletedSets = output.getCompletedSets();
         output.setProcessingAmount(output.getProcessingAmount() - trackableAmount);
 
-        if (output.getProcessingAmount() < 1) { //ceil if output is done to complete final set
+        if (output.getProcessingAmount() < 1) { //if output is done complete all sets
             output.setCompletedSets(
-                    (long) Math.ceil((output.getAmountNeeded() - output.getProcessingAmount()) /
-                            (double) output.getQuantityPerCraft()));
+                    (long) Math.ceil(output.getAmountNeeded() / (double) output.getQuantityPerCraft()));
         } else { //floor otherwise
             output.setCompletedSets(
                     (long) Math.floor((output.getAmountNeeded() - output.getProcessingAmount()) /
