@@ -27,13 +27,13 @@ public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
     public static final TileDataParameter<Long, TileDiskDrive> STORED = new TileDataParameter<>(RSSerializers.LONG_SERIALIZER, 0L, t -> {
         long stored = 0;
 
-        for (IStorageDisk storage : t.getNode().getItemDisks()) {
+        for (IStorageDisk<?> storage : t.getNode().getItemDisks()) {
             if (storage != null) {
                 stored += storage.getStored();
             }
         }
 
-        for (IStorageDisk storage : t.getNode().getFluidDisks()) {
+        for (IStorageDisk<?> storage : t.getNode().getFluidDisks()) {
             if (storage != null) {
                 stored += storage.getStored();
             }
@@ -44,7 +44,7 @@ public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
     public static final TileDataParameter<Long, TileDiskDrive> CAPACITY = new TileDataParameter<>(RSSerializers.LONG_SERIALIZER, 0L, t -> {
         long capacity = 0;
 
-        for (IStorageDisk storage : t.getNode().getItemDisks()) {
+        for (IStorageDisk<?> storage : t.getNode().getItemDisks()) {
             if (storage != null) {
                 if (storage.getCapacity() == -1) {
                     return -1L;
@@ -54,7 +54,7 @@ public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
             }
         }
 
-        for (IStorageDisk storage : t.getNode().getFluidDisks()) {
+        for (IStorageDisk<?> storage : t.getNode().getFluidDisks()) {
             if (storage != null) {
                 if (storage.getCapacity() == -1) {
                     return -1L;

@@ -1,6 +1,8 @@
 # More Refined Storage Changelog
 
 ### 2.0.7
+- Fixed restockable inputs not working properly after latest changes
+- Fixed disk drive bar rendering being broken sometimes
 
 ### 2.0.6
 - Fixed OC integration #getItems and #getFluids

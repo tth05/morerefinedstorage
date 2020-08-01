@@ -73,7 +73,10 @@ public class GuiStorage extends GuiBase {
 
         drawTexture(x, y, 0, 0, screenWidth, screenHeight);
 
-        int barHeightNew = (int) ((float) gui.getStored() / (float) gui.getCapacity() * (float) BAR_HEIGHT);
+        int barHeightNew = (int) ((double) gui.getStored() / (double) gui.getCapacity() * (double) BAR_HEIGHT);
+
+        if(barHeightNew < 0)
+            barHeightNew = BAR_HEIGHT;
 
         drawTexture(x + BAR_X, y + BAR_Y + BAR_HEIGHT - barHeightNew, 179, BAR_HEIGHT - barHeightNew, BAR_WIDTH, barHeightNew);
     }
@@ -96,7 +99,7 @@ public class GuiStorage extends GuiBase {
             int full = 0;
 
             if (gui.getCapacity() >= 0) {
-                full = (int) ((float) gui.getStored() / (float) gui.getCapacity() * 100f);
+                full = (int) ((double) gui.getStored() / (double) gui.getCapacity() * 100d);
             }
 
             drawTooltip(mouseX, mouseY, (gui.getCapacity() == -1 ?
