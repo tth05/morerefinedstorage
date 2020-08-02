@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
@@ -119,9 +120,9 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
                     Block block = stack.getFluid().getBlock();
 
                     if (world.isAirBlock(front) && block.canPlaceBlockAt(world, front)) {
-                        FluidStack stored = network.getFluidStorageCache().getList().get(stack, compare);
+                        StackListEntry<FluidStack> stored = network.getFluidStorageCache().getList().getEntry(stack, compare);
 
-                        if (stored != null && stored.amount >= Fluid.BUCKET_VOLUME) {
+                        if (stored != null && stored.getCount() >= Fluid.BUCKET_VOLUME) {
                             FluidStack took = network.extractFluid(stack, Fluid.BUCKET_VOLUME, compare, Action.PERFORM);
 
                             if (took != null) {

@@ -108,10 +108,10 @@ public class ItemStorageDisk extends ItemBase implements IStorageDiskProvider {
 
             IStorageDiskSyncData data = API.instance().getStorageDiskSync().getData(id);
             if (data != null) {
-                if (data.getCapacity() == -1) {
-                    tooltip.add(I18n.format("misc.refinedstorage:storage.stored", API.instance().getQuantityFormatter().format(data.getStored())));
+                if (data.getCapacity2() == -1) {
+                    tooltip.add(I18n.format("misc.refinedstorage:storage.stored", API.instance().getQuantityFormatter().format(data.getStored2())));
                 } else {
-                    tooltip.add(I18n.format("misc.refinedstorage:storage.stored_capacity", API.instance().getQuantityFormatter().format(data.getStored()), API.instance().getQuantityFormatter().format(data.getCapacity())));
+                    tooltip.add(I18n.format("misc.refinedstorage:storage.stored_capacity", API.instance().getQuantityFormatter().format(data.getStored2()), API.instance().getQuantityFormatter().format(data.getCapacity2())));
                 }
             }
 

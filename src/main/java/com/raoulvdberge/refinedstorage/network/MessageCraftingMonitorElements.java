@@ -46,7 +46,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
                 e.printStackTrace();
             }
 
-            int qty = buf.readInt();
+            long qty = buf.readLong();
             long executionStarted = buf.readLong();
             int percentage = buf.readInt();
 
@@ -76,7 +76,7 @@ public class MessageCraftingMonitorElements implements IMessage, IMessageHandler
 
             ByteBufUtils.writeTag(buf, task.getRequested().writeToNbt());
 
-            buf.writeInt(task.getQuantity());
+            buf.writeLong(task.getQuantity());
             buf.writeLong(task.getExecutionStarted());
             buf.writeInt(task.getCompletionPercentage());
 

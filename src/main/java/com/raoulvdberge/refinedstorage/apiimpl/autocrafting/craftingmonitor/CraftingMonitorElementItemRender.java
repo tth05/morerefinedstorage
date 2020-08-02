@@ -24,12 +24,12 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
     public static final String ID = "item_render";
 
     private final ItemStack stack;
-    private int stored;
-    private int processing;
-    private int scheduled;
-    private int crafting;
+    private long stored;
+    private long processing;
+    private long scheduled;
+    private long crafting;
 
-    public CraftingMonitorElementItemRender(ItemStack stack, int stored, int processing, int scheduled, int crafting) {
+    public CraftingMonitorElementItemRender(ItemStack stack, long stored, long processing, long scheduled, long crafting) {
         this.stack = stack;
         this.stored = stored;
         this.processing = processing;
@@ -100,32 +100,32 @@ public class CraftingMonitorElementItemRender implements ICraftingMonitorElement
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return stored;
     }
 
     @Override
-    public int getProcessing() {
+    public long getProcessing() {
         return processing;
     }
 
     @Override
-    public int getScheduled() {
+    public long getScheduled() {
         return scheduled;
     }
 
     @Override
-    public int getCrafting() {
+    public long getCrafting() {
         return crafting;
     }
 
     @Override
     public void write(ByteBuf buf) {
         StackUtils.writeItemStack(buf, stack);
-        buf.writeInt(stored);
-        buf.writeInt(processing);
-        buf.writeInt(scheduled);
-        buf.writeInt(crafting);
+        buf.writeLong(stored);
+        buf.writeLong(processing);
+        buf.writeLong(scheduled);
+        buf.writeLong(crafting);
     }
 
     @Override

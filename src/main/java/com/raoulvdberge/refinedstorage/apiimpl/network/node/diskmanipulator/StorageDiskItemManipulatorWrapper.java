@@ -5,12 +5,13 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.render.constants.ConstantsDisk;
 import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -40,7 +41,7 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return parent.getCapacity();
     }
 
@@ -60,13 +61,19 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
     }
 
     @Override
+    public Collection<StackListEntry<ItemStack>> getEntries() {
+        return parent.getEntries();
+    }
+
+    @Override
     @Nullable
-    public ItemStack insert(@Nonnull ItemStack stack, int size, Action action) {
+    public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
         if(stack.isEmpty())
-            return stack;
+            return new StackListResult<>(stack.copy(), null, size);
+
 
         if (!IFilterable.acceptsItem(diskManipulator.getItemFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
-            return ItemHandlerHelper.copyStackWithSize(stack, size);
+            return new StackListResult<>(stack.copy(), null, size);
         }
 
         return parent.insert(stack, size, action);
@@ -74,9 +81,9 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
 
     @Override
     @Nullable
-    public ItemStack extract(@Nonnull ItemStack stack, int size, int flags, Action action) {
+    public StackListResult<ItemStack> extract(@Nonnull ItemStack stack, long size, int flags, Action action) {
         if(stack.isEmpty())
-            return stack;
+            return new StackListResult<>(stack.copy(), null, size);
 
         if (!IFilterable.acceptsItem(diskManipulator.getItemFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
             return null;
@@ -86,7 +93,7 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return parent.getStored();
     }
 
@@ -101,7 +108,7 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable ItemStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         return parent.getCacheDelta(storedPreInsertion, size, remainder);
     }
 

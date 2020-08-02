@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.network;
 
 import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler.ItemGridHandler;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
@@ -67,10 +68,12 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
                     if (cache == null)
                         return;
 
-                    ItemStack stack = cache.getList().get(message.id);
-                    if (stack == null)
+                    StackListEntry<ItemStack> entry = cache.getList().get(message.id);
+                    if (entry == null)
                         return;
 
+                    ItemStack stack = entry.getStack();
+                    stack.setCount((int) entry.getCount());
                     int slot = player.inventory.storeItemStack(stack);
                     if (slot != -1) {
                         grid.getItemHandler()

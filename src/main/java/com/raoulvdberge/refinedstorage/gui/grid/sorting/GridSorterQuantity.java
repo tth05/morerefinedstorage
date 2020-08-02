@@ -11,8 +11,8 @@ public class GridSorterQuantity implements IGridSorter {
 
     @Override
     public int compare(IGridStack left, IGridStack right, GridSorterDirection sortingDirection) {
-        int leftSize = left.getQuantity();
-        int rightSize = right.getQuantity();
+        long leftSize = left.getQuantity();
+        long rightSize = right.getQuantity();
 
         if (leftSize != rightSize) {
             if (sortingDirection == GridSorterDirection.ASCENDING) {

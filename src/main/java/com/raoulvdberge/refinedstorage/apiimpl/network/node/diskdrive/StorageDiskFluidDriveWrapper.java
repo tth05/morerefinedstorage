@@ -5,9 +5,10 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.render.constants.ConstantsDisk;
 import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -54,10 +55,15 @@ public class StorageDiskFluidDriveWrapper implements IStorageDisk<FluidStack> {
     }
 
     @Override
+    public Collection<StackListEntry<FluidStack>> getEntries() {
+        return parent.getEntries();
+    }
+
+    @Override
     @Nullable
-    public FluidStack insert(@Nonnull FluidStack stack, int size, Action action) {
+    public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
         if (!IFilterable.acceptsFluid(diskDrive.getFluidFilters(), diskDrive.getMode(), diskDrive.getCompare(), stack)) {
-            return StackUtils.copy(stack, size);
+            return new StackListResult<>(stack.copy(), null, size);
         }
 
         return parent.insert(stack, size, action);
@@ -65,22 +71,22 @@ public class StorageDiskFluidDriveWrapper implements IStorageDisk<FluidStack> {
 
     @Nullable
     @Override
-    public FluidStack extract(@Nonnull FluidStack stack, int size, int flags, Action action) {
+    public StackListResult<FluidStack> extract(@Nonnull FluidStack stack, long size, int flags, Action action) {
         return parent.extract(stack, size, flags, action);
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return parent.getStored();
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable FluidStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         return parent.getCacheDelta(storedPreInsertion, size, remainder);
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return parent.getCapacity();
     }
 

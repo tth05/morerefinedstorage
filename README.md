@@ -14,3 +14,5 @@ Most notable additions are a completely new crafting engine, re-written from scr
 Builds can be found in the release section on github.
 
 Check the CHANGELOG.md file to see what has been added in this version.
+
+> Make sure to stop all running auto-crafting tasks before upgrading!

@@ -5,11 +5,12 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.render.constants.ConstantsDisk;
 import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,10 +55,15 @@ public class StorageDiskItemDriveWrapper implements IStorageDisk<ItemStack> {
     }
 
     @Override
+    public Collection<StackListEntry<ItemStack>> getEntries() {
+        return parent.getEntries();
+    }
+
+    @Override
     @Nullable
-    public ItemStack insert(@Nonnull ItemStack stack, int size, Action action) {
+    public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
         if (!IFilterable.acceptsItem(diskDrive.getItemFilters(), diskDrive.getMode(), diskDrive.getCompare(), stack)) {
-            return ItemHandlerHelper.copyStackWithSize(stack, size);
+            return new StackListResult<>(stack.copy(), null, size);
         }
 
         return parent.insert(stack, size, action);
@@ -65,22 +71,22 @@ public class StorageDiskItemDriveWrapper implements IStorageDisk<ItemStack> {
 
     @Nullable
     @Override
-    public ItemStack extract(@Nonnull ItemStack stack, int size, int flags, Action action) {
+    public StackListResult<ItemStack> extract(@Nonnull ItemStack stack, long size, int flags, Action action) {
         return parent.extract(stack, size, flags, action);
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return parent.getStored();
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable ItemStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         return parent.getCacheDelta(storedPreInsertion, size, remainder);
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return parent.getCapacity();
     }
 

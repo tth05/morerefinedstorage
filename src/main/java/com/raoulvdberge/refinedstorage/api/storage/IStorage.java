@@ -2,6 +2,8 @@ package com.raoulvdberge.refinedstorage.api.storage;
 
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -12,7 +14,7 @@ public interface IStorage<T> {
     Comparator<IStorage<?>> COMPARATOR = (left, right) -> {
         int compare = Integer.compare(right.getPriority(), left.getPriority());
 
-        return compare != 0 ? compare : Integer.compare(right.getStored(), left.getStored());
+        return compare != 0 ? compare : Long.compare(right.getStored(), left.getStored());
     };
 
     /**
@@ -22,8 +24,16 @@ public interface IStorage<T> {
      * For the caller: modifying stacks is not allowed!
      *
      * @return stacks stored in this storage, empty stacks are allowed
+     *
+     * @deprecated use {@link #getEntries()}
      */
+    @Deprecated
     Collection<T> getStacks();
+
+    /**
+     * @return all entries of this storage
+     */
+    Collection<StackListEntry<T>> getEntries();
 
     /**
      * Inserts a stack to this storage.
@@ -34,7 +44,7 @@ public interface IStorage<T> {
      * @return null if the insert was successful, or a stack with the remainder
      */
     @Nullable
-    T insert(@Nonnull T stack, int size, Action action);
+    StackListResult<T> insert(@Nonnull T stack, long size, Action action);
 
     /**
      * Extracts a stack from this storage.
@@ -48,12 +58,12 @@ public interface IStorage<T> {
      * @return null if we didn't extract anything, or a stack with the result
      */
     @Nullable
-    T extract(@Nonnull T stack, int size, int flags, Action action);
+    StackListResult<T> extract(@Nonnull T stack, long size, int flags, Action action);
 
     /**
      * @return the amount stored in this storage
      */
-    int getStored();
+    long getStored();
 
     /**
      * @return the priority of this storage
@@ -73,5 +83,5 @@ public interface IStorage<T> {
      * @param remainder          the remainder that we got back, or null if no remainder was there
      * @return the amount to increase the cache with
      */
-    int getCacheDelta(int storedPreInsertion, int size, @Nullable T remainder);
+    long getCacheDelta(long storedPreInsertion, long size, long remainder);
 }

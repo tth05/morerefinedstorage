@@ -57,7 +57,7 @@ public interface ICraftingManager {
      * @return the crafting task, or null if no pattern was found for the given stack
      */
     @Nullable
-    ICraftingTask create(ItemStack stack, int quantity);
+    ICraftingTask create(ItemStack stack, long quantity);
 
     /**
      * Creates a crafting task for a given stack, but doesn't add it to the list.
@@ -67,10 +67,10 @@ public interface ICraftingManager {
      * @return the crafting task, or null if no pattern was found for the given stack
      */
     @Nullable
-    ICraftingTask create(FluidStack stack, int quantity);
+    ICraftingTask create(FluidStack stack, long quantity);
 
     /**
-     * @deprecated Use {@link #request(Object, ItemStack, int)}
+     * @deprecated Use {@link #request(Object, ItemStack, long)}
      */
     @Nullable
     @Deprecated
@@ -79,7 +79,7 @@ public interface ICraftingManager {
     }
 
     /**
-     * @deprecated Use {@link #request(Object, FluidStack, int)}
+     * @deprecated Use {@link #request(Object, FluidStack, long)}
      */
     @Nullable
     @Deprecated
@@ -96,7 +96,7 @@ public interface ICraftingManager {
      * @return the crafting task created, or null if no task is created
      */
     @Nullable
-    ICraftingTask request(Object source, ItemStack stack, int amount);
+    ICraftingTask request(Object source, ItemStack stack, long amount);
 
     /**
      * Schedules a crafting task if the task isn't scheduled yet.
@@ -107,7 +107,7 @@ public interface ICraftingManager {
      * @return the crafting task created, or null if no task is created
      */
     @Nullable
-    ICraftingTask request(Object source, FluidStack stack, int amount);
+    ICraftingTask request(Object source, FluidStack stack, long amount);
 
     /**
      * Tracks an incoming stack.

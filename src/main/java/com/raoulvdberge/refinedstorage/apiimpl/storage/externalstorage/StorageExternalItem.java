@@ -5,6 +5,8 @@ import com.raoulvdberge.refinedstorage.api.storage.AccessType;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageContext;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExternal;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
@@ -78,22 +80,40 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
         return stacks;
     }
 
-    @Nullable
     @Override
-    public ItemStack insert(@Nonnull ItemStack stack, int size, Action action) {
-        IItemHandler handler = handlerSupplier.get();
+    public Collection<StackListEntry<ItemStack>> getEntries() {
+        List<StackListEntry<ItemStack>> list = new ArrayList<>();
+        for (ItemStack s : getStacks())
+            list.add(new StackListEntry<>(s, s.getCount()));
 
-        if (handler != null && context.acceptsItem(stack)) {
-            return StackUtils.emptyToNull(ItemHandlerHelper.insertItem(handler, ItemHandlerHelper.copyStackWithSize(stack, size), action == Action.SIMULATE));
-        }
-
-        return ItemHandlerHelper.copyStackWithSize(stack, size);
+        return list;
     }
 
     @Nullable
     @Override
-    public ItemStack extract(@Nonnull ItemStack stack, int size, int flags, Action action) {
-        int remaining = size;
+    public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
+        IItemHandler handler = handlerSupplier.get();
+
+        if (handler != null && context.acceptsItem(stack)) {
+            //TODO: remove cast
+            ItemStack result = StackUtils.emptyToNull(
+                    ItemHandlerHelper.insertItem(
+                            handler,
+                            ItemHandlerHelper.copyStackWithSize(stack, (int) size),
+                            action == Action.SIMULATE));
+            if(result == null)
+                return null;
+            return new StackListResult<>(result, null, result.getCount());
+        }
+
+        return new StackListResult<>(stack.copy(), null, size);
+    }
+
+    @Nullable
+    @Override
+    public StackListResult<ItemStack> extract(@Nonnull ItemStack stack, long size, int flags, Action action) {
+        //TODO: remove cast
+        int remaining = (int) size;
 
         ItemStack received = null;
 
@@ -125,11 +145,11 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
             }
         }
 
-        return received;
+        return received == null ? null : new StackListResult<>(received, null, received.getCount());
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         IItemHandler handler = handlerSupplier.get();
 
         if (handler == null) {
@@ -156,11 +176,11 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable ItemStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         if (getAccessType() == AccessType.INSERT) {
             return 0;
         }
 
-        return remainder == null ? size : (size - remainder.getCount());
+        return remainder < 1 ? size : (size - remainder);
     }
 }

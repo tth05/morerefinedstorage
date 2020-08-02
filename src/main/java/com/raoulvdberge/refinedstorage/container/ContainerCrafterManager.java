@@ -180,7 +180,7 @@ public class ContainerCrafterManager extends ContainerBase {
                         visible = false;
 
                         for (ItemStack output : pattern.getOutputs()) {
-                            GridStackItem outputConverted = new GridStackItem(output);
+                            GridStackItem outputConverted = new GridStackItem(output, output.getCount());
 
                             for (Predicate<IGridStack> filter : filters) {
                                 if (filter.test(outputConverted)) {

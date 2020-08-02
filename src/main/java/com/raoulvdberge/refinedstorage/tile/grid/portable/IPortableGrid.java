@@ -12,9 +12,9 @@ import javax.annotation.Nullable;
 
 public interface IPortableGrid {
     interface IPortableGridRenderInfo {
-        int getStored();
+        long getStored();
 
-        int getCapacity();
+        long getCapacity();
 
         boolean hasStorage();
 

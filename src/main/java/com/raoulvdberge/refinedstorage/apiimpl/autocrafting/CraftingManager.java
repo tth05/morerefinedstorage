@@ -208,7 +208,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     @Nullable
-    public ICraftingTask request(Object source, ItemStack stack, int amount) {
+    public ICraftingTask request(Object source, ItemStack stack, long amount) {
         if (isThrottled(source)) {
             return null;
         }
@@ -256,7 +256,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Nullable
     @Override
-    public ICraftingTask request(Object source, FluidStack stack, int amount) {
+    public ICraftingTask request(Object source, FluidStack stack, long amount) {
         if (isThrottled(source)) {
             return null;
         }
@@ -307,7 +307,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     @Nullable
-    public ICraftingTask create(ItemStack stack, int quantity) {
+    public ICraftingTask create(ItemStack stack, long quantity) {
         ICraftingPattern pattern = getPattern(stack);
         if (pattern == null) {
             return null;
@@ -323,7 +323,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Nullable
     @Override
-    public ICraftingTask create(FluidStack stack, int quantity) {
+    public ICraftingTask create(FluidStack stack, long quantity) {
         ICraftingPattern pattern = getPattern(stack);
         if (pattern == null) {
             return null;

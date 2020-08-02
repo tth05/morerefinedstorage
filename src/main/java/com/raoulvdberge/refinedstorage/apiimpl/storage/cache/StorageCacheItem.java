@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.api.storage.*;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.ItemStack;
@@ -48,9 +49,9 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
                 continue;
             }
 
-            for (ItemStack stack : storage.getStacks()) {
-                if (!stack.isEmpty()) {
-                    add(stack, stack.getCount(), true, false);
+            for (StackListEntry<ItemStack> stack : storage.getEntries()) {
+                if (stack != null && stack.getCount() > 0) {
+                    add(stack.getStack(), stack.getCount(), true, false);
                 }
             }
         }
@@ -59,7 +60,7 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
     }
 
     @Override
-    public synchronized void add(@Nonnull ItemStack stack, int size, boolean rebuilding, boolean batched) {
+    public synchronized void add(@Nonnull ItemStack stack, long size, boolean rebuilding, boolean batched) {
         StackListResult<ItemStack> result = list.add(stack, size);
 
         if (!rebuilding) {
@@ -72,7 +73,7 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
     }
 
     @Override
-    public synchronized void remove(@Nonnull ItemStack stack, int size, boolean batched) {
+    public synchronized void remove(@Nonnull ItemStack stack, long size, boolean batched) {
         StackListResult<ItemStack> result = list.remove(stack, size);
 
         if (result != null) {

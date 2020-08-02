@@ -24,7 +24,7 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
     private INetwork network;
     private List<StackListResult<ItemStack>> deltas = new ArrayList<>();
 
-    private final List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
+    private final List<Pair<IGridStack, Long>> clientDeltas = new ArrayList<>();
 
     public MessageGridItemDelta(@Nullable INetwork network, List<StackListResult<ItemStack>> deltas) {
         this.network = network;
@@ -40,7 +40,7 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
         int size = buf.readInt();
 
         for (int i = 0; i < size; ++i) {
-            int delta = buf.readInt();
+            long delta = buf.readLong();
             clientDeltas.add(Pair.of(StackUtils.readItemGridStack(buf), delta));
         }
     }
@@ -50,12 +50,15 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
         buf.writeInt(deltas.size());
 
         for (StackListResult<ItemStack> delta : deltas) {
-            buf.writeInt(delta.getChange());
+            buf.writeLong(delta.getChange());
 
             StackListEntry<ItemStack> craftingEntry =
                     network.getItemStorageCache().getCraftablesList().getEntry(delta.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
 
-            StackUtils.writeItemGridStack(buf, delta.getStack(), delta.getId(),
+            //real count is 0 here because later in the postChange method it is ignored.
+            // If the stack doesn't exist then the count is set to the given delta, otherwise the existing stack is
+            // incremented by the given delta.
+            StackUtils.writeItemGridStack(buf, delta.getStack(), 0, delta.getId(),
                     craftingEntry != null ? craftingEntry.getId() : null, false,
                     network.getItemStorageTracker().get(delta.getStack()));
         }

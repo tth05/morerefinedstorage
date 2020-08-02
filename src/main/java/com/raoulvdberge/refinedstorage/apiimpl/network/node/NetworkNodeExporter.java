@@ -3,6 +3,8 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
@@ -178,7 +180,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
             return;
         }
 
-        int toExtract = Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount();
+        long toExtract = Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount();
 
         if (upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
             int found = 0;
@@ -203,20 +205,23 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
             toExtract = Math.min(toExtract, needed - found);
         }
 
-        FluidStack stackInStorage = network.getFluidStorageCache().getList().get(stack, compare);
+        StackListEntry<FluidStack> stackInStorage = network.getFluidStorageCache().getList().getEntry(stack, compare);
 
         if (stackInStorage != null) {
-            toExtract = Math.min(toExtract, stackInStorage.amount);
+            toExtract = Math.min(toExtract, stackInStorage.getCount());
 
-            FluidStack took = network.extractFluid(stack, toExtract, compare, Action.SIMULATE);
+            StackListResult<FluidStack> took = network.extractFluid(stack, toExtract, compare, Action.SIMULATE);
 
             if (took != null) {
-                int filled = handler.fill(took, false);
+                took.applyCount();
+                int filled = handler.fill(took.getStack(), false);
 
                 if (filled > 0) {
-                    took = network.extractFluid(stack, filled, compare, Action.PERFORM);
-
-                    handler.fill(took, true);
+                    took = network.extractFluid(stack, (long)filled, compare, Action.PERFORM);
+                    if(took != null) {
+                        took.applyCount();
+                        handler.fill(took.getStack(), true);
+                    }
                 }
             }
         } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {

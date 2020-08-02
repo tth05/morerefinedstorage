@@ -64,12 +64,12 @@ public class GuiCraftingMonitor extends GuiBase {
     public static class CraftingMonitorTask implements IGridTab {
         private final UUID id;
         private final ICraftingRequestInfo requested;
-        private final int qty;
+        private final long qty;
         private final long executionStarted;
         private final int completionPercentage;
         private final List<ICraftingMonitorElement> elements;
 
-        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, int qty, long executionStarted,
+        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, long qty, long executionStarted,
                                    int completionPercentage, List<ICraftingMonitorElement> elements) {
             this.id = id;
             this.requested = requested;

@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
@@ -29,14 +30,17 @@ public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
         list.clear();
 
         if (portableGrid.getFluidStorage() != null) {
-            portableGrid.getFluidStorage().getStacks().forEach(list::add);
+            for (StackListEntry<FluidStack> e : portableGrid.getFluidStorage().getEntries()) {
+                if(e != null && e.getCount() > 0)
+                    list.add(e.getStack(), e.getCount());
+            }
         }
 
         listeners.forEach(IStorageCacheListener::onInvalidated);
     }
 
     @Override
-    public void add(@Nonnull FluidStack stack, int size, boolean rebuilding, boolean batched) {
+    public void add(@Nonnull FluidStack stack, long size, boolean rebuilding, boolean batched) {
         StackListResult<FluidStack> result = list.add(stack, size);
 
         if (!rebuilding) {
@@ -45,7 +49,7 @@ public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
     }
 
     @Override
-    public void remove(@Nonnull FluidStack stack, int size, boolean batched) {
+    public void remove(@Nonnull FluidStack stack, long size, boolean batched) {
         StackListResult<FluidStack> result = list.remove(stack, size);
         if (result != null) {
             listeners.forEach(l -> l.onChanged(result));

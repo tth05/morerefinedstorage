@@ -12,22 +12,6 @@ import java.util.function.Consumer;
  * Represents a graph of all the nodes connected to a network.
  */
 public interface INetworkNodeGraph {
-    /**
-     * Rebuilds the network graph.
-     *
-     * @deprecated Use {@link #invalidate(Action, World, BlockPos)} - needed to support simulating the calculation of network connections
-     */
-    @Deprecated
-    default void rebuild() {
-        invalidate(Action.PERFORM, getNetworkForBCReasons().world(), getNetworkForBCReasons().getPosition());
-    }
-
-    /**
-     * DON'T USE THIS!
-     * This method exists to support a default {@link #rebuild()} method to maintain backward compatibility.
-     */
-    @Deprecated
-    INetwork getNetworkForBCReasons();
 
     /**
      * Rebuilds the network graph.

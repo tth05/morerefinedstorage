@@ -17,10 +17,10 @@ import java.util.UUID;
 
 public class StackListFluid implements IStackList<FluidStack> {
     private final ArrayListMultimap<Fluid, StackListEntry<FluidStack>> stacks = ArrayListMultimap.create();
-    private final Map<UUID, FluidStack> index = new HashMap<>();
+    private final Map<UUID, StackListEntry<FluidStack>> index = new HashMap<>();
 
     @Override
-    public StackListResult<FluidStack> add(@Nonnull FluidStack stack, int size) {
+    public StackListResult<FluidStack> add(@Nonnull FluidStack stack, long size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Cannot accept empty stack");
         }
@@ -29,23 +29,17 @@ public class StackListFluid implements IStackList<FluidStack> {
             FluidStack otherStack = entry.getStack();
 
             if (stack.isFluidEqual(otherStack)) {
-                if ((long) otherStack.amount + (long) size > Integer.MAX_VALUE) {
-                    otherStack.amount = Integer.MAX_VALUE;
-                } else {
-                    otherStack.amount += size;
-                }
+                entry.grow(size);
 
                 return new StackListResult<>(otherStack, entry.getId(), size);
             }
         }
 
         FluidStack newStack = stack.copy();
-        newStack.amount = size;
-
-        StackListEntry<FluidStack> newEntry = new StackListEntry<>(newStack);
+        StackListEntry<FluidStack> newEntry = new StackListEntry<>(newStack, newStack.amount);
 
         stacks.put(newStack.getFluid(), newEntry);
-        index.put(newEntry.getId(), newEntry.getStack());
+        index.put(newEntry.getId(), newEntry);
 
         return new StackListResult<>(newStack, newEntry.getId(), size);
     }
@@ -56,18 +50,18 @@ public class StackListFluid implements IStackList<FluidStack> {
     }
 
     @Override
-    public StackListResult<FluidStack> remove(@Nonnull FluidStack stack, int size) {
+    public StackListResult<FluidStack> remove(@Nonnull FluidStack stack, long size) {
         for (StackListEntry<FluidStack> entry : stacks.get(stack.getFluid())) {
             FluidStack otherStack = entry.getStack();
 
             if (stack.isFluidEqual(otherStack)) {
-                if (otherStack.amount - size <= 0) {
+                if (entry.getCount() - size <= 0) {
                     stacks.remove(otherStack.getFluid(), entry);
                     index.remove(entry.getId());
 
-                    return new StackListResult<>(otherStack, entry.getId(), -otherStack.amount);
+                    return new StackListResult<>(otherStack, entry.getId(), -entry.getCount());
                 } else {
-                    otherStack.amount -= size;
+                    entry.shrink(size);
 
                     return new StackListResult<>(otherStack, entry.getId(), -size);
                 }
@@ -85,10 +79,12 @@ public class StackListFluid implements IStackList<FluidStack> {
     @Override
     @Nullable
     public FluidStack get(@Nonnull FluidStack stack, int flags) {
+        //TODO: check for get and getEntry calls
         for (StackListEntry<FluidStack> entry : stacks.get(stack.getFluid())) {
             FluidStack otherStack = entry.getStack();
 
             if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
+                otherStack.amount = entry.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) entry.getCount();
                 return otherStack;
             }
         }
@@ -112,7 +108,7 @@ public class StackListFluid implements IStackList<FluidStack> {
 
     @Override
     @Nullable
-    public FluidStack get(UUID id) {
+    public StackListEntry<FluidStack> get(UUID id) {
         return index.get(id);
     }
 
@@ -139,10 +135,10 @@ public class StackListFluid implements IStackList<FluidStack> {
         StackListFluid list = new StackListFluid();
 
         for (StackListEntry<FluidStack> entry : stacks.values()) {
-            FluidStack newStack = entry.getStack().copy();
 
-            list.stacks.put(entry.getStack().getFluid(), new StackListEntry<>(entry.getId(), newStack));
-            list.index.put(entry.getId(), newStack);
+            StackListEntry<FluidStack> newEntry = new StackListEntry<>(entry.getId(), entry.getStack().copy(), entry.getCount());
+            list.stacks.put(entry.getStack().getFluid(), newEntry);
+            list.index.put(entry.getId(), newEntry);
         }
 
         return list;

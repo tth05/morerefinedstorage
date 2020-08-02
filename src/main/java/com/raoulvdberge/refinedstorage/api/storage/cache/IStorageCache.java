@@ -27,7 +27,7 @@ public interface IStorageCache<T> {
      * Adds a stack to the cache.
      * <p>
      * Note that this doesn't modify any of the connected storages, but just modifies the cache.
-     * Use {@link IStorage#insert(T, int, com.raoulvdberge.refinedstorage.api.util.Action)} to add a stack to an actual storage.
+     * Use {@link IStorage#insert(T, long, com.raoulvdberge.refinedstorage.api.util.Action)} to add a stack to an actual storage.
      * <p>
      * Will merge it with another stack if it already exists.
      *
@@ -36,19 +36,19 @@ public interface IStorageCache<T> {
      * @param rebuilding true if this method is called while rebuilding, false otherwise
      * @param batched    true if this change needs to be batched
      */
-    void add(@Nonnull T stack, int size, boolean rebuilding, boolean batched);
+    void add(@Nonnull T stack, long size, boolean rebuilding, boolean batched);
 
     /**
      * Removes a stack from the cache.
      * <p>
      * Note that this doesn't modify any of the connected storages, but just modifies the cache.
-     * Use {@link IStorage#extract(T, int, int, com.raoulvdberge.refinedstorage.api.util.Action)} to remove a stack from an actual storage.
+     * Use {@link IStorage#extract(T, long, int, com.raoulvdberge.refinedstorage.api.util.Action)} to remove a stack from an actual storage.
      *
      * @param stack   the stack to remove, do NOT modify
      * @param size    the size to remove
      * @param batched true if this change needs to be batched, false otherwise
      */
-    void remove(@Nonnull T stack, int size, boolean batched);
+    void remove(@Nonnull T stack, long size, boolean batched);
 
     /**
      * Notifies storage cache listeners about batched up storage cache changes.

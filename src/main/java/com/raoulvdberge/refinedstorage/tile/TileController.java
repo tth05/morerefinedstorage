@@ -20,9 +20,10 @@ import com.raoulvdberge.refinedstorage.api.network.security.ISecurityManager;
 import com.raoulvdberge.refinedstorage.api.storage.AccessType;
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
-import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExternal;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import com.raoulvdberge.refinedstorage.apiimpl.energy.Energy;
 import com.raoulvdberge.refinedstorage.apiimpl.network.NetworkNodeGraph;
@@ -61,7 +62,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -243,33 +243,33 @@ public class TileController extends TileBase
 
     @Nullable
     @Override
-    public ItemStack insertItem(@Nonnull ItemStack stack, int size, Action action) {
-        if (stack.isEmpty() || itemStorage.getStorages().isEmpty()) {
-            return ItemHandlerHelper.copyStackWithSize(stack, size);
+    public StackListResult<ItemStack> insertItem(@Nonnull ItemStack stack, long size, Action action) {
+        if (size < 1 || itemStorage.getStorages().isEmpty()) {
+            return new StackListResult<>(stack.copy(), null, size);
         }
 
-        ItemStack remainder = stack;
+        StackListResult<ItemStack> remainder = null;
 
-        int inserted = 0;
-        int insertedExternally = 0;
+        long inserted = 0;
+        long insertedExternally = 0;
 
         for (IStorage<ItemStack> storage : this.itemStorage.getStorages()) {
             if (storage.getAccessType() == AccessType.EXTRACT) {
                 continue;
             }
 
-            int storedPre = storage.getStored();
+            long storedPre = storage.getStored();
 
-            remainder = storage.insert(remainder, size, action);
+            remainder = storage.insert(stack, size, action);
 
             if (action == Action.PERFORM) {
-                inserted += storage.getCacheDelta(storedPre, size, remainder);
+                inserted += storage.getCacheDelta(storedPre, size, remainder == null ? 0 : remainder.getCount());
             }
 
             if (remainder == null) {
                 // The external storage is responsible for sending changes, we don't need to anymore
                 if (storage instanceof IStorageExternal && action == Action.PERFORM) {
-                    ((IStorageExternal) storage).update(this);
+                    ((IStorageExternal<?>) storage).update(this);
 
                     insertedExternally += size;
                 }
@@ -278,7 +278,7 @@ public class TileController extends TileBase
             } else {
                 // The external storage is responsible for sending changes, we don't need to anymore
                 if (size != remainder.getCount() && storage instanceof IStorageExternal && action == Action.PERFORM) {
-                    ((IStorageExternal) storage).update(this);
+                    ((IStorageExternal<?>) storage).update(this);
 
                     insertedExternally += size - remainder.getCount();
                 }
@@ -291,21 +291,20 @@ public class TileController extends TileBase
             itemStorage.add(stack, inserted - insertedExternally, false, false);
         }
 
-        return StackUtils.emptyToNull(remainder);
+        return remainder;
     }
 
-    @Nonnull
+    @Nullable
     @Override
-    public ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action,
-                                 Predicate<IStorage<ItemStack>> filter) {
-        int received = 0;
+    public StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action,
+                                                  Predicate<IStorage<ItemStack>> filter) {
+        long received = 0;
+        long extractedExternally = 0;
 
-        int extractedExternally = 0;
-
-        ItemStack newStack = null;
+        StackListResult<ItemStack> newStack = null;
 
         for (IStorage<ItemStack> storage : this.itemStorage.getStorages()) {
-            ItemStack took = null;
+            StackListResult<ItemStack> took = null;
 
             if (filter.test(storage) && storage.getAccessType() != AccessType.INSERT) {
                 took = storage.extract(stack, size - received, flags, action);
@@ -314,7 +313,7 @@ public class TileController extends TileBase
             if (took != null) {
                 // The external storage is responsible for sending changes, we don't need to anymore
                 if (storage instanceof IStorageExternal && action == Action.PERFORM) {
-                    ((IStorageExternal) storage).update(this);
+                    ((IStorageExternal<?>) storage).update(this);
 
                     extractedExternally += took.getCount();
                 }
@@ -334,41 +333,41 @@ public class TileController extends TileBase
         }
 
         if (newStack != null && newStack.getCount() - extractedExternally > 0 && action == Action.PERFORM) {
-            itemStorage.remove(newStack, newStack.getCount() - extractedExternally, false);
+            itemStorage.remove(newStack.getStack(), newStack.getCount() - extractedExternally, false);
         }
 
-        return StackUtils.nullToEmpty(newStack);
+        return newStack;
     }
 
-
+    @Nullable
     @Override
-    public FluidStack insertFluid(@Nonnull FluidStack stack, int size, Action action) {
-        if (stack == null || fluidStorage.getStorages().isEmpty()) {
-            return StackUtils.copy(stack, size);
+    public StackListResult<FluidStack> insertFluid(@Nonnull FluidStack stack, long size, Action action) {
+        if (size < 1 || fluidStorage.getStorages().isEmpty()) {
+            return new StackListResult<>(StackUtils.copy(stack, 0), null, size);
         }
 
-        FluidStack remainder = stack;
+        StackListResult<FluidStack> remainder = null;
 
-        int inserted = 0;
-        int insertedExternally = 0;
+        long inserted = 0;
+        long insertedExternally = 0;
 
         for (IStorage<FluidStack> storage : this.fluidStorage.getStorages()) {
             if (storage.getAccessType() == AccessType.EXTRACT) {
                 continue;
             }
 
-            int storedPre = storage.getStored();
+            long storedPre = storage.getStored();
 
-            remainder = storage.insert(remainder, size, action);
+            remainder = storage.insert(stack, size, action);
 
             if (action == Action.PERFORM) {
-                inserted += storage.getCacheDelta(storedPre, size, remainder);
+                inserted += storage.getCacheDelta(storedPre, size, remainder == null ? 0 : remainder.getCount());
             }
 
             if (remainder == null) {
                 // The external storage is responsible for sending changes, we don't need to anymore
                 if (storage instanceof IStorageExternal && action == Action.PERFORM) {
-                    ((IStorageExternal) storage).update(this);
+                    ((IStorageExternal<?>) storage).update(this);
 
                     insertedExternally += size;
                 }
@@ -376,13 +375,13 @@ public class TileController extends TileBase
                 break;
             } else {
                 // The external storage is responsible for sending changes, we don't need to anymore
-                if (size != remainder.amount && storage instanceof IStorageExternal && action == Action.PERFORM) {
-                    ((IStorageExternal) storage).update(this);
+                if (size != remainder.getCount() && storage instanceof IStorageExternal && action == Action.PERFORM) {
+                    ((IStorageExternal<?>) storage).update(this);
 
-                    insertedExternally += size - remainder.amount;
+                    insertedExternally += size - remainder.getCount();
                 }
 
-                size = remainder.amount;
+                size = remainder.getCount();
             }
         }
 
@@ -394,16 +393,15 @@ public class TileController extends TileBase
     }
 
     @Override
-    public FluidStack extractFluid(@Nonnull FluidStack stack, int size, int flags, Action action,
+    public StackListResult<FluidStack> extractFluid(@Nonnull FluidStack stack, long size, int flags, Action action,
                                    Predicate<IStorage<FluidStack>> filter) {
-        int received = 0;
+        long received = 0;
+        long extractedExternally = 0;
 
-        int extractedExternally = 0;
-
-        FluidStack newStack = null;
+        StackListResult<FluidStack> newStack = null;
 
         for (IStorage<FluidStack> storage : this.fluidStorage.getStorages()) {
-            FluidStack took = null;
+            StackListResult<FluidStack> took = null;
 
             if (filter.test(storage) && storage.getAccessType() != AccessType.INSERT) {
                 took = storage.extract(stack, size - received, flags, action);
@@ -412,18 +410,18 @@ public class TileController extends TileBase
             if (took != null) {
                 // The external storage is responsible for sending changes, we don't need to anymore
                 if (storage instanceof IStorageExternal && action == Action.PERFORM) {
-                    ((IStorageExternal) storage).update(this);
+                    ((IStorageExternal<?>) storage).update(this);
 
-                    extractedExternally += took.amount;
+                    extractedExternally += took.getCount();
                 }
 
                 if (newStack == null) {
                     newStack = took;
                 } else {
-                    newStack.amount += took.amount;
+                    newStack.grow(took.getCount());
                 }
 
-                received += took.amount;
+                received += took.getCount();
             }
 
             if (size == received) {
@@ -431,8 +429,8 @@ public class TileController extends TileBase
             }
         }
 
-        if (newStack != null && newStack.amount - extractedExternally > 0 && action == Action.PERFORM) {
-            fluidStorage.remove(newStack, newStack.amount - extractedExternally, false);
+        if (newStack != null && newStack.getCount() - extractedExternally > 0 && action == Action.PERFORM) {
+            fluidStorage.remove(newStack.getStack(), newStack.getCount() - extractedExternally, false);
         }
 
         return newStack;

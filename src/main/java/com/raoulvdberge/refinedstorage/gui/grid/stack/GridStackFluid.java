@@ -17,16 +17,18 @@ public class GridStackFluid implements IGridStack {
     private UUID otherId;
 
     private final FluidStack stack;
+    private long count;
     @Nullable
     private StorageTrackerEntry entry;
     private final boolean craftable;
     private String modId;
     private String modName;
 
-    public GridStackFluid(UUID id, @Nullable UUID otherId, FluidStack stack, @Nullable StorageTrackerEntry entry, boolean craftable) {
+    public GridStackFluid(UUID id, @Nullable UUID otherId, FluidStack stack, long count, @Nullable StorageTrackerEntry entry, boolean craftable) {
         this.id = id;
         this.otherId = otherId;
         this.stack = stack;
+        this.count = count;
         this.entry = entry;
         this.craftable = craftable;
     }
@@ -98,8 +100,23 @@ public class GridStackFluid implements IGridStack {
     }
 
     @Override
-    public int getQuantity() {
-        return isCraftable() ? 0 : stack.amount;
+    public long getQuantity() {
+        return isCraftable() ? 0 : getCount();
+    }
+
+    @Override
+    public long getCount() {
+        return this.count;
+    }
+
+    @Override
+    public void setCount(long count) {
+        this.count = count;
+    }
+
+    @Override
+    public void grow(long count) {
+        this.count += count;
     }
 
     @Override

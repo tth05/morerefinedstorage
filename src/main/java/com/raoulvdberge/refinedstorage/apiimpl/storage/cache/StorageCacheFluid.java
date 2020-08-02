@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.api.storage.*;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraftforge.fluids.FluidStack;
@@ -47,9 +48,9 @@ public class StorageCacheFluid implements IStorageCache<FluidStack> {
                 continue;
             }
 
-            for (FluidStack stack : storage.getStacks()) {
-                if(stack.amount > 0)
-                    add(stack, stack.amount, true, false);
+            for (StackListEntry<FluidStack> stack : storage.getEntries()) {
+                if(stack != null && stack.getCount() > 0)
+                    add(stack.getStack(), stack.getCount(), true, false);
             }
         }
 
@@ -57,7 +58,7 @@ public class StorageCacheFluid implements IStorageCache<FluidStack> {
     }
 
     @Override
-    public synchronized void add(@Nonnull FluidStack stack, int size, boolean rebuilding, boolean batched) {
+    public synchronized void add(@Nonnull FluidStack stack, long size, boolean rebuilding, boolean batched) {
         StackListResult<FluidStack> result = list.add(stack, size);
 
         if (!rebuilding) {
@@ -70,7 +71,7 @@ public class StorageCacheFluid implements IStorageCache<FluidStack> {
     }
 
     @Override
-    public synchronized void remove(@Nonnull FluidStack stack, int size, boolean batched) {
+    public synchronized void remove(@Nonnull FluidStack stack, long size, boolean batched) {
         StackListResult<FluidStack> result = list.remove(stack, size);
 
         if (result != null) {

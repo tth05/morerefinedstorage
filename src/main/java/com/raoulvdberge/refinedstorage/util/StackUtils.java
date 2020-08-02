@@ -59,8 +59,9 @@ public final class StackUtils {
         }
     }
 
-    public static void writeItemGridStack(ByteBuf buf, ItemStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
+    public static void writeItemGridStack(ByteBuf buf, ItemStack stack, long count, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
         writeItemStack(buf, stack);
+        buf.writeLong(count);
 
         buf.writeBoolean(craftable);
         buf.writeLong(id.getMostSignificantBits());
@@ -84,6 +85,7 @@ public final class StackUtils {
 
     public static GridStackItem readItemGridStack(ByteBuf buf) {
         ItemStack stack = readItemStack(buf);
+        long realCount = buf.readLong();
 
         boolean craftable = buf.readBoolean();
         UUID id = new UUID(buf.readLong(), buf.readLong());
@@ -98,11 +100,12 @@ public final class StackUtils {
             entry = new StorageTrackerEntry(buf.readLong(), ByteBufUtils.readUTF8String(buf));
         }
 
-        return new GridStackItem(id, otherId, stack, craftable, entry);
+        return new GridStackItem(id, otherId, stack, realCount, craftable, entry);
     }
 
-    public static void writeFluidGridStack(ByteBuf buf, FluidStack stack, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
+    public static void writeFluidGridStack(ByteBuf buf, FluidStack stack, long realCount, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
         ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
+        buf.writeLong(realCount);
 
         buf.writeBoolean(craftable);
 
@@ -127,6 +130,8 @@ public final class StackUtils {
 
     public static GridStackFluid readFluidGridStack(ByteBuf buf) {
         FluidStack stack = FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf));
+        long realCount = buf.readLong();
+
         boolean craftable = buf.readBoolean();
         UUID id = new UUID(buf.readLong(), buf.readLong());
 
@@ -140,7 +145,7 @@ public final class StackUtils {
             entry = new StorageTrackerEntry(buf.readLong(), ByteBufUtils.readUTF8String(buf));
         }
 
-        return new GridStackFluid(id, otherId, stack, entry, craftable);
+        return new GridStackFluid(id, otherId, stack, realCount, entry, craftable);
     }
 
     public static ItemStack nullToEmpty(@Nullable ItemStack stack) {

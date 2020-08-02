@@ -5,6 +5,8 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -23,7 +25,7 @@ public class StorageDiskFluidPortable implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return parent.getCapacity();
     }
 
@@ -42,15 +44,20 @@ public class StorageDiskFluidPortable implements IStorageDisk<FluidStack> {
         return parent.getStacks();
     }
 
+    @Override
+    public Collection<StackListEntry<FluidStack>> getEntries() {
+        return parent.getEntries();
+    }
+
     @Nullable
     @Override
-    public FluidStack insert(@Nonnull FluidStack stack, int size, Action action) {
-        int storedPre = parent.getStored();
+    public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
+        long storedPre = parent.getStored();
 
-        FluidStack remainder = parent.insert(stack, size, action);
+        StackListResult<FluidStack> remainder = parent.insert(stack, size, action);
 
         if (action == Action.PERFORM) {
-            int inserted = parent.getCacheDelta(storedPre, size, remainder);
+            long inserted = parent.getCacheDelta(storedPre, size, remainder == null ? 0 : remainder.getCount());
 
             if (inserted > 0) {
                 portableGrid.getFluidCache().add(stack, inserted, false, false);
@@ -62,18 +69,18 @@ public class StorageDiskFluidPortable implements IStorageDisk<FluidStack> {
 
     @Nullable
     @Override
-    public FluidStack extract(@Nonnull FluidStack stack, int size, int flags, Action action) {
-        FluidStack extracted = parent.extract(stack, size, flags, action);
+    public StackListResult<FluidStack> extract(@Nonnull FluidStack stack, long size, int flags, Action action) {
+        StackListResult<FluidStack> extracted = parent.extract(stack, size, flags, action);
 
         if (action == Action.PERFORM && extracted != null) {
-            portableGrid.getFluidCache().remove(extracted, extracted.amount, false);
+            portableGrid.getFluidCache().remove(extracted.getStack(), extracted.getCount(), false);
         }
 
         return extracted;
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return parent.getStored();
     }
 
@@ -88,7 +95,7 @@ public class StorageDiskFluidPortable implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable FluidStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         return parent.getCacheDelta(storedPreInsertion, size, remainder);
     }
 

@@ -24,7 +24,7 @@ public interface ICraftingTaskFactory {
      * @return the crafting task
      */
     @Nonnull
-    MasterCraftingTask create(INetwork network, ICraftingRequestInfo requested, int quantity, ICraftingPattern pattern);
+    MasterCraftingTask create(INetwork network, ICraftingRequestInfo requested, long quantity, ICraftingPattern pattern);
 
     /**
      * Returns a crafting task for a given NBT tag.

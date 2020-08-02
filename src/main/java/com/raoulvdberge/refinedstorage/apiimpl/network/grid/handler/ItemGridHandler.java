@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
@@ -44,22 +45,22 @@ public class ItemGridHandler implements IItemGridHandler {
 
     @Override
     public void onExtract(EntityPlayerMP player, UUID id, int preferredSlot, int flags) {
-        ItemStack item = network.getItemStorageCache().getList().get(id);
+        StackListEntry<ItemStack> entry = network.getItemStorageCache().getList().get(id);
 
-        if (item == null || !network.getSecurityManager().hasPermission(Permission.EXTRACT, player)) {
+        if (entry == null || !network.getSecurityManager().hasPermission(Permission.EXTRACT, player)) {
             return;
         }
 
-        int itemSize = item.getCount();
+        long itemSize = entry.getCount();
         // We copy here because some mods change the NBT tag of an item after getting the stack limit
-        int maxItemSize = item.getItem().getItemStackLimit(item.copy());
+        int maxItemSize = entry.getStack().getItem().getItemStackLimit(entry.getStack().copy());
 
         boolean single = (flags & EXTRACT_SINGLE) == EXTRACT_SINGLE;
 
         ItemStack held = player.inventory.getItemStack();
 
         if (single) {
-            if (!held.isEmpty() && (!API.instance().getComparer().isEqualNoQuantity(item, held) ||
+            if (!held.isEmpty() && (!API.instance().getComparer().isEqualNoQuantity(entry.getStack(), held) ||
                     held.getCount() + 1 > held.getMaxStackSize())) {
                 return;
             }
@@ -67,7 +68,7 @@ public class ItemGridHandler implements IItemGridHandler {
             return;
         }
 
-        int size = 64;
+        long size = 64;
 
         if ((flags & EXTRACT_HALF) == EXTRACT_HALF && itemSize > 1) {
             size = itemSize / 2;
@@ -86,46 +87,54 @@ public class ItemGridHandler implements IItemGridHandler {
         size = Math.min(size, maxItemSize);
 
         // Do this before actually extracting, since external storage sends updates as soon as a change happens (so before the storage tracker used to track)
-        network.getItemStorageTracker().changed(player, item.copy());
+        network.getItemStorageTracker().changed(player, entry.getStack().copy());
 
-        ItemStack took = network.extractItem(item, size, Action.SIMULATE);
+        StackListResult<ItemStack> took = network.extractItem(entry.getStack(), size, Action.SIMULATE);
 
-        if (!took.isEmpty()) {
-            if ((flags & EXTRACT_SHIFT) == EXTRACT_SHIFT) {
-                IItemHandler playerInventory =
-                        player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-                if (playerInventory != null) {
-                    if (preferredSlot != -1) {
-                        ItemStack remainder = playerInventory.insertItem(preferredSlot, took, true);
-                        if (remainder.getCount() != took.getCount()) {
-                            ItemStack inserted = network.extractItem(item, size - remainder.getCount(), Action.PERFORM);
-                            playerInventory.insertItem(preferredSlot, inserted, false);
-                            took.setCount(remainder.getCount());
+        if (took == null)
+            return;
+        took.applyCount();
+
+        if ((flags & EXTRACT_SHIFT) == EXTRACT_SHIFT) {
+            IItemHandler playerInventory =
+                    player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+            if (playerInventory != null) {
+                if (preferredSlot != -1) {
+                    ItemStack remainder = playerInventory.insertItem(preferredSlot, took.getStack(), true);
+                    if (remainder.getCount() != took.getCount()) {
+                        StackListResult<ItemStack> inserted = network.extractItem(entry.getStack(), size - remainder.getCount(), Action.PERFORM);
+                        if(inserted != null) {
+                            inserted.applyCount();
+                            playerInventory.insertItem(preferredSlot, inserted.getStack(), false);
+                        } else {
+                            playerInventory.insertItem(preferredSlot, ItemStack.EMPTY, false);
                         }
-                    }
-                    if (!took.isEmpty()) {
-                        ItemStack remainder = ItemHandlerHelper.insertItemStacked(playerInventory, took, false);
 
-                        if (took.getCount() - remainder.getCount() > 0)
-                            network.extractItem(item, took.getCount() - remainder.getCount(), Action.PERFORM);
+                        took.setCount(remainder.getCount());
+                        took.applyCount();
                     }
                 }
-            } else {
-                took = network.extractItem(item, size, Action.PERFORM);
+                ItemStack remainder = ItemHandlerHelper.insertItemStacked(playerInventory, took.getStack(), false);
 
-                if (!took.isEmpty()) {
-                    if (single && !held.isEmpty()) {
-                        held.grow(1);
-                    } else {
-                        player.inventory.setItemStack(took);
-                    }
-
-                    player.updateHeldItem();
-                }
+                if (took.getCount() - remainder.getCount() > 0)
+                    network.extractItem(entry.getStack(), took.getCount() - remainder.getCount(), Action.PERFORM);
             }
+        } else {
+            took = network.extractItem(entry.getStack(), size, Action.PERFORM);
 
-            network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessGridExtractUsage);
+            if (took != null) {
+                if (single && !held.isEmpty()) {
+                    held.grow(1);
+                } else {
+                    took.applyCount();
+                    player.inventory.setItemStack(took.getStack());
+                }
+
+                player.updateHeldItem();
+            }
         }
+
+        network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessGridExtractUsage);
     }
 
     @Override
@@ -194,11 +203,11 @@ public class ItemGridHandler implements IItemGridHandler {
             return;
         }
 
-        ItemStack stack = network.getItemStorageCache().getCraftablesList().get(id);
+        StackListEntry<ItemStack> stack = network.getItemStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
             CraftingManager.CALCULATION_THREAD_POOL.execute(() -> {
-                ICraftingTask task = network.getCraftingManager().create(stack, quantity);
+                ICraftingTask task = network.getCraftingManager().create(stack.getStack(), quantity);
                 if (task == null) {
                     return;
                 }

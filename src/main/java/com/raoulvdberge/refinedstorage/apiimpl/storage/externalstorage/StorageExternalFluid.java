@@ -5,6 +5,8 @@ import com.raoulvdberge.refinedstorage.api.storage.AccessType;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageContext;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExternal;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -88,41 +90,69 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
         return Collections.emptyList();
     }
 
-    @Nullable
     @Override
-    public FluidStack insert(@Nonnull FluidStack stack, int size, Action action) {
-        if (context.acceptsFluid(stack)) {
-            IFluidHandler handler = handlerSupplier.get();
-
-            if(handler == null)
-                return StackUtils.copy(stack, size);
-
-            int filled = handler.fill(StackUtils.copy(stack, size), action == Action.PERFORM);
-
-            if (filled == size) {
-                return null;
-            }
-
-            return StackUtils.copy(stack, size - filled);
-        }
-
-        return StackUtils.copy(stack, size);
+    public Collection<StackListEntry<FluidStack>> getEntries() {
+        List<StackListEntry<FluidStack>> list = new ArrayList<>();
+        for (FluidStack s : getStacks())
+            list.add(new StackListEntry<>(s, s.amount));
+        return list;
     }
 
     @Nullable
     @Override
-    public FluidStack extract(@Nonnull FluidStack stack, int size, int flags, Action action) {
+    public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
+        if (context.acceptsFluid(stack)) {
+            IFluidHandler handler = handlerSupplier.get();
+
+            if(handler == null)
+                return new StackListResult<>(stack.copy(), null, size);
+
+            while(size > 1) {
+                int filled = handler.fill(
+                        StackUtils.copy(stack, size > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) size),
+                        action == Action.PERFORM);
+                size -= filled;
+                if(filled != Integer.MAX_VALUE)
+                    break;
+            }
+
+            if (size < 1) {
+                return null;
+            }
+        }
+
+        return new StackListResult<>(stack.copy(), null, size);
+    }
+
+    @Nullable
+    @Override
+    public StackListResult<FluidStack> extract(@Nonnull FluidStack stack, long size, int flags, Action action) {
         IFluidHandler handler = handlerSupplier.get();
 
         if (handler == null) {
             return null;
         }
 
-        return handler.drain(StackUtils.copy(stack, size), action == Action.PERFORM);
+        long extracted = 0;
+        while(size > 1) {
+            FluidStack drained = handler.drain(
+                    StackUtils.copy(stack, size > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) size),
+                    action == Action.PERFORM);
+
+            if(drained == null)
+                break;
+            extracted += drained.amount;
+
+            size -= drained.amount;
+            if(drained.amount != Integer.MAX_VALUE)
+                break;
+        }
+
+        return new StackListResult<>(stack.copy(), null, extracted);
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         IFluidTankProperties[] props = getProperties();
 
         if (props != null) {
@@ -153,11 +183,11 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable FluidStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         if (getAccessType() == AccessType.INSERT) {
             return 0;
         }
 
-        return remainder == null ? size : (size - remainder.amount);
+        return remainder < 1 ? size : (size - remainder);
     }
 }

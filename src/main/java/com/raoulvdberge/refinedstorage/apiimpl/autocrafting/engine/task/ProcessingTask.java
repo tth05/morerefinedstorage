@@ -671,31 +671,30 @@ public class ProcessingTask extends Task {
         //inputs
         for (Input input : this.inputs) {
             if (input.isFluid()) {
-                //TODO: remove casts
                 CraftingMonitorElementFluidRender fluid =
                         new CraftingMonitorElementFluidRender(input.getFluidStack(),
-                                (int) input.getTotalInputAmount(), (int) input.getProcessingAmount(), 0,
-                                (int) input.getToCraftAmount());
+                                input.getTotalInputAmount(), input.getProcessingAmount(), 0,
+                                input.getToCraftAmount());
                 elements.add(hasError ? getErrorElement(fluid) : fluid);
             } else {
                 CraftingMonitorElementItemRender item =
                         new CraftingMonitorElementItemRender(input.getCompareableItemStack(),
-                                (int) input.getTotalInputAmount(), (int) input.getProcessingAmount(), 0,
-                                (int) input.getToCraftAmount());
+                                input.getTotalInputAmount(), input.getProcessingAmount(), 0,
+                                input.getToCraftAmount());
                 elements.add(hasError ? getErrorElement(item) : item);
             }
         }
 
-        //ouputs
+        //outputs
         for (Output output : this.outputs) {
             if (output.isFluid()) {
                 elements.add(
                         new CraftingMonitorElementFluidRender(output.getFluidStack(), 0, 0,
-                                (int) output.getProcessingAmount(), 0));
+                                output.getProcessingAmount(), 0));
             } else {
                 elements.add(
                         new CraftingMonitorElementItemRender(output.getCompareableItemStack(), 0, 0,
-                                (int) output.getProcessingAmount(), 0));
+                                output.getProcessingAmount(), 0));
             }
         }
 

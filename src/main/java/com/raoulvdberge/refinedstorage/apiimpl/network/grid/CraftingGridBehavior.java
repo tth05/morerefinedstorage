@@ -7,10 +7,10 @@ import com.raoulvdberge.refinedstorage.api.network.grid.IGridNetworkAware;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import net.minecraft.entity.player.EntityPlayer;
@@ -53,7 +53,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             // Only if we are a crafting grid. Pattern grids can just be emptied.
             if (!slot.isEmpty() && grid.getGridType() == GridType.CRAFTING) {
                 // try to insert into network.
-                ItemStack remainder = network.insertItem(slot, slot.getCount(), Action.PERFORM);
+                StackListResult<ItemStack> remainder = network.insertItem(slot, (long)slot.getCount(), Action.PERFORM);
                 if (remainder != null) {
                     //give to player otherwise
                     giveToPlayerOrNetwork(slot, player, null);
@@ -74,13 +74,13 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (grid.getGridType() == GridType.CRAFTING) {
                 // If we are connected, first try to get the possibilities from the network
                 for (ItemStack possibility : possibilities) {
-                    ItemStack took = network.extractItem(possibility, 1, IComparer.COMPARE_NBT |
+                    StackListResult<ItemStack> took = network.extractItem(possibility, 1L, IComparer.COMPARE_NBT |
                                     (possibility.getItem().isDamageable() ? 0 : IComparer.COMPARE_DAMAGE),
                             Action.PERFORM);
 
-                    if (!took.isEmpty()) {
-                        grid.getCraftingMatrix().setInventorySlotContents(i, StackUtils.nullToEmpty(took));
-                        network.getItemStorageTracker().changed(player, took.copy());
+                    if (took != null) {
+                        grid.getCraftingMatrix().setInventorySlotContents(i, took.getStack());
+                        network.getItemStorageTracker().changed(player, took.getStack().copy());
                         continue matrixLoop;
                     }
                 }
@@ -149,13 +149,13 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     if (network != null && remainder.get(i)
                             .hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
                         //refill one item so the slot is never empty if possible
-                        ItemStack refill = network.extractItem(slot, 1, Action.PERFORM);
+                        StackListResult<ItemStack> refill = network.extractItem(slot, 1L, Action.PERFORM);
 
-                        if (refill.isEmpty()) {
+                        if (refill == null) {
                             //replace item with remainder
                             matrix.setInventorySlotContents(i, remainder.get(i).copy());
                         } else {
-                            network.getItemStorageTracker().changed(player, refill.copy());
+                            network.getItemStorageTracker().changed(player, refill.getStack().copy());
                         }
                     } else {
                         //replace item with remainder
@@ -165,13 +165,16 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             } else if (!slot.isEmpty()) {
                 if (slot.getCount() == 1) {
                     //refill one item so the slot is never empty if possible
-                    ItemStack refill = network == null ? ItemStack.EMPTY : network.extractItem(slot, 1, Action.PERFORM);
-
-                    matrix.setInventorySlotContents(i, refill);
-
-                    if (!refill.isEmpty())
+                    StackListResult<ItemStack> refill = network == null ? null : network.extractItem(slot, 1L, Action.PERFORM);
+                    if (refill != null) {
+                        refill.applyCount();
+                        matrix.setInventorySlotContents(i, refill.getStack());
+                        network.getItemStorageTracker().changed(player, refill.getStack().copy());
+                    } else {
                         //noinspection ConstantConditions
-                        network.getItemStorageTracker().changed(player, refill.copy());
+                        matrix.setInventorySlotContents(i, ItemStack.EMPTY);
+                    }
+
                 } else {
                     matrix.decrStackSize(i, 1);
                 }
@@ -408,11 +411,11 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
 
             //remove used item from system
             if (toExtract > 0) {
-                ItemStack extractedItem = StackUtils.nullToEmpty(
+                StackListResult<ItemStack> extractedItem =
                         network.extractItem(commonSlotsPair.getLeft().iterator().next().getLeft(),
-                                toExtract, Action.PERFORM));
-                if (!extractedItem.isEmpty())
-                    network.getItemStorageTracker().changed(player, extractedItem.copy());
+                                (long)toExtract, Action.PERFORM);
+                if (extractedItem != null)
+                    network.getItemStorageTracker().changed(player, extractedItem.getStack().copy());
             }
         }
 
@@ -428,10 +431,12 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 //Replace item with remainder if count is 1
                 if (slot.getCount() == 1 && remainderItem.getCount() == 1) {
                     if (remainderItem.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
-                        ItemStack newItem = network.insertItem(remainderItem, remainderItem.getCount(), Action.PERFORM);
+                        StackListResult<ItemStack> newItem = network.insertItem(remainderItem, (long)remainderItem.getCount(), Action.PERFORM);
 
-                        if (newItem != null)
-                            giveToPlayerOrNetwork(newItem, player, null);
+                        if (newItem != null) {
+                            newItem.applyCount();
+                            giveToPlayerOrNetwork(newItem.getStack(), player, null);
+                        }
                     } else {
                         matrix.setInventorySlotContents(i, remainderItem);
                     }
@@ -462,11 +467,15 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     }
 
                     if (!hasRefilledAllSlots) {
-                        ItemStack refill = network.extractItem(slot, 1, Action.PERFORM);
+                        StackListResult<ItemStack> refill = network.extractItem(slot, 1L, Action.PERFORM);
 
-                        matrix.setInventorySlotContents(i, refill);
-                        if (!refill.isEmpty())
-                            network.getItemStorageTracker().changed(player, refill.copy());
+                        if(refill == null) {
+                            matrix.setInventorySlotContents(i, ItemStack.EMPTY);
+                        } else {
+                            refill.applyCount();
+                            matrix.setInventorySlotContents(i, refill.getStack());
+                            network.getItemStorageTracker().changed(player, refill.getStack().copy());
+                        }
                     } else {
                         matrix.decrStackSize(i, slot.getCount() - 1);
                     }
@@ -545,8 +554,16 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                                               @Nullable INetwork network) {
         if (!player.inventory.addItemStackToInventory(itemStack)) {
             //if the players inventory is full, insert the item into the network
-            ItemStack remainingItem =
-                    network == null ? itemStack : network.insertItem(itemStack, itemStack.getCount(), Action.PERFORM);
+            ItemStack remainingItem = itemStack;
+            if (network != null) {
+                StackListResult<ItemStack> result = network.insertItem(itemStack, (long)itemStack.getCount(), Action.PERFORM);
+                if(result != null) {
+                    result.applyCount();
+                    remainingItem = result.getStack();
+                } else {
+                    remainingItem = null;
+                }
+            }
 
             //if the network doesn't accept it, drop it into the world
             if (remainingItem != null) {

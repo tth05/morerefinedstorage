@@ -11,6 +11,7 @@ import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.*;
@@ -433,30 +434,31 @@ public abstract class Task {
                 if (input instanceof DurabilityInput) { //handle durability inputs
                     DurabilityInput durabilityInput = (DurabilityInput) input;
                     //always only extract 1 item
-                    ItemStack extracted = network.extractItem(durabilityInput.getCompareableItemStack(), 1,
+                    StackListResult<ItemStack> extracted = network.extractItem(durabilityInput.getCompareableItemStack(), 1L,
                             IComparer.COMPARE_NBT, Action.PERFORM);
 
                     //extract as many items as needed
-                    while (!extracted.isEmpty()) {
-                        durabilityInput.addDamageableItemStack(extracted);
+                    while (extracted != null) {
+                        extracted.applyCount();
+                        durabilityInput.addDamageableItemStack(extracted.getStack());
 
                         //keep extracting if input is not satisfied
                         if (input.getAmountMissing() > 0)
-                            extracted = network.extractItem(durabilityInput.getCompareableItemStack(), 1,
+                            extracted = network.extractItem(durabilityInput.getCompareableItemStack(), 1L,
                                     IComparer.COMPARE_NBT, Action.PERFORM);
                         else
                             break;
                     }
                 } else { //handle normal inputs
                     for (ItemStack ingredient : input.getItemStacks()) {
-                        //TODO: support inserting and extracting of more than Integer.MAX_VALUE xd
-                        ItemStack extracted = network.extractItem(ingredient,
-                                input.getAmountMissing() > Integer.MAX_VALUE ? Integer.MAX_VALUE :
-                                        (int) input.getAmountMissing(), Action.PERFORM);
-                        if (extracted.isEmpty())
+
+                        StackListResult<ItemStack> extracted = network.extractItem(ingredient,
+                                input.getAmountMissing(), Action.PERFORM);
+
+                        if (extracted == null)
                             continue;
 
-                        long remainder = input.increaseItemStackAmount(extracted, extracted.getCount());
+                        long remainder = input.increaseItemStackAmount(ingredient, extracted.getCount());
                         //special case for infinite inputs -> tell this input that it is the one that actually extracted
                         //an item
                         if (input instanceof InfiniteInput) {
@@ -466,22 +468,21 @@ public abstract class Task {
                         //if it extracted too much, insert it back. Shouldn't happen
                         if (remainder != -1) {
                             if (remainder != 0)
-                                network.insertItem(ingredient, (int) remainder, Action.PERFORM);
+                                network.insertItem(ingredient, remainder, Action.PERFORM);
                             continue inputLoop;
                         }
                     }
                 }
             } else { //extract fluid
-                //TODO: support inserting and extracting of more than Integer.MAX_VALUE
-                FluidStack extracted = network.extractFluid(input.getFluidStack(),
-                        input.getAmountMissing() > Integer.MAX_VALUE ? Integer.MAX_VALUE :
-                                (int) input.getAmountMissing(), Action.PERFORM);
+                StackListResult<FluidStack> extracted = network.extractFluid(input.getFluidStack(),
+                        input.getAmountMissing(), Action.PERFORM);
+
                 if (extracted != null) {
-                    long remainder = input.increaseFluidStackAmount(extracted.amount);
+                    long remainder = input.increaseFluidStackAmount(extracted.getCount());
                     //if it extracted too much, insert it back. Shouldn't happen
                     if (remainder != -1) {
                         if (remainder != 0)
-                            network.insertFluid(input.getFluidStack(), (int) remainder, Action.PERFORM);
+                            network.insertFluid(input.getFluidStack(), remainder, Action.PERFORM);
                         continue;
                     }
                 }
@@ -531,23 +532,12 @@ public abstract class Task {
 
                 if (!input.isFluid()) { //missing itemstacks
                     ItemStack missing = input.getCompareableItemStack().copy();
-                    //avoid int overflow
-                    //TODO: add support for real ItemStack counts
-                    if (input.getAmountMissing() > Integer.MAX_VALUE)
-                        missing.setCount(Integer.MAX_VALUE);
-                    else
-                        missing.setCount((int) input.getAmountMissing());
-                    result.getMissingItemStacks().add(missing);
+
+                    result.getMissingItemStacks().add(missing, input.getAmountMissing());
                 } else { //missing fluid stacks
                     FluidStack missing = input.getFluidStack();
 
-                    //TODO: add support for real FluidStack counts
-                    //avoid overflow
-                    if (input.getAmountMissing() > Integer.MAX_VALUE)
-                        missing.amount = Integer.MAX_VALUE;
-                    else
-                        missing.amount = (int) input.getAmountMissing();
-                    result.getMissingFluidStacks().add(missing);
+                    result.getMissingFluidStacks().add(missing, input.getAmountMissing());
                 }
             }
         }

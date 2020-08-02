@@ -42,7 +42,7 @@ public interface ICraftingTask {
     /**
      * @return the amount of items that have to be crafted
      */
-    int getQuantity();
+    long getQuantity();
 
     /**
      * @return the completion percentage

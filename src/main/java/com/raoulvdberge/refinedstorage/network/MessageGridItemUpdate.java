@@ -41,7 +41,6 @@ public class MessageGridItemUpdate implements IMessage, IMessageHandler<MessageG
         for (int i = 0; i < size; ++i) {
             stacks.add(StackUtils.readItemGridStack(buf));
         }
-
     }
 
     @Override
@@ -57,7 +56,7 @@ public class MessageGridItemUpdate implements IMessage, IMessageHandler<MessageG
             StackListEntry<ItemStack> craftingEntry = network.getItemStorageCache().getCraftablesList()
                     .getEntry(stack.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
 
-            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getId(),
+            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getCount(), stack.getId(),
                     craftingEntry != null ? craftingEntry.getId() : null, false,
                     network.getItemStorageTracker().get(stack.getStack()));
         }
@@ -66,7 +65,7 @@ public class MessageGridItemUpdate implements IMessage, IMessageHandler<MessageG
             StackListEntry<ItemStack> regularEntry = network.getItemStorageCache().getList()
                     .getEntry(stack.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
 
-            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getId(),
+            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getCount(), stack.getId(),
                     regularEntry != null ? regularEntry.getId() : null, true,
                     network.getItemStorageTracker().get(stack.getStack()));
         }

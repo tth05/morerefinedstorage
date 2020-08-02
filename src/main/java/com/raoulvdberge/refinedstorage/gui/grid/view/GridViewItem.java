@@ -22,7 +22,7 @@ public class GridViewItem extends GridViewBase {
     }
 
     @Override
-    public void postChange(IGridStack stack, int delta) {
+    public void postChange(IGridStack stack, long delta) {
         if (!(stack instanceof GridStackItem)) {
             return;
         }
@@ -51,16 +51,16 @@ public class GridViewItem extends GridViewBase {
         GridStackItem existing = (GridStackItem) map.get(stack.getId());
 
         if (existing == null) {
-            ((GridStackItem) stack).getStack().setCount(delta);
+            stack.setCount(delta);
 
             map.put(stack.getId(), stack);
         } else {
-            if (existing.getStack().getCount() + delta <= 0) {
-                existing.getStack().grow(delta);
+            if (existing.getCount() + delta <= 0) {
+                existing.grow(delta);
 
                 map.remove(existing.getId());
             } else {
-                existing.getStack().grow(delta);
+                existing.grow(delta);
             }
 
             existing.setTrackerEntry(stack.getTrackerEntry());

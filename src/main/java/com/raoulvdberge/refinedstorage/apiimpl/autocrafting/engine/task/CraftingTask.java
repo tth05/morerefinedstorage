@@ -7,6 +7,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadE
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
@@ -14,7 +15,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.D
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -36,8 +36,8 @@ public class CraftingTask extends Task {
     /**
      * Saves the remainder from previous crafting attempts to make sure this doesn't get lost
      */
-    @Nonnull
-    private ItemStack remainder = ItemStack.EMPTY;
+    @Nullable
+    private StackListResult<ItemStack> remainder = null;
 
     @Nullable
     private List<ItemStack> byProducts;
@@ -57,8 +57,10 @@ public class CraftingTask extends Task {
             throws CraftingTaskReadException {
         super(network, compound);
 
-        if (compound.hasKey(NBT_REMAINDER_ITEM))
-            this.remainder = new ItemStack(compound.getCompoundTag(NBT_REMAINDER_ITEM));
+        if (compound.hasKey(NBT_REMAINDER_ITEM)) {
+            ItemStack itemStack = new ItemStack(compound.getCompoundTag(NBT_REMAINDER_ITEM));
+            this.remainder = new StackListResult<>(itemStack, null, itemStack.getCount());
+        }
 
         generateCleanByProducts();
     }
@@ -96,9 +98,8 @@ public class CraftingTask extends Task {
     @Override
     public int update(@Nonnull INetwork network, @Nonnull ICraftingPatternContainer container, int toCraft) {
         //don't update if there's any remainder left from the previous update
-        if (!this.remainder.isEmpty()) {
-            this.remainder = StackUtils
-                    .nullToEmpty(network.insertItem(this.remainder, this.remainder.getCount(), Action.PERFORM));
+        if (this.remainder != null) {
+            this.remainder = network.insertItem(this.remainder.getStack(), (long)this.remainder.getCount(), Action.PERFORM);
             return 0;
         }
 
@@ -148,12 +149,12 @@ public class CraftingTask extends Task {
 
         //if there is to much crafted we insert it back into the network
         if (!crafted.isEmpty())
-            this.remainder = StackUtils.nullToEmpty(network.insertItem(crafted, crafted.getCount(), Action.PERFORM));
+            this.remainder = network.insertItem(crafted, (long)crafted.getCount(), Action.PERFORM);
 
         this.amountNeeded -= toCraft;
 
         //if there's no remainder and the task has crafted everything, we're done
-        if (this.amountNeeded < 1 && this.remainder.isEmpty())
+        if (this.amountNeeded < 1 && this.remainder == null)
             this.finished = true;
 
         network.getCraftingManager().onTaskChanged();
@@ -164,8 +165,10 @@ public class CraftingTask extends Task {
     @Override
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
         super.writeToNbt(compound);
-        if (!remainder.isEmpty())
-            compound.setTag(NBT_REMAINDER_ITEM, remainder.writeToNBT(new NBTTagCompound()));
+        if (remainder != null) {
+            this.remainder.applyCount();
+            compound.setTag(NBT_REMAINDER_ITEM, this.remainder.getStack().writeToNBT(new NBTTagCompound()));
+        }
 
         return compound;
     }
@@ -182,16 +185,13 @@ public class CraftingTask extends Task {
                 continue;
 
             if (input.isFluid()) {
-                //TODO: remove casts
                 elements.add(
                         new CraftingMonitorElementFluidRender(input.getFluidStack(),
-                                (int) input.getTotalInputAmount(), 0, 0,
-                                (int) input.getToCraftAmount()));
+                                input.getTotalInputAmount(), 0, 0, input.getToCraftAmount()));
             } else {
                 elements.add(
                         new CraftingMonitorElementItemRender(input.getCompareableItemStack(),
-                                (int) input.getTotalInputAmount(), 0, 0,
-                                (int) input.getToCraftAmount()));
+                                input.getTotalInputAmount(), 0, 0, input.getToCraftAmount()));
             }
         }
 
@@ -202,7 +202,11 @@ public class CraftingTask extends Task {
     @Nonnull
     @Override
     public List<ItemStack> getLooseItemStacks() {
-        return !remainder.isEmpty() ? Collections.singletonList(remainder) : Collections.emptyList();
+        if (this.remainder != null) {
+            this.remainder.applyCount();
+            return Collections.singletonList(remainder.getStack());
+        }
+        return Collections.emptyList();
     }
 
     @Nonnull

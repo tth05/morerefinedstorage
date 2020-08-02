@@ -46,7 +46,7 @@ public class MessagePortableGridFluidUpdate
         buf.writeInt(size);
 
         for (StackListEntry<FluidStack> stack : portableGrid.getFluidCache().getList().getStacks()) {
-            StackUtils.writeFluidGridStack(buf, stack.getStack(), stack.getId(), null, false,
+            StackUtils.writeFluidGridStack(buf, stack.getStack(), stack.getCount(), stack.getId(), null, false,
                     portableGrid.getFluidStorageTracker().get(stack.getStack()));
         }
     }

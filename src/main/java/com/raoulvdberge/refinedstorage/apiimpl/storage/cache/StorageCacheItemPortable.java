@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
@@ -28,14 +29,17 @@ public class StorageCacheItemPortable implements IStorageCache<ItemStack> {
         list.clear();
 
         if (portableGrid.getItemStorage() != null) {
-            portableGrid.getItemStorage().getStacks().forEach(list::add);
+            for (StackListEntry<ItemStack> entry : portableGrid.getItemStorage().getEntries()) {
+                if(entry != null && entry.getCount() > 0)
+                    list.add(entry.getStack(), entry.getCount());
+            }
         }
 
         listeners.forEach(IStorageCacheListener::onInvalidated);
     }
 
     @Override
-    public void add(@Nonnull ItemStack stack, int size, boolean rebuilding, boolean batched) {
+    public void add(@Nonnull ItemStack stack, long size, boolean rebuilding, boolean batched) {
         StackListResult<ItemStack> result = list.add(stack, size);
 
         if (!rebuilding) {
@@ -44,7 +48,7 @@ public class StorageCacheItemPortable implements IStorageCache<ItemStack> {
     }
 
     @Override
-    public void remove(@Nonnull ItemStack stack, int size, boolean batched) {
+    public void remove(@Nonnull ItemStack stack, long size, boolean batched) {
         StackListResult<ItemStack> result = list.remove(stack, size);
 
         if (result != null) {

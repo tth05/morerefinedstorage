@@ -54,7 +54,7 @@ public class MessageGridFluidUpdate implements IMessage, IMessageHandler<Message
             StackListEntry<FluidStack> craftingEntry = network.getFluidStorageCache().getCraftablesList()
                     .getEntry(stack.getStack(), IComparer.COMPARE_NBT);
 
-            StackUtils.writeFluidGridStack(buf, stack.getStack(), stack.getId(),
+            StackUtils.writeFluidGridStack(buf, stack.getStack(), stack.getCount(), stack.getId(),
                     craftingEntry != null ? craftingEntry.getId() : null, false,
                     network.getFluidStorageTracker().get(stack.getStack()));
         }
@@ -63,7 +63,7 @@ public class MessageGridFluidUpdate implements IMessage, IMessageHandler<Message
             StackListEntry<FluidStack> regularEntry =
                     network.getFluidStorageCache().getList().getEntry(stack.getStack(), IComparer.COMPARE_NBT);
 
-            StackUtils.writeFluidGridStack(buf, stack.getStack(), stack.getId(),
+            StackUtils.writeFluidGridStack(buf, stack.getStack(), stack.getCount(), stack.getId(),
                     regularEntry != null ? regularEntry.getId() : null, true,
                     network.getFluidStorageTracker().get(stack.getStack()));
         }

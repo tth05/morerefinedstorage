@@ -16,7 +16,7 @@ public interface IStackList<T> {
      * @param size  the size to add
      * @return the result
      */
-    StackListResult<T> add(@Nonnull T stack, int size);
+    StackListResult<T> add(@Nonnull T stack, long size);
 
     /**
      * Adds a stack to the list, will merge it with another stack if it already exists in the list.
@@ -34,7 +34,7 @@ public interface IStackList<T> {
      * @return the result, or null if the stack wasn't present
      */
     @Nullable
-    StackListResult<T> remove(@Nonnull T stack, int size);
+    StackListResult<T> remove(@Nonnull T stack, long size);
 
     /**
      * Decrements the count of that stack in the list.
@@ -62,18 +62,21 @@ public interface IStackList<T> {
      * @param stack the stack to search for
      * @param flags the flags to compare on, see {@link IComparer}
      * @return the stack, or null if no stack was found
+     *
+     * @deprecated does not return real stack counts; use {@link #getEntry(Object, int)}
      */
     @Nullable
+    @Deprecated
     T get(@Nonnull T stack, int flags);
 
     /**
-     * Returns a stack.
+     * Returns a {@link StackListEntry}.
      *
      * @param id the id of the entry to search for
-     * @return the stack, or null if no stack was found
+     * @return the entry, or null if no entry was found
      */
     @Nullable
-    T get(UUID id);
+    StackListEntry<T> get(UUID id);
 
     /**
      * Returns a stack entry.

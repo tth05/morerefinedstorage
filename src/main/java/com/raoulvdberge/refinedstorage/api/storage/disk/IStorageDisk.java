@@ -14,7 +14,7 @@ public interface IStorageDisk<T> extends IStorage<T> {
     /**
      * @return the capacity of this storage disk
      */
-    int getCapacity();
+    long getCapacity();
 
     /**
      * When this storage disk is inserted into a storage disk container, it has to adjust to the container's settings

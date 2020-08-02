@@ -8,6 +8,8 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryItem;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -16,32 +18,33 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
-import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class StorageDiskItem implements IStorageDisk<ItemStack> {
     public static final String NBT_VERSION = "Version";
     public static final String NBT_CAPACITY = "Capacity";
     public static final String NBT_ITEMS = "Items";
+    public static final String NBT_REAL_SIZE = "RealSize";
 
     private final World world;
-    private final int capacity;
+    private final long capacity;
 
     /**
      * tracks the amount of stored items
      */
-    private int stored;
+    private long stored;
 
-    private final Multimap<Item, ItemStack> stacks = ArrayListMultimap.create();
+    private final Multimap<Item, StackListEntry<ItemStack>> stacks = ArrayListMultimap.create();
 
     @Nullable
     private IStorageDiskListener listener;
     private IStorageDiskContainerContext context;
 
-    public StorageDiskItem(@Nullable World world, int capacity) {
+    public StorageDiskItem(@Nullable World world, long capacity) {
         this.world = world;
         this.capacity = capacity;
     }
@@ -52,13 +55,15 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
         NBTTagList list = new NBTTagList();
 
-        for (ItemStack stack : stacks.values()) {
-            list.appendTag(StackUtils.serializeStackToNbt(stack));
+        for (StackListEntry<ItemStack> entry : stacks.values()) {
+            NBTTagCompound stackTag = StackUtils.serializeStackToNbt(entry.getStack());
+            stackTag.setLong(NBT_REAL_SIZE, entry.getCount());
+            list.appendTag(stackTag);
         }
 
         tag.setString(NBT_VERSION, RS.VERSION);
         tag.setTag(NBT_ITEMS, list);
-        tag.setInteger(NBT_CAPACITY, capacity);
+        tag.setLong(NBT_CAPACITY, capacity);
 
         return tag;
     }
@@ -70,32 +75,37 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
     @Override
     public Collection<ItemStack> getStacks() {
+        return stacks.values().stream().map(StackListEntry::getStack).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<StackListEntry<ItemStack>> getEntries() {
         return stacks.values();
     }
 
     @Override
     @Nullable
-    public ItemStack insert(@Nonnull ItemStack stack, int size, Action action) {
-        for (ItemStack otherStack : stacks.get(stack.getItem())) {
-            if (API.instance().getComparer().isEqualNoQuantity(otherStack, stack)) {
+    public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
+        for (StackListEntry<ItemStack> otherEntry : stacks.get(stack.getItem())) {
+            if (API.instance().getComparer().isEqualNoQuantity(otherEntry.getStack(), stack)) {
                 if (getCapacity() != -1 && getStored() + size > getCapacity()) {
-                    int remainingSpace = getCapacity() - getStored();
+                    long remainingSpace = getCapacity() - getStored();
 
                     if (remainingSpace <= 0) {
-                        return ItemHandlerHelper.copyStackWithSize(stack, size);
+                        return new StackListResult<>(stack.copy(), null, size);
                     }
 
                     if (action == Action.PERFORM) {
-                        otherStack.grow(remainingSpace);
+                        otherEntry.grow(remainingSpace);
                         stored += remainingSpace;
 
                         onChanged();
                     }
 
-                    return ItemHandlerHelper.copyStackWithSize(otherStack, size - remainingSpace);
+                    return new StackListResult<>(otherEntry.getStack().copy(), null, size - remainingSpace);
                 } else {
                     if (action == Action.PERFORM) {
-                        otherStack.grow(size);
+                        otherEntry.grow(size);
                         stored += size;
 
                         onChanged();
@@ -107,23 +117,23 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         }
 
         if (getCapacity() != -1 && getStored() + size > getCapacity()) {
-            int remainingSpace = getCapacity() - getStored();
+            long remainingSpace = getCapacity() - getStored();
 
             if (remainingSpace <= 0) {
-                return ItemHandlerHelper.copyStackWithSize(stack, size);
+                return new StackListResult<>(stack.copy(), null, size);
             }
 
             if (action == Action.PERFORM) {
-                stacks.put(stack.getItem(), ItemHandlerHelper.copyStackWithSize(stack, remainingSpace));
+                stacks.put(stack.getItem(), new StackListEntry<>(stack.copy(), remainingSpace));
                 stored += remainingSpace;
 
                 onChanged();
             }
 
-            return ItemHandlerHelper.copyStackWithSize(stack, size - remainingSpace);
+            return new StackListResult<>(stack.copy(), null, size - remainingSpace);
         } else {
             if (action == Action.PERFORM) {
-                stacks.put(stack.getItem(), ItemHandlerHelper.copyStackWithSize(stack, size));
+                stacks.put(stack.getItem(), new StackListEntry<>(stack.copy(), size));
                 stored += size;
 
                 onChanged();
@@ -135,26 +145,26 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
     @Override
     @Nullable
-    public ItemStack extract(@Nonnull ItemStack stack, int size, int flags, Action action) {
-        for (ItemStack otherStack : stacks.get(stack.getItem())) {
-            if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
-                if (size > otherStack.getCount()) {
-                    size = otherStack.getCount();
+    public StackListResult<ItemStack> extract(@Nonnull ItemStack stack, long size, int flags, Action action) {
+        for (StackListEntry<ItemStack> otherEntry : stacks.get(stack.getItem())) {
+            if (API.instance().getComparer().isEqual(otherEntry.getStack(), stack, flags)) {
+                if (size > otherEntry.getCount()) {
+                    size = otherEntry.getCount();
                 }
 
                 if (action == Action.PERFORM) {
-                    if (otherStack.getCount() - size == 0) {
-                        stacks.remove(otherStack.getItem(), otherStack);
-                        stored -= otherStack.getCount();
+                    if (otherEntry.getCount() - size == 0) {
+                        stacks.remove(otherEntry.getStack().getItem(), otherEntry);
+                        stored -= otherEntry.getCount();
                     } else {
-                        otherStack.shrink(size);
+                        otherEntry.shrink(size);
                         stored -= size;
                     }
 
                     onChanged();
                 }
 
-                return ItemHandlerHelper.copyStackWithSize(otherStack, size);
+                return new StackListResult<>(otherEntry.getStack().copy(), null, size);
             }
         }
 
@@ -162,7 +172,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return this.stored;
     }
 
@@ -170,7 +180,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
      * forces the stored amount to be re-calculated
      */
     public void calculateStoredAmount() {
-        this.stored = stacks.values().stream().mapToInt(ItemStack::getCount).sum();
+        this.stored = stacks.values().stream().mapToLong(StackListEntry::getCount).sum();
     }
 
     @Override
@@ -184,7 +194,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return capacity;
     }
 
@@ -195,15 +205,15 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable ItemStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         if (getAccessType() == AccessType.INSERT) {
             return 0;
         }
 
-        return remainder == null ? size : (size - remainder.getCount());
+        return remainder < 1 ? size : (size - remainder);
     }
 
-    public Multimap<Item, ItemStack> getRawStacks() {
+    public Multimap<Item, StackListEntry<ItemStack>> getRawStacks() {
         return stacks;
     }
 
@@ -211,7 +221,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         if (listener != null)
             listener.onChanged();
 
-        if(world != null)
+        if (world != null)
             API.instance().getStorageDiskManager(world).markForSaving();
     }
 }

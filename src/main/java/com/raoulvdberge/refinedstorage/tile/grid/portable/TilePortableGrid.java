@@ -559,12 +559,12 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return storage != null ? storage.getStored() : 0;
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return storage != null ? storage.getCapacity() : 0;
     }
 

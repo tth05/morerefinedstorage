@@ -21,7 +21,7 @@ public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<M
     private IPortableGrid portableGrid;
     private List<StackListResult<ItemStack>> deltas = new ArrayList<>();
 
-    private final List<Pair<IGridStack, Integer>> clientDeltas = new ArrayList<>();
+    private final List<Pair<IGridStack, Long>> clientDeltas = new ArrayList<>();
 
     public MessagePortableGridItemDelta(IPortableGrid portableGrid, List<StackListResult<ItemStack>> deltas) {
         this.portableGrid = portableGrid;
@@ -36,7 +36,7 @@ public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<M
         int size = buf.readInt();
 
         for (int i = 0; i < size; ++i) {
-            int delta = buf.readInt();
+            long delta = buf.readInt();
             clientDeltas.add(Pair.of(StackUtils.readItemGridStack(buf), delta));
         }
     }
@@ -46,9 +46,12 @@ public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<M
         buf.writeInt(deltas.size());
 
         for (StackListResult<ItemStack> delta : deltas) {
-            buf.writeInt(delta.getChange());
+            buf.writeLong(delta.getChange());
 
-            StackUtils.writeItemGridStack(buf, delta.getStack(), delta.getId(), null, false,
+            //real count is 0 here because later in the postChange method it is ignored.
+            // If the stack doesn't exist then the count is set to the given delta, otherwise the existing stack is
+            // incremented by the given delta.
+            StackUtils.writeItemGridStack(buf, delta.getStack(), 0, delta.getId(), null, false,
                     portableGrid.getItemStorageTracker().get(delta.getStack()));
         }
     }

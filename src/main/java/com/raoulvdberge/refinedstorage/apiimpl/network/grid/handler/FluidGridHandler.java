@@ -7,6 +7,8 @@ import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandler;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
@@ -35,14 +37,14 @@ public class FluidGridHandler implements IFluidGridHandler {
 
     @Override
     public void onExtract(EntityPlayerMP player, UUID id, boolean shift) {
-        FluidStack stack = network.getFluidStorageCache().getList().get(id);
+        StackListEntry<FluidStack> entry = network.getFluidStorageCache().getList().get(id);
 
-        if (stack == null || stack.amount < Fluid.BUCKET_VOLUME ||
+        if (entry == null || entry.getCount() < Fluid.BUCKET_VOLUME ||
                 !network.getSecurityManager().hasPermission(Permission.EXTRACT, player)) {
             return;
         }
 
-        if (StackUtils.hasFluidBucket(stack)) {
+        if (StackUtils.hasFluidBucket(entry.getStack())) {
             ItemStack bucket = null;
 
             for (int i = 0; i < player.inventory.getSizeInventory(); ++i) {
@@ -65,9 +67,13 @@ public class FluidGridHandler implements IFluidGridHandler {
                 IFluidHandlerItem fluidHandler =
                         bucket.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
 
-                network.getFluidStorageTracker().changed(player, stack.copy());
+                network.getFluidStorageTracker().changed(player, entry.getStack().copy());
 
-                fluidHandler.fill(network.extractFluid(stack, Fluid.BUCKET_VOLUME, Action.PERFORM), true);
+                StackListResult<FluidStack> extracted = network.extractFluid(entry.getStack(), (long)Fluid.BUCKET_VOLUME, Action.PERFORM);
+                if(extracted != null) {
+                    extracted.applyCount();
+                    fluidHandler.fill(extracted.getStack(), true);
+                }
 
                 if (shift) {
                     if (!player.inventory.addItemStackToInventory(fluidHandler.getContainer().copy())) {
@@ -126,11 +132,11 @@ public class FluidGridHandler implements IFluidGridHandler {
             return;
         }
 
-        FluidStack stack = network.getFluidStorageCache().getCraftablesList().get(id);
+        StackListEntry<FluidStack> stack = network.getFluidStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
             CraftingManager.CALCULATION_THREAD_POOL.execute(() -> {
-                ICraftingTask task = network.getCraftingManager().create(stack, quantity);
+                ICraftingTask task = network.getCraftingManager().create(stack.getStack(), quantity);
                 if (task == null) {
                     return;
                 }

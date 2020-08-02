@@ -6,10 +6,10 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSyncData;
  * Contains synced info about a storage disk.
  */
 public class StorageDiskSyncData implements IStorageDiskSyncData {
-    private final int stored;
-    private final int capacity;
+    private final long stored;
+    private final long capacity;
 
-    public StorageDiskSyncData(int stored, int capacity) {
+    public StorageDiskSyncData(long stored, long capacity) {
         this.stored = stored;
         this.capacity = capacity;
     }
@@ -17,14 +17,14 @@ public class StorageDiskSyncData implements IStorageDiskSyncData {
     /**
      * @return the amount stored
      */
-    public int getStored() {
+    public long getStored2() {
         return stored;
     }
 
     /**
      * @return the capacity
      */
-    public int getCapacity() {
+    public long getCapacity2() {
         return capacity;
     }
 }

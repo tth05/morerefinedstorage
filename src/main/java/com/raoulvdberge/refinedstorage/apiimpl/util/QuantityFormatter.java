@@ -19,16 +19,11 @@ public class QuantityFormatter implements IQuantityFormatter {
     }
 
     @Override
-    public String formatWithUnits(int qty) {
-        return formatWithUnits((long) qty);
-    }
-
-    @Override
     public String formatWithUnits(long qty) {
         if (qty >= 1_000_000_000) {
-            return formatterWithUnits.format(Math.round((float) qty / 1_000_000_000)) + "B";
+            return formatterWithUnits.format((double) qty / 1_000_000_000) + "B";
         } else if (qty >= 1_000_000) {
-            float qtyShort = (float) qty / 1_000_000F;
+            double qtyShort = (double) qty / 1_000_000F;
 
             if (qty >= 100_000_000) {
                 qtyShort = Math.round(qtyShort); // XXX.XM looks weird.
@@ -49,18 +44,8 @@ public class QuantityFormatter implements IQuantityFormatter {
     }
 
     @Override
-    public String format(int qty) {
-        return formatter.format(qty);
-    }
-
-    @Override
     public String format(long qty) {
         return formatter.format(qty);
-    }
-
-    @Override
-    public String formatInBucketForm(int qty) {
-        return bucketFormatter.format((float) qty / (float) Fluid.BUCKET_VOLUME) + " B";
     }
 
     @Override
@@ -69,9 +54,9 @@ public class QuantityFormatter implements IQuantityFormatter {
     }
 
     @Override
-    public String formatInBucketFormWithOnlyTrailingDigitsIfZero(int qty) {
-        float amountRaw = ((float) qty / (float) Fluid.BUCKET_VOLUME);
-        int amount = (int) amountRaw;
+    public String formatInBucketFormWithOnlyTrailingDigitsIfZero(long qty) {
+        double amountRaw = ((double) qty / (double) Fluid.BUCKET_VOLUME);
+        long amount = (long) amountRaw;
 
         if (amount >= 1) {
             return API.instance().getQuantityFormatter().formatWithUnits(amount);

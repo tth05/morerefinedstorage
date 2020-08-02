@@ -14,7 +14,7 @@ public interface IGridView {
 
     void setStacks(List<IGridStack> stacks);
 
-    void postChange(IGridStack stack, int delta);
+    void postChange(IGridStack stack, long delta);
 
     void setCanCraft(boolean canCraft);
 

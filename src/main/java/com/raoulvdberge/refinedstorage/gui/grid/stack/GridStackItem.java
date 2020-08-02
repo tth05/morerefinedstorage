@@ -20,6 +20,7 @@ public class GridStackItem implements IGridStack {
     private UUID otherId;
 
     private final ItemStack stack;
+    private long count;
     private String cachedName;
     private boolean craftable;
     private String[] oreIds = null;
@@ -29,14 +30,16 @@ public class GridStackItem implements IGridStack {
     private String modName;
     private String tooltip;
 
-    public GridStackItem(ItemStack stack) {
+    public GridStackItem(ItemStack stack, long count) {
         this.stack = stack;
+        this.count = count;
     }
 
-    public GridStackItem(UUID id, @Nullable UUID otherId, ItemStack stack, boolean craftable, @Nullable StorageTrackerEntry entry) {
+    public GridStackItem(UUID id, @Nullable UUID otherId, ItemStack stack, long count, boolean craftable, @Nullable StorageTrackerEntry entry) {
         this.id = id;
         this.otherId = otherId;
         this.stack = stack;
+        this.count = count;
         this.craftable = craftable;
         this.entry = entry;
     }
@@ -141,8 +144,23 @@ public class GridStackItem implements IGridStack {
     }
 
     @Override
-    public int getQuantity() {
-        return isCraftable() ? 0 : stack.getCount();
+    public long getQuantity() {
+        return isCraftable() ? 0 : getCount();
+    }
+
+    @Override
+    public long getCount() {
+        return this.count;
+    }
+
+    @Override
+    public void setCount(long count) {
+        this.count = count;
+    }
+
+    @Override
+    public void grow(long count) {
+        this.count += count;
     }
 
     @Override
@@ -156,7 +174,7 @@ public class GridStackItem implements IGridStack {
 
         if (isCraftable()) {
             text = I18n.format("gui.refinedstorage:grid.craft");
-        } else if (stack.getCount() > 1) {
+        } else if (getCount() > 1) {
             text = API.instance().getQuantityFormatter().formatWithUnits(getQuantity());
         }
 

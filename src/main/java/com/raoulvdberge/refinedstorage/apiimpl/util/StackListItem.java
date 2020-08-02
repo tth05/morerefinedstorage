@@ -7,18 +7,20 @@ import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class StackListItem implements IStackList<ItemStack> {
     private final ArrayListMultimap<Item, StackListEntry<ItemStack>> stacks = ArrayListMultimap.create();
-    private final Map<UUID, ItemStack> index = new HashMap<>();
+    private final Map<UUID, StackListEntry<ItemStack>> index = new HashMap<>();
 
     @Override
-    public StackListResult<ItemStack> add(@Nonnull ItemStack stack, int size) {
+    public StackListResult<ItemStack> add(@Nonnull ItemStack stack, long size) {
         if (stack.isEmpty() || size <= 0) {
             throw new IllegalArgumentException("Cannot accept empty stack");
         }
@@ -27,20 +29,16 @@ public class StackListItem implements IStackList<ItemStack> {
             ItemStack otherStack = entry.getStack();
 
             if (API.instance().getComparer().isEqualNoQuantity(otherStack, stack)) {
-                if ((long) otherStack.getCount() + (long) size > Integer.MAX_VALUE) {
-                    otherStack.setCount(Integer.MAX_VALUE);
-                } else {
-                    otherStack.grow(size);
-                }
+                entry.grow(size);
 
                 return new StackListResult<>(otherStack, entry.getId(), size);
             }
         }
 
-        StackListEntry<ItemStack> newEntry = new StackListEntry<>(ItemHandlerHelper.copyStackWithSize(stack, size));
+        StackListEntry<ItemStack> newEntry = new StackListEntry<>(stack.copy(), size);
 
         stacks.put(stack.getItem(), newEntry);
-        index.put(newEntry.getId(), newEntry.getStack());
+        index.put(newEntry.getId(), newEntry);
 
         return new StackListResult<>(newEntry.getStack(), newEntry.getId(), size);
     }
@@ -51,18 +49,18 @@ public class StackListItem implements IStackList<ItemStack> {
     }
 
     @Override
-    public StackListResult<ItemStack> remove(@Nonnull ItemStack stack, int size) {
+    public StackListResult<ItemStack> remove(@Nonnull ItemStack stack, long size) {
         for (StackListEntry<ItemStack> entry : stacks.get(stack.getItem())) {
             ItemStack otherStack = entry.getStack();
 
             if (API.instance().getComparer().isEqualNoQuantity(otherStack, stack)) {
-                if (otherStack.getCount() - size <= 0) {
+                if (entry.getCount() - size <= 0) {
                     stacks.remove(otherStack.getItem(), entry);
                     index.remove(entry.getId());
 
-                    return new StackListResult<>(otherStack, entry.getId(), -otherStack.getCount());
+                    return new StackListResult<>(otherStack, entry.getId(), -entry.getCount());
                 } else {
-                    otherStack.shrink(size);
+                    entry.shrink(size);
 
                     return new StackListResult<>(otherStack, entry.getId(), -size);
                 }
@@ -80,10 +78,12 @@ public class StackListItem implements IStackList<ItemStack> {
     @Override
     @Nullable
     public ItemStack get(@Nonnull ItemStack stack, int flags) {
+        //TODO: check for get and getEntry calls
         for (StackListEntry<ItemStack> entry : stacks.get(stack.getItem())) {
             ItemStack otherStack = entry.getStack();
 
             if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
+                otherStack.setCount(entry.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) entry.getCount());
                 return otherStack;
             }
         }
@@ -107,7 +107,7 @@ public class StackListItem implements IStackList<ItemStack> {
 
     @Override
     @Nullable
-    public ItemStack get(UUID id) {
+    public StackListEntry<ItemStack> get(UUID id) {
         return index.get(id);
     }
 
@@ -136,8 +136,9 @@ public class StackListItem implements IStackList<ItemStack> {
         for (StackListEntry<ItemStack> entry : stacks.values()) {
             ItemStack newStack = entry.getStack().copy();
 
-            list.stacks.put(entry.getStack().getItem(), new StackListEntry<>(entry.getId(), newStack));
-            list.index.put(entry.getId(), newStack);
+            StackListEntry<ItemStack> newEntry = new StackListEntry<>(entry.getId(), newStack, entry.getCount());
+            list.stacks.put(entry.getStack().getItem(), newEntry);
+            list.index.put(entry.getId(), newEntry);
         }
 
         return list;

@@ -25,7 +25,7 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
 
     private List<StackListResult<FluidStack>> deltas;
 
-    private List<Pair<IGridStack, Integer>> clientDeltas;
+    private List<Pair<IGridStack, Long>> clientDeltas;
 
     public MessageGridFluidDelta(@Nullable INetwork network, List<StackListResult<FluidStack>> deltas) {
         this.network = network;
@@ -42,7 +42,7 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
         this.clientDeltas = new LinkedList<>();
 
         for (int i = 0; i < size; ++i) {
-            int delta = buf.readInt();
+            long delta = buf.readLong();
 
             this.clientDeltas.add(Pair.of(StackUtils.readFluidGridStack(buf), delta));
         }
@@ -53,12 +53,15 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
         buf.writeInt(deltas.size());
 
         for (StackListResult<FluidStack> delta : deltas) {
-            buf.writeInt(delta.getChange());
+            buf.writeLong(delta.getChange());
 
             StackListEntry<FluidStack> craftingEntry = network.getFluidStorageCache().getCraftablesList()
                     .getEntry(delta.getStack(), IComparer.COMPARE_NBT);
 
-            StackUtils.writeFluidGridStack(buf, delta.getStack(), delta.getId(),
+            //real count is 0 here because later in the postChange method it is ignored.
+            // If the stack doesn't exist then the count is set to the given delta, otherwise the existing stack is
+            // incremented by the given delta.
+            StackUtils.writeFluidGridStack(buf, delta.getStack(), 0, delta.getId(),
                     craftingEntry != null ? craftingEntry.getId() : null, false,
                     network.getFluidStorageTracker().get(delta.getStack()));
         }

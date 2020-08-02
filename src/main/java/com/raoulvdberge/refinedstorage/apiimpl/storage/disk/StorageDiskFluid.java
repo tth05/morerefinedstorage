@@ -8,9 +8,10 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryFluid;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
@@ -20,27 +21,29 @@ import net.minecraftforge.fluids.FluidStack;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     public static final String NBT_VERSION = "Version";
     public static final String NBT_CAPACITY = "Capacity";
     public static final String NBT_FLUIDS = "Fluids";
+    public static final String NBT_REAL_SIZE = "RealSize";
 
     private final World world;
-    private final int capacity;
+    private final long capacity;
 
     /**
      * tracks the stored amount
      */
-    private int stored;
+    private long stored;
 
-    private final Multimap<Fluid, FluidStack> stacks = ArrayListMultimap.create();
+    private final Multimap<Fluid, StackListEntry<FluidStack>> stacks = ArrayListMultimap.create();
 
     @Nullable
     private IStorageDiskListener listener;
     private IStorageDiskContainerContext context;
 
-    public StorageDiskFluid(@Nullable World world, int capacity) {
+    public StorageDiskFluid(@Nullable World world, long capacity) {
         this.world = world;
         this.capacity = capacity;
     }
@@ -51,45 +54,54 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
 
         NBTTagList list = new NBTTagList();
 
-        for (FluidStack stack : stacks.values()) {
-            list.appendTag(stack.writeToNBT(new NBTTagCompound()));
+        for (StackListEntry<FluidStack> entry : stacks.values()) {
+            NBTTagCompound stackTag = new NBTTagCompound();
+            entry.getStack().writeToNBT(stackTag);
+            stackTag.setLong(NBT_REAL_SIZE, entry.getCount());
+
+            list.appendTag(stackTag);
         }
 
         tag.setString(NBT_VERSION, RS.VERSION);
         tag.setTag(NBT_FLUIDS, list);
-        tag.setInteger(NBT_CAPACITY, capacity);
+        tag.setLong(NBT_CAPACITY, capacity);
 
         return tag;
     }
 
     @Override
     public Collection<FluidStack> getStacks() {
+        return stacks.values().stream().map(StackListEntry::getStack).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<StackListEntry<FluidStack>> getEntries() {
         return stacks.values();
     }
 
     @Override
     @Nullable
-    public FluidStack insert(@Nonnull FluidStack stack, int size, Action action) {
-        for (FluidStack otherStack : stacks.get(stack.getFluid())) {
-            if (otherStack.isFluidEqual(stack)) {
+    public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
+        for (StackListEntry<FluidStack> otherEntry : stacks.get(stack.getFluid())) {
+            if (otherEntry.getStack().isFluidEqual(stack)) {
                 if (getCapacity() != -1 && getStored() + size > getCapacity()) {
-                    int remainingSpace = getCapacity() - getStored();
+                    long remainingSpace = getCapacity() - getStored();
 
                     if (remainingSpace <= 0) {
-                        return StackUtils.copy(stack, size);
+                        return new StackListResult<>(stack.copy(), null, size);
                     }
 
                     if (action == Action.PERFORM) {
-                        otherStack.amount += remainingSpace;
+                        otherEntry.grow(remainingSpace);
                         stored += remainingSpace;
 
                         onChanged();
                     }
 
-                    return StackUtils.copy(otherStack, size - remainingSpace);
+                    return new StackListResult<>(otherEntry.getStack().copy(), null, size - remainingSpace);
                 } else {
                     if (action == Action.PERFORM) {
-                        otherStack.amount += size;
+                        otherEntry.grow(size);
                         stored += size;
 
                         onChanged();
@@ -101,23 +113,23 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
         }
 
         if (getCapacity() != -1 && getStored() + size > getCapacity()) {
-            int remainingSpace = getCapacity() - getStored();
+            long remainingSpace = getCapacity() - getStored();
 
             if (remainingSpace <= 0) {
-                return StackUtils.copy(stack, size);
+                return new StackListResult<>(stack.copy(), null, size);
             }
 
             if (action == Action.PERFORM) {
-                stacks.put(stack.getFluid(), StackUtils.copy(stack, remainingSpace));
+                stacks.put(stack.getFluid(), new StackListEntry<>(stack.copy(), remainingSpace));
                 stored += remainingSpace;
 
                 onChanged();
             }
 
-            return StackUtils.copy(stack, size - remainingSpace);
+            return new StackListResult<>(stack.copy(), null, size - remainingSpace);
         } else {
             if (action == Action.PERFORM) {
-                stacks.put(stack.getFluid(), StackUtils.copy(stack, size));
+                stacks.put(stack.getFluid(), new StackListEntry<>(stack.copy(), size));
                 stored += size;
 
                 onChanged();
@@ -129,26 +141,26 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
 
     @Override
     @Nullable
-    public FluidStack extract(@Nonnull FluidStack stack, int size, int flags, Action action) {
-        for (FluidStack otherStack : stacks.get(stack.getFluid())) {
-            if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
-                if (size > otherStack.amount) {
-                    size = otherStack.amount;
+    public StackListResult<FluidStack> extract(@Nonnull FluidStack stack, long size, int flags, Action action) {
+        for (StackListEntry<FluidStack> otherEntry : stacks.get(stack.getFluid())) {
+            if (API.instance().getComparer().isEqual(otherEntry.getStack(), stack, flags)) {
+                if (size > otherEntry.getCount()) {
+                    size = otherEntry.getCount();
                 }
 
                 if (action == Action.PERFORM) {
-                    if (otherStack.amount - size == 0) {
-                        stacks.remove(otherStack.getFluid(), otherStack);
-                        stored -= otherStack.amount;
+                    if (otherEntry.getCount() - size == 0) {
+                        stacks.remove(otherEntry.getStack().getFluid(), otherEntry);
+                        stored -= otherEntry.getCount();
                     } else {
-                        otherStack.amount -= size;
+                        otherEntry.shrink(size);
                         stored -= size;
                     }
 
                     onChanged();
                 }
 
-                return StackUtils.copy(otherStack, size);
+                return new StackListResult<>(otherEntry.getStack().copy(), null, size);
             }
         }
 
@@ -156,7 +168,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return this.stored;
     }
 
@@ -164,7 +176,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
      * forces the stored amount to be re-calculated
      */
     public void calculateStoredAmount() {
-        this.stored = stacks.values().stream().mapToInt(s -> s.amount).sum();
+        this.stored = stacks.values().stream().mapToLong(StackListEntry::getCount).sum();
     }
 
     @Override
@@ -178,17 +190,17 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return capacity;
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable FluidStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         if (getAccessType() == AccessType.INSERT) {
             return 0;
         }
 
-        return remainder == null ? size : (size - remainder.amount);
+        return remainder < 1 ? size : (size - remainder);
     }
 
     @Override
@@ -202,7 +214,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
         return StorageDiskFactoryFluid.ID;
     }
 
-    public Multimap<Fluid, FluidStack> getRawStacks() {
+    public Multimap<Fluid, StackListEntry<FluidStack>> getRawStacks() {
         return stacks;
     }
 

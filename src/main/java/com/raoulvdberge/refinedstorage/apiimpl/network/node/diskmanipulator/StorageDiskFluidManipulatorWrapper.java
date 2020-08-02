@@ -5,9 +5,10 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.render.constants.ConstantsDisk;
 import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -40,7 +41,7 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     }
 
     @Override
-    public int getCapacity() {
+    public long getCapacity() {
         return parent.getCapacity();
     }
 
@@ -65,10 +66,15 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     }
 
     @Override
+    public Collection<StackListEntry<FluidStack>> getEntries() {
+        return parent.getEntries();
+    }
+
+    @Override
     @Nullable
-    public FluidStack insert(@Nonnull FluidStack stack, int size, Action action) {
+    public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
         if (!IFilterable.acceptsFluid(diskManipulator.getFluidFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
-            return StackUtils.copy(stack, size);
+            return new StackListResult<>(stack.copy(), null, size);
         }
 
         return parent.insert(stack, size, action);
@@ -76,7 +82,7 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
 
     @Override
     @Nullable
-    public FluidStack extract(@Nonnull FluidStack stack, int size, int flags, Action action) {
+    public StackListResult<FluidStack> extract(@Nonnull FluidStack stack, long size, int flags, Action action) {
         if (!IFilterable.acceptsFluid(diskManipulator.getFluidFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
             return null;
         }
@@ -85,7 +91,7 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     }
 
     @Override
-    public int getStored() {
+    public long getStored() {
         return parent.getStored();
     }
 
@@ -100,7 +106,7 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     }
 
     @Override
-    public int getCacheDelta(int storedPreInsertion, int size, @Nullable FluidStack remainder) {
+    public long getCacheDelta(long storedPreInsertion, long size, long remainder) {
         return parent.getCacheDelta(storedPreInsertion, size, remainder);
     }
 }

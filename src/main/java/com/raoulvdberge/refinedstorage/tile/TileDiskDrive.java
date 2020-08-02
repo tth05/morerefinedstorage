@@ -103,7 +103,7 @@ public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
         return diskState;
     }
 
-    public static void writeDiskState(NBTTagCompound tag, int disks, boolean connected, IStorageDisk[] itemStorages, IStorageDisk[] fluidStorages) {
+    public static void writeDiskState(NBTTagCompound tag, int disks, boolean connected, IStorageDisk<?>[] itemStorages, IStorageDisk<?>[] fluidStorages) {
         for (int i = 0; i < disks; ++i) {
             int state = ConstantsDisk.DISK_STATE_NONE;
 

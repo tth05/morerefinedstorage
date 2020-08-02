@@ -4,6 +4,8 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandler;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -28,13 +30,13 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
 
     @Override
     public void onExtract(EntityPlayerMP player, UUID id, boolean shift) {
-        FluidStack stack = portableGrid.getFluidCache().getList().get(id);
+        StackListEntry<FluidStack> stack = portableGrid.getFluidCache().getList().get(id);
 
-        if (stack == null || stack.amount < Fluid.BUCKET_VOLUME) {
+        if (stack == null || stack.getCount() < Fluid.BUCKET_VOLUME) {
             return;
         }
 
-        if (StackUtils.hasFluidBucket(stack)) {
+        if (StackUtils.hasFluidBucket(stack.getStack())) {
             ItemStack bucket = null;
 
             for (int i = 0; i < player.inventory.getSizeInventory(); ++i) {
@@ -52,9 +54,13 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
             if (bucket != null) {
                 IFluidHandlerItem fluidHandler = bucket.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
 
-                portableGrid.getFluidStorageTracker().changed(player, stack.copy());
+                portableGrid.getFluidStorageTracker().changed(player, stack.getStack().copy());
 
-                fluidHandler.fill(portableGrid.getFluidStorage().extract(stack, Fluid.BUCKET_VOLUME, IComparer.COMPARE_NBT, Action.PERFORM), true);
+                StackListResult<FluidStack> entry = portableGrid.getFluidStorage().extract(stack.getStack(), Fluid.BUCKET_VOLUME, IComparer.COMPARE_NBT, Action.PERFORM);
+                if(entry != null) {
+                    entry.applyCount();
+                    fluidHandler.fill(entry.getStack(), true);
+                }
 
                 if (shift) {
                     if (!player.inventory.addItemStackToInventory(fluidHandler.getContainer().copy())) {

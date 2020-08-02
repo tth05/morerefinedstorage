@@ -1,11 +1,11 @@
 package com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor;
 
 public interface ICraftingMonitorElementAttributeHolder {
-    int getScheduled();
+    long getScheduled();
 
-    int getProcessing();
+    long getProcessing();
 
-    int getCrafting();
+    long getCrafting();
 
-    int getStored();
+    long getStored();
 }

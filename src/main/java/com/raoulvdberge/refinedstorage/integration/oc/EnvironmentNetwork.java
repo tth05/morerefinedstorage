@@ -374,7 +374,12 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         if (compareNBT) {
             flags |= IComparer.COMPARE_NBT;
         }
-        return new Object[]{node.getNetwork().getItemStorageCache().getList().get(stack, flags)};
+        StackListEntry<ItemStack> entry = node.getNetwork().getItemStorageCache().getList().getEntry(stack, flags);
+        if(entry == null)
+            return new Object[]{null};
+
+        entry.getStack().setCount((int) entry.getCount());
+        return new Object[]{entry.getStack()};
     }
 
     //performance

@@ -31,7 +31,7 @@ public class ItemMeshDefinitionPortableGrid implements ItemMeshDefinition {
 
         IPortableGrid.IPortableGridRenderInfo renderInfo = new IPortableGrid.IPortableGridRenderInfo() {
             @Override
-            public int getStored() {
+            public long getStored() {
                 if (diskId == null) {
                     return 0;
                 }
@@ -40,11 +40,11 @@ public class ItemMeshDefinitionPortableGrid implements ItemMeshDefinition {
 
                 IStorageDiskSyncData data = API.instance().getStorageDiskSync().getData(diskId);
 
-                return data == null ? 0 : data.getStored();
+                return data == null ? 0 : data.getStored2();
             }
 
             @Override
-            public int getCapacity() {
+            public long getCapacity() {
                 if (diskId == null) {
                     return 0;
                 }
@@ -53,7 +53,7 @@ public class ItemMeshDefinitionPortableGrid implements ItemMeshDefinition {
 
                 IStorageDiskSyncData data = API.instance().getStorageDiskSync().getData(diskId);
 
-                return data == null ? 0 : data.getCapacity();
+                return data == null ? 0 : data.getCapacity2();
             }
 
             @Override

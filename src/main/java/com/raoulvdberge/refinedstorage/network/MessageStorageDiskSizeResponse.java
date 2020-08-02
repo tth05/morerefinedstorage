@@ -12,13 +12,13 @@ import java.util.UUID;
 
 public class MessageStorageDiskSizeResponse implements IMessage, IMessageHandler<MessageStorageDiskSizeResponse, IMessage> {
     private UUID id;
-    private int stored;
-    private int capacity;
+    private long stored;
+    private long capacity;
 
     public MessageStorageDiskSizeResponse() {
     }
 
-    public MessageStorageDiskSizeResponse(UUID id, int stored, int capacity) {
+    public MessageStorageDiskSizeResponse(UUID id, long stored, long capacity) {
         this.id = id;
         this.stored = stored;
         this.capacity = capacity;
@@ -27,16 +27,16 @@ public class MessageStorageDiskSizeResponse implements IMessage, IMessageHandler
     @Override
     public void fromBytes(ByteBuf buf) {
         id = new UUID(buf.readLong(), buf.readLong());
-        stored = buf.readInt();
-        capacity = buf.readInt();
+        stored = buf.readLong();
+        capacity = buf.readLong();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeLong(id.getMostSignificantBits());
         buf.writeLong(id.getLeastSignificantBits());
-        buf.writeInt(stored);
-        buf.writeInt(capacity);
+        buf.writeLong(stored);
+        buf.writeLong(capacity);
     }
 
     @Override

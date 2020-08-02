@@ -25,7 +25,13 @@ public interface IGridStack {
 
     String getTooltip();
 
-    int getQuantity();
+    long getQuantity();
+
+    long getCount();
+
+    void setCount(long count);
+
+    void grow(long count);
 
     String getFormattedFullQuantity();
 

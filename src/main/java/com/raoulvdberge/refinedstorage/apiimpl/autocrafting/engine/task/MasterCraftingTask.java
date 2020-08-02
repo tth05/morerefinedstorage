@@ -57,7 +57,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
     private UUID id = UUID.randomUUID();
 
-    private final int quantity;
+    private final long quantity;
     /** Timestamp of when the execution started */
     private long executionStarted = -1;
     /** The time in milli seconds it took for the calculation to complete */
@@ -65,7 +65,7 @@ public class MasterCraftingTask implements ICraftingTask {
     private long ticks;
     private boolean canUpdate;
 
-    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, int quantity,
+    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, long quantity,
                               @Nonnull ICraftingPattern pattern) {
         this.network = network;
         this.info = requested;
@@ -229,10 +229,10 @@ public class MasterCraftingTask implements ICraftingTask {
         for (Task task : this.tasks) {
             //insert loose items and fluids
             for (ItemStack looseItemStack : task.getLooseItemStacks())
-                network.insertItem(looseItemStack, looseItemStack.getCount(), Action.PERFORM);
+                network.insertItem(looseItemStack, (long)looseItemStack.getCount(), Action.PERFORM);
 
             for (FluidStack looseFluidStack : task.getLooseFluidStacks())
-                network.insertFluid(looseFluidStack, looseFluidStack.amount, Action.PERFORM);
+                network.insertFluid(looseFluidStack, (long)looseFluidStack.amount, Action.PERFORM);
 
             //insert items that are still inside of inputs
             for (Input input : task.getInputs()) {
@@ -244,10 +244,11 @@ public class MasterCraftingTask implements ICraftingTask {
                 List<ItemStack> itemStacks = input.getItemStacks();
                 for (int i = 0; i < itemStacks.size(); i++) {
                     ItemStack itemStack = itemStacks.get(i);
-                    //TODO: real stack counts
-                    int amount = 1;
+
+                    long amount = 1;
+
                     if (!isDurabilityInput) {
-                        amount = input.getCurrentInputCounts().get(i).intValue();
+                        amount = input.getCurrentInputCounts().get(i);
                     } else { //set correct durability to item stack
                         itemStack.setItemDamage(
                                 itemStack.getMaxDamage() - input.getCurrentInputCounts().get(i).intValue() + 1);
@@ -259,7 +260,7 @@ public class MasterCraftingTask implements ICraftingTask {
                 }
 
                 if (input.isFluid()) {
-                    int amount = input.getCurrentInputCounts().get(0).intValue();
+                    long amount = input.getCurrentInputCounts().get(0);
                     if (amount > 0)
                         network.insertFluid(input.getFluidStack(), amount, Action.PERFORM);
                 }
@@ -318,7 +319,7 @@ public class MasterCraftingTask implements ICraftingTask {
     @Override
     public NBTTagCompound writeToNbt(NBTTagCompound compound) {
         compound.setUniqueId(NBT_UUID, this.id);
-        compound.setInteger(NBT_QUANTITY, this.quantity);
+        compound.setLong(NBT_QUANTITY, this.quantity);
         compound.setLong(NBT_CALCULATION_TIME, this.calculationTime);
         compound.setLong(NBT_EXECUTION_STARTED, this.executionStarted);
         compound.setBoolean(NBT_CAN_UPDATE, this.canUpdate);
@@ -349,7 +350,7 @@ public class MasterCraftingTask implements ICraftingTask {
             ItemStack itemStack = entry.getStack();
 
             CraftingPreviewElementItemStack element =
-                    new CraftingPreviewElementItemStack(itemStack, 0, true, itemStack.getCount());
+                    new CraftingPreviewElementItemStack(itemStack, 0, true, entry.getCount());
             elements.add(element);
         }
 
@@ -357,7 +358,7 @@ public class MasterCraftingTask implements ICraftingTask {
             FluidStack fluidStack = entry.getStack();
 
             CraftingPreviewElementFluidStack element =
-                    new CraftingPreviewElementFluidStack(fluidStack, 0, true, fluidStack.amount);
+                    new CraftingPreviewElementFluidStack(fluidStack, 0, true, entry.getCount());
             elements.add(element);
         }
 
@@ -445,9 +446,9 @@ public class MasterCraftingTask implements ICraftingTask {
             Task task = taskList.get(i);
             if (i == 0 && task instanceof CraftingTask) {
                 Output output = task.getOutputs().get(0);
-                //TODO remove cast
+
                 elements.add(new CraftingMonitorElementItemRender(output.getCompareableItemStack(), 0, 0, 0,
-                        (int) task.getAmountNeeded() * output.getQuantityPerCraft()));
+                        task.getAmountNeeded() * output.getQuantityPerCraft()));
             }
 
             for (ICraftingMonitorElement craftingMonitorElement : task.getCraftingMonitorElements()) {
@@ -499,7 +500,7 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
-    public int getQuantity() {
+    public long getQuantity() {
         return this.quantity;
     }
 

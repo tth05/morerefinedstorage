@@ -46,6 +46,7 @@ import yalter.mousetweaks.api.MouseTweaksDisableWheelTweak;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -438,7 +439,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
     private void drawGridTooltip(IGridStack gridStack, int mouseX, int mouseY) {
         List<String> textLines = Lists.newArrayList(gridStack.getTooltip().split("\n"));
-        List<String> smallTextLines = Lists.newArrayList();
+        List<String> smallTextLines = new ArrayList<>();
 
         if (!gridStack.isCraftable()) {
             smallTextLines.add(I18n.format("misc.refinedstorage:total", gridStack.getFormattedFullQuantity()));

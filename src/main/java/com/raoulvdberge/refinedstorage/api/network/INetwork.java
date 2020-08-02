@@ -12,6 +12,7 @@ import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -24,7 +25,6 @@ import java.util.function.Predicate;
 /**
  * Represents a network, usually is a controller.
  */
-//TODO: add system that ensures items don't get voided when inserting into full network -> basically keep them in memory
 public interface INetwork {
     /**
      * @return the energy usage per tick of this network
@@ -98,9 +98,32 @@ public interface INetwork {
      * @param size   the amount of that prototype that has to be inserted
      * @param action the action
      * @return null if the insert was successful, or a stack with the remainder
+     *
+     * @deprecated use {@link #insertItem(ItemStack, long, Action)}
      */
     @Nullable
-    ItemStack insertItem(@Nonnull ItemStack stack, int size, Action action);
+    @Deprecated
+    default ItemStack insertItem(@Nonnull ItemStack stack, int size, Action action) {
+        StackListResult<ItemStack> result = insertItem(stack, (long) size, action);
+
+        if (result == null)
+            return null;
+
+        ItemStack resultStack = result.getStack();
+        resultStack.setCount(result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount());
+        return resultStack;
+    }
+
+    /**
+     * Inserts an item in this network.
+     *
+     * @param stack  the stack prototype to insert, do NOT modify
+     * @param size   the amount of that prototype that has to be inserted
+     * @param action the action
+     * @return null if the insert was successful, or a stack with the remainder
+     */
+    @Nullable
+    StackListResult<ItemStack> insertItem(@Nonnull ItemStack stack, long size, Action action);
 
     /**
      * Inserts an item and notifies the crafting manager of the incoming item.
@@ -131,9 +154,21 @@ public interface INetwork {
      * @param action the action
      * @param filter a filter for the storage
      * @return null if we didn't extract anything, or a stack with the result
+     *
+     * @deprecated use {@link #extractItem(ItemStack, long, int, Action, Predicate)}
      */
     @Nonnull
-    ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action, Predicate<IStorage<ItemStack>> filter);
+    @Deprecated
+    default ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action, Predicate<IStorage<ItemStack>> filter) {
+        StackListResult<ItemStack> result = extractItem(stack, (long) size, flags, action, filter);
+
+        if (result == null)
+            return ItemStack.EMPTY;
+
+        ItemStack resultStack = result.getStack();
+        resultStack.setCount(result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount());
+        return resultStack;
+    }
 
     /**
      * Extracts an item from this network.
@@ -143,8 +178,11 @@ public interface INetwork {
      * @param flags  the flags to compare on, see {@link IComparer}
      * @param action the action
      * @return null if we didn't extract anything, or a stack with the result
+     *
+     * @deprecated use {@link #extractItem(ItemStack, long, int, Action)}
      */
     @Nonnull
+    @Deprecated
     default ItemStack extractItem(@Nonnull ItemStack stack, int size, int flags, Action action) {
         return extractItem(stack, size, flags, action, s -> true);
     }
@@ -156,10 +194,76 @@ public interface INetwork {
      * @param size   the amount of that prototype that has to be extracted
      * @param action the action
      * @return null if we didn't extract anything, or a stack with the result
+     *
+     * @deprecated use {@link #extractItem(ItemStack, long, Action)}
      */
     @Nonnull
+    @Deprecated
     default ItemStack extractItem(@Nonnull ItemStack stack, int size, Action action) {
         return extractItem(stack, size, IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT, action);
+    }
+
+    /**
+     * Extracts an item from this network.
+     *
+     * @param stack  the prototype of the stack to extract, do NOT modify
+     * @param size   the amount of that prototype that has to be extracted
+     * @param flags  the flags to compare on, see {@link IComparer}
+     * @param action the action
+     * @param filter a filter for the storage
+     * @return null if we didn't extract anything, or a stack with the result
+     */
+    @Nullable
+    StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action, Predicate<IStorage<ItemStack>> filter);
+
+    /**
+     * Extracts an item from this network.
+     *
+     * @param stack  the prototype of the stack to extract, do NOT modify
+     * @param size   the amount of that prototype that has to be extracted
+     * @param flags  the flags to compare on, see {@link IComparer}
+     * @param action the action
+     * @return null if we didn't extract anything, or a stack with the result
+     */
+    @Nullable
+    default StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action) {
+        return extractItem(stack, size, flags, action, s -> true);
+    }
+
+    /**
+     * Extracts an item from this network.
+     *
+     * @param stack  the prototype of the stack to extract, do NOT modify
+     * @param size   the amount of that prototype that has to be extracted
+     * @param action the action
+     * @return null if we didn't extract anything, or a stack with the result
+     */
+    @Nullable
+    default StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, Action action) {
+        return extractItem(stack, size, IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT, action);
+    }
+
+    /**
+     * Inserts a fluid in this network.
+     *
+     * @param stack  the stack prototype to insert, do NOT modify
+     * @param size   the amount of that prototype that has to be inserted
+     * @param action the action
+     * @return null if the insert was successful, or a stack with the remainder
+     *
+     * @deprecated use {@link #insertFluid(FluidStack, long, Action)}
+     */
+    @Nullable
+    @Deprecated
+    default FluidStack insertFluid(@Nonnull FluidStack stack, int size, Action action) {
+        StackListResult<FluidStack> result = insertFluid(stack, (long) size, action);
+
+        if (result == null)
+            return null;
+
+        FluidStack resultStack = result.getStack();
+        resultStack.amount = result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount();
+        return resultStack;
     }
 
     /**
@@ -171,7 +275,7 @@ public interface INetwork {
      * @return null if the insert was successful, or a stack with the remainder
      */
     @Nullable
-    FluidStack insertFluid(@Nonnull FluidStack stack, int size, Action action);
+    StackListResult<FluidStack> insertFluid(@Nonnull FluidStack stack, long size, Action action);
 
     /**
      * Inserts a fluid and notifies the crafting manager of the incoming fluid.
@@ -201,9 +305,54 @@ public interface INetwork {
      * @param flags  the flags to compare on, see {@link IComparer}
      * @param action the action
      * @return null if we didn't extract anything, or a stack with the result
+     *
+     * @deprecated use {@link #extractFluid(FluidStack, long, int, Action, Predicate)}
      */
     @Nullable
-    FluidStack extractFluid(@Nonnull FluidStack stack, int size, int flags, Action action, Predicate<IStorage<FluidStack>> filter);
+    @Deprecated
+    default FluidStack extractFluid(@Nonnull FluidStack stack, int size, int flags, Action action, Predicate<IStorage<FluidStack>> filter) {
+        StackListResult<FluidStack> result = extractFluid(stack, (long) size, flags, action, filter);
+
+        if (result == null)
+            return null;
+
+        FluidStack resultStack = result.getStack();
+        resultStack.amount = result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount();
+        return resultStack;
+    }
+
+    /**
+     * Extracts a fluid from this network.
+     *
+     * @param stack  the prototype of the stack to extract, do NOT modify
+     * @param size   the amount of that prototype that has to be extracted
+     * @param flags  the flags to compare on, see {@link IComparer}
+     * @param action the action
+     * @return null if we didn't extract anything, or a stack with the result
+     *
+     * @deprecated use {@link #extractFluid(FluidStack, long, int, Action)}
+     */
+    @Nullable
+    @Deprecated
+    default FluidStack extractFluid(FluidStack stack, int size, int flags, Action action) {
+        return extractFluid(stack, size, flags, action, s -> true);
+    }
+
+    /**
+     * Extracts a fluid from this network.
+     *
+     * @param stack  the prototype of the stack to extract, do NOT modify
+     * @param size   the amount of that prototype that has to be extracted
+     * @param action the action
+     * @return null if we didn't extract anything, or a stack with the result
+     *
+     * @deprecated use {@link #extractFluid(FluidStack, long, Action)}
+     */
+    @Nullable
+    @Deprecated
+    default FluidStack extractFluid(FluidStack stack, int size, Action action) {
+        return extractFluid(stack, size, IComparer.COMPARE_NBT, action);
+    }
 
     /**
      * Extracts a fluid from this network.
@@ -215,7 +364,19 @@ public interface INetwork {
      * @return null if we didn't extract anything, or a stack with the result
      */
     @Nullable
-    default FluidStack extractFluid(FluidStack stack, int size, int flags, Action action) {
+    StackListResult<FluidStack> extractFluid(@Nonnull FluidStack stack, long size, int flags, Action action, Predicate<IStorage<FluidStack>> filter);
+
+    /**
+     * Extracts a fluid from this network.
+     *
+     * @param stack  the prototype of the stack to extract, do NOT modify
+     * @param size   the amount of that prototype that has to be extracted
+     * @param flags  the flags to compare on, see {@link IComparer}
+     * @param action the action
+     * @return null if we didn't extract anything, or a stack with the result
+     */
+    @Nullable
+    default StackListResult<FluidStack> extractFluid(FluidStack stack, long size, int flags, Action action) {
         return extractFluid(stack, size, flags, action, s -> true);
     }
 
@@ -228,7 +389,7 @@ public interface INetwork {
      * @return null if we didn't extract anything, or a stack with the result
      */
     @Nullable
-    default FluidStack extractFluid(FluidStack stack, int size, Action action) {
+    default StackListResult<FluidStack> extractFluid(FluidStack stack, long size, Action action) {
         return extractFluid(stack, size, IComparer.COMPARE_NBT, action);
     }
 

@@ -46,7 +46,7 @@ public class MessagePortableGridItemUpdate implements IMessage,
         buf.writeInt(size);
 
         for (StackListEntry<ItemStack> stack : portableGrid.getItemCache().getList().getStacks()) {
-            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getId(), null, false,
+            StackUtils.writeItemGridStack(buf, stack.getStack(), stack.getCount(), stack.getId(), null, false,
                     portableGrid.getItemStorageTracker().get(stack.getStack()));
         }
     }

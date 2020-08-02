@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.RSBlocks;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
@@ -73,9 +74,9 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
                 ItemStack slot = itemFilters.getStackInSlot(0);
 
                 if (!slot.isEmpty()) {
-                    ItemStack stack = network.getItemStorageCache().getList().get(slot, compare);
+                    StackListEntry<ItemStack> stack = network.getItemStorageCache().getList().getEntry(slot, compare);
 
-                    powered = isPowered(stack == null ? null : stack.getCount());
+                    powered = isPowered(stack == null ? null : (int)stack.getCount());
                 } else {
                     powered = isPowered(network.getItemStorageCache().getList().getStacks().stream().mapToInt(e -> e.getStack().getCount()).sum());
                 }
@@ -83,9 +84,9 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
                 FluidStack slot = fluidFilters.getFluid(0);
 
                 if (slot != null) {
-                    FluidStack stack = network.getFluidStorageCache().getList().get(slot, compare);
+                    StackListEntry<FluidStack> stack = network.getFluidStorageCache().getList().getEntry(slot, compare);
 
-                    powered = isPowered(stack == null ? null : stack.amount);
+                    powered = isPowered(stack == null ? null : (int)stack.getCount());
                 } else {
                     powered = isPowered(network.getFluidStorageCache().getList().getStacks().stream().mapToInt(e -> e.getStack().amount).sum());
                 }
@@ -115,7 +116,7 @@ public class NetworkNodeDetector extends NetworkNode implements IComparable, ITy
         this.powered = powered;
     }
 
-    private boolean isPowered(Integer size) {
+    public boolean isPowered(Integer size) {
         if (size != null) {
             switch (mode) {
                 case MODE_UNDER:
