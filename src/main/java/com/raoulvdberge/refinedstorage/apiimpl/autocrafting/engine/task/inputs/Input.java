@@ -37,7 +37,7 @@ public class Input {
     protected long totalInputAmount;
     private final List<Long> currentInputCounts = new LongArrayList(9);
 
-    private long toCraftAmount;
+    protected long toCraftAmount;
 
     protected long amountNeeded;
     protected long processingAmount = 0;

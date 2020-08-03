@@ -62,10 +62,13 @@ public class DurabilityInput extends Input {
         if (!API.instance().getComparer().isEqual(this.compareableItemStack, stack, IComparer.COMPARE_NBT))
             return;
 
-        for (int i = 0; i < stack.getCount(); i++)
+        int needed = (int) Math.min(this.getToCraftAmount(), stack.getCount());
+
+        for (int i = 0; i < needed; i++)
             addDamageableItemStack(stack.copy());
 
-        stack.setCount(0);
+        this.toCraftAmount = Math.max(0, this.toCraftAmount - needed);
+        stack.shrink(needed);
     }
 
     @Override
