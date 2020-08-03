@@ -65,6 +65,10 @@ public class MasterCraftingTask implements ICraftingTask {
     private long ticks;
     private boolean canUpdate;
 
+    //completion percentage
+    private long totalAmountNeeded;
+    private int completionPercentage;
+
     public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, long quantity,
                               @Nonnull ICraftingPattern pattern) {
         this.network = network;
@@ -156,6 +160,8 @@ public class MasterCraftingTask implements ICraftingTask {
 
         boolean allFinished = true;
 
+        long totalAmount = 0;
+
         for (int i = tasks.size() - 1; i >= 0; i--) {
             Task task = tasks.get(i);
             if (task.isFinished())
@@ -165,6 +171,8 @@ public class MasterCraftingTask implements ICraftingTask {
             for (ICraftingPatternContainer container : containers) {
                 if (container.getUpdateInterval() < 0)
                     throw new IllegalStateException(container + " has an update interval of < 0");
+
+                totalAmount += task.getAmountNeeded();
 
                 //check if container is allowed to update
                 if (ticks % container.getUpdateInterval() != 0)
@@ -192,6 +200,8 @@ public class MasterCraftingTask implements ICraftingTask {
                 allFinished = false;
         }
 
+        this.completionPercentage = 100 - (int) (totalAmount * 100d / (double)this.totalAmountNeeded);
+
         ticks++;
         return allFinished;
     }
@@ -218,6 +228,8 @@ public class MasterCraftingTask implements ICraftingTask {
             this.missingFluidStacks = result.getMissingFluidStacks();
 
             this.calculationTime = System.currentTimeMillis() - calculationStarted;
+
+            this.totalAmountNeeded = this.tasks.stream().mapToLong(Task::getAmountNeeded).sum();
         }
 
         return result.getError();
@@ -465,8 +477,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
     @Override
     public int getCompletionPercentage() {
-        //TODO: completion percentage
-        return 0;
+        return this.completionPercentage;
     }
 
     @Override
