@@ -1,8 +1,13 @@
 # More Refined Storage Changelog
 
 ### 2.0.7
+- Added proper support for the network to use longs instead of ints
+- Added completion percentage to auto-crafting tasks
 - Fixed restockable inputs not working properly after latest changes
 - Fixed disk drive bar rendering being broken sometimes
+- Fixed crafting upgrade in interface not working
+- Fixed the "Crafting" count not updating in crafting monitor for items with durability
+- Fixed auto-crafting sometimes deleting items when importing
 
 ### 2.0.6
 - Fixed OC integration #getItems and #getFluids
