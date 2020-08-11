@@ -19,7 +19,10 @@ import net.minecraftforge.common.DimensionManager;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public abstract class ItemNetworkItem extends ItemEnergyItem implements INetworkItemProvider {
@@ -27,6 +30,8 @@ public abstract class ItemNetworkItem extends ItemEnergyItem implements INetwork
     private static final String NBT_CONTROLLER_Y = "ControllerY";
     private static final String NBT_CONTROLLER_Z = "ControllerZ";
     private static final String NBT_DIMENSION_ID = "DimensionID";
+
+    private static final Map<UUID, Long> COOLDOWNS = new HashMap<>();
 
     public ItemNetworkItem(IItemInfo info, int energyCapacity) {
         super(info, energyCapacity);
@@ -40,7 +45,12 @@ public abstract class ItemNetworkItem extends ItemEnergyItem implements INetwork
         ItemStack stack = player.getHeldItem(hand);
 
         if (!world.isRemote) {
-            applyNetwork(stack, n -> n.getNetworkItemHandler().open(player, player.getHeldItem(hand), player.inventory.currentItem), player::sendMessage);
+            long currentTimeMillis = System.currentTimeMillis();
+            Long lastClicked = COOLDOWNS.get(player.getUniqueID());
+            if (lastClicked == null || currentTimeMillis - lastClicked > 300) {
+                COOLDOWNS.put(player.getUniqueID(), currentTimeMillis);
+                applyNetwork(stack, n -> n.getNetworkItemHandler().open(player, player.getHeldItem(hand), player.inventory.currentItem), player::sendMessage);
+            }
         }
 
         return ActionResult.newResult(EnumActionResult.SUCCESS, stack);
@@ -121,9 +131,9 @@ public abstract class ItemNetworkItem extends ItemEnergyItem implements INetwork
 
     public boolean isValid(ItemStack stack) {
         return stack.hasTagCompound()
-            && stack.getTagCompound().hasKey(NBT_CONTROLLER_X)
-            && stack.getTagCompound().hasKey(NBT_CONTROLLER_Y)
-            && stack.getTagCompound().hasKey(NBT_CONTROLLER_Z)
-            && stack.getTagCompound().hasKey(NBT_DIMENSION_ID);
+                && stack.getTagCompound().hasKey(NBT_CONTROLLER_X)
+                && stack.getTagCompound().hasKey(NBT_CONTROLLER_Y)
+                && stack.getTagCompound().hasKey(NBT_CONTROLLER_Z)
+                && stack.getTagCompound().hasKey(NBT_DIMENSION_ID);
     }
 }
