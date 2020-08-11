@@ -322,10 +322,14 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             commonSlots.add(MutablePair.of(correspondingSlots, false));
 
             //if the max stack size is 1, ignore it
-            if (slot.getMaxStackSize() == 1 &&
-                    !slot.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
-                continue;
-            if (missingCount <= toSplitUp &&
+            if (slot.getMaxStackSize() == 1) {
+                if(remainder.get(i).isEmpty()) {
+                    toCraft = 1;
+                    break;
+                } else if(!slot.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
+                    continue;
+                }
+            } else if (missingCount <= toSplitUp &&
                     !slot.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
                 //fill up slot copies to maximum amount, otherwise the remainder simulation won't work
                 for (Pair<ItemStack, Integer> correspondingSlot : correspondingSlots)
