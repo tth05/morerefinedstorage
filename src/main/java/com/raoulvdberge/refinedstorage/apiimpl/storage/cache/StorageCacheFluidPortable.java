@@ -1,7 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.cache;
 
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
-import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
+import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;

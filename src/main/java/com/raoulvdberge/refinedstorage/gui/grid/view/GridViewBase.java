@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterParser;
 import com.raoulvdberge.refinedstorage.gui.grid.sorting.GridSorterDirection;
 import com.raoulvdberge.refinedstorage.gui.grid.sorting.IGridSorter;
 import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import javax.annotation.Nullable;
@@ -20,7 +21,7 @@ public abstract class GridViewBase implements IGridView {
     private final List<IGridSorter> sorters;
 
     private List<IGridStack> stacks = new ArrayList<>();
-    protected final Map<UUID, IGridStack> map = new HashMap<>();
+    protected final Map<UUID, IGridStack> map = new Object2ObjectOpenHashMap<>();
 
     public GridViewBase(GuiGrid gui, IGridSorter defaultSorter, List<IGridSorter> sorters) {
         this.gui = gui;
