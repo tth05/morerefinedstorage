@@ -28,7 +28,6 @@ public class GridStackItem implements IGridStack {
     private StorageTrackerEntry entry;
     private String modId;
     private String modName;
-    private String tooltip;
 
     public GridStackItem(ItemStack stack, long count) {
         this.stack = stack;
@@ -58,9 +57,9 @@ public class GridStackItem implements IGridStack {
     @Nullable
     static String getModNameByModId(String modId) {
         ModContainer container = Loader.instance().getActiveModList().stream()
-            .filter(m -> m.getModId().equalsIgnoreCase(modId))
-            .findFirst()
-            .orElse(null);
+                .filter(m -> m.getModId().equalsIgnoreCase(modId))
+                .findFirst()
+                .orElse(null);
 
         return container == null ? null : container.getName();
     }
@@ -132,12 +131,11 @@ public class GridStackItem implements IGridStack {
 
     @Override
     public String getTooltip() {
-        if (tooltip == null) {
-            try {
-                tooltip = String.join("\n", RenderUtils.getItemTooltip(stack));
-            } catch (Exception t) {
-                tooltip = "";
-            }
+        String tooltip;
+        try {
+            tooltip = String.join("\n", RenderUtils.getItemTooltip(stack));
+        } catch (Exception t) {
+            tooltip = "";
         }
 
         return tooltip;
