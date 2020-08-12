@@ -36,7 +36,7 @@ public class StackListFluid implements IStackList<FluidStack> {
         }
 
         FluidStack newStack = stack.copy();
-        StackListEntry<FluidStack> newEntry = new StackListEntry<>(newStack, newStack.amount);
+        StackListEntry<FluidStack> newEntry = new StackListEntry<>(newStack, size);
 
         stacks.put(newStack.getFluid(), newEntry);
         index.put(newEntry.getId(), newEntry);
