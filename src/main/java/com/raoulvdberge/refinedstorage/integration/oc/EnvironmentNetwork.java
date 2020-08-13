@@ -30,7 +30,6 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_DAMAGE;
 import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_NBT;
@@ -292,10 +291,15 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
-        return new Object[]{node.getNetwork().getFluidStorageCache().getList().getStacks()
-                .stream()
-                .map(StackListEntry::getStack).collect(Collectors.toList())
-        };
+        List<Map<String, Object>> result = new ObjectArrayList<>();
+        for (StackListEntry<FluidStack> entry : node.getNetwork().getFluidStorageCache().getList().getStacks()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("size", entry.getCount());
+            map.put("stack", entry.getStack());
+            list.add(map);
+        }
+
+        return new Object[]{result};
     }
 
     @Callback(doc = "function(stack:table[, count:number[, direction:number]]):table -- Extracts an item from the network.")
@@ -383,7 +387,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
     }
 
     //performance
-    private final List<ItemStack> list = new ObjectArrayList<>();
+    private final List<Map<String, Object>> list = new ObjectArrayList<>();
 
     @Callback(doc = "function():table -- Gets a list of all items in this network.")
     public Object[] getItems(final Context context, final Arguments args) {
@@ -392,8 +396,12 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             return new Object[]{null, ERROR_NOT_CONNECTED};
         }
 
-        for (StackListEntry<ItemStack> entry : node.getNetwork().getItemStorageCache().getList().getStacks())
-            list.add(entry.getStack());
+        for (StackListEntry<ItemStack> entry : node.getNetwork().getItemStorageCache().getList().getStacks()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("size", entry.getCount());
+            map.put("stack", entry.getStack());
+            list.add(map);
+        }
 
         return new Object[]{list};
     }
