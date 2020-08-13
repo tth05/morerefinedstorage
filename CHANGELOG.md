@@ -1,5 +1,14 @@
 # More Refined Storage Changelog
 
+### 2.0.8
+- Added better tooltips to crafting preview
+- Added trillion support to quantity formatting
+- Fixed OC integration using wrong stack count
+- Fixed crafting preview showing wrong missing count
+- Fixed enderio fluid conduits compatibility
+- Fixed shift crafting dupe when using normal unstackable items
+- Fixed grid being "empty" when opening it too fast
+
 ### 2.0.7
 - Added proper support for the network to use longs instead of ints
 - Added completion percentage to auto-crafting tasks
