@@ -40,10 +40,10 @@ public class CalculationResult {
      */
     public void merge(@Nonnull CalculationResult other) {
         for (StackListEntry<FluidStack> entry : other.missingFluidStacks.getStacks())
-            this.missingFluidStacks.add(entry.getStack());
+            this.missingFluidStacks.add(entry.getStack(), entry.getCount());
 
         for (StackListEntry<ItemStack> entry : other.missingItemStacks.getStacks())
-            this.missingItemStacks.add(entry.getStack());
+            this.missingItemStacks.add(entry.getStack(), entry.getCount());
 
         if (other.getError() != null)
             this.error = other.getError();

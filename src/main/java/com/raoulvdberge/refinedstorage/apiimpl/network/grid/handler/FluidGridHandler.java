@@ -148,8 +148,7 @@ public class FluidGridHandler implements IFluidGridHandler {
 
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
-                                    Collections
-                                            .singletonList(new CraftingPreviewElementError(ItemStack.EMPTY)),
+                                    Collections.singletonList(new CraftingPreviewElementError()),
                                     task.getId(),
                                     task.getCalculationTime(), quantity, true),
                             player);

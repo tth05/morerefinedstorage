@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.gui;
 
+import com.google.common.collect.Lists;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElement;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawer;
@@ -21,7 +22,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import org.lwjgl.input.Keyboard;
 
@@ -58,8 +58,8 @@ public class GuiCraftingPreview extends GuiBase {
     private GuiButton startButton;
     private GuiButton cancelButton;
 
-    private ItemStack hoveringStack;
-    private FluidStack hoveringFluid;
+    private CraftingPreviewElementItemStack hoveringStack;
+    private CraftingPreviewElementFluidStack hoveringFluid;
 
     private final IElementDrawers drawers = new CraftingPreviewElementDrawers();
 
@@ -165,11 +165,11 @@ public class GuiCraftingPreview extends GuiBase {
 
                     if (inBounds(x + 5, y + 7, 16, 16, mouseX, mouseY)) {
                         this.hoveringStack = stack.getId().equals(CraftingPreviewElementItemStack.ID) ?
-                                (ItemStack) stack.getElement() : null;
+                                (CraftingPreviewElementItemStack) stack : null;
 
                         if (this.hoveringStack == null) {
                             this.hoveringFluid = stack.getId().equals(CraftingPreviewElementFluidStack.ID) ?
-                                    (FluidStack) stack.getElement() : null;
+                                    (CraftingPreviewElementFluidStack) stack : null;
                         }
                     }
                 }
@@ -191,11 +191,28 @@ public class GuiCraftingPreview extends GuiBase {
         super.drawScreen(mouseX, mouseY, partialTicks);
 
         if (hoveringStack != null) {
-            drawTooltip(hoveringStack, mouseX, mouseY, hoveringStack.getTooltip(Minecraft.getMinecraft().player,
-                    Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED :
-                            ITooltipFlag.TooltipFlags.NORMAL));
+            List<String> textLines = hoveringStack.getElement().getTooltip(Minecraft.getMinecraft().player,
+                    Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
+                            ITooltipFlag.TooltipFlags.ADVANCED :
+                            ITooltipFlag.TooltipFlags.NORMAL);
+
+            List<String> smallTextLines = Lists.newArrayList(
+                    t(hoveringStack.hasMissing() ? "gui.refinedstorage:crafting_preview.missing" :
+                            "gui.refinedstorage:crafting_preview.to_craft", hoveringStack.getToCraft()),
+                    t("gui.refinedstorage:crafting_preview.available", hoveringStack.getAvailable()));
+
+            RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, RS.INSTANCE.config.detailedTooltip,
+                    hoveringStack.getElement(), mouseX, mouseY, screenWidth, screenHeight, fontRenderer);
         } else if (hoveringFluid != null) {
-            drawTooltip(mouseX, mouseY, hoveringFluid.getLocalizedName());
+            List<String> textLines = Lists.newArrayList(hoveringFluid.getElement().getLocalizedName());
+
+            List<String> smallTextLines = Lists.newArrayList(
+                    t(hoveringFluid.hasMissing() ? "gui.refinedstorage:crafting_preview.missing" :
+                            "gui.refinedstorage:crafting_preview.to_craft", hoveringFluid.getToCraft()),
+                    t("gui.refinedstorage:crafting_preview.available", hoveringFluid.getAvailable()));
+
+            RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, RS.INSTANCE.config.detailedTooltip,
+                            ItemStack.EMPTY, mouseX, mouseY, screenWidth, screenHeight, fontRenderer);
         }
     }
 

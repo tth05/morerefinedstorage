@@ -529,7 +529,6 @@ public abstract class Task {
 
             //if input cannot be satisfied -> add to missing
             if (input.getAmountMissing() > 0) {
-
                 if (!input.isFluid()) { //missing itemstacks
                     ItemStack missing = input.getCompareableItemStack().copy();
 

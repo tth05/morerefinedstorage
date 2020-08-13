@@ -219,8 +219,7 @@ public class ItemGridHandler implements IItemGridHandler {
 
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
-                                    Collections
-                                            .singletonList(new CraftingPreviewElementError(ItemStack.EMPTY)),
+                                    Collections.singletonList(new CraftingPreviewElementError()),
                                     task.getId(),
                                     task.getCalculationTime(),
                                     quantity,
