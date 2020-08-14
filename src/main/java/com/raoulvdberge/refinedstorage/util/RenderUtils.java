@@ -38,6 +38,7 @@ import net.minecraftforge.fml.client.config.GuiUtils;
 import javax.annotation.Nonnull;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -93,10 +94,10 @@ public final class RenderUtils {
 
     private static TRSRTransformation getTransform(float tx, float ty, float tz, float ax, float ay, float az, float s) {
         return new TRSRTransformation(
-            new Vector3f(tx / 16, ty / 16, tz / 16),
-            TRSRTransformation.quatFromXYZDegrees(new Vector3f(ax, ay, az)),
-            new Vector3f(s, s, s),
-            null
+                new Vector3f(tx / 16, ty / 16, tz / 16),
+                TRSRTransformation.quatFromXYZDegrees(new Vector3f(ax, ay, az)),
+                new Vector3f(s, s, s),
+                null
         );
     }
 
@@ -106,13 +107,13 @@ public final class RenderUtils {
         }
 
         return DEFAULT_ITEM_TRANSFORM = ImmutableMap.<ItemCameraTransforms.TransformType, TRSRTransformation>builder()
-            .put(ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, getTransform(0, 3, 1, 0, 0, 0, 0.55f))
-            .put(ItemCameraTransforms.TransformType.THIRD_PERSON_LEFT_HAND, getTransform(0, 3, 1, 0, 0, 0, 0.55f))
-            .put(ItemCameraTransforms.TransformType.FIRST_PERSON_RIGHT_HAND, getTransform(1.13f, 3.2f, 1.13f, 0, -90, 25, 0.68f))
-            .put(ItemCameraTransforms.TransformType.FIRST_PERSON_LEFT_HAND, getTransform(1.13f, 3.2f, 1.13f, 0, 90, -25, 0.68f))
-            .put(ItemCameraTransforms.TransformType.GROUND, getTransform(0, 2, 0, 0, 0, 0, 0.5f))
-            .put(ItemCameraTransforms.TransformType.HEAD, getTransform(0, 13, 7, 0, 180, 0, 1))
-            .build();
+                .put(ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, getTransform(0, 3, 1, 0, 0, 0, 0.55f))
+                .put(ItemCameraTransforms.TransformType.THIRD_PERSON_LEFT_HAND, getTransform(0, 3, 1, 0, 0, 0, 0.55f))
+                .put(ItemCameraTransforms.TransformType.FIRST_PERSON_RIGHT_HAND, getTransform(1.13f, 3.2f, 1.13f, 0, -90, 25, 0.68f))
+                .put(ItemCameraTransforms.TransformType.FIRST_PERSON_LEFT_HAND, getTransform(1.13f, 3.2f, 1.13f, 0, 90, -25, 0.68f))
+                .put(ItemCameraTransforms.TransformType.GROUND, getTransform(0, 2, 0, 0, 0, 0, 0.5f))
+                .put(ItemCameraTransforms.TransformType.HEAD, getTransform(0, 13, 7, 0, 180, 0, 1))
+                .build();
     }
 
     public static ImmutableMap<ItemCameraTransforms.TransformType, TRSRTransformation> getDefaultBlockTransforms() {
@@ -123,14 +124,14 @@ public final class RenderUtils {
         TRSRTransformation thirdperson = getTransform(0, 2.5f, 0, 75, 45, 0, 0.375f);
 
         return DEFAULT_BLOCK_TRANSFORM = ImmutableMap.<ItemCameraTransforms.TransformType, TRSRTransformation>builder()
-            .put(ItemCameraTransforms.TransformType.GUI, getTransform(0, 0, 0, 30, 225, 0, 0.625f))
-            .put(ItemCameraTransforms.TransformType.GROUND, getTransform(0, 3, 0, 0, 0, 0, 0.25f))
-            .put(ItemCameraTransforms.TransformType.FIXED, getTransform(0, 0, 0, 0, 0, 0, 0.5f))
-            .put(ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, thirdperson)
-            .put(ItemCameraTransforms.TransformType.THIRD_PERSON_LEFT_HAND, leftifyTransform(thirdperson))
-            .put(ItemCameraTransforms.TransformType.FIRST_PERSON_RIGHT_HAND, getTransform(0, 0, 0, 0, 45, 0, 0.4f))
-            .put(ItemCameraTransforms.TransformType.FIRST_PERSON_LEFT_HAND, getTransform(0, 0, 0, 0, 225, 0, 0.4f))
-            .build();
+                .put(ItemCameraTransforms.TransformType.GUI, getTransform(0, 0, 0, 30, 225, 0, 0.625f))
+                .put(ItemCameraTransforms.TransformType.GROUND, getTransform(0, 3, 0, 0, 0, 0, 0.25f))
+                .put(ItemCameraTransforms.TransformType.FIXED, getTransform(0, 0, 0, 0, 0, 0, 0.5f))
+                .put(ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, thirdperson)
+                .put(ItemCameraTransforms.TransformType.THIRD_PERSON_LEFT_HAND, leftifyTransform(thirdperson))
+                .put(ItemCameraTransforms.TransformType.FIRST_PERSON_RIGHT_HAND, getTransform(0, 0, 0, 0, 45, 0, 0.4f))
+                .put(ItemCameraTransforms.TransformType.FIRST_PERSON_LEFT_HAND, getTransform(0, 0, 0, 0, 225, 0, 0.4f))
+                .build();
     }
 
     public static int getOffsetOnScale(int pos, float scale) {
@@ -295,7 +296,9 @@ public final class RenderUtils {
             mouseX = event.getX();
             mouseY = event.getY();
 
+            screenWidth = event.getScreenWidth();
             screenHeight = event.getScreenHeight();
+            int maxTextWidth = event.getMaxWidth();
 
             FontRenderer font = event.getFontRenderer();
 
@@ -331,15 +334,64 @@ public final class RenderUtils {
             }
             // RS END
 
+            boolean needsWrap = false;
+
             int titleLinesCount = 1;
             int tooltipX = mouseX + 12;
+            if (tooltipX + tooltipTextWidth + 4 > screenWidth) {
+                tooltipX = mouseX - 16 - tooltipTextWidth;
+                if (tooltipX < 4) // if the tooltip doesn't fit on the screen
+                {
+                    if (mouseX > screenWidth / 2) {
+                        tooltipTextWidth = mouseX - 12 - 8;
+                    } else {
+                        tooltipTextWidth = screenWidth - 16 - mouseX;
+                    }
+                    needsWrap = true;
+                }
+            }
+
+            if (maxTextWidth > 0 && tooltipTextWidth > maxTextWidth) {
+                tooltipTextWidth = maxTextWidth;
+                needsWrap = true;
+            }
+
+            if (needsWrap) {
+                int wrappedTooltipWidth = 0;
+                List<String> wrappedTextLines = new ArrayList<String>();
+                for (int i = 0; i < textLines.size(); i++) {
+                    String textLine = textLines.get(i);
+                    List<String> wrappedLine = font.listFormattedStringToWidth(textLine, tooltipTextWidth);
+                    if (i == 0) {
+                        titleLinesCount = wrappedLine.size();
+                    }
+
+                    for (String line : wrappedLine) {
+                        int lineWidth = font.getStringWidth(line);
+                        if (lineWidth > wrappedTooltipWidth) {
+                            wrappedTooltipWidth = lineWidth;
+                        }
+                        wrappedTextLines.add(line);
+                    }
+                }
+                tooltipTextWidth = wrappedTooltipWidth;
+                textLines = wrappedTextLines;
+
+                if (mouseX > screenWidth / 2) {
+                    tooltipX = mouseX - 16 - tooltipTextWidth;
+                } else {
+                    tooltipX = mouseX + 12;
+                }
+            }
 
             int tooltipY = mouseY - 12;
             int tooltipHeight = 8;
 
             if (textLines.size() > 1) {
                 tooltipHeight += (textLines.size() - 1) * 10;
-                tooltipHeight += 2;
+                if (textLines.size() > titleLinesCount) {
+                    tooltipHeight += 2; // gap between title lines and next lines
+                }
             }
 
             // RS BEGIN
@@ -353,14 +405,19 @@ public final class RenderUtils {
             }
 
             final int zLevel = 300;
-            final int backgroundColor = 0xF0100010;
+            int backgroundColor = 0xF0100010;
+            int borderColorStart = 0x505000FF;
+            int borderColorEnd = (borderColorStart & 0xFEFEFE) >> 1 | borderColorStart & 0xFF000000;
+            RenderTooltipEvent.Color colorEvent = new RenderTooltipEvent.Color(stack, textLines, tooltipX, tooltipY, font, backgroundColor, borderColorStart, borderColorEnd);
+            MinecraftForge.EVENT_BUS.post(colorEvent);
+            backgroundColor = colorEvent.getBackground();
+            borderColorStart = colorEvent.getBorderStart();
+            borderColorEnd = colorEvent.getBorderEnd();
             GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 4, tooltipX + tooltipTextWidth + 3, tooltipY - 3, backgroundColor, backgroundColor);
             GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY + tooltipHeight + 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 4, backgroundColor, backgroundColor);
             GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
             GuiUtils.drawGradientRect(zLevel, tooltipX - 4, tooltipY - 3, tooltipX - 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
             GuiUtils.drawGradientRect(zLevel, tooltipX + tooltipTextWidth + 3, tooltipY - 3, tooltipX + tooltipTextWidth + 4, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
-            final int borderColorStart = 0x505000FF;
-            final int borderColorEnd = (borderColorStart & 0xFEFEFE) >> 1 | borderColorStart & 0xFF000000;
             GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3 + 1, tooltipX - 3 + 1, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
             GuiUtils.drawGradientRect(zLevel, tooltipX + tooltipTextWidth + 2, tooltipY - 3 + 1, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
             GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY - 3 + 1, borderColorStart, borderColorStart);
@@ -391,10 +448,10 @@ public final class RenderUtils {
 
                 for (int i = smallTextLines.size() - 1; i >= 0; --i) {
                     font.drawStringWithShadow(
-                        TextFormatting.GRAY + smallTextLines.get(i),
-                        RenderUtils.getOffsetOnScale(tooltipX, textScale),
-                        RenderUtils.getOffsetOnScale(y - (font.getUnicodeFlag() ? 2 : 0), textScale),
-                        -1
+                            TextFormatting.GRAY + smallTextLines.get(i),
+                            RenderUtils.getOffsetOnScale(tooltipX, textScale),
+                            RenderUtils.getOffsetOnScale(y - (font.getUnicodeFlag() ? 2 : 0), textScale),
+                            -1
                     );
 
                     y -= 9;

@@ -452,9 +452,8 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         ItemStack stack = gridStack instanceof GridStackItem ? ((GridStackItem) gridStack).getStack() : ItemStack.EMPTY;
 
-        RenderUtils
-                .drawTooltipWithSmallText(textLines, smallTextLines, RS.INSTANCE.config.detailedTooltip, stack, mouseX,
-                        mouseY, screenWidth, screenHeight, fontRenderer);
+        RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, RS.INSTANCE.config.detailedTooltip, stack,
+                mouseX, mouseY, width, height, fontRenderer);
     }
 
     @Override
