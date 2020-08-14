@@ -172,8 +172,6 @@ public class MasterCraftingTask implements ICraftingTask {
                 if (container.getUpdateInterval() < 0)
                     throw new IllegalStateException(container + " has an update interval of < 0");
 
-                totalAmount += task.getAmountNeeded();
-
                 //check if container is allowed to update
                 if (ticks % container.getUpdateInterval() != 0)
                     continue;
@@ -195,6 +193,8 @@ public class MasterCraftingTask implements ICraftingTask {
                 if (remainingUpdates != container.getMaximumSuccessfulCraftingUpdates())
                     updateCountMap.put(container, remainingUpdates);
             }
+
+            totalAmount += task.getAmountNeeded();
 
             if (!task.isFinished())
                 allFinished = false;
