@@ -55,7 +55,6 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 // try to insert into network.
                 StackListResult<ItemStack> remainder = network.insertItem(slot, (long)slot.getCount(), Action.PERFORM);
                 if (remainder != null) {
-                    remainder.applyCount();
                     //give to player otherwise
                     giveToPlayerOrNetwork(slot, player, null);
                 }
@@ -80,9 +79,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                             Action.PERFORM);
 
                     if (took != null) {
-                        took.applyCount();
-                        grid.getCraftingMatrix().setInventorySlotContents(i, took.getStack());
-                        network.getItemStorageTracker().changed(player, took.getStack().copy());
+                        grid.getCraftingMatrix().setInventorySlotContents(i, took.getFixedStack());
+                        network.getItemStorageTracker().changed(player, took.getFixedStack().copy());
                         continue matrixLoop;
                     }
                 }
@@ -169,8 +167,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     //refill one item so the slot is never empty if possible
                     StackListResult<ItemStack> refill = network == null ? null : network.extractItem(slot, 1L, Action.PERFORM);
                     if (refill != null) {
-                        refill.applyCount();
-                        matrix.setInventorySlotContents(i, refill.getStack());
+                        matrix.setInventorySlotContents(i, refill.getFixedStack());
                         network.getItemStorageTracker().changed(player, refill.getStack().copy());
                     } else {
                         //noinspection ConstantConditions
@@ -440,8 +437,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                         StackListResult<ItemStack> newItem = network.insertItem(remainderItem, (long)remainderItem.getCount(), Action.PERFORM);
 
                         if (newItem != null) {
-                            newItem.applyCount();
-                            giveToPlayerOrNetwork(newItem.getStack(), player, null);
+                            giveToPlayerOrNetwork(newItem.getFixedStack(), player, null);
                         }
                     } else {
                         matrix.setInventorySlotContents(i, remainderItem);
@@ -478,8 +474,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                         if(refill == null) {
                             matrix.setInventorySlotContents(i, ItemStack.EMPTY);
                         } else {
-                            refill.applyCount();
-                            matrix.setInventorySlotContents(i, refill.getStack());
+                            matrix.setInventorySlotContents(i, refill.getFixedStack());
                             network.getItemStorageTracker().changed(player, refill.getStack().copy());
                         }
                     } else {
@@ -564,8 +559,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (network != null) {
                 StackListResult<ItemStack> result = network.insertItem(itemStack, (long)itemStack.getCount(), Action.PERFORM);
                 if(result != null) {
-                    result.applyCount();
-                    remainingItem = result.getStack();
+                    remainingItem = result.getFixedStack();
                 } else {
                     remainingItem = null;
                 }

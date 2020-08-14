@@ -92,7 +92,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
                     long remainingSpace = getCapacity() - getStored();
 
                     if (remainingSpace <= 0) {
-                        return new StackListResult<>(stack.copy(), null, size);
+                        return new StackListResult<>(stack.copy(), size);
                     }
 
                     if (action == Action.PERFORM) {
@@ -102,7 +102,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
                         onChanged();
                     }
 
-                    return new StackListResult<>(otherEntry.getStack().copy(), null, size - remainingSpace);
+                    return new StackListResult<>(otherEntry.getStack().copy(), size - remainingSpace);
                 } else {
                     if (action == Action.PERFORM) {
                         otherEntry.grow(size);
@@ -120,7 +120,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
             long remainingSpace = getCapacity() - getStored();
 
             if (remainingSpace <= 0) {
-                return new StackListResult<>(stack.copy(), null, size);
+                return new StackListResult<>(stack.copy(), size);
             }
 
             if (action == Action.PERFORM) {
@@ -130,7 +130,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
                 onChanged();
             }
 
-            return new StackListResult<>(stack.copy(), null, size - remainingSpace);
+            return new StackListResult<>(stack.copy(), size - remainingSpace);
         } else {
             if (action == Action.PERFORM) {
                 stacks.put(stack.getItem(), new StackListEntry<>(stack.copy(), size));
@@ -164,7 +164,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
                     onChanged();
                 }
 
-                return new StackListResult<>(otherEntry.getStack().copy(), null, size);
+                return new StackListResult<>(otherEntry.getStack().copy(), size);
             }
         }
 

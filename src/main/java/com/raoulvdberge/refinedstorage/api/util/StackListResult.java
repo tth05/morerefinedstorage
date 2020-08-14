@@ -3,6 +3,8 @@ package com.raoulvdberge.refinedstorage.api.util;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 /**
@@ -11,23 +13,25 @@ import java.util.UUID;
  * @param <T> the stack type
  */
 public class StackListResult<T> {
+    @Nonnull
     private final T stack;
-    private final UUID id;
+    @Nullable
+    private UUID id;
     private long change;
 
-    //TODO: add constructor without UUID
-    public StackListResult(T stack, UUID id, long change) {
+    public StackListResult(@Nonnull T stack, long change) {
+        this.stack = stack;
+        this.change = change;
+    }
+
+    public StackListResult(@Nonnull T stack, @Nonnull UUID id, long change) {
         this.stack = stack;
         this.id = id;
         this.change = change;
     }
 
-    //TODO: add #getAndApply
-    public void applyCount() {
-        if(this.stack instanceof ItemStack)
-            ((ItemStack) this.stack).setCount((int) getCount());
-        else if(this.stack instanceof FluidStack)
-            ((FluidStack) this.stack).amount = (int) getCount();
+    public static ItemStack nullToEmpty(@Nullable StackListResult<ItemStack> stackListResult) {
+        return stackListResult == null ? ItemStack.EMPTY : stackListResult.getFixedStack();
     }
 
     public void grow(long count) {
@@ -49,8 +53,22 @@ public class StackListResult<T> {
     }
 
     /**
+     * @return returns the stack with {@link #getCount()} set as the stack size
+     */
+    public T getFixedStack() {
+        int stackSize = getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) getCount();
+        if(this.stack instanceof ItemStack)
+            ((ItemStack) this.stack).setCount(stackSize);
+        else if(this.stack instanceof FluidStack)
+            ((FluidStack) this.stack).amount = stackSize;
+
+        return this.stack;
+    }
+
+    /**
      * @return the stack
      */
+    @Nonnull
     public T getStack() {
         return stack;
     }
@@ -58,6 +76,7 @@ public class StackListResult<T> {
     /**
      * @return the id of the {@link StackListEntry}
      */
+    @Nullable
     public UUID getId() {
         return id;
     }

@@ -74,7 +74,7 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     @Nullable
     public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
         if (!IFilterable.acceptsFluid(diskManipulator.getFluidFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
-            return new StackListResult<>(stack.copy(), null, size);
+            return new StackListResult<>(stack.copy(), size);
         }
 
         return parent.insert(stack, size, action);

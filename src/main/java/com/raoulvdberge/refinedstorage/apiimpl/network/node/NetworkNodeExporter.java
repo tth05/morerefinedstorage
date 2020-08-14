@@ -213,14 +213,12 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
             StackListResult<FluidStack> took = network.extractFluid(stack, toExtract, compare, Action.SIMULATE);
 
             if (took != null) {
-                took.applyCount();
-                int filled = handler.fill(took.getStack(), false);
+                int filled = handler.fill(took.getFixedStack(), false);
 
                 if (filled > 0) {
                     took = network.extractFluid(stack, (long)filled, compare, Action.PERFORM);
                     if(took != null) {
-                        took.applyCount();
-                        handler.fill(took.getStack(), true);
+                        handler.fill(took.getFixedStack(), true);
                     }
                 }
             }

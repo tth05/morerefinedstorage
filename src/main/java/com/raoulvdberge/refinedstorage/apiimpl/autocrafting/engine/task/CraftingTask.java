@@ -59,7 +59,7 @@ public class CraftingTask extends Task {
 
         if (compound.hasKey(NBT_REMAINDER_ITEM)) {
             ItemStack itemStack = new ItemStack(compound.getCompoundTag(NBT_REMAINDER_ITEM));
-            this.remainder = new StackListResult<>(itemStack, null, itemStack.getCount());
+            this.remainder = new StackListResult<>(itemStack, itemStack.getCount());
         }
 
         generateCleanByProducts();
@@ -166,8 +166,7 @@ public class CraftingTask extends Task {
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
         super.writeToNbt(compound);
         if (remainder != null) {
-            this.remainder.applyCount();
-            compound.setTag(NBT_REMAINDER_ITEM, this.remainder.getStack().writeToNBT(new NBTTagCompound()));
+            compound.setTag(NBT_REMAINDER_ITEM, this.remainder.getFixedStack().writeToNBT(new NBTTagCompound()));
         }
 
         return compound;
@@ -203,8 +202,7 @@ public class CraftingTask extends Task {
     @Override
     public List<ItemStack> getLooseItemStacks() {
         if (this.remainder != null) {
-            this.remainder.applyCount();
-            return Collections.singletonList(remainder.getStack());
+            return Collections.singletonList(remainder.getFixedStack());
         }
         return Collections.emptyList();
     }

@@ -58,8 +58,7 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
 
                 StackListResult<FluidStack> entry = portableGrid.getFluidStorage().extract(stack.getStack(), Fluid.BUCKET_VOLUME, IComparer.COMPARE_NBT, Action.PERFORM);
                 if(entry != null) {
-                    entry.applyCount();
-                    fluidHandler.fill(entry.getStack(), true);
+                    fluidHandler.fill(entry.getFixedStack(), true);
                 }
 
                 if (shift) {

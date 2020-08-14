@@ -105,7 +105,7 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
             IFluidHandler handler = handlerSupplier.get();
 
             if(handler == null)
-                return new StackListResult<>(stack.copy(), null, size);
+                return new StackListResult<>(stack.copy(), size);
 
             while(size > 1) {
                 int filled = handler.fill(
@@ -121,7 +121,7 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
             }
         }
 
-        return new StackListResult<>(stack.copy(), null, size);
+        return new StackListResult<>(stack.copy(), size);
     }
 
     @Nullable
@@ -148,7 +148,7 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
                 break;
         }
 
-        return new StackListResult<>(stack.copy(), null, extracted);
+        return new StackListResult<>(stack.copy(), extracted);
     }
 
     @Override

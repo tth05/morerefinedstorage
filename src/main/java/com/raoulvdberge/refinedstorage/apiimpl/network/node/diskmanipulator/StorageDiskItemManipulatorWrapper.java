@@ -69,11 +69,11 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
     @Nullable
     public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
         if(stack.isEmpty())
-            return new StackListResult<>(stack.copy(), null, size);
+            return new StackListResult<>(stack.copy(), size);
 
 
         if (!IFilterable.acceptsItem(diskManipulator.getItemFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
-            return new StackListResult<>(stack.copy(), null, size);
+            return new StackListResult<>(stack.copy(), size);
         }
 
         return parent.insert(stack, size, action);
@@ -83,7 +83,7 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
     @Nullable
     public StackListResult<ItemStack> extract(@Nonnull ItemStack stack, long size, int flags, Action action) {
         if(stack.isEmpty())
-            return new StackListResult<>(stack.copy(), null, size);
+            return new StackListResult<>(stack.copy(), size);
 
         if (!IFilterable.acceptsItem(diskManipulator.getItemFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
             return null;

@@ -439,8 +439,7 @@ public abstract class Task {
 
                     //extract as many items as needed
                     while (extracted != null) {
-                        extracted.applyCount();
-                        durabilityInput.addDamageableItemStack(extracted.getStack());
+                        durabilityInput.addDamageableItemStack(extracted.getFixedStack());
 
                         //keep extracting if input is not satisfied
                         if (input.getAmountMissing() > 0)

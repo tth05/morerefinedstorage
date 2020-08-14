@@ -62,11 +62,7 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
     }
 
     public static CraftingPattern getPatternFromCache(World world, ItemStack stack) {
-        if (!PATTERN_CACHE.containsKey(stack)) {
-            PATTERN_CACHE.put(stack, new CraftingPattern(world, null, stack));
-        }
-
-        return PATTERN_CACHE.get(stack);
+        return PATTERN_CACHE.computeIfAbsent(stack, itemStack -> new CraftingPattern(world, null, stack));
     }
 
     @Override

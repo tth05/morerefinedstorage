@@ -49,7 +49,7 @@ public class StorageDiskItemStorageWrapper implements IStorageDisk<ItemStack> {
     @Nullable
     public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
         if (!IFilterable.acceptsItem(storage.getFilters(), storage.getMode(), storage.getCompare(), stack)) {
-            return new StackListResult<>(stack.copy(), null, size);
+            return new StackListResult<>(stack.copy(), size);
         }
 
         return parent.insert(stack, size, action);

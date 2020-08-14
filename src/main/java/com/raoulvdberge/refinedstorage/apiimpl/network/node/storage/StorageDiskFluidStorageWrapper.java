@@ -49,7 +49,7 @@ public class StorageDiskFluidStorageWrapper implements IStorageDisk<FluidStack> 
     @Nullable
     public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
         if (!IFilterable.acceptsFluid(storage.getFilters(), storage.getMode(), storage.getCompare(), stack)) {
-            return new StackListResult<>(stack.copy(), null, size);
+            return new StackListResult<>(stack.copy(), size);
         }
 
         return parent.insert(stack, size, action);

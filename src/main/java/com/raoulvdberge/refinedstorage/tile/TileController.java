@@ -245,7 +245,7 @@ public class TileController extends TileBase
     @Override
     public StackListResult<ItemStack> insertItem(@Nonnull ItemStack stack, long size, Action action) {
         if (size < 1 || itemStorage.getStorages().isEmpty()) {
-            return new StackListResult<>(stack.copy(), null, size);
+            return new StackListResult<>(stack.copy(), size);
         }
 
         StackListResult<ItemStack> remainder = null;
@@ -343,7 +343,7 @@ public class TileController extends TileBase
     @Override
     public StackListResult<FluidStack> insertFluid(@Nonnull FluidStack stack, long size, Action action) {
         if (size < 1 || fluidStorage.getStorages().isEmpty()) {
-            return new StackListResult<>(StackUtils.copy(stack, 0), null, size);
+            return new StackListResult<>(StackUtils.copy(stack, 0), size);
         }
 
         StackListResult<FluidStack> remainder = null;

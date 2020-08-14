@@ -102,29 +102,21 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
 
             if (playerInventory != null) {
                 if (preferredSlot != -1) {
-                    took.applyCount();
-                    ItemStack remainder = playerInventory.insertItem(preferredSlot, took.getStack(), true);
+                    ItemStack remainder = playerInventory.insertItem(preferredSlot, took.getFixedStack(), true);
                     if (remainder.getCount() != took.getCount()) {
                         StackListResult<ItemStack> inserted = portableGrid.getItemStorage()
                                 .extract(entry.getStack(), size - remainder.getCount(),
                                         IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT, Action.PERFORM);
-                        if(inserted != null)
-                            inserted.applyCount();
 
-                        playerInventory
-                                .insertItem(preferredSlot, inserted == null ? ItemStack.EMPTY : inserted.getStack(), false);
+                        playerInventory.insertItem(preferredSlot, StackListResult.nullToEmpty(inserted), false);
                         took.setCount(remainder.getCount());
-                        took.applyCount();
                     }
                 }
-                if (took.getCount() > 0 && ItemHandlerHelper.insertItemStacked(playerInventory, took.getStack(), true).isEmpty()) {
+                if (took.getCount() > 0 && ItemHandlerHelper.insertItemStacked(playerInventory, took.getFixedStack(), true).isEmpty()) {
                     took = portableGrid.getItemStorage()
                             .extract(entry.getStack(), size, IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT, Action.PERFORM);
 
-                    if (took != null) {
-                        took.applyCount();
-                        ItemHandlerHelper.insertItemStacked(playerInventory, took.getStack(), false);
-                    }
+                    ItemHandlerHelper.insertItemStacked(playerInventory, StackListResult.nullToEmpty(took), false);
                 }
             }
         } else {
@@ -134,12 +126,7 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
             if (single && !held.isEmpty()) {
                 held.grow(1);
             } else {
-                if(took == null) {
-                    player.inventory.setItemStack(ItemStack.EMPTY);
-                } else {
-                    took.applyCount();
-                    player.inventory.setItemStack(took.getStack());
-                }
+                player.inventory.setItemStack(StackListResult.nullToEmpty(took));
             }
 
             player.updateHeldItem();
@@ -166,10 +153,9 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
             remainder = stack;
         } else {
             StackListResult<ItemStack> entry = portableGrid.getItemStorage().insert(stack, stack.getCount(), Action.PERFORM);
-            if(entry == null)
+            if (entry == null)
                 return null;
-            entry.applyCount();
-            remainder = entry.getStack();
+            remainder = entry.getFixedStack();
         }
 
         portableGrid.drainEnergy(RS.INSTANCE.config.portableGridInsertUsage);
@@ -200,12 +186,7 @@ public class ItemGridHandlerPortable implements IItemGridHandler {
             }
         } else {
             StackListResult<ItemStack> entry = portableGrid.getItemStorage().insert(stack, size, Action.PERFORM);
-            if(entry == null) {
-                player.inventory.setItemStack(ItemStack.EMPTY);
-            } else {
-                entry.applyCount();
-                player.inventory.setItemStack(entry.getStack());
-            }
+            player.inventory.setItemStack(StackListResult.nullToEmpty(entry));
         }
 
         player.updateHeldItem();

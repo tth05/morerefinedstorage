@@ -109,9 +109,7 @@ public interface INetwork {
         if (result == null)
             return null;
 
-        ItemStack resultStack = result.getStack();
-        resultStack.setCount(result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount());
-        return resultStack;
+        return result.getFixedStack();
     }
 
     /**
@@ -165,9 +163,7 @@ public interface INetwork {
         if (result == null)
             return ItemStack.EMPTY;
 
-        ItemStack resultStack = result.getStack();
-        resultStack.setCount(result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount());
-        return resultStack;
+        return result.getFixedStack();
     }
 
     /**
@@ -261,9 +257,7 @@ public interface INetwork {
         if (result == null)
             return null;
 
-        FluidStack resultStack = result.getStack();
-        resultStack.amount = result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount();
-        return resultStack;
+        return result.getFixedStack();
     }
 
     /**
@@ -316,9 +310,7 @@ public interface INetwork {
         if (result == null)
             return null;
 
-        FluidStack resultStack = result.getStack();
-        resultStack.amount = result.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result.getCount();
-        return resultStack;
+        return result.getFixedStack();
     }
 
     /**

@@ -103,10 +103,10 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
                             action == Action.SIMULATE));
             if(result == null)
                 return null;
-            return new StackListResult<>(result, null, result.getCount());
+            return new StackListResult<>(result, result.getCount());
         }
 
-        return new StackListResult<>(stack.copy(), null, size);
+        return new StackListResult<>(stack.copy(), size);
     }
 
     @Nullable
@@ -145,7 +145,7 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
             }
         }
 
-        return received == null ? null : new StackListResult<>(received, null, received.getCount());
+        return received == null ? null : new StackListResult<>(received, received.getCount());
     }
 
     @Override

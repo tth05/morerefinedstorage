@@ -93,28 +93,21 @@ public class ItemGridHandler implements IItemGridHandler {
 
         if (took == null)
             return;
-        took.applyCount();
 
         if ((flags & EXTRACT_SHIFT) == EXTRACT_SHIFT) {
             IItemHandler playerInventory =
                     player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
             if (playerInventory != null) {
                 if (preferredSlot != -1) {
-                    ItemStack remainder = playerInventory.insertItem(preferredSlot, took.getStack(), true);
+                    ItemStack remainder = playerInventory.insertItem(preferredSlot, took.getFixedStack(), true);
                     if (remainder.getCount() != took.getCount()) {
                         StackListResult<ItemStack> inserted = network.extractItem(entry.getStack(), size - remainder.getCount(), Action.PERFORM);
-                        if(inserted != null) {
-                            inserted.applyCount();
-                            playerInventory.insertItem(preferredSlot, inserted.getStack(), false);
-                        } else {
-                            playerInventory.insertItem(preferredSlot, ItemStack.EMPTY, false);
-                        }
+                        playerInventory.insertItem(preferredSlot, StackListResult.nullToEmpty(inserted), false);
 
                         took.setCount(remainder.getCount());
-                        took.applyCount();
                     }
                 }
-                ItemStack remainder = ItemHandlerHelper.insertItemStacked(playerInventory, took.getStack(), false);
+                ItemStack remainder = ItemHandlerHelper.insertItemStacked(playerInventory, took.getFixedStack(), false);
 
                 if (took.getCount() - remainder.getCount() > 0)
                     network.extractItem(entry.getStack(), took.getCount() - remainder.getCount(), Action.PERFORM);
@@ -126,8 +119,7 @@ public class ItemGridHandler implements IItemGridHandler {
                 if (single && !held.isEmpty()) {
                     held.grow(1);
                 } else {
-                    took.applyCount();
-                    player.inventory.setItemStack(took.getStack());
+                    player.inventory.setItemStack(took.getFixedStack());
                 }
 
                 player.updateHeldItem();

@@ -71,8 +71,7 @@ public class FluidGridHandler implements IFluidGridHandler {
 
                 StackListResult<FluidStack> extracted = network.extractFluid(entry.getStack(), (long)Fluid.BUCKET_VOLUME, Action.PERFORM);
                 if(extracted != null) {
-                    extracted.applyCount();
-                    fluidHandler.fill(extracted.getStack(), true);
+                    fluidHandler.fill(extracted.getFixedStack(), true);
                 }
 
                 if (shift) {
