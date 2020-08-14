@@ -1,5 +1,9 @@
 # More Refined Storage Changelog
 
+### 2.0.9
+- Fixed JEI recipe transfer duping items after last update
+- Fixed tooltips in grid being in the wrong position and not wrapping any lines
+
 ### 2.0.8
 - Added better tooltips to crafting preview
 - Added trillion support to quantity formatting

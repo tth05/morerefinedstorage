@@ -35,13 +35,8 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Added better tooltips to crafting preview
-          - Added trillion support to quantity formatting
-          - Fixed OC integration using wrong stack count
-          - Fixed crafting preview showing wrong missing count
-          - Fixed enderio fluid conduits compatibility
-          - Fixed shift crafting dupe when using normal unstackable items
-          - Fixed grid being "empty" when opening it too fast
+          - Fixed JEI recipe transfer duping items after last update
+          - Fixed tooltips in grid being in the wrong position and not wrapping any lines
         draft: false
         prerelease: false
     - name: Upload jars to release
