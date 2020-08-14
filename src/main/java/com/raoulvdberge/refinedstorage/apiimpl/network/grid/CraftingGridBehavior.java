@@ -55,6 +55,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 // try to insert into network.
                 StackListResult<ItemStack> remainder = network.insertItem(slot, (long)slot.getCount(), Action.PERFORM);
                 if (remainder != null) {
+                    remainder.applyCount();
                     //give to player otherwise
                     giveToPlayerOrNetwork(slot, player, null);
                 }
@@ -79,6 +80,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                             Action.PERFORM);
 
                     if (took != null) {
+                        took.applyCount();
                         grid.getCraftingMatrix().setInventorySlotContents(i, took.getStack());
                         network.getItemStorageTracker().changed(player, took.getStack().copy());
                         continue matrixLoop;

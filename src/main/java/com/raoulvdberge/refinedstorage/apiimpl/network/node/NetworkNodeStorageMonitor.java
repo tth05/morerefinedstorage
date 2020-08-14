@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
@@ -43,7 +44,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
 
-    private int oldAmount = -1;
+    private long oldAmount = -1;
 
     public NetworkNodeStorageMonitor(World world, BlockPos pos) {
         super(world, pos);
@@ -53,7 +54,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
     public void update() {
         super.update();
 
-        int newAmount = getAmount();
+        long newAmount = getAmount();
 
         if (oldAmount == -1) {
             oldAmount = newAmount;
@@ -183,7 +184,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
         StackUtils.readItems(itemFilter, 0, tag);
     }
 
-    public int getAmount() {
+    public long getAmount() {
         if (network == null) {
             return 0;
         }
@@ -194,7 +195,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
             return 0;
         }
 
-        ItemStack stored = network.getItemStorageCache().getList().get(toCheck, compare);
+        StackListEntry<ItemStack> stored = network.getItemStorageCache().getList().getEntry(toCheck, compare);
 
         return stored != null ? stored.getCount() : 0;
     }

@@ -17,7 +17,7 @@ public class TileStorageMonitor extends TileNode<NetworkNodeStorageMonitor> {
     private static final String NBT_STACK = "Stack";
     private static final String NBT_AMOUNT = "Amount";
 
-    private int amount;
+    private long amount;
     @Nullable
     private ItemStack itemStack;
 
@@ -45,7 +45,7 @@ public class TileStorageMonitor extends TileNode<NetworkNodeStorageMonitor> {
             tag.setTag(NBT_STACK, stack.writeToNBT(new NBTTagCompound()));
         }
 
-        tag.setInteger(NBT_AMOUNT, getNode().getAmount());
+        tag.setLong(NBT_AMOUNT, getNode().getAmount());
 
         return tag;
     }
@@ -55,7 +55,7 @@ public class TileStorageMonitor extends TileNode<NetworkNodeStorageMonitor> {
         super.readUpdate(tag);
 
         itemStack = tag.hasKey(NBT_STACK) ? new ItemStack(tag.getCompoundTag(NBT_STACK)) : null;
-        amount = tag.getInteger(NBT_AMOUNT);
+        amount = tag.getLong(NBT_AMOUNT);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class TileStorageMonitor extends TileNode<NetworkNodeStorageMonitor> {
         return receivedDirection != getDirection() || receivedActive != getNode().isActive();
     }
 
-    public int getAmount() {
+    public long getAmount() {
         return amount;
     }
 
