@@ -8,6 +8,7 @@ import com.raoulvdberge.refinedstorage.api.network.INetworkNodeVisitor;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNodeProxy;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.inventory.InventoryHelper;
@@ -82,6 +83,13 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
         }
 
         this.invalidating = false;
+    }
+
+    @Override
+    public INetwork getNetworkForBCReasons() {
+        OneSixMigrationHelper.removalHook();
+
+        return network;
     }
 
     @Override
