@@ -1,5 +1,10 @@
 # More Refined Storage Changelog
 
+### 2.1.0
+- Stopped quantity formatter from rounding up
+- Fixed RebornStorage compatibility
+- Fixed completion percentage being incorrectly calculated sometimes
+
 ### 2.0.9
 - Fixed JEI recipe transfer duping items after last update
 - Fixed tooltips in grid being in the wrong position and not wrapping any lines

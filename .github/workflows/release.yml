@@ -35,8 +35,9 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed JEI recipe transfer duping items after last update
-          - Fixed tooltips in grid being in the wrong position and not wrapping any lines
+          - Stopped quantity formatter from rounding up
+          - Fixed RebornStorage compatibility
+          - Fixed completion percentage being incorrectly calculated sometimes
         draft: false
         prerelease: false
     - name: Upload jars to release
