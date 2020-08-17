@@ -25,10 +25,10 @@ public class QuantityFormatter implements IQuantityFormatter {
         } else if (qty >= 1_000_000_000) {
             return formatterWithUnits.format((double) qty / 1_000_000_000) + "B";
         } else if (qty >= 1_000_000) {
-            double qtyShort = (double) qty / 1_000_000F;
+            double qtyShort = (double) qty / 1_000_000D;
 
             if (qty >= 100_000_000) {
-                qtyShort = Math.round(qtyShort); // XXX.XM looks weird.
+                qtyShort = Math.floor(qtyShort); // XXX.XM looks weird.
             }
 
             return formatterWithUnits.format(qtyShort) + "M";
@@ -36,7 +36,7 @@ public class QuantityFormatter implements IQuantityFormatter {
             float qtyShort = (float) qty / 1000F;
 
             if (qty >= 100_000) {
-                qtyShort = Math.round(qtyShort); // XXX.XK looks weird.
+                qtyShort = (float) Math.floor(qtyShort); // XXX.XK looks weird.
             }
 
             return formatterWithUnits.format(qtyShort) + "K";
