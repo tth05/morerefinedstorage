@@ -1,5 +1,8 @@
 # More Refined Storage Changelog
 
+# 2.1.1
+- Fixed shift crafting duping items when a damageable item is present
+
 ### 2.1.0
 - Stopped quantity formatter from rounding up
 - Fixed RebornStorage compatibility

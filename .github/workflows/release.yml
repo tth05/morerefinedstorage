@@ -35,9 +35,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Stopped quantity formatter from rounding up
-          - Fixed RebornStorage compatibility
-          - Fixed completion percentage being incorrectly calculated sometimes
+          - Fixed shift crafting duping items when a damageable item is present
         draft: false
         prerelease: false
     - name: Upload jars to release
