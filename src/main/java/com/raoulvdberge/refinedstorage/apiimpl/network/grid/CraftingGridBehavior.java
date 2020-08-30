@@ -170,7 +170,6 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                         matrix.setInventorySlotContents(i, refill.getFixedStack());
                         network.getItemStorageTracker().changed(player, refill.getStack().copy());
                     } else {
-                        //noinspection ConstantConditions
                         matrix.setInventorySlotContents(i, ItemStack.EMPTY);
                     }
 
@@ -324,7 +323,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             if (slot.getMaxStackSize() == 1) {
                 if(remainder.get(i).isEmpty()) {
                     toCraft = 1;
-                    break;
+                    continue;
                 } else if(!slot.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
                     continue;
                 }
