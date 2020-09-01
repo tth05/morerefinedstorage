@@ -39,15 +39,15 @@ public class TileCrafter extends TileNode<NetworkNodeCrafter> {
 
     @Override
     public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+        return (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing != null &&
+                !facing.equals(this.getDirection())) || super.hasCapability(capability, facing);
     }
 
     @Override
     public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            if(facing != null && !facing.equals(this.getDirection()))
-                return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(getNode().getPatternItems());
-        }
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing != null &&
+                !facing.equals(this.getDirection()))
+            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(getNode().getPatternItems());
 
         return super.getCapability(capability, facing);
     }

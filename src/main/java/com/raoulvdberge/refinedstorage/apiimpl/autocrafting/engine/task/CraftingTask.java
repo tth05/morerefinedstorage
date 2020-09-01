@@ -99,7 +99,7 @@ public class CraftingTask extends Task {
     public int update(@Nonnull INetwork network, @Nonnull ICraftingPatternContainer container, int toCraft) {
         //don't update if there's any remainder left from the previous update
         if (this.remainder != null) {
-            this.remainder = network.insertItem(this.remainder.getStack(), (long)this.remainder.getCount(), Action.PERFORM);
+            this.remainder = network.insertItem(this.remainder.getStack(), this.remainder.getCount(), Action.PERFORM);
             return 0;
         }
 
