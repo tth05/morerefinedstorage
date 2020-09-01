@@ -35,7 +35,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed shift crafting duping items when a damageable item is present
+          - Fixed crash when trying to extract items from through the front of a crafter
         draft: false
         prerelease: false
     - name: Upload jars to release

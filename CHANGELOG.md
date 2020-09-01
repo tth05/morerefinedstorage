@@ -1,5 +1,8 @@
 # More Refined Storage Changelog
 
+# 2.1.2
+- Fixed crash when trying to extract items from through the front of a crafter
+
 # 2.1.1
 - Fixed shift crafting duping items when a damageable item is present
 
