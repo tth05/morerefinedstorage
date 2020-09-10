@@ -1,4 +1,4 @@
-package com.raoulvdberge.refinedstorage.api.storage.tracker;
+package com.raoulvdberge.refinedstorage.api.storage;
 
 /**
  * Represents a storage tracker entry.
