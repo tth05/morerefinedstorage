@@ -1,7 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.tracker;
 
-import com.raoulvdberge.refinedstorage.api.storage.IStorageTracker;
-import com.raoulvdberge.refinedstorage.api.storage.StorageTrackerEntry;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.entity.player.EntityPlayer;

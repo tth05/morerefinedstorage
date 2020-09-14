@@ -1,6 +1,6 @@
 package com.raoulvdberge.refinedstorage.gui.grid.stack;
 
-import com.raoulvdberge.refinedstorage.api.storage.StorageTrackerEntry;
+import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 
 import javax.annotation.Nullable;

@@ -2,7 +2,7 @@ package com.raoulvdberge.refinedstorage.api.storage.externalstorage;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
-import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
+import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 
 /**
  * An external storage handler.
