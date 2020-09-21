@@ -71,6 +71,7 @@ processResources {
 
 jar {
     include "com/raoulvdberge/refinedstorage/**"
+    include "baubles/api/**"
     include "assets/**"
     include "mcmod.info"
     include "pack.mcmeta"
