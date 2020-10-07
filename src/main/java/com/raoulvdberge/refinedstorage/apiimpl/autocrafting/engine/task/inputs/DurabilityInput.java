@@ -18,6 +18,7 @@ public class DurabilityInput extends Input {
     public static final String TYPE = "durability";
 
     private static final String NBT_MAX_DURABILITY = "MaxDurability";
+    private static final String NBT_COMPAREABLE_ITEMSTACK = "CompareableItemstack";
 
     /**
      * The max durability of the item that this input represents. Or in other words: the max iterations that can be done
@@ -37,7 +38,7 @@ public class DurabilityInput extends Input {
 
     public DurabilityInput(@Nonnull NBTTagCompound compound) throws CraftingTaskReadException {
         super(compound);
-        this.compareableItemStack = this.getItemStacks().get(0);
+        this.compareableItemStack = new ItemStack(compound.getCompoundTag(NBT_COMPAREABLE_ITEMSTACK));
         this.maxDurability = compound.getInteger(NBT_MAX_DURABILITY);
     }
 
@@ -100,6 +101,7 @@ public class DurabilityInput extends Input {
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
         super.writeToNbt(compound);
         compound.setInteger(NBT_MAX_DURABILITY, this.maxDurability);
+        compound.setTag(NBT_COMPAREABLE_ITEMSTACK, this.compareableItemStack.writeToNBT(new NBTTagCompound()));
         return compound;
     }
 

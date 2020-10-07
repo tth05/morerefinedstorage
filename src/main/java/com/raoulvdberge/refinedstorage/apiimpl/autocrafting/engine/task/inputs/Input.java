@@ -72,7 +72,7 @@ public class Input {
         if (compound.hasKey(NBT_ITEMSTACKS)) {
             NBTTagList itemStacks = compound.getTagList(NBT_ITEMSTACKS, Constants.NBT.TAG_COMPOUND);
 
-            if (itemStacks.tagCount() < 1)
+            if (itemStacks.tagCount() < 1 && !(this instanceof DurabilityInput))
                 throw new CraftingTaskReadException("Item stack list of input is empty. Expected at least 1!");
 
             for (int i = 0; i < itemStacks.tagCount(); i++) {
