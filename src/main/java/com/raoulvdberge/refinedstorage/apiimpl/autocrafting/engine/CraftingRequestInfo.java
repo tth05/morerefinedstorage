@@ -2,7 +2,6 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -18,7 +17,7 @@ public class CraftingRequestInfo implements ICraftingRequestInfo {
 
     public CraftingRequestInfo(NBTTagCompound tag) throws CraftingTaskReadException {
         if (!tag.getBoolean(NBT_FLUID)) {
-            item = StackUtils.deserializeStackFromNbt(tag.getCompoundTag(NBT_STACK));
+            item = new ItemStack(tag.getCompoundTag(NBT_STACK));
 
             if (item.isEmpty()) {
                 throw new CraftingTaskReadException("Extractor stack is empty");
@@ -61,7 +60,7 @@ public class CraftingRequestInfo implements ICraftingRequestInfo {
         if (fluid != null) {
             tag.setTag(NBT_STACK, fluid.writeToNBT(new NBTTagCompound()));
         } else {
-            tag.setTag(NBT_STACK, StackUtils.serializeStackToNbt(item));
+            tag.setTag(NBT_STACK, item.writeToNBT(new NBTTagCompound()));
         }
 
         return tag;

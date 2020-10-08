@@ -104,15 +104,15 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
         if (context.acceptsFluid(stack)) {
             IFluidHandler handler = handlerSupplier.get();
 
-            if(handler == null)
+            if (handler == null)
                 return new StackListResult<>(stack.copy(), size);
 
-            while(size > 1) {
+            while (size > 1) {
                 int filled = handler.fill(
                         StackUtils.copy(stack, size > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) size),
                         action == Action.PERFORM);
                 size -= filled;
-                if(filled != Integer.MAX_VALUE)
+                if (filled != Integer.MAX_VALUE)
                     break;
             }
 
@@ -134,17 +134,17 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
         }
 
         long extracted = 0;
-        while(size > 1) {
+        while (size > 1) {
             FluidStack drained = handler.drain(
                     StackUtils.copy(stack, size > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) size),
                     action == Action.PERFORM);
 
-            if(drained == null)
+            if (drained == null)
                 break;
             extracted += drained.amount;
 
             size -= drained.amount;
-            if(drained.amount != Integer.MAX_VALUE)
+            if (drained.amount != Integer.MAX_VALUE)
                 break;
         }
 

@@ -3,7 +3,6 @@ package com.raoulvdberge.refinedstorage.apiimpl.storage.tracker;
 import com.raoulvdberge.refinedstorage.api.storage.tracker.IStorageTracker;
 import com.raoulvdberge.refinedstorage.api.storage.tracker.StorageTrackerEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -41,7 +40,7 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
         for (int i = 0; i < list.tagCount(); ++i) {
             NBTTagCompound tag = list.getCompoundTagAt(i);
 
-            ItemStack stack = StackUtils.deserializeStackFromNbt(tag.getCompoundTag(NBT_STACK));
+            ItemStack stack = new ItemStack(tag.getCompoundTag(NBT_STACK));
 
             if (!stack.isEmpty()) {
                 changes.put(new Key(stack), new StorageTrackerEntry(tag.getLong(NBT_TIME), tag.getString(NBT_NAME)));
@@ -57,7 +56,7 @@ public class StorageTrackerItem implements IStorageTracker<ItemStack> {
 
             tag.setLong(NBT_TIME, entry.getValue().getTime());
             tag.setString(NBT_NAME, entry.getValue().getName());
-            tag.setTag(NBT_STACK, StackUtils.serializeStackToNbt(entry.getKey().stack));
+            tag.setTag(NBT_STACK, entry.getKey().stack.writeToNBT(new NBTTagCompound()));
 
             list.appendTag(tag);
         }

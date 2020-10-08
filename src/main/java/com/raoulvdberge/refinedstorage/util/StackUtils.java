@@ -9,7 +9,6 @@ import com.raoulvdberge.refinedstorage.gui.grid.stack.GridStackItem;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -42,10 +41,7 @@ public final class StackUtils {
             buf.writeBoolean(false);
         } else {
             buf.writeBoolean(true);
-            buf.writeInt(Item.getIdFromItem(stack.getItem()));
-            buf.writeInt(stack.getCount());
-            buf.writeShort(stack.getItemDamage());
-            ByteBufUtils.writeTag(buf, stack.getItem().getNBTShareTag(stack));
+            ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
         }
     }
 
@@ -53,14 +49,21 @@ public final class StackUtils {
         if (!buf.readBoolean()) {
             return ItemStack.EMPTY;
         } else {
-            ItemStack stack = new ItemStack(Item.getItemById(buf.readInt()), buf.readInt(), buf.readShort());
-            stack.setTagCompound(ByteBufUtils.readTag(buf));
-            return stack;
+            return new ItemStack(ByteBufUtils.readTag(buf));
         }
     }
 
     public static void writeItemGridStack(ByteBuf buf, ItemStack stack, long count, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
         writeItemStack(buf, stack);
+        writeGridStack(buf, count, id, otherId, craftable, entry);
+    }
+
+    public static void writeFluidGridStack(ByteBuf buf, FluidStack stack, long realCount, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
+        ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
+        writeGridStack(buf, realCount, id, otherId, craftable, entry);
+    }
+
+    private static void writeGridStack(ByteBuf buf, long count, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
         buf.writeLong(count);
 
         buf.writeBoolean(craftable);
@@ -101,31 +104,6 @@ public final class StackUtils {
         }
 
         return new GridStackItem(id, otherId, stack, realCount, craftable, entry);
-    }
-
-    public static void writeFluidGridStack(ByteBuf buf, FluidStack stack, long realCount, UUID id, @Nullable UUID otherId, boolean craftable, @Nullable StorageTrackerEntry entry) {
-        ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
-        buf.writeLong(realCount);
-
-        buf.writeBoolean(craftable);
-
-        buf.writeLong(id.getMostSignificantBits());
-        buf.writeLong(id.getLeastSignificantBits());
-
-        buf.writeBoolean(otherId != null);
-        if (otherId != null) {
-            buf.writeLong(otherId.getMostSignificantBits());
-            buf.writeLong(otherId.getLeastSignificantBits());
-        }
-
-        if (entry == null) {
-            buf.writeBoolean(false);
-        } else {
-            buf.writeBoolean(true);
-
-            buf.writeLong(entry.getTime());
-            ByteBufUtils.writeUTF8String(buf, entry.getName());
-        }
     }
 
     public static GridStackFluid readFluidGridStack(ByteBuf buf) {
@@ -183,6 +161,10 @@ public final class StackUtils {
         }
     }
 
+    public static void writeItems(IItemHandler handler, int id, NBTTagCompound tag) {
+        writeItems(handler, id, tag, stack -> stack.writeToNBT(new NBTTagCompound()));
+    }
+
     public static void writeItems(IItemHandler handler, int id, NBTTagCompound tag, Function<ItemStack, NBTTagCompound> serializer) {
         NBTTagList tagList = new NBTTagList();
 
@@ -197,30 +179,6 @@ public final class StackUtils {
         }
 
         tag.setTag(String.format(NBT_INVENTORY, id), tagList);
-    }
-
-    public static void writeItems(IItemHandler handler, int id, NBTTagCompound tag) {
-        writeItems(handler, id, tag, stack -> stack.writeToNBT(new NBTTagCompound()));
-    }
-
-    public static void readItems(IItemHandlerModifiable handler, int id, NBTTagCompound tag, Function<NBTTagCompound, ItemStack> deserializer) {
-        String name = String.format(NBT_INVENTORY, id);
-
-        if (tag.hasKey(name)) {
-            NBTTagList tagList = tag.getTagList(name, Constants.NBT.TAG_COMPOUND);
-
-            for (int i = 0; i < tagList.tagCount(); i++) {
-                int slot = tagList.getCompoundTagAt(i).getInteger(NBT_SLOT);
-
-                if (slot >= 0 && slot < handler.getSlots()) {
-                    handler.setStackInSlot(slot, deserializer.apply(tagList.getCompoundTagAt(i)));
-                }
-            }
-        }
-    }
-
-    public static void readItems(IItemHandlerModifiable handler, int id, NBTTagCompound tag) {
-        readItems(handler, id, tag, ItemStack::new);
     }
 
     public static void writeItems(IInventory inventory, int id, NBTTagCompound tag) {
@@ -239,6 +197,26 @@ public final class StackUtils {
         }
 
         tag.setTag(String.format(NBT_INVENTORY, id), tagList);
+    }
+
+    public static void readItems(IItemHandlerModifiable handler, int id, NBTTagCompound tag) {
+        readItems(handler, id, tag, ItemStack::new);
+    }
+
+    public static void readItems(IItemHandlerModifiable handler, int id, NBTTagCompound tag, Function<NBTTagCompound, ItemStack> deserializer) {
+        String name = String.format(NBT_INVENTORY, id);
+
+        if (tag.hasKey(name)) {
+            NBTTagList tagList = tag.getTagList(name, Constants.NBT.TAG_COMPOUND);
+
+            for (int i = 0; i < tagList.tagCount(); i++) {
+                int slot = tagList.getCompoundTagAt(i).getInteger(NBT_SLOT);
+
+                if (slot >= 0 && slot < handler.getSlots()) {
+                    handler.setStackInSlot(slot, deserializer.apply(tagList.getCompoundTagAt(i)));
+                }
+            }
+        }
     }
 
     public static void readItems(IInventory inventory, int id, NBTTagCompound tag) {
@@ -284,49 +262,5 @@ public final class StackUtils {
         }
 
         return Pair.of(null, null);
-    }
-
-    private static final String NBT_ITEM_TYPE = "Type";
-    private static final String NBT_ITEM_QUANTITY = "Quantity";
-    private static final String NBT_ITEM_DAMAGE = "Damage";
-    private static final String NBT_ITEM_NBT = "NBT";
-    private static final String NBT_ITEM_CAPS = "Caps";
-
-    public static NBTTagCompound serializeStackToNbt(@Nonnull ItemStack stack) {
-        NBTTagCompound dummy = new NBTTagCompound();
-
-        NBTTagCompound itemTag = new NBTTagCompound();
-
-        itemTag.setInteger(NBT_ITEM_TYPE, Item.getIdFromItem(stack.getItem()));
-        itemTag.setInteger(NBT_ITEM_QUANTITY, stack.getCount());
-        itemTag.setInteger(NBT_ITEM_DAMAGE, stack.getItemDamage());
-
-        if (stack.hasTagCompound()) {
-            itemTag.setTag(NBT_ITEM_NBT, stack.getTagCompound());
-        }
-
-        stack.writeToNBT(dummy);
-
-        if (dummy.hasKey("ForgeCaps")) {
-            itemTag.setTag(NBT_ITEM_CAPS, dummy.getTag("ForgeCaps"));
-        }
-
-        dummy.removeTag("ForgeCaps");
-
-        return itemTag;
-    }
-
-    @Nonnull
-    public static ItemStack deserializeStackFromNbt(NBTTagCompound tag) {
-        ItemStack stack = new ItemStack(
-            Item.getItemById(tag.getInteger(NBT_ITEM_TYPE)),
-            tag.getInteger(NBT_ITEM_QUANTITY),
-            tag.getInteger(NBT_ITEM_DAMAGE),
-            tag.hasKey(NBT_ITEM_CAPS) ? tag.getCompoundTag(NBT_ITEM_CAPS) : null
-        );
-
-        stack.setTagCompound(tag.hasKey(NBT_ITEM_NBT) ? tag.getCompoundTag(NBT_ITEM_NBT) : null);
-
-        return stack;
     }
 }
