@@ -60,7 +60,7 @@ public class StorageDiskFluidPortable implements IStorageDisk<FluidStack> {
             long inserted = parent.getCacheDelta(storedPre, size, remainder == null ? 0 : remainder.getCount());
 
             if (inserted > 0) {
-                portableGrid.getFluidCache().add(stack, inserted, false, false);
+                portableGrid.getFluidCache().add(stack, inserted, false);
             }
         }
 

@@ -34,7 +34,7 @@ public class ExternalStorageCacheFluid {
 
             if (i >= cache.size()) { // ENLARGED
                 if (actual != null) {
-                    network.getFluidStorageCache().add(actual, actual.amount, false, true);
+                    network.getFluidStorageCache().add(actual, actual.amount, true);
 
                     cache.add(actual.copy());
                 }
@@ -53,16 +53,16 @@ public class ExternalStorageCacheFluid {
 
                 cache.set(i, null);
             } else if (cached == null) { // ADDED
-                network.getFluidStorageCache().add(actual, actual.amount, false, true);
+                network.getFluidStorageCache().add(actual, actual.amount, true);
 
                 cache.set(i, actual.copy());
             } else if (!API.instance().getComparer().isEqual(actual, cached, IComparer.COMPARE_NBT)) { // CHANGED
                 network.getFluidStorageCache().remove(cached, cached.amount, true);
-                network.getFluidStorageCache().add(actual, actual.amount, false, true);
+                network.getFluidStorageCache().add(actual, actual.amount, true);
 
                 cache.set(i, actual.copy());
             } else if (actual.amount > cached.amount) { // COUNT_CHANGED
-                network.getFluidStorageCache().add(actual, actual.amount - cached.amount, false, true);
+                network.getFluidStorageCache().add(actual, actual.amount - cached.amount, true);
 
                 cached.amount = actual.amount;
             } else if (actual.amount < cached.amount) { // COUNT_CHANGED

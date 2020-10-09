@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.stack.GridStackItem;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -41,7 +42,10 @@ public final class StackUtils {
             buf.writeBoolean(false);
         } else {
             buf.writeBoolean(true);
-            ByteBufUtils.writeTag(buf, stack.writeToNBT(new NBTTagCompound()));
+            buf.writeInt(Item.getIdFromItem(stack.getItem()));
+            buf.writeInt(stack.getCount());
+            buf.writeShort(stack.getItemDamage());
+            ByteBufUtils.writeTag(buf, stack.getItem().getNBTShareTag(stack));
         }
     }
 
@@ -49,7 +53,9 @@ public final class StackUtils {
         if (!buf.readBoolean()) {
             return ItemStack.EMPTY;
         } else {
-            return new ItemStack(ByteBufUtils.readTag(buf));
+            ItemStack stack = new ItemStack(Item.getItemById(buf.readInt()), buf.readInt(), buf.readShort());
+            stack.setTagCompound(ByteBufUtils.readTag(buf));
+            return stack;
         }
     }
 

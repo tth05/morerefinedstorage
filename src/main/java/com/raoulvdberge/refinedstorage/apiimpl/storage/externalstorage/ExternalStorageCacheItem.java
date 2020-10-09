@@ -32,7 +32,7 @@ public class ExternalStorageCacheItem {
 
             if (i >= cache.size()) { // ENLARGED
                 if (!actual.isEmpty()) {
-                    network.getItemStorageCache().add(actual, actual.getCount(), false, true);
+                    network.getItemStorageCache().add(actual, actual.getCount(), true);
 
                     cache.add(actual.copy());
                 }
@@ -47,19 +47,19 @@ public class ExternalStorageCacheItem {
 
                 cache.set(i, ItemStack.EMPTY);
             } else if (cached.isEmpty() && !actual.isEmpty()) { // ADDED
-                network.getItemStorageCache().add(actual, actual.getCount(), false, true);
+                network.getItemStorageCache().add(actual, actual.getCount(), true);
 
                 cache.set(i, actual.copy());
             } else if (!API.instance().getComparer().isEqualNoQuantity(cached, actual)) { // CHANGED
                 network.getItemStorageCache().remove(cached, cached.getCount(), true);
-                network.getItemStorageCache().add(actual, actual.getCount(), false, true);
+                network.getItemStorageCache().add(actual, actual.getCount(), true);
 
                 cache.set(i, actual.copy());
             } else if (cached.getCount() != actual.getCount()) { // COUNT_CHANGED
                 int delta = actual.getCount() - cached.getCount();
 
                 if (delta > 0) {
-                    network.getItemStorageCache().add(actual, delta, false, true);
+                    network.getItemStorageCache().add(actual, delta, true);
 
                     cached.grow(delta);
                 } else {

@@ -35,17 +35,11 @@ public class StackListResult<T> {
     }
 
     public void grow(long count) {
-        if(this.change < 0)
-            this.change -= count;
-        else
-            this.change += count;
+        this.change += count;
     }
 
     public void shrink(long count) {
-        if(this.change < 0)
-            this.change = Math.min(0, this.change + count);
-        else
-            this.change = Math.max(0, this.change + count);
+       this.change -= count;
     }
 
     public void setCount(long count) {
@@ -57,9 +51,9 @@ public class StackListResult<T> {
      */
     public T getFixedStack() {
         int stackSize = getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) getCount();
-        if(this.stack instanceof ItemStack)
+        if (this.stack instanceof ItemStack)
             ((ItemStack) this.stack).setCount(stackSize);
-        else if(this.stack instanceof FluidStack)
+        else if (this.stack instanceof FluidStack)
             ((FluidStack) this.stack).amount = stackSize;
 
         return this.stack;

@@ -184,6 +184,9 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         Slot hoveredSlot = this.getSlotUnderMouse();
 
+        if (hoveredSlot != null && hoveredSlot.getStack().isEmpty())
+            return;
+
         if (delta != 0 && (isShiftKeyDown() || isCtrlKeyDown())) {
             if (isOverInventoryAndHotBar(mouseX - guiLeft, mouseY - guiTop)) {
                 if (grid.getGridType() != GridType.FLUID && hoveredSlot != null) {
@@ -477,7 +480,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int clickedButton) throws IOException {
-        if(Keyboard.isKeyDown(Keyboard.KEY_SPACE) && grid.isActive() && grid.getGridType() != GridType.FLUID &&
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE) && grid.isActive() && grid.getGridType() != GridType.FLUID &&
                 isOverInventory(mouseX - guiLeft, mouseY - guiTop)) {
             RS.INSTANCE.network.sendToServer(
                     new MessageGridItemInsertInventory(isOverHotBar(mouseX - guiLeft, mouseY - guiTop)));

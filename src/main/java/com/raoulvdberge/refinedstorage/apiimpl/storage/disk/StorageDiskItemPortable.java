@@ -60,7 +60,7 @@ public class StorageDiskItemPortable implements IStorageDisk<ItemStack> {
             long inserted = parent.getCacheDelta(storedPre, size, remainder == null ? 0 : remainder.getCount());
 
             if (inserted > 0) {
-                portableGrid.getItemCache().add(stack, inserted, false, false);
+                portableGrid.getItemCache().add(stack, inserted, false);
             }
         }
 

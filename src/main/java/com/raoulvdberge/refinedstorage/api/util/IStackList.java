@@ -94,6 +94,16 @@ public interface IStackList<T> {
     void clear();
 
     /**
+     * Resets all entries in this list to count 0 but keeps the entries to make sure UUIDs are kept.
+     */
+    void clearCounts();
+
+    /**
+     * Removes all entries from this list where the count is smaller than 1.
+     */
+    void clearEmpty();
+
+    /**
      * @return true if the list is empty, false otherwise
      */
     boolean isEmpty();

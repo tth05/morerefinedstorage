@@ -10,10 +10,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class StackListFluid implements IStackList<FluidStack> {
     private final ArrayListMultimap<Fluid, StackListEntry<FluidStack>> stacks = ArrayListMultimap.create();
@@ -31,7 +28,7 @@ public class StackListFluid implements IStackList<FluidStack> {
             if (stack.isFluidEqual(otherStack)) {
                 entry.grow(size);
 
-                return new StackListResult<>(otherStack, entry.getId(), size);
+                return new StackListResult<>(otherStack.copy(), entry.getId(), size);
             }
         }
 
@@ -41,7 +38,7 @@ public class StackListFluid implements IStackList<FluidStack> {
         stacks.put(newStack.getFluid(), newEntry);
         index.put(newEntry.getId(), newEntry);
 
-        return new StackListResult<>(newStack, newEntry.getId(), size);
+        return new StackListResult<>(newStack.copy(), newEntry.getId(), size);
     }
 
     @Override
@@ -59,11 +56,11 @@ public class StackListFluid implements IStackList<FluidStack> {
                     stacks.remove(otherStack.getFluid(), entry);
                     index.remove(entry.getId());
 
-                    return new StackListResult<>(otherStack, entry.getId(), -entry.getCount());
+                    return new StackListResult<>(otherStack.copy(), entry.getId(), -entry.getCount());
                 } else {
                     entry.shrink(size);
 
-                    return new StackListResult<>(otherStack, entry.getId(), -size);
+                    return new StackListResult<>(otherStack.copy(), entry.getId(), -size);
                 }
             }
         }
@@ -116,6 +113,24 @@ public class StackListFluid implements IStackList<FluidStack> {
     public void clear() {
         stacks.clear();
         index.clear();
+    }
+
+    @Override
+    public void clearCounts() {
+        for (Map.Entry<Fluid, StackListEntry<FluidStack>> entry : stacks.entries()) {
+            entry.getValue().setCount(0);
+        }
+    }
+
+    @Override
+    public void clearEmpty() {
+        for (Iterator<Map.Entry<Fluid, StackListEntry<FluidStack>>> iterator = stacks.entries().iterator(); iterator.hasNext(); ) {
+            Map.Entry<Fluid, StackListEntry<FluidStack>> entry = iterator.next();
+            if(entry.getValue().getCount() < 1) {
+                iterator.remove();
+                index.remove(entry.getValue().getId());
+            }
+        }
     }
 
     @Override

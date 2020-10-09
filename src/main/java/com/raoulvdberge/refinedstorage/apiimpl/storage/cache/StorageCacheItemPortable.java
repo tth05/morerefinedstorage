@@ -26,25 +26,25 @@ public class StorageCacheItemPortable implements IStorageCache<ItemStack> {
 
     @Override
     public void invalidate() {
-        list.clear();
+        list.clearCounts();
 
         if (portableGrid.getItemStorage() != null) {
             for (StackListEntry<ItemStack> entry : portableGrid.getItemStorage().getEntries()) {
-                if(entry != null && entry.getCount() > 0)
+                if (entry != null && !entry.getStack().isEmpty() && entry.getCount() > 0)
                     list.add(entry.getStack(), entry.getCount());
             }
         }
+
+        list.clearEmpty();
 
         listeners.forEach(IStorageCacheListener::onInvalidated);
     }
 
     @Override
-    public void add(@Nonnull ItemStack stack, long size, boolean rebuilding, boolean batched) {
+    public void add(@Nonnull ItemStack stack, long size, boolean batched) {
         StackListResult<ItemStack> result = list.add(stack, size);
 
-        if (!rebuilding) {
-            listeners.forEach(l -> l.onChanged(result));
-        }
+        listeners.forEach(l -> l.onChanged(result));
     }
 
     @Override

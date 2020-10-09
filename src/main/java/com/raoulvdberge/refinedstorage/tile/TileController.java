@@ -288,7 +288,7 @@ public class TileController extends TileBase
         }
 
         if (action == Action.PERFORM && inserted - insertedExternally > 0) {
-            itemStorage.add(stack, inserted - insertedExternally, false, false);
+            itemStorage.add(stack, inserted - insertedExternally, false);
         }
 
         return remainder;
@@ -386,7 +386,7 @@ public class TileController extends TileBase
         }
 
         if (action == Action.PERFORM && inserted - insertedExternally > 0) {
-            fluidStorage.add(stack, inserted - insertedExternally, false, false);
+            fluidStorage.add(stack, inserted - insertedExternally, false);
         }
 
         return remainder;

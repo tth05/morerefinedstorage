@@ -27,25 +27,25 @@ public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
 
     @Override
     public void invalidate() {
-        list.clear();
+        list.clearCounts();
 
         if (portableGrid.getFluidStorage() != null) {
             for (StackListEntry<FluidStack> e : portableGrid.getFluidStorage().getEntries()) {
-                if(e != null && e.getCount() > 0)
+                if (e != null && e.getCount() > 0)
                     list.add(e.getStack(), e.getCount());
             }
         }
+
+        list.clearEmpty();
 
         listeners.forEach(IStorageCacheListener::onInvalidated);
     }
 
     @Override
-    public void add(@Nonnull FluidStack stack, long size, boolean rebuilding, boolean batched) {
+    public void add(@Nonnull FluidStack stack, long size, boolean batched) {
         StackListResult<FluidStack> result = list.add(stack, size);
 
-        if (!rebuilding) {
-            listeners.forEach(l -> l.onChanged(result));
-        }
+        listeners.forEach(l -> l.onChanged(result));
     }
 
     @Override

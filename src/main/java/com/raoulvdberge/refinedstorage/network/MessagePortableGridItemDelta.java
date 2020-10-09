@@ -36,7 +36,7 @@ public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<M
         int size = buf.readInt();
 
         for (int i = 0; i < size; ++i) {
-            long delta = buf.readInt();
+            long delta = buf.readLong();
             clientDeltas.add(Pair.of(StackUtils.readItemGridStack(buf), delta));
         }
     }

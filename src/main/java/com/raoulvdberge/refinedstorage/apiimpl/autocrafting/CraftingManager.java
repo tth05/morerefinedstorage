@@ -375,8 +375,8 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void rebuild() {
-        this.network.getItemStorageCache().getCraftablesList().clear();
-        this.network.getFluidStorageCache().getCraftablesList().clear();
+        this.network.getItemStorageCache().getCraftablesList().clearCounts();
+        this.network.getFluidStorageCache().getCraftablesList().clearCounts();
 
         this.patterns.clear();
         this.containerInventories.clear();
@@ -429,6 +429,9 @@ public class CraftingManager implements ICraftingManager {
                 this.containerInventories.computeIfAbsent(container.getName(), k -> new ArrayList<>()).add(handler);
             }
         }
+
+        this.network.getItemStorageCache().getCraftablesList().clearEmpty();
+        this.network.getFluidStorageCache().getCraftablesList().clearEmpty();
 
         this.network.getItemStorageCache().reAttachListeners();
         this.network.getFluidStorageCache().reAttachListeners();

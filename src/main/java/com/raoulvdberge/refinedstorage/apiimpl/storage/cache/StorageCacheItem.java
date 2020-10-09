@@ -37,10 +37,16 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
         storages.clear();
 
         network.getNodeGraph().all().stream()
-            .filter(node -> node.canUpdate() && node instanceof IStorageProvider)
-            .forEach(node -> ((IStorageProvider) node).addItemStorages(storages));
+                .filter(node -> node.canUpdate() && node instanceof IStorageProvider)
+                .forEach(node -> ((IStorageProvider) node).addItemStorages(storages));
 
-        list.clear();
+        //batch to remove all items
+        for (StackListEntry<ItemStack> entry : list.getStacks()) {
+            this.batchedChanges.add(new StackListResult<>(entry.getStack(), entry.getId(), -entry.getCount()));
+        }
+
+        //reset list but keep UUIDs
+        list.clearCounts();
 
         sort();
 
@@ -50,25 +56,29 @@ public class StorageCacheItem implements IStorageCache<ItemStack> {
             }
 
             for (StackListEntry<ItemStack> stack : storage.getEntries()) {
-                if (stack != null && stack.getCount() > 0) {
-                    add(stack.getStack(), stack.getCount(), true, false);
+                if (stack != null && !stack.getStack().isEmpty() && stack.getCount() > 0) {
+                    add(stack.getStack(), stack.getCount(), true);
                 }
             }
         }
 
+        //clear all that weren't added again
+        list.clearEmpty();
+
         listeners.forEach(IStorageCacheListener::onInvalidated);
+
+        //send all changes to listeners
+        this.flush();
     }
 
     @Override
-    public synchronized void add(@Nonnull ItemStack stack, long size, boolean rebuilding, boolean batched) {
+    public synchronized void add(@Nonnull ItemStack stack, long size, boolean batched) {
         StackListResult<ItemStack> result = list.add(stack, size);
 
-        if (!rebuilding) {
-            if (!batched) {
-                listeners.forEach(l -> l.onChanged(result));
-            } else {
-                batchedChanges.add(result);
-            }
+        if (!batched) {
+            listeners.forEach(l -> l.onChanged(result));
+        } else {
+            batchedChanges.add(result);
         }
     }
 

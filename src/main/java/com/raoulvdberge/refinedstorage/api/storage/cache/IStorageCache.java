@@ -33,10 +33,9 @@ public interface IStorageCache<T> {
      *
      * @param stack      the stack to add, do NOT modify
      * @param size       the size to add
-     * @param rebuilding true if this method is called while rebuilding, false otherwise
      * @param batched    true if this change needs to be batched
      */
-    void add(@Nonnull T stack, long size, boolean rebuilding, boolean batched);
+    void add(@Nonnull T stack, long size, boolean batched);
 
     /**
      * Removes a stack from the cache.

@@ -1,7 +1,9 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.cache;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.api.storage.*;
+import com.raoulvdberge.refinedstorage.api.storage.AccessType;
+import com.raoulvdberge.refinedstorage.api.storage.IStorage;
+import com.raoulvdberge.refinedstorage.api.storage.IStorageProvider;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
@@ -36,10 +38,16 @@ public class StorageCacheFluid implements IStorageCache<FluidStack> {
         storages.clear();
 
         network.getNodeGraph().all().stream()
-            .filter(node -> node.canUpdate() && node instanceof IStorageProvider)
-            .forEach(node -> ((IStorageProvider) node).addFluidStorages(storages));
+                .filter(node -> node.canUpdate() && node instanceof IStorageProvider)
+                .forEach(node -> ((IStorageProvider) node).addFluidStorages(storages));
 
-        list.clear();
+        //batch to remove all items
+        for (StackListEntry<FluidStack> entry : list.getStacks()) {
+            this.batchedChanges.add(new StackListResult<>(entry.getStack(), entry.getId(), -entry.getCount()));
+        }
+
+        //reset list but keep UUIDs
+        list.clearCounts();
 
         sort();
 
@@ -49,24 +57,27 @@ public class StorageCacheFluid implements IStorageCache<FluidStack> {
             }
 
             for (StackListEntry<FluidStack> stack : storage.getEntries()) {
-                if(stack != null && stack.getCount() > 0)
-                    add(stack.getStack(), stack.getCount(), true, false);
+                if (stack != null && stack.getCount() > 0)
+                    add(stack.getStack(), stack.getCount(), true);
             }
         }
 
+        //clear all that weren't added again
+        list.clearEmpty();
+
         listeners.forEach(IStorageCacheListener::onInvalidated);
+
+        this.flush();
     }
 
     @Override
-    public synchronized void add(@Nonnull FluidStack stack, long size, boolean rebuilding, boolean batched) {
+    public synchronized void add(@Nonnull FluidStack stack, long size, boolean batched) {
         StackListResult<FluidStack> result = list.add(stack, size);
 
-        if (!rebuilding) {
-            if (!batched) {
-                listeners.forEach(l -> l.onChanged(result));
-            } else {
-                batchedChanges.add(result);
-            }
+        if (!batched) {
+            listeners.forEach(l -> l.onChanged(result));
+        } else {
+            batchedChanges.add(result);
         }
     }
 

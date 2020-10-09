@@ -10,10 +10,7 @@ import net.minecraft.item.ItemStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class StackListItem implements IStackList<ItemStack> {
     private final ArrayListMultimap<Item, StackListEntry<ItemStack>> stacks = ArrayListMultimap.create();
@@ -31,7 +28,7 @@ public class StackListItem implements IStackList<ItemStack> {
             if (API.instance().getComparer().isEqualNoQuantity(otherStack, stack)) {
                 entry.grow(size);
 
-                return new StackListResult<>(otherStack, entry.getId(), size);
+                return new StackListResult<>(otherStack.copy(), entry.getId(), size);
             }
         }
 
@@ -40,7 +37,7 @@ public class StackListItem implements IStackList<ItemStack> {
         stacks.put(stack.getItem(), newEntry);
         index.put(newEntry.getId(), newEntry);
 
-        return new StackListResult<>(newEntry.getStack(), newEntry.getId(), size);
+        return new StackListResult<>(newEntry.getStack().copy(), newEntry.getId(), size);
     }
 
     @Override
@@ -58,11 +55,11 @@ public class StackListItem implements IStackList<ItemStack> {
                     stacks.remove(otherStack.getItem(), entry);
                     index.remove(entry.getId());
 
-                    return new StackListResult<>(otherStack, entry.getId(), -entry.getCount());
+                    return new StackListResult<>(otherStack.copy(), entry.getId(), -entry.getCount());
                 } else {
                     entry.shrink(size);
 
-                    return new StackListResult<>(otherStack, entry.getId(), -size);
+                    return new StackListResult<>(otherStack.copy(), entry.getId(), -size);
                 }
             }
         }
@@ -115,6 +112,24 @@ public class StackListItem implements IStackList<ItemStack> {
     public void clear() {
         stacks.clear();
         index.clear();
+    }
+
+    @Override
+    public void clearCounts() {
+        for (Map.Entry<Item, StackListEntry<ItemStack>> entry : stacks.entries()) {
+            entry.getValue().setCount(0);
+        }
+    }
+
+    @Override
+    public void clearEmpty() {
+        for (Iterator<Map.Entry<Item, StackListEntry<ItemStack>>> iterator = stacks.entries().iterator(); iterator.hasNext(); ) {
+            Map.Entry<Item, StackListEntry<ItemStack>> entry = iterator.next();
+            if(entry.getValue().getCount() < 1) {
+                iterator.remove();
+                index.remove(entry.getValue().getId());
+            }
+        }
     }
 
     @Override
