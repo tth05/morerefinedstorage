@@ -12,6 +12,7 @@ import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryItem;
+import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -55,7 +56,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         NBTTagList list = new NBTTagList();
 
         for (StackListEntry<ItemStack> entry : stacks.values()) {
-            NBTTagCompound stackTag = entry.getStack().writeToNBT(new NBTTagCompound());
+            NBTTagCompound stackTag = StackUtils.serializeStackToNbt(entry.getStack());
             stackTag.setLong(NBT_REAL_SIZE, entry.getCount());
             list.appendTag(stackTag);
         }

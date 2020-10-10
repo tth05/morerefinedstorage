@@ -1,5 +1,8 @@
 # More Refined Storage Changelog
 
+### 2.1.5
+- Fixed fatal mistake that broke compatibility
+
 ### 2.1.4
 - Fixed crash if Baubles is not present
 - Fixed crash on load of a crafting task that uses durability inputs

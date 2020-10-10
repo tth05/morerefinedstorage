@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskFactory;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskItem;
+import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -20,7 +21,7 @@ public class StorageDiskFactoryItem implements IStorageDiskFactory<ItemStack> {
 
         for (int i = 0; i < list.tagCount(); ++i) {
             NBTTagCompound stackTag = list.getCompoundTagAt(i);
-            ItemStack stack = new ItemStack(stackTag);
+            ItemStack stack = StackUtils.deserializeStackFromNbt(stackTag);
 
             long realCount;
 
