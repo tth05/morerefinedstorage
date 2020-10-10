@@ -56,6 +56,15 @@ public class GridViewImpl implements IGridView {
 
     @Override
     public void postChange(IGridStack stack, long delta) {
+        /*
+        !!!!!!!!!!!!!!!!!!!
+        otherId for normal GridStack is the id of the same GridStack but the craftable version
+        otherId for craftable GridStack is the id of the GridStack but the normal version
+
+        A GridStack that contains a proper count will never be craftable. In this case a second GridStack always exists.
+        !!!!!!!!!!!!!!!!!!
+         */
+
         // COMMENT 1 (about this if check in general)
         // Update the other id reference if needed.
         // Taking a stack out - and then re-inserting it - gives the new stack a new ID
@@ -101,6 +110,7 @@ public class GridViewImpl implements IGridView {
             if (existing.getCount() <= 0) {
                 map.remove(existing.getId());
 
+                //add craftable stack to view
                 if (!existing.isCraftable() && existing.getOtherId() != null) {
                     IGridStack craftingStack = map.get(stack.getOtherId());
                     if (craftingStack != null && activeFilters.test(craftingStack))
