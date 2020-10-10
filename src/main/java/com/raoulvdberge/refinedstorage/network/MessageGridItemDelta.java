@@ -22,9 +22,9 @@ import java.util.List;
 public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGridItemDelta, IMessage> {
     @Nullable
     private INetwork network;
-    private List<StackListResult<ItemStack>> deltas = new ArrayList<>();
+    private List<StackListResult<ItemStack>> deltas;
 
-    private final List<Pair<IGridStack, Long>> clientDeltas = new ArrayList<>();
+    private List<Pair<IGridStack, Long>> clientDeltas;
 
     public MessageGridItemDelta(@Nullable INetwork network, List<StackListResult<ItemStack>> deltas) {
         this.network = network;
@@ -38,6 +38,8 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
     @Override
     public void fromBytes(ByteBuf buf) {
         int size = buf.readInt();
+
+        this.clientDeltas = new ArrayList<>(size);
 
         for (int i = 0; i < size; ++i) {
             long delta = buf.readLong();
@@ -68,8 +70,6 @@ public class MessageGridItemDelta implements IMessage, IMessageHandler<MessageGr
     public IMessage onMessage(MessageGridItemDelta message, MessageContext ctx) {
         GuiBase.executeLater(GuiGrid.class, grid -> {
             message.clientDeltas.forEach(p -> grid.getView().postChange(p.getLeft(), p.getRight()));
-
-            grid.getView().sort();
         });
 
         return null;

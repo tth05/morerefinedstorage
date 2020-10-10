@@ -4,7 +4,7 @@ import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.grid.GuiGrid;
 import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
-import com.raoulvdberge.refinedstorage.gui.grid.view.GridViewFluid;
+import com.raoulvdberge.refinedstorage.gui.grid.view.GridViewImpl;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
@@ -54,7 +54,7 @@ public class MessagePortableGridFluidUpdate
     @Override
     public IMessage onMessage(MessagePortableGridFluidUpdate message, MessageContext ctx) {
         GuiBase.executeLater(GuiGrid.class, grid -> {
-            grid.setView(new GridViewFluid(grid, GuiGrid.getDefaultSorter(), GuiGrid.getSorters()));
+            grid.setView(new GridViewImpl(grid, GuiGrid.getDefaultSorter(), GuiGrid.getSorters()));
             grid.getView().setStacks(message.stacks);
             grid.getView().sort();
         });

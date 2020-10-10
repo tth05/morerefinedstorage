@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageGridFluidDelta, IMessage> {
@@ -39,7 +39,7 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
     public void fromBytes(ByteBuf buf) {
         int size = buf.readInt();
 
-        this.clientDeltas = new LinkedList<>();
+        this.clientDeltas = new ArrayList<>(size);
 
         for (int i = 0; i < size; ++i) {
             long delta = buf.readLong();
@@ -71,7 +71,6 @@ public class MessageGridFluidDelta implements IMessage, IMessageHandler<MessageG
     public IMessage onMessage(MessageGridFluidDelta message, MessageContext ctx) {
         GuiBase.executeLater(GuiGrid.class, grid -> {
             message.clientDeltas.forEach(p -> grid.getView().postChange(p.getLeft(), p.getRight()));
-            grid.getView().sort();
         });
 
         return null;

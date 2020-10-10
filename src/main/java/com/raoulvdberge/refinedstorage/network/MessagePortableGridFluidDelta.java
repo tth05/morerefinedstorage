@@ -20,9 +20,9 @@ public class MessagePortableGridFluidDelta
         implements IMessage, IMessageHandler<MessagePortableGridFluidDelta, IMessage> {
 
     private IPortableGrid portableGrid;
-    private List<StackListResult<FluidStack>> deltas = new ArrayList<>();
+    private List<StackListResult<FluidStack>> deltas;
 
-    private final List<Pair<IGridStack, Long>> clientDeltas = new ArrayList<>();
+    private List<Pair<IGridStack, Long>> clientDeltas;
 
     public MessagePortableGridFluidDelta(IPortableGrid portableGrid, List<StackListResult<FluidStack>> deltas) {
         this.portableGrid = portableGrid;
@@ -35,6 +35,8 @@ public class MessagePortableGridFluidDelta
     @Override
     public void fromBytes(ByteBuf buf) {
         int size = buf.readInt();
+
+        this.clientDeltas = new ArrayList<>(size);
 
         for (int i = 0; i < size; ++i) {
             long delta = buf.readLong();
@@ -61,8 +63,6 @@ public class MessagePortableGridFluidDelta
     public IMessage onMessage(MessagePortableGridFluidDelta message, MessageContext ctx) {
         GuiBase.executeLater(GuiGrid.class, grid -> {
             message.clientDeltas.forEach(p -> grid.getView().postChange(p.getLeft(), p.getRight()));
-
-            grid.getView().sort();
         });
         return null;
     }

@@ -19,9 +19,9 @@ import java.util.List;
 public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<MessagePortableGridItemDelta, IMessage> {
 
     private IPortableGrid portableGrid;
-    private List<StackListResult<ItemStack>> deltas = new ArrayList<>();
+    private List<StackListResult<ItemStack>> deltas;
 
-    private final List<Pair<IGridStack, Long>> clientDeltas = new ArrayList<>();
+    private List<Pair<IGridStack, Long>> clientDeltas;
 
     public MessagePortableGridItemDelta(IPortableGrid portableGrid, List<StackListResult<ItemStack>> deltas) {
         this.portableGrid = portableGrid;
@@ -34,6 +34,8 @@ public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<M
     @Override
     public void fromBytes(ByteBuf buf) {
         int size = buf.readInt();
+
+        this.clientDeltas = new ArrayList<>(size);
 
         for (int i = 0; i < size; ++i) {
             long delta = buf.readLong();
@@ -60,8 +62,6 @@ public class MessagePortableGridItemDelta implements IMessage, IMessageHandler<M
     public IMessage onMessage(MessagePortableGridItemDelta message, MessageContext ctx) {
         GuiBase.executeLater(GuiGrid.class, grid -> {
             message.clientDeltas.forEach(p -> grid.getView().postChange(p.getLeft(), p.getRight()));
-
-            grid.getView().sort();
         });
         return null;
     }
