@@ -35,7 +35,10 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed ThaumicGrid compatibility
+          - Fixed crash if Baubles is not present
+          - Fixed crash on load of a crafting task that uses durability inputs
+          - Fixed some sync issues with the grid when for example a disk is removed while the grid is open
+          - Improved Grid filtering performance (ScoreUnder)
         draft: false
         prerelease: false
     - name: Upload jars to release

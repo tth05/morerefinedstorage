@@ -1,5 +1,11 @@
 # More Refined Storage Changelog
 
+### 2.1.4
+- Fixed crash if Baubles is not present
+- Fixed crash on load of a crafting task that uses durability inputs
+- Fixed some sync issues with the grid when for example a disk is removed while the grid is open
+- Improved Grid filtering performance (ScoreUnder)
+
 ### 2.1.3
 - Fixed ThaumicGrid compatibility
 
