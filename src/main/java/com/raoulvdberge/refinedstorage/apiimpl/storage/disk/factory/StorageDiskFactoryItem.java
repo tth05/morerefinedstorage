@@ -30,8 +30,7 @@ public class StorageDiskFactoryItem implements IStorageDiskFactory<ItemStack> {
                 realCount = stackTag.getLong(StorageDiskItem.NBT_REAL_SIZE);
 
             if (!stack.isEmpty()) {
-                disk.getRawStacks().put(stack.getItem(),
-                        new StackListEntry<>(stack, realCount));
+                disk.getRawStacks().put(stack.getItem(), new StackListEntry<>(stack, realCount));
             }
         }
 

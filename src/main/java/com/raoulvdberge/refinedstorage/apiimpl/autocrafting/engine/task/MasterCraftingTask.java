@@ -46,7 +46,7 @@ public class MasterCraftingTask implements ICraftingTask {
     private static final String NBT_UUID = "Uuid";
     private static final String NBT_REQUEST_INFO = "RequestInfo";
 
-    /** All current tasks that make up this auto crafting task */
+    /** All tasks that make up this auto crafting request */
     private final List<Task> tasks = new ObjectArrayList<>();
     private IStackList<ItemStack> missingItemStacks = API.instance().createItemStackList();
     private IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();

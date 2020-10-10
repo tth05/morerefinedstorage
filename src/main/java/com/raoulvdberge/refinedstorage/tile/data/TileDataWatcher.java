@@ -37,7 +37,7 @@ public class TileDataWatcher {
                 Object real = parameter.getValueProducer().apply(manager.getTile());
                 Object cached = cache[i];
 
-                if (!real.equals(cached)) {
+                if (real != null && !real.equals(cached)) {
                     cache[i] = real;
 
                     // Avoid sending watched parameter twice (after initial packet)
