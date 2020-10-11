@@ -126,6 +126,8 @@ public class GridViewImpl implements IGridView {
         if (stillExists && activeFilters.test(existing)) {
             binaryInsert(existing);
         }
+
+        this.gui.updateScrollbar();
     }
 
     private void binaryInsert(IGridStack stack) {
