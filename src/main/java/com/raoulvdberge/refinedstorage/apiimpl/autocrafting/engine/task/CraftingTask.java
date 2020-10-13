@@ -140,8 +140,6 @@ public class CraftingTask extends Task {
         if (!this.getParents().isEmpty()) {
             //loop through all parents while there is anything left to split up
 
-            //TODO: evenly split up instead of giving everything to first parent. Only useful once tasks can have
-            // multiple parents
             for (Iterator<Task> iterator = this.getParents().iterator(); !crafted.isEmpty() && iterator.hasNext(); ) {
                 iterator.next().supplyInput(crafted);
             }

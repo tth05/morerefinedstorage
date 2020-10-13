@@ -6,7 +6,6 @@ import com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterParser;
 import com.raoulvdberge.refinedstorage.gui.grid.sorting.GridSorterDirection;
 import com.raoulvdberge.refinedstorage.gui.grid.sorting.IGridSorter;
 import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -34,7 +33,7 @@ public class GridViewImpl implements IGridView {
         if (gui.getGrid().isActive()) {
             Predicate<IGridStack> activeFilters = getActiveFilters();
 
-            this.stacks = new ObjectArrayList<>(map.values());
+            this.stacks = new ArrayList<>(map.values());
 
             this.stacks.removeIf(gridStack -> {
                 if (gui.getGrid().getViewType() != IGrid.VIEW_TYPE_CRAFTABLES &&
@@ -57,12 +56,11 @@ public class GridViewImpl implements IGridView {
     @Override
     public void postChange(IGridStack stack, long delta) {
         /*
-        !!!!!!!!!!!!!!!!!!!
-        otherId for normal GridStack is the id of the same GridStack but the craftable version
-        otherId for craftable GridStack is the id of the GridStack but the normal version
+        Explanation of otherId:
+        otherId for a normal GridStack is the id of the same GridStack but the craftable version
+        otherId for a craftable GridStack is the id of the GridStack but the normal version
 
         A GridStack that contains a proper count will never be craftable. In this case a second GridStack always exists.
-        !!!!!!!!!!!!!!!!!!
          */
 
         // COMMENT 1 (about this if check in general)
