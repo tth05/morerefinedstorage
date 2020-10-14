@@ -206,7 +206,7 @@ public class ItemGridHandler implements IItemGridHandler {
 
                 ICraftingTaskError error = task.calculate();
 
-                if (error == null)
+                if (error == null && !task.hasMissing())
                     network.getCraftingManager().add(task);
 
                 if (error != null) {

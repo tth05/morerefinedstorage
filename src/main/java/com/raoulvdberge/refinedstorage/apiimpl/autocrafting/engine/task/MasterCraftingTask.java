@@ -45,8 +45,11 @@ public class MasterCraftingTask implements ICraftingTask {
     private static final String NBT_CALCULATION_TIME = "CalculationTime";
     private static final String NBT_UUID = "Uuid";
     private static final String NBT_REQUEST_INFO = "RequestInfo";
+    private static final String NBT_CANCELLED = "Cancelled";
 
-    /** All tasks that make up this auto crafting request */
+    /**
+     * All tasks that make up this auto crafting request
+     */
     private final List<Task> tasks = new ObjectArrayList<>();
     private IStackList<ItemStack> missingItemStacks = API.instance().createItemStackList();
     private IStackList<FluidStack> missingFluidStacks = API.instance().createFluidStackList();
@@ -58,12 +61,17 @@ public class MasterCraftingTask implements ICraftingTask {
     private UUID id = UUID.randomUUID();
 
     private final long quantity;
-    /** Timestamp of when the execution started */
+    /**
+     * Timestamp of when the execution started
+     */
     private long executionStarted = -1;
-    /** The time in milli seconds it took for the calculation to complete */
+    /**
+     * The time in milli seconds it took for the calculation to complete
+     */
     private long calculationTime = -1;
     private long ticks;
     private boolean canUpdate;
+    private boolean cancelled;
 
     //completion percentage
     private long totalAmountNeeded;
@@ -88,6 +96,7 @@ public class MasterCraftingTask implements ICraftingTask {
         this.executionStarted = compound.getLong(NBT_EXECUTION_STARTED);
         this.calculationTime = compound.getLong(NBT_CALCULATION_TIME);
         this.canUpdate = compound.getBoolean(NBT_CAN_UPDATE);
+        this.cancelled = compound.getBoolean(NBT_CANCELLED);
         this.quantity = compound.getInteger(NBT_QUANTITY);
         this.ticks = compound.getLong(NBT_TICKS);
         this.info = new CraftingRequestInfo(compound.getCompoundTag(NBT_REQUEST_INFO));
@@ -200,7 +209,7 @@ public class MasterCraftingTask implements ICraftingTask {
                 allFinished = false;
         }
 
-        this.completionPercentage = 100 - (int) (totalAmount * 100d / (double)this.totalAmountNeeded);
+        this.completionPercentage = 100 - (int) (totalAmount * 100d / (double) this.totalAmountNeeded);
 
         ticks++;
         return allFinished;
@@ -219,9 +228,7 @@ public class MasterCraftingTask implements ICraftingTask {
         );
 
         //instantly cancel if calculation had any error, saver than waiting for the player to cancel
-        if (result.getError() != null) {
-            onCancelled();
-        } else {
+        if (result.getError() == null) {
             this.tasks.addAll(result.getNewTasks());
 
             this.missingItemStacks = result.getMissingItemStacks();
@@ -232,19 +239,27 @@ public class MasterCraftingTask implements ICraftingTask {
             this.totalAmountNeeded = this.tasks.stream().mapToLong(Task::getAmountNeeded).sum();
         }
 
+        //instantly cancel if anything went wrong
+        if (result.getError() != null || hasMissing())
+            onCancelled();
+
         return result.getError();
     }
 
     @Override
     public void onCancelled() {
+        if (cancelled)
+            return;
+        cancelled = true;
+
         //just insert all stored items back into network
         for (Task task : this.tasks) {
             //insert loose items and fluids
             for (ItemStack looseItemStack : task.getLooseItemStacks())
-                network.insertItem(looseItemStack, (long)looseItemStack.getCount(), Action.PERFORM);
+                network.insertItem(looseItemStack, (long) looseItemStack.getCount(), Action.PERFORM);
 
             for (FluidStack looseFluidStack : task.getLooseFluidStacks())
-                network.insertFluid(looseFluidStack, (long)looseFluidStack.amount, Action.PERFORM);
+                network.insertFluid(looseFluidStack, (long) looseFluidStack.amount, Action.PERFORM);
 
             //insert items that are still inside of inputs
             for (Input input : task.getInputs()) {
@@ -335,6 +350,7 @@ public class MasterCraftingTask implements ICraftingTask {
         compound.setLong(NBT_CALCULATION_TIME, this.calculationTime);
         compound.setLong(NBT_EXECUTION_STARTED, this.executionStarted);
         compound.setBoolean(NBT_CAN_UPDATE, this.canUpdate);
+        compound.setBoolean(NBT_CANCELLED, this.cancelled);
         compound.setLong(NBT_TICKS, this.ticks);
         compound.setTag(NBT_REQUEST_INFO, this.info.writeToNbt());
 

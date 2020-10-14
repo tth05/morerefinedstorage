@@ -343,7 +343,7 @@ public class CraftingManager implements ICraftingManager {
         int oldStackSize = stack.getCount();
 
         for (ICraftingTask task : tasks.values()) {
-            if(!task.canUpdate())
+            if (!task.canUpdate())
                 continue;
 
             trackedAmount = task.onTrackedInsert(stack, trackedAmount);
@@ -361,7 +361,7 @@ public class CraftingManager implements ICraftingManager {
         int oldStackSize = stack.amount;
 
         for (ICraftingTask task : tasks.values()) {
-            if(!task.canUpdate())
+            if (!task.canUpdate())
                 continue;
 
             trackedAmount = task.onTrackedInsert(stack, trackedAmount);

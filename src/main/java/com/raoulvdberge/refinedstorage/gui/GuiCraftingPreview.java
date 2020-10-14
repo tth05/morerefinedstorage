@@ -212,7 +212,7 @@ public class GuiCraftingPreview extends GuiBase {
                     t("gui.refinedstorage:crafting_preview.available", hoveringFluid.getAvailable()));
 
             RenderUtils.drawTooltipWithSmallText(textLines, smallTextLines, RS.INSTANCE.config.detailedTooltip,
-                            ItemStack.EMPTY, mouseX, mouseY, screenWidth, screenHeight, fontRenderer);
+                    ItemStack.EMPTY, mouseX, mouseY, screenWidth, screenHeight, fontRenderer);
         }
     }
 
@@ -249,7 +249,10 @@ public class GuiCraftingPreview extends GuiBase {
     }
 
     private void close() {
-        RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(craftingTaskId));
+        //if task has error or missing then it has already cancelled itself
+        if (startButton.enabled)
+            RS.INSTANCE.network.sendToServer(new MessageCraftingCancel(craftingTaskId));
+
         FMLClientHandler.instance().showGuiScreen(parent);
     }
 }
