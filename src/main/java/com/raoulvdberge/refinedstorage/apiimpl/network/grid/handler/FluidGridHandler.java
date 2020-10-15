@@ -1,8 +1,8 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandler;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
@@ -10,7 +10,6 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingPreviewResponse;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingStartResponse;
@@ -22,11 +21,13 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class FluidGridHandler implements IFluidGridHandler {
     private final INetwork network;
@@ -134,22 +135,27 @@ public class FluidGridHandler implements IFluidGridHandler {
         StackListEntry<FluidStack> stack = network.getFluidStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            CraftingManager.CALCULATION_THREAD_POOL.execute(() -> {
-                ICraftingTask task = network.getCraftingManager().create(stack.getStack(), quantity);
-                if (task == null) {
-                    return;
-                }
+            ICraftingTask task = network.getCraftingManager().create(stack.getStack(), quantity);
 
+            if (task == null) {
+                return;
+            }
+
+            CompletableFuture.runAsync(() -> {
                 ICraftingTaskError error = task.calculate();
 
-                if (error == null)
-                    network.getCraftingManager().add(task);
+                FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
+                    if (error == null && !task.hasMissing())
+                        network.getCraftingManager().add(task);
+                });
 
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
                                     Collections.singletonList(new CraftingPreviewElementError()),
                                     task.getId(),
-                                    task.getCalculationTime(), quantity, true),
+                                    task.getCalculationTime(),
+                                    quantity,
+                                    true),
                             player);
                 } else if (noPreview && !task.hasMissing()) {
                     task.setCanUpdate(true);

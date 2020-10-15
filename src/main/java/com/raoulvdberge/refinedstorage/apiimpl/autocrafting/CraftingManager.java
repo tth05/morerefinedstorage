@@ -1,12 +1,10 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
-import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
@@ -22,6 +20,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +28,7 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
 
 public class CraftingManager implements ICraftingManager {
     private static final int THROTTLE_DELAY_MS = 3000;
@@ -40,9 +38,6 @@ public class CraftingManager implements ICraftingManager {
     private static final String NBT_TASKS = "Tasks";
     private static final String NBT_TASK_TYPE = "Type";
     private static final String NBT_TASK_DATA = "Task";
-
-    public static final ExecutorService CALCULATION_THREAD_POOL = Executors.newFixedThreadPool(4,
-            new ThreadFactoryBuilder().setNameFormat("RS Calculation Thread %d").build());
 
     private final TileController network;
 
@@ -236,16 +231,8 @@ public class CraftingManager implements ICraftingManager {
             ICraftingTask task = create(stack, amount);
 
             if (task != null) {
-                ICraftingTaskError error = task.calculate();
-
-                if (error == null && !task.hasMissing()) {
-                    this.add(task);
-                    task.setCanUpdate(true);
-
-                    return task;
-                } else {
-                    throttle(source);
-                }
+                addTaskFromSource(source, task);
+                return task;
             } else {
                 throttle(source);
             }
@@ -287,22 +274,27 @@ public class CraftingManager implements ICraftingManager {
             ICraftingTask task = create(stack, amount);
 
             if (task != null) {
-                ICraftingTaskError error = task.calculate();
-
-                if (error == null && !task.hasMissing()) {
-                    this.add(task);
-                    task.setCanUpdate(true);
-
-                    return task;
-                } else {
-                    throttle(source);
-                }
+                addTaskFromSource(source, task);
+                return task;
             } else {
                 throttle(source);
             }
         }
 
         return null;
+    }
+
+    private void addTaskFromSource(Object source, ICraftingTask task) {
+        CompletableFuture.supplyAsync(task::calculate).thenAccept((err) -> {
+            FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
+                if (err == null && !task.hasMissing()) {
+                    this.add(task);
+                    task.setCanUpdate(true);
+                } else {
+                    throttle(source);
+                }
+            });
+        });
     }
 
     @Override

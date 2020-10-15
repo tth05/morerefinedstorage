@@ -1,8 +1,8 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
-import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
+import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
@@ -11,7 +11,6 @@ import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingManager;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingPreviewResponse;
 import com.raoulvdberge.refinedstorage.network.MessageGridCraftingStartResponse;
@@ -19,6 +18,7 @@ import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -26,6 +26,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class ItemGridHandler implements IItemGridHandler {
     private final INetwork network;
@@ -198,16 +199,20 @@ public class ItemGridHandler implements IItemGridHandler {
         StackListEntry<ItemStack> stack = network.getItemStorageCache().getCraftablesList().get(id);
 
         if (stack != null) {
-            CraftingManager.CALCULATION_THREAD_POOL.execute(() -> {
-                ICraftingTask task = network.getCraftingManager().create(stack.getStack(), quantity);
-                if (task == null) {
-                    return;
-                }
+            ICraftingTask task = network.getCraftingManager().create(stack.getStack(), quantity);
+
+            if (task == null) {
+                return;
+            }
+
+            CompletableFuture.runAsync(() -> {
 
                 ICraftingTaskError error = task.calculate();
 
-                if (error == null && !task.hasMissing())
-                    network.getCraftingManager().add(task);
+                FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
+                    if (error == null && !task.hasMissing())
+                        network.getCraftingManager().add(task);
+                });
 
                 if (error != null) {
                     RS.INSTANCE.network.sendTo(new MessageGridCraftingPreviewResponse(
