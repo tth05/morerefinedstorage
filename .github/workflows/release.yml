@@ -35,7 +35,9 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed fatal mistake that broke compatibility
+          - Fixed crafting tasks started by machines consuming items even if they can't craft
+          - Fixed crafting tasks started by machines being calculated on the main thread
+          - Fixed Thaumcraft aspects being rendered at wrong height
         draft: false
         prerelease: false
     - name: Upload jars to release

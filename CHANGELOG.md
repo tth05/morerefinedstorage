@@ -1,5 +1,10 @@
 # More Refined Storage Changelog
 
+### 2.1.6
+- Fixed crafting tasks started by machines consuming items even if they can't craft
+- Fixed crafting tasks started by machines being calculated on the main thread
+- Fixed Thaumcraft aspects being rendered at wrong height
+
 ### 2.1.5
 - Fixed fatal mistake that broke compatibility
 
