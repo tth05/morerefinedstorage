@@ -76,70 +76,68 @@ public class CraftingManager implements ICraftingManager {
             this.tasksDirty = false;
         }
 
-        if (network.canRun()) {
-            if (tasksToRead != null) {
-                for (int i = 0; i < tasksToRead.tagCount(); ++i) {
-                    NBTTagCompound taskTag = tasksToRead.getCompoundTagAt(i);
+        if (tasksToRead != null) {
+            for (int i = 0; i < tasksToRead.tagCount(); ++i) {
+                NBTTagCompound taskTag = tasksToRead.getCompoundTagAt(i);
 
-                    String taskType = taskTag.getString(NBT_TASK_TYPE);
-                    NBTTagCompound taskData = taskTag.getCompoundTag(NBT_TASK_DATA);
+                String taskType = taskTag.getString(NBT_TASK_TYPE);
+                NBTTagCompound taskData = taskTag.getCompoundTag(NBT_TASK_DATA);
 
-                    ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(taskType);
-                    if (factory != null) {
-                        try {
-                            MasterCraftingTask task = factory.createFromNbt(network, taskData);
+                ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(taskType);
+                if (factory != null) {
+                    try {
+                        MasterCraftingTask task = factory.createFromNbt(network, taskData);
 
-                            tasks.put(task.getId(), task);
-                        } catch (CraftingTaskReadException e) {
-                            LOGGER.catching(e);
-                        }
+                        tasks.put(task.getId(), task);
+                    } catch (CraftingTaskReadException e) {
+                        LOGGER.catching(e);
                     }
                 }
-
-                this.tasksToRead = null;
             }
 
-            boolean changed = !tasksToCancel.isEmpty() || !tasksToAdd.isEmpty();
+            this.tasksToRead = null;
+        }
 
-            for (ICraftingTask task : this.tasksToAdd) {
-                this.tasks.put(task.getId(), task);
+        boolean changed = !tasksToCancel.isEmpty() || !tasksToAdd.isEmpty();
+
+        for (ICraftingTask task : this.tasksToAdd) {
+            this.tasks.put(task.getId(), task);
+        }
+
+        tasksToAdd.clear();
+
+        for (UUID idToCancel : tasksToCancel) {
+            ICraftingTask task = this.tasks.get(idToCancel);
+            if (task != null) {
+                task.onCancelled();
+                this.tasks.remove(idToCancel);
             }
+        }
+        this.tasksToCancel.clear();
 
-            tasksToAdd.clear();
+        boolean anyFinished = false;
 
-            for (UUID idToCancel : tasksToCancel) {
-                ICraftingTask task = this.tasks.get(idToCancel);
-                if (task != null) {
-                    task.onCancelled();
-                    this.tasks.remove(idToCancel);
-                }
+        updateCountMap.clear();
+
+        Iterator<Map.Entry<UUID, ICraftingTask>> it = tasks.entrySet().iterator();
+        while (it.hasNext()) {
+            ICraftingTask task = it.next().getValue();
+
+            if (task.canUpdate() && task.update(updateCountMap)) {
+                anyFinished = true;
+
+                it.remove();
+                //insert everything that remains, like infinite inputs
+                task.onCancelled();
             }
-            this.tasksToCancel.clear();
+        }
 
-            boolean anyFinished = false;
+        if (changed || anyFinished) {
+            onTaskChanged();
+        }
 
-            updateCountMap.clear();
-
-            Iterator<Map.Entry<UUID, ICraftingTask>> it = tasks.entrySet().iterator();
-            while (it.hasNext()) {
-                ICraftingTask task = it.next().getValue();
-
-                if (task.canUpdate() && task.update(updateCountMap)) {
-                    anyFinished = true;
-
-                    it.remove();
-                    //insert everything that remains, like infinite inputs
-                    task.onCancelled();
-                }
-            }
-
-            if (changed || anyFinished) {
-                onTaskChanged();
-            }
-
-            if (!tasks.isEmpty()) {
-                network.markDirty();
-            }
+        if (!tasks.isEmpty()) {
+            network.markDirty();
         }
     }
 
