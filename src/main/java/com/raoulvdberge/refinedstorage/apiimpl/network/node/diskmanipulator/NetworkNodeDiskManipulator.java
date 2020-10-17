@@ -31,8 +31,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
@@ -81,7 +79,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 protected void onContentsChanged(int slot) {
                     super.onContentsChanged(slot);
 
-                    if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
+                    if (!world.isRemote) {
                         StackUtils.createStorages(
                                 world,
                                 getStackInSlot(slot),
@@ -103,7 +101,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 protected void onContentsChanged(int slot) {
                     super.onContentsChanged(slot);
 
-                    if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
+                    if (!world.isRemote) {
                         StackUtils.createStorages(
                                 world,
                                 getStackInSlot(slot),
@@ -183,11 +181,11 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     private void insertItemIntoNetwork(IStorageDisk<ItemStack> storage) {
-        if(network == null)
-            return;
-
         Collection<StackListEntry<ItemStack>> entries = new ObjectArrayList<>(storage.getEntries());
         for (StackListEntry<ItemStack> stack : entries) {
+            if (!IFilterable.acceptsItem(itemFilters, mode, compare, stack.getStack()))
+                continue;
+
             StackListResult<ItemStack> extracted =
                     storage.extract(stack.getStack(), upgrades.getItemInteractCount(), compare, Action.PERFORM);
             if (extracted == null) {
@@ -238,10 +236,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     private void extractItemFromNetwork(IStorageDisk<ItemStack> storage, int slot) {
-        if(network == null)
-            return;
-
-        ItemStack extracted = null;
+        StackListResult<ItemStack> extracted = null;
         int i = 0;
 
         if (itemFilters.isEmpty()) {
@@ -254,7 +249,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
             }
 
             if (toExtract != null) {
-                extracted = network.extractItem(toExtract, upgrades.getItemInteractCount(), compare, Action.PERFORM);
+                extracted = network.extractItem(toExtract, (long) upgrades.getItemInteractCount(), compare, Action.PERFORM);
             }
         } else {
             while (itemFilters.getSlots() > i && extracted == null) {
@@ -265,8 +260,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
                 }
 
                 if (!filterStack.isEmpty()) {
-                    extracted =
-                            network.extractItem(filterStack, upgrades.getItemInteractCount(), compare, Action.PERFORM);
+                    extracted = network.extractItem(filterStack, (long) upgrades.getItemInteractCount(), compare, Action.PERFORM);
                 }
             }
         }
@@ -276,7 +270,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
             return;
         }
 
-        StackListResult<ItemStack> remainder = storage.insert(extracted, extracted.getCount(), Action.PERFORM);
+        StackListResult<ItemStack> remainder = storage.insert(extracted.getStack(), extracted.getCount(), Action.PERFORM);
 
         if (remainder != null) {
             network.insertItem(remainder.getStack(), remainder.getCount(), Action.PERFORM);
@@ -284,7 +278,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     private void insertFluidIntoNetwork(IStorageDisk<FluidStack> storage, int slot) {
-        if(network == null)
+        if (network == null)
             return;
 
         List<StackListEntry<FluidStack>> entries = new ArrayList<>(storage.getEntries());
@@ -343,7 +337,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     private void extractFluidFromNetwork(IStorageDisk<FluidStack> storage, int slot) {
-        if(network == null)
+        if (network == null)
             return;
 
         FluidStack extracted = null;
