@@ -168,110 +168,53 @@ public class ProxyCommon {
 
         int id = 0;
 
-        RS.INSTANCE.network
-                .registerMessage(MessageTileDataParameter.class, MessageTileDataParameter.class, id++, Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageTileDataParameterUpdate.class, MessageTileDataParameterUpdate.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridItemInsertHeld.class, MessageGridItemInsertHeld.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageTileDataParameter.class, MessageTileDataParameter.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageTileDataParameterUpdate.class, MessageTileDataParameterUpdate.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridItemInsertHeld.class, MessageGridItemInsertHeld.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridItemPull.class, MessageGridItemPull.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridItemScroll.class, MessageGridItemScroll.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridItemInventoryScroll.class, MessageGridItemInventoryScroll.class, id++,
-                        Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridItemScroll.class, MessageGridItemScroll.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridItemInventoryScroll.class, MessageGridItemInventoryScroll.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridPatternSlotScroll.class, MessageGridPatternSlotScroll.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridClear.class, MessageGridClear.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridTransfer.class, MessageGridTransfer.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridSettingsUpdate.class, MessageGridSettingsUpdate.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridCraftingStart.class, MessageGridCraftingStart.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridPatternCreate.class, MessageGridPatternCreate.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageCraftingCancel.class, MessageCraftingCancel.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageCraftingMonitorElements.class, MessageCraftingMonitorElements.class, id++,
-                        Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridItemUpdate.class, MessageGridItemUpdate.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridSettingsUpdate.class, MessageGridSettingsUpdate.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridCraftingStart.class, MessageGridCraftingStart.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridPatternCreate.class, MessageGridPatternCreate.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageCraftingCancel.class, MessageCraftingCancel.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageCraftingMonitorElements.class, MessageCraftingMonitorElements.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridItemUpdate.class, MessageGridItemUpdate.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageGridItemDelta.class, MessageGridItemDelta.class, id++, Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridItemInsertInventory.class, MessageGridItemInsertInventory.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridFluidUpdate.class, MessageGridFluidUpdate.class, id++, Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridFluidDelta.class, MessageGridFluidDelta.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridItemInsertInventory.class, MessageGridItemInsertInventory.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridFluidUpdate.class, MessageGridFluidUpdate.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridFluidDelta.class, MessageGridFluidDelta.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageGridFluidPull.class, MessageGridFluidPull.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridFluidInsertHeld.class, MessageGridFluidInsertHeld.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessagePortableGridFluidDelta.class, MessagePortableGridFluidDelta.class, id++,
-                        Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessagePortableGridFluidUpdate.class, MessagePortableGridFluidUpdate.class, id++,
-                        Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessagePortableGridItemDelta.class, MessagePortableGridItemDelta.class, id++,
-                        Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessagePortableGridItemUpdate.class, MessagePortableGridItemUpdate.class, id++,
-                        Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridFluidInsertHeld.class, MessageGridFluidInsertHeld.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridFluidDelta.class, MessagePortableGridFluidDelta.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridFluidUpdate.class, MessagePortableGridFluidUpdate.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridItemDelta.class, MessagePortableGridItemDelta.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessagePortableGridItemUpdate.class, MessagePortableGridItemUpdate.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageFilterUpdate.class, MessageFilterUpdate.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridCraftingPreview.class, MessageGridCraftingPreview.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridCraftingPreviewResponse.class, MessageGridCraftingPreviewResponse.class,
-                        id++, Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridCraftingStartResponse.class, MessageGridCraftingStartResponse.class, id++,
-                        Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageGridProcessingTransfer.class, MessageGridProcessingTransfer.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageReaderWriterUpdate.class, MessageReaderWriterUpdate.class, id++, Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageReaderWriterChannelAdd.class, MessageReaderWriterChannelAdd.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageReaderWriterChannelRemove.class, MessageReaderWriterChannelRemove.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageSecurityManagerUpdate.class, MessageSecurityManagerUpdate.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network.registerMessage(MessageWirelessFluidGridSettingsUpdate.class,
-                MessageWirelessFluidGridSettingsUpdate.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageCrafterManagerSlotSizes.class, MessageCrafterManagerSlotSizes.class, id++,
-                        Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageCrafterManagerRequestSlotData.class, MessageCrafterManagerRequestSlotData.class,
-                        id++, Side.SERVER);
-        RS.INSTANCE.network.registerMessage(MessageWirelessCraftingMonitorSettings.class,
-                MessageWirelessCraftingMonitorSettings.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageStorageDiskSizeRequest.class, MessageStorageDiskSizeRequest.class, id++,
-                        Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageStorageDiskSizeResponse.class, MessageStorageDiskSizeResponse.class, id++,
-                        Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridCraftingPreview.class, MessageGridCraftingPreview.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageGridCraftingPreviewResponse.class, MessageGridCraftingPreviewResponse.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridCraftingStartResponse.class, MessageGridCraftingStartResponse.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageGridProcessingTransfer.class, MessageGridProcessingTransfer.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageReaderWriterUpdate.class, MessageReaderWriterUpdate.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageReaderWriterChannelAdd.class, MessageReaderWriterChannelAdd.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageReaderWriterChannelRemove.class, MessageReaderWriterChannelRemove.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageSecurityManagerUpdate.class, MessageSecurityManagerUpdate.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageWirelessFluidGridSettingsUpdate.class, MessageWirelessFluidGridSettingsUpdate.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageCrafterManagerSlotSizes.class, MessageCrafterManagerSlotSizes.class, id++, Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageCrafterManagerRequestSlotData.class, MessageCrafterManagerRequestSlotData.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageWirelessCraftingMonitorSettings.class, MessageWirelessCraftingMonitorSettings.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageStorageDiskSizeRequest.class, MessageStorageDiskSizeRequest.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageStorageDiskSizeResponse.class, MessageStorageDiskSizeResponse.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageConfigSync.class, MessageConfigSync.class, id++, Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageSlotFilterFluidSetAmount.class, MessageSlotFilterFluidSetAmount.class, id++,
-                        Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageSlotFilterFluidSetAmount.class, MessageSlotFilterFluidSetAmount.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageSlotFilterSet.class, MessageSlotFilterSet.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageSlotFilterSetFluid.class, MessageSlotFilterSetFluid.class, id++, Side.SERVER);
-        RS.INSTANCE.network
-                .registerMessage(MessageSlotFilterFluidUpdate.class, MessageSlotFilterFluidUpdate.class, id++,
-                        Side.CLIENT);
+        RS.INSTANCE.network.registerMessage(MessageSlotFilterSetFluid.class, MessageSlotFilterSetFluid.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageSlotFilterFluidUpdate.class, MessageSlotFilterFluidUpdate.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageGridOpen.class, MessageGridOpen.class, id++, Side.CLIENT);
-        RS.INSTANCE.network
-                .registerMessage(MessageNetworkItemOpen.class, MessageNetworkItemOpen.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageNetworkItemOpen.class, MessageNetworkItemOpen.class, id++, Side.SERVER);
 
         NetworkRegistry.INSTANCE.registerGuiHandler(RS.INSTANCE, new GuiHandler());
 

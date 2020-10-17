@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.network.grid.IGridNetworkAware;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
+import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.IResizableDisplay;
 import com.raoulvdberge.refinedstorage.gui.control.*;
@@ -174,6 +175,9 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int delta = Mouse.getEventDWheel();
+        if (delta == 0)
+            return;
+
         ScaledResolution scaledResolution = new ScaledResolution(mc);
         int width = scaledResolution.getScaledWidth();
         int height = scaledResolution.getScaledHeight();
@@ -182,22 +186,24 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         Slot hoveredSlot = this.getSlotUnderMouse();
 
-        if (hoveredSlot != null && hoveredSlot.getStack().isEmpty())
+        if (hoveredSlot == null || hoveredSlot.getStack().isEmpty())
             return;
 
-        if (delta != 0 && (isShiftKeyDown() || isCtrlKeyDown())) {
-            if (isOverInventoryAndHotBar(mouseX - guiLeft, mouseY - guiTop)) {
-                if (grid.getGridType() != GridType.FLUID && hoveredSlot != null) {
+        if (isShiftKeyDown() || isCtrlKeyDown()) {
+            if (isOverInventoryAndHotBar(mouseX - guiLeft, mouseY - guiTop)) { //scroll into grid
+                if (grid.getGridType() != GridType.FLUID) {
                     RS.INSTANCE.network.sendToServer(
                             new MessageGridItemInventoryScroll(hoveredSlot.getSlotIndex(), isShiftKeyDown(),
                                     delta > 0));
                 }
-            } else if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) &&
+            } else if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) && //scroll from grid
                     grid.getGridType() != GridType.FLUID) {
                 RS.INSTANCE.network.sendToServer(new MessageGridItemScroll(
                         isOverSlotWithStack() ? view.getStacks().get(slotNumber).getId() : new UUID(0, 0),
                         isShiftKeyDown(), isCtrlKeyDown(), delta > 0));
             }
+        } else if (getGrid().getGridType() == GridType.PATTERN && hoveredSlot instanceof SlotFilter) {
+            RS.INSTANCE.network.sendToServer(new MessageGridPatternSlotScroll(hoveredSlot.slotNumber, delta > 0));
         }
     }
 

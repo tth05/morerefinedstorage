@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import li.cil.oc.api.Network;
@@ -327,16 +328,16 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         }
 
         // Simulate extracting the item and get the amount of items that can be extracted
-        ItemStack extracted = node.getNetwork().extractItem(stack, count, Action.SIMULATE);
-        if (extracted.isEmpty()) {
+        StackListResult<ItemStack> extracted = node.getNetwork().extractItem(stack, (long)count, Action.SIMULATE);
+        if (extracted == null) {
             return new Object[]{null, "could not extract the specified item"};
         }
 
-        int transferableAmount = extracted.getCount();
+        long transferableAmount = extracted.getCount();
 
         // Simulate inserting the item and see how many we were able to insert
         IItemHandler handler = targetEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing.getOpposite());
-        ItemStack remainder = ItemHandlerHelper.insertItemStacked(handler, extracted, true);
+        ItemStack remainder = ItemHandlerHelper.insertItemStacked(handler, extracted.getFixedStack(), true);
         if (!remainder.isEmpty()) {
             transferableAmount -= remainder.getCount();
         }
@@ -348,11 +349,11 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         // Actually do it and return how many items we've inserted
         extracted = node.getNetwork().extractItem(stack, transferableAmount, Action.PERFORM);
-        if (!extracted.isEmpty()) {
-            remainder = ItemHandlerHelper.insertItemStacked(handler, extracted, false);
+        if (extracted != null) {
+            remainder = ItemHandlerHelper.insertItemStacked(handler, extracted.getFixedStack(), false);
 
             if (!remainder.isEmpty()) {
-                node.getNetwork().insertItem(remainder, remainder.getCount(), Action.PERFORM);
+                node.getNetwork().insertItem(remainder, (long)remainder.getCount(), Action.PERFORM);
             }
         }
 
