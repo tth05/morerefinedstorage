@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.RSItems;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternProvider;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.CraftingPattern;
 import com.raoulvdberge.refinedstorage.item.info.ItemInfo;
@@ -37,7 +38,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
-    private static final Map<ItemStack, CraftingPattern> PATTERN_CACHE = new HashMap<>();
+    private static final Map<PatternCacheKey, CraftingPattern> PATTERN_CACHE = new HashMap<>();
 
     private static final String NBT_VERSION = "Version";
     public static final String NBT_INPUT_SLOT = "Input_%d";
@@ -62,7 +63,7 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
     }
 
     public static CraftingPattern getPatternFromCache(World world, ItemStack stack) {
-        return PATTERN_CACHE.computeIfAbsent(stack, itemStack -> new CraftingPattern(world, null, stack));
+        return PATTERN_CACHE.computeIfAbsent(new PatternCacheKey(stack), key -> new CraftingPattern(world, null, key.stack));
     }
 
     @Override
@@ -240,6 +241,29 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
 
         if (!world.isRemote) {
             API.instance().getOneSixMigrationHelper().migratePattern(stack);
+        }
+    }
+
+    private static final class PatternCacheKey {
+        private final ItemStack stack;
+
+        private PatternCacheKey(ItemStack stack) {
+            this.stack = stack;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PatternCacheKey that = (PatternCacheKey) o;
+
+            return API.instance().getComparer().isEqual(stack, that.stack, IComparer.COMPARE_NBT);
+        }
+
+        @Override
+        public int hashCode() {
+            return stack != null ? API.instance().getItemStackHashCode(stack) : 0;
         }
     }
 }
