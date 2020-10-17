@@ -1,5 +1,15 @@
 # More Refined Storage Changelog
 
+# 2.1.7
+- Added creative range upgrade
+- Added scrolling support to pattern grid (scroll to change amount of items)
+- Removed Gregtech pattern rendering blacklist
+- Fixed completion percentage of crafting tasks rounding in the wrong direction
+- Fixed filtering in disk manipulator not working correctly
+- Fixed various thing being able to run without power
+- Fixed some controller gui issues
+- Fixed big amount of patterns freezing the client when rendering
+
 ### 2.1.6
 - Fixed crafting tasks started by machines consuming items even if they can't craft
 - Fixed crafting tasks started by machines being calculated on the main thread
