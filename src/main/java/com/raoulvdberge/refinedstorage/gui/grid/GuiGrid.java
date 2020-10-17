@@ -503,13 +503,10 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                     .sendToServer(new MessageGridPatternCreate(gridPos.getX(), gridPos.getY(), gridPos.getZ()));
 
             mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        } else if (clickedClear && grid instanceof IGridNetworkAware) {
+            RS.INSTANCE.network.sendToServer(new MessageGridClear());
+            mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         } else if (grid.isActive()) {
-            if (clickedClear && grid instanceof IGridNetworkAware) {
-                RS.INSTANCE.network.sendToServer(new MessageGridClear());
-                mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                return;
-            }
-
             EntityPlayer player = ((ContainerGrid) this.inventorySlots).getPlayer();
             ItemStack held = player.inventory.getItemStack();
 

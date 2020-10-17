@@ -40,7 +40,7 @@ public class MessageGridItemInsertInventory extends MessageHandlerPlayerToServer
 
         IGrid grid = ((ContainerGrid) container).getGrid();
 
-        if (grid.getGridType() == GridType.FLUID || grid.getItemHandler() == null)
+        if (!grid.isActive() || grid.getGridType() == GridType.FLUID || grid.getItemHandler() == null)
             return;
 
         int index, bound;

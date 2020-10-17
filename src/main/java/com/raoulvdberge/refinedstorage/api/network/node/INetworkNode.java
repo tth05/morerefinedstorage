@@ -49,6 +49,12 @@ public interface INetworkNode {
     boolean canUpdate();
 
     /**
+     * Whether or not this node is active independent of the network
+     * @return true if it enabled; false otherwise
+     */
+    boolean isEnabled();
+
+    /**
      * @return the network, or null if this node is not connected to any network
      */
     @Nullable

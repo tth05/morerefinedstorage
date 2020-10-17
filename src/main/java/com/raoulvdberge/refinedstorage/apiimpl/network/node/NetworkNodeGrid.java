@@ -9,7 +9,6 @@ import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.cache.IStorageCacheListener;
-import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IFilter;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.listener.StorageCacheListenerGridFluid;
@@ -405,16 +404,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     @Override
     public void onClear(EntityPlayer player) {
         if (type == GridType.CRAFTING && network != null && network.getSecurityManager().hasPermission(Permission.INSERT, player)) {
-            for (int i = 0; i < matrix.getSizeInventory(); ++i) {
-                ItemStack slot = matrix.getStackInSlot(i);
-
-                if (!slot.isEmpty()) {
-                    matrix.setInventorySlotContents(i, StackUtils.nullToEmpty(network.insertItem(slot, slot.getCount(), Action.PERFORM)));
-
-                    network.getItemStorageTracker().changed(player, slot.copy());
-                }
-            }
-        } else if (type == GridType.PATTERN) {
+            API.instance().getCraftingGridBehavior().onClear(this, player);
+        } else if (type == GridType.PATTERN && network != null && network.canRun()) {
             clearMatrix();
         }
     }

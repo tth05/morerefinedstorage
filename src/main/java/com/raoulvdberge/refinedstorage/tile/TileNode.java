@@ -90,6 +90,20 @@ public abstract class TileNode<N extends NetworkNode> extends TileBase implement
     }
 
     @Override
+    public void validate() {
+        super.validate();
+
+        if (!world.isRemote) {
+            INetworkNodeManager manager = API.instance().getNetworkNodeManager(world);
+
+            if (manager.getNode(pos) == null) {
+                manager.setNode(pos, createNode(world, pos));
+                manager.markForSaving();
+            }
+        }
+    }
+
+    @Override
     @Nonnull
     @SuppressWarnings("unchecked")
     public N getNode() {
@@ -105,9 +119,8 @@ public abstract class TileNode<N extends NetworkNode> extends TileBase implement
 
         INetworkNode node = manager.getNode(pos);
 
-        if (node == null || !node.getId().equals(getNodeId())) {
-            manager.setNode(pos, node = createNode(world, pos));
-            manager.markForSaving();
+        if (node == null) {
+            throw new RuntimeException("No network node present at " + pos.toString());
         }
 
         OneSixMigrationHelper.removalHook();

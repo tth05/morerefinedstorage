@@ -199,10 +199,8 @@ public class TileController extends TileBase
 
                 if (!RS.INSTANCE.config.controllerUsesEnergy) {
                     this.energy.setStored(this.energy.getCapacity());
-                } else if (this.energy.extract(energyUsage, Action.SIMULATE) >= 0) {
+                } else if (this.energy.extract(energyUsage, Action.SIMULATE) == energyUsage) {
                     this.energy.extract(energyUsage, Action.PERFORM);
-                } else {
-                    this.energy.setStored(0);
                 }
             } else if (getType() == ControllerType.CREATIVE) {
                 this.energy.setStored(this.energy.getCapacity());
@@ -219,7 +217,10 @@ public class TileController extends TileBase
                     couldRun = canRun;
                     throttlingDisabled = false;
 
-                    nodeGraph.invalidate(Action.PERFORM, world, pos);
+                    if(!canRun)
+                        nodeGraph.disconnectAll();
+                    else
+                        nodeGraph.invalidate(Action.PERFORM, world, pos);
                     securityManager.invalidate();
                 }
             } else {
@@ -238,7 +239,7 @@ public class TileController extends TileBase
 
     @Override
     public boolean canRun() {
-        return this.energy.getStored() > 0 && redstoneMode.isEnabled(world, pos);
+        return this.energy.getStored() >= this.getEnergyUsage() && redstoneMode.isEnabled(world, pos);
     }
 
     @Nullable
@@ -554,6 +555,11 @@ public class TileController extends TileBase
     }
 
     @Override
+    public boolean isEnabled() {
+        return false;
+    }
+
+    @Override
     public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
         return capability == CapabilityEnergy.ENERGY
                 || capability == CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY
@@ -630,7 +636,7 @@ public class TileController extends TileBase
         int usage = RS.INSTANCE.config.controllerBaseUsage;
 
         for (INetworkNode node : nodeGraph.all()) {
-            if (node.canUpdate()) {
+            if (node.isEnabled()) {
                 usage += node.getEnergyUsage();
             }
         }

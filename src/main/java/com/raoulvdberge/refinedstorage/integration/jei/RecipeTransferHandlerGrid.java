@@ -12,6 +12,7 @@ import mezz.jei.api.recipe.IRecipeCategory;
 import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
@@ -37,6 +38,21 @@ public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
     public IRecipeTransferError transferRecipe(@Nonnull Container container, @Nonnull IRecipeLayout recipeLayout, @Nonnull EntityPlayer player,
                                                boolean maxTransfer, boolean doTransfer) {
         IGrid grid = ((ContainerGrid) container).getGrid();
+
+        if (!grid.isActive()) {
+            return new IRecipeTransferError() {
+                @Nonnull
+                @Override
+                public Type getType() {
+                    return Type.INTERNAL;
+                }
+
+                @Override
+                public void showError(@Nonnull Minecraft minecraft, int mouseX, int mouseY, @Nonnull IRecipeLayout recipeLayout, int recipeX, int recipeY) {
+                    //NO OP
+                }
+            };
+        }
 
         if (doTransfer) {
             LAST_TRANSFER = System.currentTimeMillis();

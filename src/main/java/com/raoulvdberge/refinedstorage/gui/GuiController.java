@@ -64,45 +64,47 @@ public class GuiController extends GuiBase {
 
         int slot = scrollbar != null ? (scrollbar.getOffset() * 2) : 0;
 
-        RenderHelper.enableGUIStandardItemLighting();
+        if(TileController.ENERGY_STORED.getValue() >= TileController.ENERGY_USAGE.getValue()) {
+            RenderHelper.enableGUIStandardItemLighting();
 
-        List<ClientNode> nodes = TileController.NODES.getValue();
+            List<ClientNode> nodes = TileController.NODES.getValue();
 
-        ClientNode nodeHovering = null;
+            ClientNode nodeHovering = null;
 
-        for (int i = 0; i < 4; ++i) {
-            if (slot < nodes.size()) {
-                ClientNode node = nodes.get(slot);
+            for (int i = 0; i < 4; ++i) {
+                if (slot < nodes.size()) {
+                    ClientNode node = nodes.get(slot);
 
-                drawItem(x, y + 5, node.getStack());
+                    drawItem(x, y + 5, node.getStack());
 
-                float scale = fontRenderer.getUnicodeFlag() ? 1F : 0.5F;
+                    float scale = fontRenderer.getUnicodeFlag() ? 1F : 0.5F;
 
-                GlStateManager.pushMatrix();
-                GlStateManager.scale(scale, scale, 1);
+                    GlStateManager.pushMatrix();
+                    GlStateManager.scale(scale, scale, 1);
 
-                drawString(RenderUtils.getOffsetOnScale(x + 1, scale), RenderUtils.getOffsetOnScale(y - 2, scale), trimNameIfNeeded(!fontRenderer.getUnicodeFlag(), node.getStack().getDisplayName()));
-                drawString(RenderUtils.getOffsetOnScale(x + 21, scale), RenderUtils.getOffsetOnScale(y + 10, scale), node.getAmount() + "x");
+                    drawString(RenderUtils.getOffsetOnScale(x + 1, scale), RenderUtils.getOffsetOnScale(y - 2, scale), trimNameIfNeeded(!fontRenderer.getUnicodeFlag(), node.getStack().getDisplayName()));
+                    drawString(RenderUtils.getOffsetOnScale(x + 21, scale), RenderUtils.getOffsetOnScale(y + 10, scale), node.getAmount() + "x");
 
-                GlStateManager.popMatrix();
+                    GlStateManager.popMatrix();
 
-                if (inBounds(x, y, 16, 16, mouseX, mouseY)) {
-                    nodeHovering = node;
+                    if (inBounds(x, y, 16, 16, mouseX, mouseY)) {
+                        nodeHovering = node;
+                    }
                 }
+
+                if (i == 1) {
+                    x = 33;
+                    y += 30;
+                } else {
+                    x += 60;
+                }
+
+                slot++;
             }
 
-            if (i == 1) {
-                x = 33;
-                y += 30;
-            } else {
-                x += 60;
+            if (nodeHovering != null) {
+                drawTooltip(mouseX, mouseY, t("misc.refinedstorage:energy_usage_minimal", nodeHovering.getEnergyUsage()));
             }
-
-            slot++;
-        }
-
-        if (nodeHovering != null) {
-            drawTooltip(mouseX, mouseY, t("misc.refinedstorage:energy_usage_minimal", nodeHovering.getEnergyUsage()));
         }
 
         if (inBounds(BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, mouseX, mouseY)) {

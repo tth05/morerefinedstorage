@@ -4,8 +4,6 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.GridType;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridCraftingListener;
-import com.raoulvdberge.refinedstorage.api.network.security.Permission;
-import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.item.ItemWirelessCraftingGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -108,18 +106,7 @@ public class WirelessCraftingGrid extends WirelessGrid {
 
     @Override
     public void onClear(EntityPlayer player) {
-        INetwork network = this.getNetwork();
-        if (network != null && network.getSecurityManager().hasPermission(Permission.INSERT, player)) {
-            for (int i = 0; i < matrix.getSizeInventory(); ++i) {
-                ItemStack slot = matrix.getStackInSlot(i);
-
-                if (!slot.isEmpty()) {
-                    matrix.setInventorySlotContents(i, StackUtils.nullToEmpty(network.insertItem(slot, slot.getCount(), Action.PERFORM)));
-
-                    network.getItemStorageTracker().changed(player, slot.copy());
-                }
-            }
-        }
+        API.instance().getCraftingGridBehavior().onClear(this, player);
     }
 
     public void addCraftingListener(final IGridCraftingListener listener) {

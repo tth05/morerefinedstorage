@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
+import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.api.network.grid.handler.IFluidGridHandler;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
@@ -32,7 +33,8 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
     public void onExtract(EntityPlayerMP player, UUID id, boolean shift) {
         StackListEntry<FluidStack> stack = portableGrid.getFluidCache().getList().get(id);
 
-        if (stack == null || stack.getCount() < Fluid.BUCKET_VOLUME) {
+        if (stack == null || stack.getCount() < Fluid.BUCKET_VOLUME ||
+                (portableGrid instanceof IGrid && !((IGrid) portableGrid).isActive())) {
             return;
         }
 
@@ -78,6 +80,9 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
     @Nullable
     @Override
     public ItemStack onInsert(EntityPlayerMP player, ItemStack container) {
+        if((portableGrid instanceof IGrid && !((IGrid) portableGrid).isActive()))
+            return container;
+
         Pair<ItemStack, FluidStack> result = StackUtils.getFluid(container, true);
 
         if (result.getValue() != null && portableGrid.getFluidStorage().insert(result.getValue(), result.getValue().amount, Action.SIMULATE) == null) {

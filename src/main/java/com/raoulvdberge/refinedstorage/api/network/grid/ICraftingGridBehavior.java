@@ -29,4 +29,9 @@ public interface ICraftingGridBehavior {
      * Default logic for transferring a recipe into the given {@code grid}.
      */
     void onRecipeTransfer(IGridNetworkAware grid, EntityPlayer player, ItemStack[][] recipe);
+
+    /**
+     * Default logic for clearing the crafting matrix
+     */
+    void onClear(IGridNetworkAware grid, EntityPlayer player);
 }
