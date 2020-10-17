@@ -28,6 +28,7 @@ public class ItemUpgrade extends ItemBase {
     public static final int TYPE_FORTUNE_2 = 8;
     public static final int TYPE_FORTUNE_3 = 9;
     public static final int TYPE_REGULATOR = 10;
+    public static final int TYPE_CREATIVE_RANGE = 11;
 
     public ItemUpgrade() {
         super(new ItemInfo(RS.ID, "upgrade"));
@@ -52,6 +53,7 @@ public class ItemUpgrade extends ItemBase {
 
         modelRegistration.setModel(this, 0, new ModelResourceLocation(RS.ID + ":upgrade", "inventory"));
         modelRegistration.setModel(this, TYPE_RANGE, new ModelResourceLocation(RS.ID + ":range_upgrade", "inventory"));
+        modelRegistration.setModel(this, TYPE_CREATIVE_RANGE, new ModelResourceLocation(RS.ID + ":range_upgrade", "inventory"));
         modelRegistration.setModel(this, TYPE_SPEED, new ModelResourceLocation(RS.ID + ":speed_upgrade", "inventory"));
         modelRegistration.setModel(this, TYPE_CRAFTING, new ModelResourceLocation(RS.ID + ":crafting_upgrade", "inventory"));
         modelRegistration.setModel(this, TYPE_STACK, new ModelResourceLocation(RS.ID + ":stack_upgrade", "inventory"));
@@ -82,7 +84,7 @@ public class ItemUpgrade extends ItemBase {
             return;
         }
 
-        for (int i = 0; i <= 10; ++i) {
+        for (int i = 0; i <= 11; ++i) {
             if (i != 5) { // Removal of interdimensional upgrade
                 items.add(new ItemStack(this, 1, i));
             }

@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWirelessTransmitter {
     public static final String ID = "wireless_transmitter";
 
-    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_RANGE);
+    private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_RANGE, ItemUpgrade.TYPE_CREATIVE_RANGE);
 
     public NetworkNodeWirelessTransmitter(World world, BlockPos pos) {
         super(world, pos);
@@ -52,7 +52,9 @@ public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWire
 
     @Override
     public int getRange() {
-        return RS.INSTANCE.config.wirelessTransmitterBaseRange + (upgrades.getUpgradeCount(ItemUpgrade.TYPE_RANGE) * RS.INSTANCE.config.wirelessTransmitterRangePerUpgrade);
+        return RS.INSTANCE.config.wirelessTransmitterBaseRange +
+                (upgrades.getUpgradeCount(ItemUpgrade.TYPE_RANGE) * RS.INSTANCE.config.wirelessTransmitterRangePerUpgrade) +
+                upgrades.getUpgradeCount(ItemUpgrade.TYPE_CREATIVE_RANGE) * 1000000;
     }
 
     @Override
