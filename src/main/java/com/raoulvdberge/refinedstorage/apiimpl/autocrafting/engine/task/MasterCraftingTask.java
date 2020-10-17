@@ -209,7 +209,7 @@ public class MasterCraftingTask implements ICraftingTask {
                 allFinished = false;
         }
 
-        this.completionPercentage = 100 - (int) (totalAmount * 100d / (double) this.totalAmountNeeded);
+        this.completionPercentage = (int) (100 - Math.ceil(totalAmount * 100d / (double) this.totalAmountNeeded));
 
         ticks++;
         return allFinished;
