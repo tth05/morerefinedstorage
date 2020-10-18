@@ -66,6 +66,7 @@ import net.minecraftforge.fluids.FluidStack;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -217,10 +218,7 @@ public class TileController extends TileBase
                     couldRun = canRun;
                     throttlingDisabled = false;
 
-                    if(!canRun)
-                        nodeGraph.disconnectAll();
-                    else
-                        nodeGraph.invalidate(Action.PERFORM, world, pos);
+                    nodeGraph.invalidate(Action.PERFORM, world, pos);
                     securityManager.invalidate();
                 }
             } else {
@@ -395,7 +393,7 @@ public class TileController extends TileBase
 
     @Override
     public StackListResult<FluidStack> extractFluid(@Nonnull FluidStack stack, long size, int flags, Action action,
-                                   Predicate<IStorage<FluidStack>> filter) {
+                                                    Predicate<IStorage<FluidStack>> filter) {
         long received = 0;
         long extractedExternally = 0;
 
