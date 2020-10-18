@@ -4,6 +4,7 @@ itemGroup.refinedstorage.covers=Refined Storage: Фасады
 key.refinedstorage.focusSearchBar=Фокусировка на панели поиска
 key.refinedstorage.clearGridCraftingMatrix=Очистить сетку создания
 key.refinedstorage.openWirelessGrid=Открыть беспроводной терминал
+key.refinedstorage.openWirelessCraftingGrid=Открыть беспроводной терминал создания
 key.refinedstorage.openWirelessFluidGrid=Открыть жидкостный беспроводной терминал
 key.refinedstorage.openPortableGrid=Открыть переносной терминал
 key.refinedstorage.openWirelessCraftingMonitor=Открыть беспроводной монитор создания
