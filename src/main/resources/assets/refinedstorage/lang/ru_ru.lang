@@ -38,8 +38,7 @@ gui.refinedstorage:crafting_monitor.missing=Отсутствует: %d
 gui.refinedstorage:crafting_monitor.processing=Обработка: %d
 gui.refinedstorage:crafting_monitor.scheduled=Запланировано: %d
 gui.refinedstorage:crafting_monitor.crafting=Создание: %d
-gui.refinedstorage:crafting_monitor.machine_does_not_accept_item=Механизм не принимает предмет
-gui.refinedstorage:crafting_monitor.machine_does_not_accept_fluid=Механизм не принимает жидкость
+gui.refinedstorage:crafting_monitor.machine_does_not_accept=Механизм не принимает предмет/жидкость
 gui.refinedstorage:crafting_monitor.machine_none=Механизм не найден
 gui.refinedstorage:crafting_monitor.crafter_is_locked=Сборщик заблокирован
 gui.refinedstorage:wireless_transmitter=Беспроводной передатчик
@@ -101,6 +100,7 @@ misc.refinedstorage:storage.full=%d%% полный
 misc.refinedstorage:network_item.tooltip=Привязано к %d, %d, %d.
 misc.refinedstorage:network_item.out_of_range=В диапазоне нет беспроводного передатчика.
 misc.refinedstorage:network_item.not_found=Контроллер не найден.
+misc.refinedstorage:network_item.out_of_energy=%s разряжен.
 
 misc.refinedstorage:network_card.tooltip=Привязано к %d, %d, %d.
 
