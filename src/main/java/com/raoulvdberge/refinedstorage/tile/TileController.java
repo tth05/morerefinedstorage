@@ -66,7 +66,6 @@ import net.minecraftforge.fluids.FluidStack;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -155,6 +154,7 @@ public class TileController extends TileBase
     private boolean throttlingDisabled = true; // Will be enabled after first update
     private boolean couldRun;
     private int ticksSinceUpdateChanged;
+    private int lastEnergyUsage;
 
     private ControllerType type;
     private ControllerEnergyType energyType = ControllerEnergyType.OFF;
@@ -185,7 +185,9 @@ public class TileController extends TileBase
     @Override
     public void update() {
         if (!world.isRemote) {
-            if (canRun()) {
+            boolean canRun = canRun();
+
+            if (canRun) {
                 craftingManager.update();
 
                 readerWriterManager.update();
@@ -194,6 +196,8 @@ public class TileController extends TileBase
                     markDirty();
                 }
             }
+
+            updateEnergyUsage();
 
             if (getType() == ControllerType.NORMAL) {
                 int energyUsage = getEnergyUsage();
@@ -206,8 +210,6 @@ public class TileController extends TileBase
             } else if (getType() == ControllerType.CREATIVE) {
                 this.energy.setStored(this.energy.getCapacity());
             }
-
-            boolean canRun = canRun();
 
             if (couldRun != canRun) {
                 ++ticksSinceUpdateChanged;
@@ -626,10 +628,11 @@ public class TileController extends TileBase
         return this.energy;
     }
 
-    @Override
-    public int getEnergyUsage() {
-        if (!redstoneMode.isEnabled(world, pos))
-            return 0;
+    private void updateEnergyUsage() {
+        if (!redstoneMode.isEnabled(world, pos)) {
+            this.lastEnergyUsage = 0;
+            return;
+        }
 
         int usage = RS.INSTANCE.config.controllerBaseUsage;
 
@@ -639,7 +642,12 @@ public class TileController extends TileBase
             }
         }
 
-        return usage;
+        this.lastEnergyUsage = usage;
+    }
+
+    @Override
+    public int getEnergyUsage() {
+        return this.lastEnergyUsage;
     }
 
     @Override
