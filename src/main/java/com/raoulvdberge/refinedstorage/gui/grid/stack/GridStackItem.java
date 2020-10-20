@@ -28,6 +28,7 @@ public class GridStackItem implements IGridStack {
     private StorageTrackerEntry entry;
     private String modId;
     private String modName;
+    private String tooltip;
 
     public GridStackItem(ItemStack stack, long count) {
         this.stack = stack;
@@ -130,15 +131,23 @@ public class GridStackItem implements IGridStack {
     }
 
     @Override
-    public String getTooltip() {
-        String tooltip;
-        try {
-            tooltip = String.join("\n", RenderUtils.getItemTooltip(stack));
-        } catch (Exception t) {
-            tooltip = "";
+    public String getTooltip(boolean cached) {
+        if (this.tooltip == null) {
+            try {
+                this.tooltip = String.join("\n", RenderUtils.getItemTooltip(stack));
+            } catch(Exception e) {
+                this.tooltip = "";
+            }
         }
 
-        return tooltip;
+        if (cached)
+            return this.tooltip;
+
+        try {
+            return String.join("\n", RenderUtils.getItemTooltip(stack));
+        } catch (Exception t) {
+            return "";
+        }
     }
 
     @Override

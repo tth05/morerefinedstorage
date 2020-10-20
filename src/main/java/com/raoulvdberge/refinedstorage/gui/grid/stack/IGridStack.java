@@ -23,7 +23,7 @@ public interface IGridStack {
 
     String[] getOreIds();
 
-    String getTooltip();
+    String getTooltip(boolean cached);
 
     long getQuantity();
 

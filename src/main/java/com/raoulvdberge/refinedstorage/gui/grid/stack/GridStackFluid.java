@@ -95,7 +95,7 @@ public class GridStackFluid implements IGridStack {
     }
 
     @Override
-    public String getTooltip() {
+    public String getTooltip(boolean cached) {
         return stack.getFluid().getLocalizedName(stack);
     }
 
