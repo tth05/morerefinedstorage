@@ -173,7 +173,6 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
     @Override
     public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
         int delta = Mouse.getEventDWheel();
         if (delta == 0)
             return;
@@ -204,6 +203,8 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
             }
         } else if (getGrid().getGridType() == GridType.PATTERN && hoveredSlot instanceof SlotFilter) {
             RS.INSTANCE.network.sendToServer(new MessageGridPatternSlotScroll(hoveredSlot.slotNumber, delta > 0));
+        } else {
+            super.handleMouseInput();
         }
     }
 
