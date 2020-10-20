@@ -186,12 +186,12 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         Slot hoveredSlot = this.getSlotUnderMouse();
 
-        if (hoveredSlot == null || hoveredSlot.getStack().isEmpty())
+        if (hoveredSlot != null && hoveredSlot.getStack().isEmpty())
             return;
 
         if (isShiftKeyDown() || isCtrlKeyDown()) {
             if (isOverInventoryAndHotBar(mouseX - guiLeft, mouseY - guiTop)) { //scroll into grid
-                if (grid.getGridType() != GridType.FLUID) {
+                if (grid.getGridType() != GridType.FLUID && hoveredSlot != null) {
                     RS.INSTANCE.network.sendToServer(
                             new MessageGridItemInventoryScroll(hoveredSlot.getSlotIndex(), isShiftKeyDown(),
                                     delta > 0));
