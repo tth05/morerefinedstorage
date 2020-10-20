@@ -52,7 +52,9 @@ public interface INetworkNode {
      * Whether or not this node is active independent of the network
      * @return true if it enabled; false otherwise
      */
-    boolean isEnabled();
+    default boolean isEnabled() {
+        return true;
+    }
 
     /**
      * @return the network, or null if this node is not connected to any network

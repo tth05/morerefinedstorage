@@ -125,7 +125,7 @@ public class StackListItem implements IStackList<ItemStack> {
     public void clearEmpty() {
         for (Iterator<Map.Entry<Item, StackListEntry<ItemStack>>> iterator = stacks.entries().iterator(); iterator.hasNext(); ) {
             Map.Entry<Item, StackListEntry<ItemStack>> entry = iterator.next();
-            if(entry.getValue().getCount() < 1) {
+            if (entry.getValue().getCount() < 1) {
                 iterator.remove();
                 index.remove(entry.getValue().getId());
             }
