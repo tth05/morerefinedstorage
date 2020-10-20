@@ -1,5 +1,9 @@
 # More Refined Storage Changelog
 
+# 2.1.8
+- Fixed crash on world load
+- Updated russian translation (bigenergy)
+
 # 2.1.7
 - Added creative range upgrade
 - Added scrolling support to pattern grid (scroll to change amount of items)

@@ -35,14 +35,8 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Added creative range upgrade
-          - Added scrolling support to pattern grid (scroll to change amount of items)
-          - Removed Gregtech pattern rendering blacklist
-          - Fixed completion percentage of crafting tasks rounding in the wrong direction
-          - Fixed filtering in disk manipulator not working correctly
-          - Fixed various thing being able to run without power
-          - Fixed some controller gui issues
-          - Fixed big amount of patterns freezing the client when rendering
+          - Fixed crash on world load
+          - Updated russian translation (bigenergy)
         draft: false
         prerelease: false
     - name: Upload jars to release
