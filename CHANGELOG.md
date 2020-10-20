@@ -1,5 +1,9 @@
 # More Refined Storage Changelog
 
+# 2.1.9
+- Fixed performance hit from last update
+- Fixed RebornStorage compatibility
+
 # 2.1.8
 - Fixed crash on world load
 - Updated russian translation (bigenergy)
