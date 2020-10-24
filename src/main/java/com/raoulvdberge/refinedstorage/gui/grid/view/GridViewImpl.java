@@ -30,6 +30,9 @@ public class GridViewImpl implements IGridView {
 
     @Override
     public void sort() {
+        if (!this.gui.canSort())
+            return;
+
         if (gui.getGrid().isActive()) {
             Predicate<IGridStack> activeFilters = getActiveFilters();
 
@@ -86,6 +89,7 @@ public class GridViewImpl implements IGridView {
 
         IGridStack existing = map.get(stack.getId());
         boolean stillExists = true;
+        boolean canSort = this.gui.canSort();
 
         Predicate<IGridStack> activeFilters = getActiveFilters();
 
@@ -95,7 +99,7 @@ public class GridViewImpl implements IGridView {
             map.put(stack.getId(), stack);
 
             //remove craftable stack from view
-            if (!stack.isCraftable() && stack.getOtherId() != null) {
+            if (canSort && !stack.isCraftable() && stack.getOtherId() != null) {
                 IGridStack craftingStack = map.get(stack.getOtherId());
                 if (craftingStack != null)
                     stacks.remove(craftingStack);
@@ -103,15 +107,18 @@ public class GridViewImpl implements IGridView {
 
             existing = stack;
         } else {
-            stacks.remove(existing);
             existing.grow(delta);
+
+            if (canSort || existing.getCount() < 1)
+                stacks.remove(existing);
+
             if (existing.getCount() <= 0) {
                 map.remove(existing.getId());
 
                 //add craftable stack to view
                 if (!existing.isCraftable() && existing.getOtherId() != null) {
                     IGridStack craftingStack = map.get(stack.getOtherId());
-                    if (craftingStack != null && activeFilters.test(craftingStack))
+                    if (canSort && craftingStack != null && activeFilters.test(craftingStack))
                         binaryInsert(craftingStack);
                 }
 
@@ -121,7 +128,7 @@ public class GridViewImpl implements IGridView {
             existing.setTrackerEntry(stack.getTrackerEntry());
         }
 
-        if (stillExists && activeFilters.test(existing)) {
+        if (canSort && stillExists && activeFilters.test(existing)) {
             binaryInsert(existing);
         }
 

@@ -29,7 +29,6 @@ import com.raoulvdberge.refinedstorage.util.TimeUtils;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
@@ -63,6 +62,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     private final TabList tabs;
 
     private boolean wasConnected;
+    private boolean canSort = true;
 
     private int slotNumber;
 
@@ -172,18 +172,35 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     }
 
     @Override
+    public void handleKeyboardInput() throws IOException {
+        super.handleKeyboardInput();
+
+        if ((Keyboard.getEventKey() == Keyboard.KEY_LSHIFT || Keyboard.getEventKey() == Keyboard.KEY_RSHIFT ||
+                Keyboard.getEventKey() == Keyboard.KEY_LCONTROL || Keyboard.getEventKey() == Keyboard.KEY_RCONTROL)
+                && !Keyboard.getEventKeyState() && !canSort) {
+            canSort = true;
+            this.view.sort();
+        }
+    }
+
+    @Override
     public void handleMouseInput() throws IOException {
+        int mouseX = Mouse.getEventX() * this.width / this.mc.displayWidth;
+        int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+
+        //prevent sorting while over slot area - helps with scrolling items
+        if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) && (isShiftKeyDown() || isCtrlKeyDown())) {
+            canSort = false;
+        } else if (!canSort) {
+            canSort = true;
+            this.view.sort();
+        }
+
         int delta = Mouse.getEventDWheel();
         if (delta == 0) {
             super.handleMouseInput();
             return;
         }
-
-        ScaledResolution scaledResolution = new ScaledResolution(mc);
-        int width = scaledResolution.getScaledWidth();
-        int height = scaledResolution.getScaledHeight();
-        int mouseX = Mouse.getX() * width / mc.displayWidth;
-        int mouseY = height - Mouse.getY() * height / mc.displayHeight - 1;
 
         Slot hoveredSlot = this.getSlotUnderMouse();
 
@@ -600,6 +617,10 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
             scrollbar.setEnabled(getRows() > getVisibleRows());
             scrollbar.setMaxOffset(getRows() - getVisibleRows());
         }
+    }
+
+    public boolean canSort() {
+        return canSort;
     }
 
     public static List<IGridSorter> getSorters() {
