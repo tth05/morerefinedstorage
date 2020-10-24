@@ -199,19 +199,17 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         if (hoveredSlot != null && hoveredSlot.getStack().isEmpty())
             return;
 
-        if (isShiftKeyDown() || isCtrlKeyDown()) {
-            if (isOverInventoryAndHotBar(mouseX - guiLeft, mouseY - guiTop)) { //scroll into grid
-                if (grid.getGridType() != GridType.FLUID && hoveredSlot != null) {
-                    RS.INSTANCE.network.sendToServer(
-                            new MessageGridItemInventoryScroll(hoveredSlot.getSlotIndex(), isShiftKeyDown(),
-                                    delta > 0));
-                }
-            } else if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) && //scroll from grid
-                    grid.getGridType() != GridType.FLUID) {
-                RS.INSTANCE.network.sendToServer(new MessageGridItemScroll(
-                        isOverSlotWithStack() ? view.getStacks().get(slotNumber).getId() : new UUID(0, 0),
-                        isShiftKeyDown(), isCtrlKeyDown(), delta > 0));
+        if (isShiftKeyDown() && isOverInventoryAndHotBar(mouseX - guiLeft, mouseY - guiTop)) { //scroll into grid
+            if (grid.getGridType() != GridType.FLUID && hoveredSlot != null) {
+                RS.INSTANCE.network.sendToServer(
+                        new MessageGridItemInventoryScroll(hoveredSlot.getSlotIndex(), delta > 0));
             }
+        } else if ((isShiftKeyDown() || isCtrlKeyDown()) &&
+                isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) &&
+                grid.getGridType() != GridType.FLUID) { //scroll from grid
+            RS.INSTANCE.network.sendToServer(new MessageGridItemScroll(
+                    isOverSlotWithStack() ? view.getStacks().get(slotNumber).getId() : new UUID(0, 0),
+                    isShiftKeyDown(), delta > 0));
         } else if (getGrid().getGridType() == GridType.PATTERN && hoveredSlot instanceof SlotFilter) {
             RS.INSTANCE.network.sendToServer(new MessageGridPatternSlotScroll(hoveredSlot.slotNumber, delta > 0));
         }

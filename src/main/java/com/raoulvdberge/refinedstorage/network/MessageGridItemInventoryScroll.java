@@ -14,29 +14,25 @@ public class MessageGridItemInventoryScroll extends MessageHandlerPlayerToServer
         implements IMessage {
 
     private int slot;
-    private boolean shift;
     private boolean up;
 
     public MessageGridItemInventoryScroll() {
     }
 
-    public MessageGridItemInventoryScroll(int slot, boolean shift, boolean up) {
+    public MessageGridItemInventoryScroll(int slot, boolean up) {
         this.slot = slot;
-        this.shift = shift;
         this.up = up;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
         slot = buf.readInt();
-        shift = buf.readBoolean();
         up = buf.readBoolean();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeInt(slot);
-        buf.writeBoolean(shift);
         buf.writeBoolean(up);
     }
 
@@ -50,7 +46,7 @@ public class MessageGridItemInventoryScroll extends MessageHandlerPlayerToServer
             return;
         IGrid grid = ((ContainerGrid) container).getGrid();
 
-        if (grid.getItemHandler() == null || !message.shift)
+        if (grid.getItemHandler() == null)
             return;
 
         int flags = ItemGridHandler.EXTRACT_SINGLE | ItemGridHandler.EXTRACT_SHIFT;

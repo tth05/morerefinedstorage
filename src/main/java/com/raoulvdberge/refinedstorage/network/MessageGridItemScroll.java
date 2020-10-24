@@ -18,15 +18,13 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
     private UUID id;
     private boolean shift;
     private boolean up;
-    private boolean ctrl;
 
     public MessageGridItemScroll() {
     }
 
-    public MessageGridItemScroll(UUID id, boolean shift, boolean ctrl, boolean up) {
+    public MessageGridItemScroll(UUID id, boolean shift, boolean up) {
         this.id = id;
         this.shift = shift;
-        this.ctrl = ctrl;
         this.up = up;
     }
 
@@ -34,7 +32,6 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
     public void fromBytes(ByteBuf buf) {
         id = new UUID(buf.readLong(), buf.readLong());
         shift = buf.readBoolean();
-        ctrl = buf.readBoolean();
         up = buf.readBoolean();
     }
 
@@ -43,7 +40,6 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
         buf.writeLong(id.getMostSignificantBits());
         buf.writeLong(id.getLeastSignificantBits());
         buf.writeBoolean(shift);
-        buf.writeBoolean(ctrl);
         buf.writeBoolean(up);
     }
 
@@ -59,40 +55,42 @@ public class MessageGridItemScroll extends MessageHandlerPlayerToServer<MessageG
 
         if (grid.getItemHandler() == null)
             return;
-        int flags = ItemGridHandler.EXTRACT_SINGLE;
-        if (!message.id.equals(new UUID(0, 0))) { //isOverStack
-            if (message.shift && !message.ctrl) { //shift
-                flags |= ItemGridHandler.EXTRACT_SHIFT;
-                if (message.up) { //scroll up
-                    StorageCacheItem cache = (StorageCacheItem) grid.getStorageCache();
-                    if (cache == null)
-                        return;
 
-                    StackListEntry<ItemStack> entry = cache.getList().get(message.id);
-                    if (entry == null)
-                        return;
-
-                    ItemStack stack = entry.getStack();
-                    stack.setCount((int) entry.getCount());
-                    int slot = player.inventory.storeItemStack(stack);
-                    if (slot != -1) {
-                        grid.getItemHandler()
-                                .onInsert(player, player.inventory.getStackInSlot(slot), true);
-                        return;
-                    }
-                } else { //scroll down
-                    grid.getItemHandler().onExtract(player, message.id, -1, flags);
-                    return;
-                }
-            } else if (!message.up) { //scroll down
-                grid.getItemHandler().onExtract(player, message.id, -1, flags);
-                return;
-            }
-        }
-
-        if (message.up) { //scroll up
+        if (message.up && !message.shift) { //insert to grid from cursor
             grid.getItemHandler().onInsert(player, player.inventory.getItemStack(), true);
             player.updateHeldItem();
+            return;
         }
+
+        if (message.up) { //insert to grid from inventory
+            StorageCacheItem cache = (StorageCacheItem) grid.getStorageCache();
+            if (cache == null)
+                return;
+
+            StackListEntry<ItemStack> entry = cache.getList().get(message.id);
+            if (entry == null)
+                return;
+
+            ItemStack stack = entry.getStack();
+            stack.setCount((int) entry.getCount());
+            int slot = player.inventory.storeItemStack(stack);
+            if (slot != -1) {
+                grid.getItemHandler().onInsert(player, player.inventory.getStackInSlot(slot), true);
+            }
+
+            return;
+        }
+
+        //not over grid stack -> can't extract anything
+        if (message.id.equals(new UUID(0, 0)))
+            return;
+
+        if (!message.shift) { //extract from grid to cursor
+            grid.getItemHandler().onExtract(player, message.id, -1, ItemGridHandler.EXTRACT_SINGLE);
+            return;
+        }
+
+        //extract from grid to inventory
+        grid.getItemHandler().onExtract(player, message.id, -1, ItemGridHandler.EXTRACT_SINGLE | ItemGridHandler.EXTRACT_SHIFT);
     }
 }
