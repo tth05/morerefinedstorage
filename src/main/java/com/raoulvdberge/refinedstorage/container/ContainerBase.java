@@ -196,7 +196,10 @@ public abstract class ContainerBase extends Container {
         super.detectAndSendChanges();
 
         if (listener != null) {
-            listener.detectAndSendChanges();
+            if(tile != null && tile.isInvalid())
+                this.player.closeScreen();
+            else
+                listener.detectAndSendChanges();
         }
 
         if (this.getPlayer() instanceof EntityPlayerMP) {
