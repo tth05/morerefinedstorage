@@ -45,7 +45,30 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
     private final ItemHandlerUpgrade upgrades =
-            new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING,
+            new ItemHandlerUpgrade(4, slot -> {
+                if (!getUpgrades().hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
+                    for (int i = 0; i < itemFilters.getSlots(); ++i) {
+                        ItemStack filteredItem = itemFilters.getStackInSlot(i);
+
+                        if (filteredItem.getCount() > 1) {
+                            filteredItem.setCount(1);
+                        }
+                    }
+
+                    for (int i = 0; i < fluidFilters.getSlots(); ++i) {
+                        FluidStack filteredFluid = fluidFilters.getFluid(i);
+
+                        if (filteredFluid == null)
+                            continue;
+
+                        if (filteredFluid.amount > 0 && filteredFluid.amount != Fluid.BUCKET_VOLUME) {
+                            filteredFluid.amount = Fluid.BUCKET_VOLUME;
+                        }
+                    }
+                }
+
+                this.markDirty();
+            }, ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING,
                     ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_REGULATOR);
 
     private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
@@ -216,8 +239,8 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
                 int filled = handler.fill(took.getFixedStack(), false);
 
                 if (filled > 0) {
-                    took = network.extractFluid(stack, (long)filled, compare, Action.PERFORM);
-                    if(took != null) {
+                    took = network.extractFluid(stack, (long) filled, compare, Action.PERFORM);
+                    if (took != null) {
                         handler.fill(took.getFixedStack(), true);
                     }
                 }
@@ -302,7 +325,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
         }
     }
 
-    public IItemHandler getUpgrades() {
+    public ItemHandlerUpgrade getUpgrades() {
         return upgrades;
     }
 
