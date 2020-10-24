@@ -174,8 +174,10 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     @Override
     public void handleMouseInput() throws IOException {
         int delta = Mouse.getEventDWheel();
-        if (delta == 0)
+        if (delta == 0) {
+            super.handleMouseInput();
             return;
+        }
 
         ScaledResolution scaledResolution = new ScaledResolution(mc);
         int width = scaledResolution.getScaledWidth();
@@ -184,6 +186,15 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         int mouseY = height - Mouse.getY() * height / mc.displayHeight - 1;
 
         Slot hoveredSlot = this.getSlotUnderMouse();
+
+        boolean prevState = this.scrollbar.isEnabled();
+        //disable scrollbar while scrolling on pattern grid
+        if (getGrid().getGridType() == GridType.PATTERN && hoveredSlot instanceof SlotFilter && !hoveredSlot.getStack().isEmpty()) {
+            this.scrollbar.setEnabled(false);
+        }
+
+        super.handleMouseInput();
+        this.scrollbar.setEnabled(prevState);
 
         if (hoveredSlot != null && hoveredSlot.getStack().isEmpty())
             return;
@@ -203,8 +214,6 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
             }
         } else if (getGrid().getGridType() == GridType.PATTERN && hoveredSlot instanceof SlotFilter) {
             RS.INSTANCE.network.sendToServer(new MessageGridPatternSlotScroll(hoveredSlot.slotNumber, delta > 0));
-        } else {
-            super.handleMouseInput();
         }
     }
 
@@ -446,7 +455,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     }
 
     private void drawGridTooltip(IGridStack gridStack, int mouseX, int mouseY) {
-        List<String> textLines = Lists.newArrayList(gridStack.getTooltip().split("\n"));
+        List<String> textLines = Lists.newArrayList(gridStack.getTooltip(false).split("\n"));
         List<String> smallTextLines = new ArrayList<>();
 
         if (!gridStack.isCraftable()) {
@@ -454,8 +463,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         }
 
         if (gridStack.getTrackerEntry() != null) {
-            smallTextLines.add(TimeUtils
-                    .getAgo(gridStack.getTrackerEntry().getTime(), gridStack.getTrackerEntry().getName()));
+            smallTextLines.add(TimeUtils.getAgo(gridStack.getTrackerEntry().getTime(), gridStack.getTrackerEntry().getName()));
         }
 
         ItemStack stack = gridStack instanceof GridStackItem ? ((GridStackItem) gridStack).getStack() : ItemStack.EMPTY;
