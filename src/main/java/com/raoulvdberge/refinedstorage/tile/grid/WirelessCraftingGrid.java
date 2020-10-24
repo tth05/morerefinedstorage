@@ -93,10 +93,16 @@ public class WirelessCraftingGrid extends WirelessGrid {
         if (network != null) {
             network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessCraftingGridCraftUsage);
         }
+
         API.instance().getCraftingGridBehavior().onCrafted(this, this.currentRecipe, player);
     }
 
     public void onCraftedShift(final EntityPlayer player) {
+        final INetwork network = this.getNetwork();
+        if (network != null) {
+            network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessCraftingGridCraftUsage);
+        }
+
         API.instance().getCraftingGridBehavior().onCraftedShift(this, this.currentRecipe, player);
     }
 
