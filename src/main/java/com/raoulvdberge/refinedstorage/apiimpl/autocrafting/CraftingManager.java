@@ -242,8 +242,7 @@ public class CraftingManager implements ICraftingManager {
         ICraftingTask task = create(stack, amount);
 
         if (task != null) {
-            addAndCalculateTask(task);
-            throttle(source);
+            addAndCalculateTask(source, task);
             return task;
         } else {
             throttle(source);
@@ -297,8 +296,7 @@ public class CraftingManager implements ICraftingManager {
         ICraftingTask task = create(stack, amount);
 
         if (task != null) {
-            addAndCalculateTask(task);
-            throttle(source);
+            addAndCalculateTask(source, task);
             return task;
         } else {
             throttle(source);
@@ -307,13 +305,15 @@ public class CraftingManager implements ICraftingManager {
         return null;
     }
 
-    private void addAndCalculateTask(ICraftingTask task) {
+    private void addAndCalculateTask(Object source, ICraftingTask task) {
         this.tasksInCalculation.add(task);
         CompletableFuture.supplyAsync(task::calculate).thenAccept((err) -> {
             FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
                 if (err == null && !task.hasMissing()) {
                     this.add(task);
                     task.setCanUpdate(true);
+                } else {
+                    throttle(source);
                 }
 
                 this.tasksInCalculation.remove(task);
