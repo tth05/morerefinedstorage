@@ -54,6 +54,7 @@ public class CraftingManager implements ICraftingManager {
     private final Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
     private final List<ICraftingTask> tasksToAdd = new ArrayList<>();
     private final List<UUID> tasksToCancel = new ArrayList<>();
+    private final List<ICraftingTask> tasksInCalculation = new ArrayList<>();
 
     private final Map<Object, Long> throttledRequesters = new HashMap<>();
     private final Set<ICraftingMonitorListener> listeners = new HashSet<>();
@@ -214,26 +215,38 @@ public class CraftingManager implements ICraftingManager {
                 amount -= task.getQuantity();
         }
 
-        //also check in pending tasks
-        if (amount > 0) {
-            for (ICraftingTask task : this.tasksToAdd) {
-                if (task.getRequested().getItem() == null)
-                    continue;
+        if (amount <= 0)
+            return null;
 
-                if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack))
-                    amount -= task.getQuantity();
-            }
+        //also check in pending tasks
+        for (ICraftingTask task : this.tasksToAdd) {
+            if (task.getRequested().getItem() == null)
+                continue;
+
+            if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack))
+                amount -= task.getQuantity();
         }
 
-        if (amount > 0) {
-            ICraftingTask task = create(stack, amount);
+        //check tasks that are still calculating
+        for (ICraftingTask task : this.tasksInCalculation) {
+            if (task.getRequested().getItem() == null)
+                continue;
 
-            if (task != null) {
-                addTaskFromSource(source, task);
-                return task;
-            } else {
-                throttle(source);
-            }
+            if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack))
+                amount -= task.getQuantity();
+        }
+
+        if (amount <= 0)
+            return null;
+
+        ICraftingTask task = create(stack, amount);
+
+        if (task != null) {
+            addAndCalculateTask(task);
+            throttle(source);
+            return task;
+        } else {
+            throttle(source);
         }
 
         return null;
@@ -255,42 +268,55 @@ public class CraftingManager implements ICraftingManager {
             }
         }
 
-        //also check in pending tasks
-        if (amount > 0) {
-            for (ICraftingTask task : this.tasksToAdd) {
-                if (task.getRequested().getFluid() == null)
-                    continue;
+        if (amount <= 0)
+            return null;
 
-                if (API.instance().getComparer()
-                        .isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
-                    amount -= task.getQuantity();
-                }
+        //also check in pending tasks
+        for (ICraftingTask task : this.tasksToAdd) {
+            if (task.getRequested().getFluid() == null)
+                continue;
+
+            if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
+                amount -= task.getQuantity();
             }
         }
 
-        if (amount > 0) {
-            ICraftingTask task = create(stack, amount);
+        //check tasks that are still calculating
+        for (ICraftingTask task : this.tasksInCalculation) {
+            if (task.getRequested().getFluid() == null)
+                continue;
 
-            if (task != null) {
-                addTaskFromSource(source, task);
-                return task;
-            } else {
-                throttle(source);
+            if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
+                amount -= task.getQuantity();
             }
+        }
+
+        if (amount <= 0)
+            return null;
+
+        ICraftingTask task = create(stack, amount);
+
+        if (task != null) {
+            addAndCalculateTask(task);
+            throttle(source);
+            return task;
+        } else {
+            throttle(source);
         }
 
         return null;
     }
 
-    private void addTaskFromSource(Object source, ICraftingTask task) {
+    private void addAndCalculateTask(ICraftingTask task) {
+        this.tasksInCalculation.add(task);
         CompletableFuture.supplyAsync(task::calculate).thenAccept((err) -> {
             FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
                 if (err == null && !task.hasMissing()) {
                     this.add(task);
                     task.setCanUpdate(true);
-                } else {
-                    throttle(source);
                 }
+
+                this.tasksInCalculation.remove(task);
             });
         });
     }
