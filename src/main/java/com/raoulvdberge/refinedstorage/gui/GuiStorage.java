@@ -106,6 +106,8 @@ public class GuiStorage extends GuiBase {
                 t("misc.refinedstorage:storage.stored_minimal", API.instance().getQuantityFormatter().format(gui.getStored())) :
                 t("misc.refinedstorage:storage.stored_capacity_minimal", API.instance().getQuantityFormatter().format(gui.getStored()), API.instance().getQuantityFormatter().format(gui.getCapacity()))
             ) + "\n" + TextFormatting.GRAY + t("misc.refinedstorage:storage.full", full));
+        } else if (inBounds(priorityButton.x - guiLeft, priorityButton.y - guiTop, priorityButton.width, priorityButton.height, mouseX, mouseY)) {
+            drawTooltip(mouseX, mouseY, gui.getPriorityParameter().getValue() + "");
         }
     }
 

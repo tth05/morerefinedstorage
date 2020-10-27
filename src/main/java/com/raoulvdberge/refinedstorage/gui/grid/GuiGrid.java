@@ -175,10 +175,11 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     public void handleKeyboardInput() throws IOException {
         super.handleKeyboardInput();
 
+        //force sort when shift or control is released
         if ((Keyboard.getEventKey() == Keyboard.KEY_LSHIFT || Keyboard.getEventKey() == Keyboard.KEY_RSHIFT ||
                 Keyboard.getEventKey() == Keyboard.KEY_LCONTROL || Keyboard.getEventKey() == Keyboard.KEY_RCONTROL)
-                && !Keyboard.getEventKeyState() && !canSort) {
-            canSort = true;
+                && !Keyboard.getEventKeyState() && !this.canSort) {
+            this.canSort = true;
             this.view.sort();
         }
     }
@@ -190,9 +191,9 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         //prevent sorting while over slot area - helps with scrolling items
         if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) && (isShiftKeyDown() || isCtrlKeyDown())) {
-            canSort = false;
+            this.canSort = false;
         } else if (!canSort) {
-            canSort = true;
+            this.canSort = true;
             this.view.sort();
         }
 
