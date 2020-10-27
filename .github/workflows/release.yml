@@ -35,8 +35,15 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed performance hit from last update
-          - Fixed RebornStorage compatibility
+          - Holding shift or ctrl now prevents the grid from sorting (helpful when scrolling items to inventory)
+          - Added tooltip to the priority button in disk drive/external storage
+          - Fixed russian translation for creative range upgrade (bigenergy)
+          - Fixed tooltip search in grid being incredibly slow
+          - Fixed machines being able to starting multiple crafting after last change
+          - Fixed scrolling from grid to inventory not working
+          - Fixed scrollbar moving when scrolling pattern grid slots
+          - Fixed Wireless Crafting Grid not using energy when shift crafting
+          - Fixed crash when a block is broken while the gui is opened by a player
         draft: false
         prerelease: false
     - name: Upload jars to release
