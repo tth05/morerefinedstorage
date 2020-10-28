@@ -177,10 +177,6 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
 
         StackUtils.readItems(patternsInventory, 0, tag);
 
-        if (API.instance().getOneSixMigrationHelper().migratePatternInventory(patternsInventory)) {
-            markDirty();
-        }
-
         this.invalidate();
 
         this.reading = false;

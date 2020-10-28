@@ -14,7 +14,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
@@ -177,8 +176,6 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
         }
 
         accessType = AccessTypeUtils.readAccessType(tag);
-
-        OneSixMigrationHelper.migrateEmptyWhitelistToEmptyBlacklist(version, this, itemFilters);
     }
 
     @Override

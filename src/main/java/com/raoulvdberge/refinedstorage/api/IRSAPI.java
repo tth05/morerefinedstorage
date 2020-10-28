@@ -3,10 +3,10 @@ package com.raoulvdberge.refinedstorage.api;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternRenderHandler;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementList;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementRegistry;
-import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElementRegistry;
-import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskRegistry;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
+import com.raoulvdberge.refinedstorage.api.autocrafting.preview.ICraftingPreviewElementRegistry;
+import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskRegistry;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.ICraftingGridBehavior;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridManager;
@@ -22,7 +22,6 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskRegistry;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSync;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageProvider;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
-import com.raoulvdberge.refinedstorage.api.util.IOneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.api.util.IQuantityFormatter;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import net.minecraft.item.ItemStack;
@@ -202,15 +201,6 @@ public interface IRSAPI {
      * @return the request info
      */
     ICraftingRequestInfo createCraftingRequestInfo(NBTTagCompound tag) throws CraftingTaskReadException;
-
-    /**
-     * Returns a helper for the 1.6.x migration.
-     * Will be removed in 1.7.x!
-     *
-     * @return the 1.6.x migration helper
-     */
-    @Nonnull
-    IOneSixMigrationHelper getOneSixMigrationHelper();
 
     /**
      * @param renderHandler the render handler to add

@@ -17,7 +17,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -233,15 +232,6 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
     @Nonnull
     public ICraftingPattern create(World world, ItemStack stack, ICraftingPatternContainer container) {
         return new CraftingPattern(world, container, stack);
-    }
-
-    @Override
-    public void onUpdate(@Nonnull ItemStack stack, @Nonnull World world, @Nonnull Entity entity, int slot, boolean isSelected) {
-        super.onUpdate(stack, world, entity, slot, isSelected);
-
-        if (!world.isRemote) {
-            API.instance().getOneSixMigrationHelper().migratePattern(stack);
-        }
     }
 
     private static final class PatternCacheKey {

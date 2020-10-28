@@ -6,7 +6,6 @@ import com.raoulvdberge.refinedstorage.api.network.INetworkNodeVisitor;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.block.state.IBlockState;
@@ -197,12 +196,6 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
         }
 
         readConfiguration(tag);
-
-        // We do this after readConfiguration so the 1.6 migration calls see that version is null.
-        OneSixMigrationHelper.removalHook();
-        if (version == null) {
-            version = RS.VERSION;
-        }
     }
 
     public void readConfiguration(NBTTagCompound tag) {

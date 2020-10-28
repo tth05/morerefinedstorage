@@ -13,7 +13,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.IGuiStorage;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.block.BlockStorage;
 import com.raoulvdberge.refinedstorage.block.enums.ItemStorageType;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
@@ -109,8 +108,6 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
 
             loadStorage();
         }
-
-        OneSixMigrationHelper.migrateItemStorageBlock(this, tag);
     }
 
     public void loadStorage() {
@@ -173,8 +170,6 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
         }
 
         accessType = AccessTypeUtils.readAccessType(tag);
-
-        OneSixMigrationHelper.migrateEmptyWhitelistToEmptyBlacklist(version, this, filters);
     }
 
     public ItemStorageType getType() {

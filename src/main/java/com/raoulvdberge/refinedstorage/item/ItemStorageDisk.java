@@ -82,10 +82,6 @@ public class ItemStorageDisk extends ItemBase implements IStorageDiskProvider {
         super.onUpdate(stack, world, entity, slot, selected);
 
         if (!world.isRemote) {
-            if (!isValid(stack)) {
-                API.instance().getOneSixMigrationHelper().migrateDisk(world, stack);
-            }
-
             if (!stack.hasTagCompound()) {
                 UUID id = UUID.randomUUID();
 

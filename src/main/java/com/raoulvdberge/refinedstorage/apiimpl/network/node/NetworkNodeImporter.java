@@ -4,7 +4,6 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
@@ -216,8 +215,6 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
         if (tag.hasKey(NBT_FLUID_FILTERS)) {
             fluidFilters.readFromNbt(tag.getCompoundTag(NBT_FLUID_FILTERS));
         }
-
-        OneSixMigrationHelper.migrateEmptyWhitelistToEmptyBlacklist(version, this, itemFilters);
     }
 
     public IItemHandler getUpgrades() {

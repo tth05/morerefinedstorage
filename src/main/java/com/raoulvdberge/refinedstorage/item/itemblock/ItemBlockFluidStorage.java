@@ -6,13 +6,11 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSyncData;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.storage.NetworkNodeFluidStorage;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.block.BlockFluidStorage;
 import com.raoulvdberge.refinedstorage.item.ItemFluidStorageDisk;
 import com.raoulvdberge.refinedstorage.item.ItemProcessor;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
@@ -106,14 +104,5 @@ public class ItemBlockFluidStorage extends ItemBlockBase {
 
     private boolean isValid(ItemStack disk) {
         return disk.hasTagCompound() && disk.getTagCompound().hasUniqueId(NetworkNodeFluidStorage.NBT_ID);
-    }
-
-    @Override
-    public void onUpdate(@Nonnull ItemStack stack, @Nonnull World world, @Nonnull Entity entity, int itemSlot, boolean isSelected) {
-        super.onUpdate(stack, world, entity, itemSlot, isSelected);
-
-        if (!world.isRemote) {
-            OneSixMigrationHelper.migrateFluidStorageBlockItem(world, stack);
-        }
     }
 }

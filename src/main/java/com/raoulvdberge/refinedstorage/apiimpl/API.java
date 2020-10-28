@@ -69,7 +69,6 @@ public class API implements IRSAPI {
     private final ICraftingGridBehavior craftingGridBehavior = new CraftingGridBehavior();
     private final IStorageDiskRegistry storageDiskRegistry = new StorageDiskRegistry();
     private final IStorageDiskSync storageDiskSync = new StorageDiskSync();
-    private final IOneSixMigrationHelper oneSixMigrationHelper = new OneSixMigrationHelper();
     private final Map<StorageType, TreeSet<IExternalStorageProvider<?>>> externalStorageProviders =
             new EnumMap<>(StorageType.class);
     private final List<ICraftingPatternRenderHandler> patternRenderHandlers = new LinkedList<>();
@@ -270,12 +269,6 @@ public class API implements IRSAPI {
     @Override
     public ICraftingRequestInfo createCraftingRequestInfo(NBTTagCompound tag) throws CraftingTaskReadException {
         return new CraftingRequestInfo(tag);
-    }
-
-    @Override
-    @Nonnull
-    public IOneSixMigrationHelper getOneSixMigrationHelper() {
-        return oneSixMigrationHelper;
     }
 
     @Override

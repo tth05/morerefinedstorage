@@ -13,7 +13,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.IGuiStorage;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.block.BlockFluidStorage;
 import com.raoulvdberge.refinedstorage.block.enums.FluidStorageType;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
@@ -109,8 +108,6 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
 
             loadStorage();
         }
-
-        OneSixMigrationHelper.migrateFluidStorageBlock(this, tag);
     }
 
     public void loadStorage() {
@@ -174,8 +171,6 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
         }
 
         accessType = AccessTypeUtils.readAccessType(tag);
-
-        OneSixMigrationHelper.migrateEmptyWhitelistToEmptyBlacklist(version, this, null);
     }
 
     public FluidStorageType getType() {

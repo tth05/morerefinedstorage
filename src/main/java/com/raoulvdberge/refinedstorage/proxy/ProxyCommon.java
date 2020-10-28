@@ -8,10 +8,10 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
-import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.apiimpl.network.NetworkNodeListener;
 import com.raoulvdberge.refinedstorage.apiimpl.network.grid.factory.*;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
@@ -23,7 +23,6 @@ import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskF
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryItem;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage.ExternalStorageProviderFluid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage.ExternalStorageProviderItem;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.block.BlockBase;
 import com.raoulvdberge.refinedstorage.block.info.IBlockInfo;
 import com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy;
@@ -349,23 +348,9 @@ public class ProxyCommon {
 
     @SubscribeEvent
     public void fixItemMappings(RegistryEvent.MissingMappings<Item> e) {
-        OneSixMigrationHelper.removalHook();
-
         for (RegistryEvent.MissingMappings.Mapping<Item> missing : e.getMappings()) {
-            if (missing.key.getNamespace().equals(RS.ID) && missing.key.getPath().equals("solderer") &&
-                    missing.key.getNamespace().equals("refinedstorageaddons") &&
+            if (missing.key.getNamespace().equals("refinedstorageaddons") &&
                     missing.key.getPath().equals("wireless_crafting_grid")) {
-                missing.ignore();
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void fixBlockMappings(RegistryEvent.MissingMappings<Block> e) {
-        OneSixMigrationHelper.removalHook();
-
-        for (RegistryEvent.MissingMappings.Mapping<Block> missing : e.getMappings()) {
-            if (missing.key.getNamespace().equals(RS.ID) && missing.key.getPath().equals("solderer")) {
                 missing.ignore();
             }
         }

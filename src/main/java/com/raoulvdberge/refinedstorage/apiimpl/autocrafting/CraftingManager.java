@@ -11,7 +11,6 @@ import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.tile.TileController;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.item.ItemStack;
@@ -454,16 +453,12 @@ public class CraftingManager implements ICraftingManager {
     }
 
     private void throttle(@Nullable Object source) {
-        OneSixMigrationHelper.removalHook(); // Remove @Nullable source
-
         if (source != null) {
             throttledRequesters.put(source, MinecraftServer.getCurrentTimeMillis());
         }
     }
 
     private boolean isThrottled(@Nullable Object source) {
-        OneSixMigrationHelper.removalHook(); // Remove @Nullable source
-
         if (source == null) {
             return false;
         }

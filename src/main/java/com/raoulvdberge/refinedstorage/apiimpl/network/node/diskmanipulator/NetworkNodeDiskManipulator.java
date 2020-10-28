@@ -8,10 +8,8 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
-import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.diskdrive.NetworkNodeDiskDrive;
-import com.raoulvdberge.refinedstorage.apiimpl.util.OneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerProxy;
@@ -479,14 +477,6 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         StackUtils.readItems(upgrades, 3, tag);
         StackUtils.readItems(inputDisks, 4, tag);
         StackUtils.readItems(outputDisks, 5, tag);
-
-        if (API.instance().getOneSixMigrationHelper().migrateDiskInventory(world, inputDisks)) {
-            markDirty();
-        }
-
-        if (API.instance().getOneSixMigrationHelper().migrateDiskInventory(world, outputDisks)) {
-            markDirty();
-        }
     }
 
     @Override
@@ -545,8 +535,6 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         if (tag.hasKey(NBT_IO_MODE)) {
             ioMode = tag.getInteger(NBT_IO_MODE);
         }
-
-        OneSixMigrationHelper.migrateEmptyWhitelistToEmptyBlacklist(version, this, itemFilters);
     }
 
     @Override
