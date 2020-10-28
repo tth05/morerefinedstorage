@@ -31,6 +31,8 @@ public interface ICraftingTask {
     /**
      * Updates this task.
      * {@link ICraftingTask#calculate()} must be run before this!
+     *
+     * @return whether or not this task is finished
      */
     boolean update(Map<ICraftingPatternContainer, Integer> updateCountMap);
 

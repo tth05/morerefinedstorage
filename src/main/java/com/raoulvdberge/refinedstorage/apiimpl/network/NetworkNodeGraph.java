@@ -126,10 +126,10 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
     private class Operator implements INetworkNodeVisitor.Operator {
         private final Set<INetworkNode> foundNodes = Sets.newConcurrentHashSet(); // All scanned nodes
 
+        // All scanned new nodes, that didn't appear in the list before
         private final Set<INetworkNode> newNodes = Sets.newConcurrentHashSet();
-                // All scanned new nodes, that didn't appear in the list before
+        // All unscanned nodes (nodes that were in the previous list, but not in the new list)
         private final Set<INetworkNode> previousNodes = Sets.newConcurrentHashSet(nodes);
-                // All unscanned nodes (nodes that were in the previous list, but not in the new list)
 
         private final Queue<Visitor> toCheck = new ArrayDeque<>();
 
