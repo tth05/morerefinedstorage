@@ -33,10 +33,10 @@ public class QuantityFormatter implements IQuantityFormatter {
 
             return formatterWithUnits.format(qtyShort) + "M";
         } else if (qty >= 1000) {
-            float qtyShort = (float) qty / 1000F;
+            double qtyShort = (double) qty / 1000F;
 
             if (qty >= 100_000) {
-                qtyShort = (float) Math.floor(qtyShort); // XXX.XK looks weird.
+                qtyShort = Math.floor(qtyShort); // XXX.XK looks weird.
             }
 
             return formatterWithUnits.format(qtyShort) + "K";
