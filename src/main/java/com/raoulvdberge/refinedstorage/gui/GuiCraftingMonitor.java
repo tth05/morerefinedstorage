@@ -47,7 +47,7 @@ public class GuiCraftingMonitor extends GuiBase {
 
             bindTexture("gui/crafting_preview.png");
 
-            drawTexture(x + ITEM_WIDTH - 12 - 2, y + ITEM_HEIGHT - 12 - 2, 0, 244, 12, 12);
+            drawTexture(x + 2, y + 2, 0, 244, 12, 12);
         };
 
         @Override

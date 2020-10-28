@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -25,7 +26,10 @@ public class CraftingMonitorElementError implements ICraftingMonitorElement {
     public void draw(int x, int y, IElementDrawers drawers) {
         base.draw(x, y, drawers);
 
+        //move in front of item which is drawn at zLevel 300
+        GlStateManager.translate(0, 0, 500);
         drawers.getErrorDrawer().draw(x, y, null);
+        GlStateManager.translate(0, 0, -500);
     }
 
     @Nullable
