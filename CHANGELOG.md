@@ -1,5 +1,12 @@
 # More Refined Storage Changelog
 
+# 2.1.1
+- Moved error icon in crafting monitor to better position
+- Fixed the last world crash properly now
+- Fixed completion percentage being wrong after reloading world
+- Fixed execution time of tasks being incorrect sometimes
+- Fixed precision issue in grid quantity display
+
 # 2.2.0
 - Holding shift or ctrl now prevents the grid from sorting (helpful when scrolling items to inventory)
 - Added tooltip to the priority button in disk drive/external storage

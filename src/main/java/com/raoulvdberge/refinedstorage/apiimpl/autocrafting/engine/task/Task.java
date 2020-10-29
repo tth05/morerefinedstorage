@@ -282,7 +282,7 @@ public abstract class Task {
             if (stack.getItem() instanceof ICraftingPatternProvider) {
                 return ((ICraftingPatternProvider) stack.getItem()).create(world, stack, (ICraftingPatternContainer) node);
             } else {
-                throw new CraftingTaskReadException("Pattern stack is not a crafting pattern provider");
+                throw new CraftingTaskReadException("Pattern stack is not a crafting pattern provider: " + stack);
             }
         } else {
             throw new CraftingTaskReadException("Crafting pattern container doesn't exist anymore");

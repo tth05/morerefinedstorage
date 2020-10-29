@@ -35,15 +35,11 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Holding shift or ctrl now prevents the grid from sorting (helpful when scrolling items to inventory)
-          - Added tooltip to the priority button in disk drive/external storage
-          - Fixed russian translation for creative range upgrade (bigenergy)
-          - Fixed tooltip search in grid being incredibly slow
-          - Fixed machines being able to starting multiple crafting after last change
-          - Fixed scrolling from grid to inventory not working
-          - Fixed scrollbar moving when scrolling pattern grid slots
-          - Fixed Wireless Crafting Grid not using energy when shift crafting
-          - Fixed crash when a block is broken while the gui is opened by a player
+          - Moved error icon in crafting monitor to better position
+          - Fixed the last world crash properly now
+          - Fixed completion percentage being wrong after reloading world
+          - Fixed execution time of tasks being incorrect sometimes
+          - Fixed precision issue in grid quantity display
         draft: false
         prerelease: false
     - name: Upload jars to release
