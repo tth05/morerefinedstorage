@@ -61,7 +61,7 @@ public interface ICraftingTask {
     /**
      * Called when a stack is inserted into the system through {@link com.raoulvdberge.refinedstorage.api.network.INetwork#insertItemTracked(ItemStack, int)}.
      *
-     * @param stack the stack
+     * @param stack         the stack
      * @param trackedAmount the amount of the stack that already has been tracked
      * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(ItemStack, int)}
      */
@@ -70,7 +70,7 @@ public interface ICraftingTask {
     /**
      * Called when a stack is inserted into the system through {@link com.raoulvdberge.refinedstorage.api.network.INetwork#insertFluidTracked(FluidStack, int)}.
      *
-     * @param stack the stack
+     * @param stack         the stack
      * @param trackedAmount the amount of the stack that already has been tracked
      * @return see {@link com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.ProcessingTask#supplyOutput(FluidStack, int)}
      */
@@ -107,6 +107,15 @@ public interface ICraftingTask {
      * @return the time in ms when this task has started
      */
     long getExecutionStarted();
+
+    /**
+     * @return the total time that this task has been running for in ms
+     */
+    default long getExecutionTime() {
+        if (getExecutionStarted() == -1)
+            return -1;
+        return System.currentTimeMillis() - getExecutionStarted();
+    }
 
     /**
      * @return the time it took for the calculation to complete in ms or -1 if the calculation failed/hasn't completed.

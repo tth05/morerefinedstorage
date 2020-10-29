@@ -65,16 +65,16 @@ public class GuiCraftingMonitor extends GuiBase {
         private final UUID id;
         private final ICraftingRequestInfo requested;
         private final long qty;
-        private final long executionStarted;
+        private final long executionTime;
         private final int completionPercentage;
         private final List<ICraftingMonitorElement> elements;
 
-        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, long qty, long executionStarted,
+        public CraftingMonitorTask(UUID id, ICraftingRequestInfo requested, long qty, long executionTime,
                                    int completionPercentage, List<ICraftingMonitorElement> elements) {
             this.id = id;
             this.requested = requested;
             this.qty = qty;
-            this.executionStarted = executionStarted;
+            this.executionTime = executionTime;
             this.completionPercentage = completionPercentage;
             this.elements = elements;
         }
@@ -92,17 +92,22 @@ public class GuiCraftingMonitor extends GuiBase {
                             requested.getFluid().getLocalizedName());
             List<String> smallTextLines = new ObjectArrayList<>();
 
-            int totalSecs = (int) (System.currentTimeMillis() - executionStarted) / 1000;
-            int minutes = (totalSecs % 3600) / 60;
+            int totalSecs = (int) (executionTime / 1000);
             int seconds = totalSecs % 60;
+            int minutes = (totalSecs / 60) % 60;
+            int hours = (totalSecs / (60 * 60)) % 24;
+            int days = totalSecs / (60 * 60 * 24);
 
             smallTextLines.add(I18n.format("gui.refinedstorage:crafting_monitor.tooltip.requested",
                     requested.getFluid() != null ? API.instance().getQuantityFormatter().formatInBucketForm(qty) :
                             API.instance().getQuantityFormatter().format(qty)));
-            if (executionStarted == -1) {
+            if (executionTime == -1) {
                 smallTextLines.add("Pending");
             } else {
-                smallTextLines.add(String.format("%02d:%02d", minutes, seconds));
+                if (hours > 0)
+                    smallTextLines.add(String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds));
+                else
+                    smallTextLines.add(String.format("%02d:%02d", minutes, seconds));
                 smallTextLines.add(String.format("%d%%", completionPercentage));
             }
 
@@ -327,7 +332,7 @@ public class GuiCraftingMonitor extends GuiBase {
 
         tabs.actionPerformed(button);
 
-        if(getCurrentTab() == null)
+        if (getCurrentTab() == null)
             return;
 
         if (button == cancelButton && hasValidTabSelected()) {
