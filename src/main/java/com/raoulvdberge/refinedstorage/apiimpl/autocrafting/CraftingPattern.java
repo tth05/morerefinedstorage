@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CraftingPattern implements ICraftingPattern {
-    private ICraftingPatternContainer container;
-    private ItemStack stack;
-    private boolean processing;
-    private boolean oredict;
+    private final ICraftingPatternContainer container;
+    private final ItemStack stack;
+    private final boolean processing;
+    private final boolean oredict;
     private boolean valid;
     private IRecipe recipe;
     private final List<NonNullList<ItemStack>> inputs = new ArrayList<>();
@@ -42,7 +42,7 @@ public class CraftingPattern implements ICraftingPattern {
 
     public CraftingPattern(World world, ICraftingPatternContainer container, ItemStack stack) {
         this.container = container;
-        this.stack = stack;
+        this.stack = stack.copy();
         this.processing = ItemPattern.isProcessing(stack);
         this.oredict = ItemPattern.isOredict(stack);
 
