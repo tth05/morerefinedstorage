@@ -42,6 +42,7 @@ public class MasterCraftingTask implements ICraftingTask {
     private static final String NBT_CAN_UPDATE = "CanUpdate";
     private static final String NBT_TICKS = "Ticks";
     private static final String NBT_EXECUTION_STARTED = "ExecutionStarted";
+    private static final String NBT_TOTAL_AMOUNT_NEEDED = "TotalAmountNeeded";
     private static final String NBT_CALCULATION_TIME = "CalculationTime";
     private static final String NBT_UUID = "Uuid";
     private static final String NBT_REQUEST_INFO = "RequestInfo";
@@ -95,6 +96,7 @@ public class MasterCraftingTask implements ICraftingTask {
 
         this.executionStarted = compound.getLong(NBT_EXECUTION_STARTED);
         this.calculationTime = compound.getLong(NBT_CALCULATION_TIME);
+        this.totalAmountNeeded = compound.getLong(NBT_TOTAL_AMOUNT_NEEDED);
         this.canUpdate = compound.getBoolean(NBT_CAN_UPDATE);
         this.cancelled = compound.getBoolean(NBT_CANCELLED);
         this.quantity = compound.getInteger(NBT_QUANTITY);
@@ -349,6 +351,7 @@ public class MasterCraftingTask implements ICraftingTask {
         compound.setLong(NBT_QUANTITY, this.quantity);
         compound.setLong(NBT_CALCULATION_TIME, this.calculationTime);
         compound.setLong(NBT_EXECUTION_STARTED, this.executionStarted);
+        compound.setLong(NBT_TOTAL_AMOUNT_NEEDED, this.totalAmountNeeded);
         compound.setBoolean(NBT_CAN_UPDATE, this.canUpdate);
         compound.setBoolean(NBT_CANCELLED, this.cancelled);
         compound.setLong(NBT_TICKS, this.ticks);
