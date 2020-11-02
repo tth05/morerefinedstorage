@@ -98,7 +98,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
 
             if (!patternStack.isEmpty()) {
                 ICraftingPattern pattern =
-                        ((ICraftingPatternProvider) patternStack.getItem()).create(world, patternStack, this);
+                        ((ICraftingPatternProvider) patternStack.getItem()).create(world, patternStack);
 
                 if (pattern.isValid()) {
                     patterns.add(pattern);
@@ -155,10 +155,6 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     @Override
     public void onDisconnected(INetwork network) {
         super.onDisconnected(network);
-
-        network.getCraftingManager().getTasks().stream()
-                .filter(task -> task.getPattern().getContainer().getPosition().equals(pos))
-                .forEach(task -> network.getCraftingManager().cancel(task.getId()));
     }
 
     @Override
@@ -233,7 +229,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
 
     public static boolean isValidPatternInSlot(World world, ItemStack stack) {
         return stack.getItem() instanceof ICraftingPatternProvider &&
-                ((ICraftingPatternProvider) stack.getItem()).create(world, stack, null).isValid();
+                ((ICraftingPatternProvider) stack.getItem()).create(world, stack).isValid();
     }
 
     @Override

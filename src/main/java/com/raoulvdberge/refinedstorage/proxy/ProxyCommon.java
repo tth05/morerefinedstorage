@@ -8,6 +8,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementMissingPatternRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementFluidStack;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.preview.CraftingPreviewElementItemStack;
@@ -101,13 +102,12 @@ public class ProxyCommon {
 
         API.instance().getCraftingTaskRegistry().add(CraftingTaskFactory.ID, new CraftingTaskFactory());
 
-        API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID,
-                buf -> new CraftingMonitorElementItemRender(StackUtils.readItemStack(buf), buf.readLong(), buf.readLong(),
-                        buf.readLong(), buf.readLong()));
-        API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID,
-                buf -> new CraftingMonitorElementFluidRender(
-                        FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf)),
-                        buf.readLong(), buf.readLong(), buf.readLong(), buf.readLong()));
+        API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementItemRender.ID, buf ->
+                new CraftingMonitorElementItemRender(
+                        StackUtils.readItemStack(buf), buf.readLong(), buf.readLong(), buf.readLong(), buf.readLong()));
+        API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementFluidRender.ID, buf ->
+                new CraftingMonitorElementFluidRender(
+                        FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf)), buf.readLong(), buf.readLong(), buf.readLong(), buf.readLong()));
         API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementError.ID, buf -> {
             String id = ByteBufUtils.readUTF8String(buf);
             String message = ByteBufUtils.readUTF8String(buf);
@@ -115,6 +115,9 @@ public class ProxyCommon {
             return new CraftingMonitorElementError(
                     API.instance().getCraftingMonitorElementRegistry().get(id).apply(buf), message);
         });
+        API.instance().getCraftingMonitorElementRegistry().add(CraftingMonitorElementMissingPatternRender.ID, buf ->
+                new CraftingMonitorElementMissingPatternRender(ByteBufUtils.readItemStack(buf))
+        );
 
         API.instance().getCraftingPreviewElementRegistry()
                 .add(CraftingPreviewElementItemStack.ID, CraftingPreviewElementItemStack::fromByteBuf);

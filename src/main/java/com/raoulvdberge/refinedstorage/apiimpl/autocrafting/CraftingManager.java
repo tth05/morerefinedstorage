@@ -48,7 +48,7 @@ public class CraftingManager implements ICraftingManager {
     private final Map<String, List<IItemHandlerModifiable>> containerInventories = new LinkedHashMap<>();
     private final Map<ICraftingPattern, Set<ICraftingPatternContainer>> patternToContainer = new HashMap<>();
 
-    private final List<ICraftingPattern> patterns = new ArrayList<>();
+    private final Set<ICraftingPattern> patterns = new HashSet<>();
 
     private final Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
     private final List<UUID> tasksToCancel = new ArrayList<>();
@@ -120,7 +120,7 @@ public class CraftingManager implements ICraftingManager {
         while (it.hasNext()) {
             ICraftingTask task = it.next().getValue();
 
-            if (task.canUpdate() && task.update(updateCountMap)) {
+            if (!task.isHalted() && task.canUpdate() && task.update(updateCountMap)) {
                 anyFinished = true;
 
                 it.remove();
@@ -431,6 +431,11 @@ public class CraftingManager implements ICraftingManager {
 
         this.network.getItemStorageCache().reAttachListeners();
         this.network.getFluidStorageCache().reAttachListeners();
+
+        //cancel or resume crafting tasks
+        for (ICraftingTask value : this.tasks.values()) {
+            value.updateHaltedState();
+        }
     }
 
     private void throttle(@Nullable Object source) {
@@ -501,7 +506,7 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public List<ICraftingPattern> getPatterns() {
+    public Set<ICraftingPattern> getPatterns() {
         //synchronized for access by crafting tasks during calculation
         synchronized (patterns) {
             return patterns;

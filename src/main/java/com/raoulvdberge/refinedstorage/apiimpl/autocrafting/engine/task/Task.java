@@ -8,7 +8,6 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternProvider
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
@@ -20,7 +19,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
@@ -230,7 +228,7 @@ public abstract class Task {
         this.amountNeeded = compound.getLong(NBT_AMOUNT_NEEDED);
 
         NBTTagList inputs = compound.getTagList(NBT_INPUTS, Constants.NBT.TAG_COMPOUND);
-        for(int i = 0; i < inputs.tagCount(); i++) {
+        for (int i = 0; i < inputs.tagCount(); i++) {
             Input newInput;
             //determine correct input type
             NBTTagCompound inputTag = inputs.getCompoundTagAt(i);
@@ -257,7 +255,7 @@ public abstract class Task {
         }
 
         NBTTagList outputs = compound.getTagList(NBT_OUTPUTS, Constants.NBT.TAG_COMPOUND);
-        for(int i = 0; i < outputs.tagCount(); i++) {
+        for (int i = 0; i < outputs.tagCount(); i++) {
             this.outputs.add(new Output(outputs.getCompoundTagAt(i)));
         }
     }
@@ -266,26 +264,17 @@ public abstract class Task {
         NBTTagCompound tag = new NBTTagCompound();
 
         tag.setTag(NBT_PATTERN_STACK, pattern.getStack().serializeNBT());
-        tag.setLong(NBT_PATTERN_CONTAINER_POS, pattern.getContainer().getPosition().toLong());
 
         return tag;
     }
 
     private ICraftingPattern readPatternFromNbt(NBTTagCompound tag, World world) throws CraftingTaskReadException {
-        BlockPos containerPos = BlockPos.fromLong(tag.getLong(NBT_PATTERN_CONTAINER_POS));
+        ItemStack stack = new ItemStack(tag.getCompoundTag(NBT_PATTERN_STACK));
 
-        INetworkNode node = API.instance().getNetworkNodeManager(world).getNode(containerPos);
-
-        if (node instanceof ICraftingPatternContainer) {
-            ItemStack stack = new ItemStack(tag.getCompoundTag(NBT_PATTERN_STACK));
-
-            if (stack.getItem() instanceof ICraftingPatternProvider) {
-                return ((ICraftingPatternProvider) stack.getItem()).create(world, stack, (ICraftingPatternContainer) node);
-            } else {
-                throw new CraftingTaskReadException("Pattern stack is not a crafting pattern provider: " + stack);
-            }
+        if (stack.getItem() instanceof ICraftingPatternProvider) {
+            return ((ICraftingPatternProvider) stack.getItem()).create(world, stack);
         } else {
-            throw new CraftingTaskReadException("Crafting pattern container doesn't exist anymore: " + containerPos);
+            throw new CraftingTaskReadException("Pattern stack is not a crafting pattern provider: " + stack);
         }
     }
 
@@ -563,7 +552,7 @@ public abstract class Task {
         }
         compound.setTag(NBT_OUTPUTS, outputs);
 
-        if(!this.parents.isEmpty()) {
+        if (!this.parents.isEmpty()) {
             NBTTagList list = new NBTTagList();
             for (Task parent : this.parents) {
                 NBTTagCompound tag = new NBTTagCompound();

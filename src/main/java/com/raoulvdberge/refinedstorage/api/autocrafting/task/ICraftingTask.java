@@ -42,6 +42,18 @@ public interface ICraftingTask {
     void onCancelled();
 
     /**
+     * Called by the crafting manager. Should re-check if all patterns are available and change the result of
+     * {@link #isHalted()} accordingly
+     */
+    void updateHaltedState();
+
+    /**
+     * @return whether or not this task is halted and is not allowed to currently update. In contrast to
+     * {@link #canUpdate()}, this state can change while the task is running
+     */
+    boolean isHalted();
+
+    /**
      * @return the amount of items that have to be crafted
      */
     long getQuantity();

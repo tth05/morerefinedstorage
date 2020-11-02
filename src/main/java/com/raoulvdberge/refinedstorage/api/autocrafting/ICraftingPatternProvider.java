@@ -15,9 +15,8 @@ public interface ICraftingPatternProvider {
      *
      * @param world     the world
      * @param stack     the pattern stack, the implementor needs to copy it
-     * @param container the {@link ICraftingPatternContainer} where the pattern is in
      * @return the crafting pattern
      */
     @Nonnull
-    ICraftingPattern create(World world, ItemStack stack, ICraftingPatternContainer container);
+    ICraftingPattern create(World world, ItemStack stack);
 }

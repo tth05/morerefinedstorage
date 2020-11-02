@@ -1,7 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
@@ -23,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CraftingPattern implements ICraftingPattern {
-    private final ICraftingPatternContainer container;
     private final ItemStack stack;
     private final boolean processing;
     private final boolean oredict;
@@ -40,8 +38,7 @@ public class CraftingPattern implements ICraftingPattern {
     private final NonNullList<ItemStack> blacklistedItems = NonNullList.create();
     private final NonNullList<FluidStack> blacklistedFluids = NonNullList.create();
 
-    public CraftingPattern(World world, ICraftingPatternContainer container, ItemStack stack) {
-        this.container = container;
+    public CraftingPattern(World world, ItemStack stack) {
         this.stack = stack.copy();
         this.processing = ItemPattern.isProcessing(stack);
         this.oredict = ItemPattern.isOredict(stack);
@@ -171,11 +168,6 @@ public class CraftingPattern implements ICraftingPattern {
         //if all items and fluids are blacklisted, then this pattern is useless
         if (blacklistedFluids.size() == fluidOutputs.size() && blacklistedItems.size() == inputs.size())
             this.valid = false;
-    }
-
-    @Override
-    public ICraftingPatternContainer getContainer() {
-        return container;
     }
 
     @Override

@@ -17,6 +17,7 @@ import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementItemRender;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementMissingPatternRender;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.DurabilityInput;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.InfiniteInput;
@@ -77,6 +78,10 @@ public class MasterCraftingTask implements ICraftingTask {
     //completion percentage
     private long totalAmountNeeded;
     private int completionPercentage;
+
+    //halted data
+    private ItemStack missingPatternStack;
+    private boolean halted;
 
     public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, long quantity,
                               @Nonnull ICraftingPattern pattern) {
@@ -305,6 +310,25 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
+    public void updateHaltedState() {
+        for (Task task : this.tasks) {
+            if (!network.getCraftingManager().getPatterns().contains(task.getPattern())) {
+                this.halted = true;
+                this.missingPatternStack = task.getPattern().getStack();
+                return;
+            }
+        }
+
+        this.halted = false;
+        this.missingPatternStack = null;
+    }
+
+    @Override
+    public boolean isHalted() {
+        return this.halted;
+    }
+
+    @Override
     public int onTrackedInsert(ItemStack stack, int trackedAmount) {
         for (int i = this.tasks.size() - 1; i >= 0; i--) {
             Task task = this.tasks.get(i);
@@ -472,19 +496,24 @@ public class MasterCraftingTask implements ICraftingTask {
     @Override
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
         ICraftingMonitorElementList elements = API.instance().createCraftingMonitorElementList();
-        List<Task> taskList = this.tasks;
-        for (int i = 0; i < taskList.size(); i++) {
-            Task task = taskList.get(i);
-            if (i == 0 && task instanceof CraftingTask) {
-                Output output = task.getOutputs().get(0);
 
-                elements.add(new CraftingMonitorElementItemRender(output.getCompareableItemStack(), 0, 0, 0,
-                        task.getAmountNeeded() * output.getQuantityPerCraft()));
-            }
+        if(!this.isHalted()) {
+            List<Task> taskList = this.tasks;
+            for (int i = 0; i < taskList.size(); i++) {
+                Task task = taskList.get(i);
+                if (i == 0 && task instanceof CraftingTask) {
+                    Output output = task.getOutputs().get(0);
 
-            for (ICraftingMonitorElement craftingMonitorElement : task.getCraftingMonitorElements()) {
-                elements.add(craftingMonitorElement);
+                    elements.add(new CraftingMonitorElementItemRender(output.getCompareableItemStack(), 0, 0, 0,
+                            task.getAmountNeeded() * output.getQuantityPerCraft()));
+                }
+
+                for (ICraftingMonitorElement craftingMonitorElement : task.getCraftingMonitorElements()) {
+                    elements.add(craftingMonitorElement);
+                }
             }
+        } else {
+            elements.add(new CraftingMonitorElementMissingPatternRender(this.missingPatternStack));
         }
 
         elements.commit();

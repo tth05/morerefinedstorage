@@ -126,7 +126,7 @@ public interface ICraftingManager {
     /**
      * @return the crafting patterns in this network
      */
-    List<ICraftingPattern> getPatterns();
+    Set<ICraftingPattern> getPatterns();
 
     /**
      * Rebuilds the pattern list.

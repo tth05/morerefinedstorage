@@ -48,6 +48,9 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     @Override
     public void sort() {
         this.elements.sort((o1, o2) -> {
+            if(!(o1 instanceof ICraftingMonitorElementAttributeHolder) || !(o2 instanceof ICraftingMonitorElementAttributeHolder))
+                return 0;
+
             ICraftingMonitorElementAttributeHolder one =
                     (ICraftingMonitorElementAttributeHolder) (o1 instanceof CraftingMonitorElementError ?
                             ((CraftingMonitorElementError) o1).getBase() : o1);
@@ -78,6 +81,9 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     @Override
     public void clearEmptyElements() {
         this.elements.removeIf(e -> {
+            if(!(e instanceof ICraftingMonitorElementAttributeHolder))
+                return false;
+
             ICraftingMonitorElementAttributeHolder element =
                     (ICraftingMonitorElementAttributeHolder) (e instanceof CraftingMonitorElementError ?
                             ((CraftingMonitorElementError) e).getBase() : e);

@@ -3,7 +3,6 @@ package com.raoulvdberge.refinedstorage.item;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.RSItems;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternProvider;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
@@ -62,7 +61,7 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
     }
 
     public static CraftingPattern getPatternFromCache(World world, ItemStack stack) {
-        return PATTERN_CACHE.computeIfAbsent(new PatternCacheKey(stack), key -> new CraftingPattern(world, null, key.stack));
+        return PATTERN_CACHE.computeIfAbsent(new PatternCacheKey(stack), key -> new CraftingPattern(world, key.stack));
     }
 
     @Override
@@ -230,8 +229,8 @@ public class ItemPattern extends ItemBase implements ICraftingPatternProvider {
 
     @Override
     @Nonnull
-    public ICraftingPattern create(World world, ItemStack stack, ICraftingPatternContainer container) {
-        return new CraftingPattern(world, container, stack);
+    public ICraftingPattern create(World world, ItemStack stack) {
+        return new CraftingPattern(world, stack);
     }
 
     private static final class PatternCacheKey {

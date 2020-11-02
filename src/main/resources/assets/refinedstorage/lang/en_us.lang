@@ -33,6 +33,7 @@ gui.refinedstorage:interface.export=Interface Export
 gui.refinedstorage:crafting_monitor=Crafting Monitor
 gui.refinedstorage:wireless_crafting_monitor=Wireless Crafting Monitor
 gui.refinedstorage:crafting_monitor.tooltip.requested=%d requested
+gui.refinedstorage:crafting_monitor.missing_pattern=Missing pattern
 gui.refinedstorage:crafting_monitor.stored=Stored: %d
 gui.refinedstorage:crafting_monitor.missing=Missing: %d
 gui.refinedstorage:crafting_monitor.processing=Processing: %d
