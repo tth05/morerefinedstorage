@@ -285,7 +285,7 @@ public abstract class Task {
                 throw new CraftingTaskReadException("Pattern stack is not a crafting pattern provider: " + stack);
             }
         } else {
-            throw new CraftingTaskReadException("Crafting pattern container doesn't exist anymore");
+            throw new CraftingTaskReadException("Crafting pattern container doesn't exist anymore: " + containerPos);
         }
     }
 
@@ -506,8 +506,7 @@ public abstract class Task {
                     else
                         newTask = new CraftingTask(pattern, input.getAmountMissing());
 
-                    HashSet<ICraftingPattern> recursedPatternsCopy =
-                            (HashSet<ICraftingPattern>) recursedPatterns.clone();
+                    HashSet<ICraftingPattern> recursedPatternsCopy = (HashSet<ICraftingPattern>) recursedPatterns.clone();
                     recursedPatternsCopy.add(pattern);
 
                     CalculationResult newTaskResult =

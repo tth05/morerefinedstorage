@@ -47,7 +47,7 @@ public class MessageGridCraftingStart extends MessageHandlerPlayerToServer<Messa
 
             if (message.fluids) {
                 if (grid.getFluidHandler() != null) {
-                    grid.getFluidHandler().onCraftingRequested(player, message.id, message.quantity);
+                    grid.getFluidHandler().onCraftingStartRequested(player, message.id, message.quantity);
                 }
             } else {
                 if (grid.getItemHandler() != null) {

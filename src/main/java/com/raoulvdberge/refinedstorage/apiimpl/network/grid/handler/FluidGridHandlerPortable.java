@@ -117,7 +117,7 @@ public class FluidGridHandlerPortable implements IFluidGridHandler {
     }
 
     @Override
-    public void onCraftingRequested(EntityPlayerMP player, UUID id, int quantity) {
+    public void onCraftingStartRequested(EntityPlayerMP player, UUID id, int quantity) {
         // NO OP
     }
 }

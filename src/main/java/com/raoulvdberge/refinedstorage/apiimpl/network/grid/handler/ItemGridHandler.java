@@ -206,7 +206,6 @@ public class ItemGridHandler implements IItemGridHandler {
             }
 
             CompletableFuture.runAsync(() -> {
-
                 ICraftingTaskError error = task.calculate();
 
                 FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {

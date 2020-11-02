@@ -17,4 +17,4 @@ Check the CHANGELOG.md file to see what has been added in this version.
 
 > Make sure to stop all running auto-crafting tasks before upgrading!
 
-> If you are using RebornStorage, please use this version: https://github.com/Minecraft-TA/RebornStorage
+> If you are using RebornStorage, please use this version: https://github.com/Minecraft-TA/RebornStorage/releases

@@ -171,7 +171,7 @@ public class FluidGridHandler implements IFluidGridHandler {
     }
 
     @Override
-    public void onCraftingRequested(EntityPlayerMP player, UUID id, int quantity) {
+    public void onCraftingStartRequested(EntityPlayerMP player, UUID id, int quantity) {
         if (quantity <= 0 || !network.getSecurityManager().hasPermission(Permission.AUTOCRAFTING, player)) {
             return;
         }

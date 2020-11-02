@@ -51,7 +51,6 @@ public class CraftingManager implements ICraftingManager {
     private final List<ICraftingPattern> patterns = new ArrayList<>();
 
     private final Map<UUID, ICraftingTask> tasks = new LinkedHashMap<>();
-    private final List<ICraftingTask> tasksToAdd = new ArrayList<>();
     private final List<UUID> tasksToCancel = new ArrayList<>();
     private final List<ICraftingTask> tasksInCalculation = new ArrayList<>();
 
@@ -86,9 +85,13 @@ public class CraftingManager implements ICraftingManager {
                 ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(taskType);
                 if (factory != null) {
                     try {
+                        LOGGER.debug("Reading task...");
+
                         MasterCraftingTask task = factory.createFromNbt(network, taskData);
 
                         tasks.put(task.getId(), task);
+
+                        LOGGER.debug("Loaded task with id {}", task.getId());
                     } catch (CraftingTaskReadException e) {
                         LOGGER.catching(e);
                     }
@@ -98,13 +101,7 @@ public class CraftingManager implements ICraftingManager {
             this.tasksToRead = null;
         }
 
-        boolean changed = !tasksToCancel.isEmpty() || !tasksToAdd.isEmpty();
-
-        for (ICraftingTask task : this.tasksToAdd) {
-            this.tasks.put(task.getId(), task);
-        }
-
-        tasksToAdd.clear();
+        boolean changed = !tasksToCancel.isEmpty();
 
         for (UUID idToCancel : tasksToCancel) {
             ICraftingTask task = this.tasks.get(idToCancel);
@@ -171,7 +168,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void add(@Nonnull ICraftingTask task) {
-        tasksToAdd.add(task);
+        tasks.put(task.getId(), task);
 
         network.markDirty();
     }
@@ -217,15 +214,6 @@ public class CraftingManager implements ICraftingManager {
         if (amount <= 0)
             return null;
 
-        //also check in pending tasks
-        for (ICraftingTask task : this.tasksToAdd) {
-            if (task.getRequested().getItem() == null)
-                continue;
-
-            if (API.instance().getComparer().isEqualNoQuantity(task.getRequested().getItem(), stack))
-                amount -= task.getQuantity();
-        }
-
         //check tasks that are still calculating
         for (ICraftingTask task : this.tasksInCalculation) {
             if (task.getRequested().getItem() == null)
@@ -268,16 +256,6 @@ public class CraftingManager implements ICraftingManager {
 
         if (amount <= 0)
             return null;
-
-        //also check in pending tasks
-        for (ICraftingTask task : this.tasksToAdd) {
-            if (task.getRequested().getFluid() == null)
-                continue;
-
-            if (API.instance().getComparer().isEqual(task.getRequested().getFluid(), stack, IComparer.COMPARE_NBT)) {
-                amount -= task.getQuantity();
-            }
-        }
 
         //check tasks that are still calculating
         for (ICraftingTask task : this.tasksInCalculation) {
@@ -393,55 +371,58 @@ public class CraftingManager implements ICraftingManager {
         this.network.getItemStorageCache().getCraftablesList().clearCounts();
         this.network.getFluidStorageCache().getCraftablesList().clearCounts();
 
-        this.patterns.clear();
-        this.containerInventories.clear();
-        this.patternToContainer.clear();
+        //synchronized for access by crafting tasks during calculation
+        synchronized (patterns) {
+            this.patterns.clear();
+            this.containerInventories.clear();
+            this.patternToContainer.clear();
 
-        List<ICraftingPatternContainer> containers = new ArrayList<>();
+            List<ICraftingPatternContainer> containers = new ArrayList<>();
 
-        for (INetworkNode node : network.getNodeGraph().all()) {
-            if (node instanceof ICraftingPatternContainer && node.canUpdate()) {
-                containers.add((ICraftingPatternContainer) node);
-            }
-        }
-
-        containers.sort((a, b) -> b.getPosition().compareTo(a.getPosition()));
-
-        for (ICraftingPatternContainer container : containers) {
-            for (ICraftingPattern pattern : container.getPatterns()) {
-                this.patterns.add(pattern);
-
-                outer:
-                for (ItemStack output : pattern.getOutputs()) {
-                    for (ItemStack blacklistedItem : pattern.getBlacklistedItems()) {
-                        if (API.instance().getComparer().isEqualNoQuantity(blacklistedItem, output))
-                            continue outer;
-                    }
-
-                    network.getItemStorageCache().getCraftablesList().add(output);
+            for (INetworkNode node : network.getNodeGraph().all()) {
+                if (node instanceof ICraftingPatternContainer && node.canUpdate()) {
+                    containers.add((ICraftingPatternContainer) node);
                 }
-
-                outer:
-                for (FluidStack output : pattern.getFluidOutputs()) {
-                    for (FluidStack blacklistedFluid : pattern.getBlacklistedFluids()) {
-                        if (API.instance().getComparer().isEqual(blacklistedFluid, output, IComparer.COMPARE_NBT))
-                            continue outer;
-                    }
-
-                    network.getFluidStorageCache().getCraftablesList().add(output);
-                }
-
-                Set<ICraftingPatternContainer> list = this.patternToContainer.get(pattern);
-                if (list == null) {
-                    list = new LinkedHashSet<>();
-                }
-                list.add(container);
-                this.patternToContainer.put(pattern, list);
             }
 
-            IItemHandlerModifiable handler = container.getPatternInventory();
-            if (handler != null) {
-                this.containerInventories.computeIfAbsent(container.getName(), k -> new ArrayList<>()).add(handler);
+            containers.sort((a, b) -> b.getPosition().compareTo(a.getPosition()));
+
+            for (ICraftingPatternContainer container : containers) {
+                for (ICraftingPattern pattern : container.getPatterns()) {
+                    this.patterns.add(pattern);
+
+                    outer:
+                    for (ItemStack output : pattern.getOutputs()) {
+                        for (ItemStack blacklistedItem : pattern.getBlacklistedItems()) {
+                            if (API.instance().getComparer().isEqualNoQuantity(blacklistedItem, output))
+                                continue outer;
+                        }
+
+                        network.getItemStorageCache().getCraftablesList().add(output);
+                    }
+
+                    outer:
+                    for (FluidStack output : pattern.getFluidOutputs()) {
+                        for (FluidStack blacklistedFluid : pattern.getBlacklistedFluids()) {
+                            if (API.instance().getComparer().isEqual(blacklistedFluid, output, IComparer.COMPARE_NBT))
+                                continue outer;
+                        }
+
+                        network.getFluidStorageCache().getCraftablesList().add(output);
+                    }
+
+                    Set<ICraftingPatternContainer> list = this.patternToContainer.get(pattern);
+                    if (list == null) {
+                        list = new LinkedHashSet<>();
+                    }
+                    list.add(container);
+                    this.patternToContainer.put(pattern, list);
+                }
+
+                IItemHandlerModifiable handler = container.getPatternInventory();
+                if (handler != null) {
+                    this.containerInventories.computeIfAbsent(container.getName(), k -> new ArrayList<>()).add(handler);
+                }
             }
         }
 
@@ -521,7 +502,10 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public List<ICraftingPattern> getPatterns() {
-        return patterns;
+        //synchronized for access by crafting tasks during calculation
+        synchronized (patterns) {
+            return patterns;
+        }
     }
 
     @Override

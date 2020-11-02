@@ -88,12 +88,13 @@ public class ProcessingTask extends Task {
             INetworkNode node = API.instance().getNetworkNodeManager(network.world()).getNode(containerPos);
 
             if (node == null) {
-                throw new CraftingTaskReadException("No network node found at remainder container pos");
+                throw new CraftingTaskReadException("No network node found at remainder container pos "
+                        + containerPos + " " + this.getUuid());
             } else if (node instanceof ICraftingPatternContainer) {
                 this.remainderContainer = (ICraftingPatternContainer) node;
             } else {
-                throw new CraftingTaskReadException(
-                        "Remainer container of processing task is not a Crafting Pattern Container");
+                throw new CraftingTaskReadException("Remainer container of processing task is not a Crafting Pattern Container "
+                        + containerPos + " " + this.getUuid());
             }
         }
 

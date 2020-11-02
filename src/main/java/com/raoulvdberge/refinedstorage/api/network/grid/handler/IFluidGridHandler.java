@@ -62,5 +62,5 @@ public interface IFluidGridHandler {
      * @param id       the id of the item to request a craft for, this id is the id from {@link com.raoulvdberge.refinedstorage.api.util.StackListEntry}
      * @param quantity the amount of the item that has to be crafted
      */
-    void onCraftingRequested(EntityPlayerMP player, UUID id, int quantity);
+    void onCraftingStartRequested(EntityPlayerMP player, UUID id, int quantity);
 }
