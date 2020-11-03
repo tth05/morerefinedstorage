@@ -52,9 +52,12 @@ public class CraftingPattern implements ICraftingPattern {
                 } else if (oredict) {
                     NonNullList<ItemStack> ores = NonNullList.create();
 
-                    ores.add(input.copy());
+                    int[] oreIDs = OreDictionary.getOreIDs(input);
 
-                    for (int id : OreDictionary.getOreIDs(input)) {
+                    if (oreIDs.length == 0)
+                        ores.add(input.copy());
+
+                    for (int id : oreIDs) {
                         String name = OreDictionary.getOreName(id);
 
                         for (ItemStack ore : OreDictionary.getOres(name)) {

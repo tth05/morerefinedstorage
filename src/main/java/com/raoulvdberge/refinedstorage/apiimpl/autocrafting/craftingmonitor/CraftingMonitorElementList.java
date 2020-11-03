@@ -1,7 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
-import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementAttributeHolder;
+import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementComparable;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElementList;
 
 import java.util.*;
@@ -48,14 +48,15 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     @Override
     public void sort() {
         this.elements.sort((o1, o2) -> {
-            if(!(o1 instanceof ICraftingMonitorElementAttributeHolder) || !(o2 instanceof ICraftingMonitorElementAttributeHolder))
+            if((!(o1 instanceof CraftingMonitorElementError) && !(o1 instanceof ICraftingMonitorElementComparable)) ||
+                    (!(o2 instanceof CraftingMonitorElementError) &&!(o2 instanceof ICraftingMonitorElementComparable)))
                 return 0;
 
-            ICraftingMonitorElementAttributeHolder one =
-                    (ICraftingMonitorElementAttributeHolder) (o1 instanceof CraftingMonitorElementError ?
+            ICraftingMonitorElementComparable one =
+                    (ICraftingMonitorElementComparable) (o1 instanceof CraftingMonitorElementError ?
                             ((CraftingMonitorElementError) o1).getBase() : o1);
-            ICraftingMonitorElementAttributeHolder two =
-                    (ICraftingMonitorElementAttributeHolder) (o2 instanceof CraftingMonitorElementError ?
+            ICraftingMonitorElementComparable two =
+                    (ICraftingMonitorElementComparable) (o2 instanceof CraftingMonitorElementError ?
                             ((CraftingMonitorElementError) o2).getBase() : o2);
 
             if (one.getScheduled() > two.getScheduled())
@@ -81,11 +82,11 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     @Override
     public void clearEmptyElements() {
         this.elements.removeIf(e -> {
-            if(!(e instanceof ICraftingMonitorElementAttributeHolder))
+            if(!(e instanceof ICraftingMonitorElementComparable))
                 return false;
 
-            ICraftingMonitorElementAttributeHolder element =
-                    (ICraftingMonitorElementAttributeHolder) (e instanceof CraftingMonitorElementError ?
+            ICraftingMonitorElementComparable element =
+                    (ICraftingMonitorElementComparable) (e instanceof CraftingMonitorElementError ?
                             ((CraftingMonitorElementError) e).getBase() : e);
             return element.getStored() < 1 && element.getCrafting() < 1 && element.getProcessing() < 1 &&
                     element.getScheduled() < 1;

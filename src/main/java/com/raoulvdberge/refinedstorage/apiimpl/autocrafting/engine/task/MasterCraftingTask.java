@@ -312,7 +312,7 @@ public class MasterCraftingTask implements ICraftingTask {
     @Override
     public void updateHaltedState() {
         for (Task task : this.tasks) {
-            if (!network.getCraftingManager().getPatterns().contains(task.getPattern())) {
+            if (!task.isFinished() && !network.getCraftingManager().getPatterns().contains(task.getPattern())) {
                 this.halted = true;
                 this.missingPatternStack = task.getPattern().getStack();
                 return;

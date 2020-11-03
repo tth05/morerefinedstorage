@@ -48,8 +48,8 @@ repositories {
 }
 
 dependencies {
-    deobfCompile "mezz.jei:jei_1.12.2:4.15.0.287:api"
-    runtime "mezz.jei:jei_1.12.2:4.15.0.287"
+    deobfCompile "mezz.jei:jei_1.12.2:4.16.1.302:api"
+    runtime "mezz.jei:jei_1.12.2:4.16.1.302"
     deobfCompile "li.cil.oc:OpenComputers:MC1.12.2-1.7.2.67:api"
     compile "inventory-tweaks:InventoryTweaks:1.63:api"
 }

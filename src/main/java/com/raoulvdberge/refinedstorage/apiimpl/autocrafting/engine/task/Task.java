@@ -38,7 +38,6 @@ public abstract class Task {
 
     private static final String NBT_PATTERN = "Pattern";
     private static final String NBT_PATTERN_STACK = "PatternStack";
-    private static final String NBT_PATTERN_CONTAINER_POS = "PatternContainerPos";
     private static final String NBT_AMOUNT_NEEDED = "AmountNeeded";
     private static final String NBT_INPUTS = "Inputs";
     private static final String NBT_OUTPUTS = "Outputs";

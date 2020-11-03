@@ -56,6 +56,9 @@ public class CraftingTask extends Task {
     public CraftingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound compound)
             throws CraftingTaskReadException {
         super(network, compound);
+        if (this.amountNeeded < 1) {
+            this.finished = true;
+        }
 
         if (compound.hasKey(NBT_REMAINDER_ITEM)) {
             ItemStack itemStack = new ItemStack(compound.getCompoundTag(NBT_REMAINDER_ITEM));
@@ -147,7 +150,7 @@ public class CraftingTask extends Task {
 
         //if there is to much crafted we insert it back into the network
         if (!crafted.isEmpty())
-            this.remainder = network.insertItem(crafted, (long)crafted.getCount(), Action.PERFORM);
+            this.remainder = network.insertItem(crafted, (long) crafted.getCount(), Action.PERFORM);
 
         this.amountNeeded -= toCraft;
 

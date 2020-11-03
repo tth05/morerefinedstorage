@@ -5,7 +5,6 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContaine
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
@@ -18,9 +17,6 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -40,24 +36,13 @@ public class ProcessingTask extends Task {
 
     public static final String TYPE = "processing";
 
-    private static final String NBT_REMAINING_ITEMS = "RemainingItems";
-    private static final String NBT_REMAINING_FLUIDS = "RemainingFluids";
-    private static final String NBT_REMAINDER_CONTAINER_POS = "RemainderContainerPos";
     private static final String NBT_STATE = "State";
     private static final String NBT_HAS_ITEM_INPUTS = "HasItemInputs";
     private static final String NBT_HAS_FLUID_INPUTS = "HasFluidInputs";
 
     private boolean finished;
-    private final List<ItemStack> remainingItems = new ObjectArrayList<>();
-    private final List<FluidStack> remainingFluids = new ObjectArrayList<>();
 
     private final List<Pair<Input, Integer>> generatedPairs = new ObjectArrayList<>(this.inputs.size());
-
-    /**
-     * Reference to the container that left behind the remainder. Ensures that all remainder is inserted into the
-     * correct container.
-     */
-    private ICraftingPatternContainer remainderContainer;
 
     private ProcessingState state = ProcessingState.READY;
 
@@ -73,6 +58,9 @@ public class ProcessingTask extends Task {
     public ProcessingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound compound)
             throws CraftingTaskReadException {
         super(network, compound);
+        if (this.amountNeeded < 1)
+            this.finished = true;
+
         this.hasItemInputs = compound.getBoolean(NBT_HAS_ITEM_INPUTS);
         this.hasFluidInputs = compound.getBoolean(NBT_HAS_FLUID_INPUTS);
 
@@ -80,36 +68,6 @@ public class ProcessingTask extends Task {
             this.state = ProcessingState.valueOf(compound.getString(NBT_STATE));
         } catch (IllegalArgumentException e) {
             throw new CraftingTaskReadException("Processing task has unknown state");
-        }
-
-        if (compound.hasKey(NBT_REMAINDER_CONTAINER_POS)) {
-            BlockPos containerPos = BlockPos.fromLong(compound.getLong(NBT_REMAINDER_CONTAINER_POS));
-
-            INetworkNode node = API.instance().getNetworkNodeManager(network.world()).getNode(containerPos);
-
-            if (node == null) {
-                throw new CraftingTaskReadException("No network node found at remainder container pos "
-                        + containerPos + " " + this.getUuid());
-            } else if (node instanceof ICraftingPatternContainer) {
-                this.remainderContainer = (ICraftingPatternContainer) node;
-            } else {
-                throw new CraftingTaskReadException("Remainer container of processing task is not a Crafting Pattern Container "
-                        + containerPos + " " + this.getUuid());
-            }
-        }
-
-        if (compound.hasKey(NBT_REMAINING_ITEMS)) {
-            NBTTagList items = compound.getTagList(NBT_REMAINING_ITEMS, Constants.NBT.TAG_COMPOUND);
-            for (int i = 0; i < items.tagCount(); i++) {
-                this.remainingItems.add(new ItemStack(items.getCompoundTagAt(i)));
-            }
-        }
-
-        if (compound.hasKey(NBT_REMAINING_FLUIDS)) {
-            NBTTagList fluids = compound.getTagList(NBT_REMAINING_FLUIDS, Constants.NBT.TAG_COMPOUND);
-            for (int i = 0; i < fluids.tagCount(); i++) {
-                this.remainingFluids.add(FluidStack.loadFluidStackFromNBT(fluids.getCompoundTagAt(i)));
-            }
         }
     }
 
@@ -121,30 +79,6 @@ public class ProcessingTask extends Task {
             network.getCraftingManager().onTaskChanged();
             return 0;
         }
-
-        //don't update if there's any remainder left from the previous update
-        if (!this.remainingItems.isEmpty() || !this.remainingFluids.isEmpty()) {
-            int prevItemSize = this.remainingItems.size();
-            int prevFluidSize = this.remainingFluids.size();
-
-            //only update if we get the same container again
-            if (!container.equals(remainderContainer))
-                return 0;
-
-            //try to insert remainder until it's empty
-            insertIntoContainer(container);
-
-            if (remainingItems.isEmpty() && remainingFluids.isEmpty()) {
-                container.onUsedForProcessing();
-                this.state = ProcessingState.READY;
-            }
-
-            //always use up all crafting updates if anything changed. blocks other tasks somewhat
-            return prevItemSize != this.remainingItems.size() || prevFluidSize != this.remainingFluids.size() ?
-                    toCraft : 0;
-        }
-
-        remainderContainer = container;
 
         //limit by amount needed
         if (toCraft > this.amountNeeded)
@@ -177,6 +111,7 @@ public class ProcessingTask extends Task {
         }
 
         List<Pair<Input, Integer>> pairs = tryInsertIntoContainer(container, toCraft);
+
         //something couldn't be inserted at all
         if (pairs.isEmpty()) {
             this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
@@ -198,18 +133,14 @@ public class ProcessingTask extends Task {
             generateAndInsertIntoContainer(container, toCraft);
         }
 
-        if (this.remainingItems.isEmpty() && this.remainingFluids.isEmpty()) { //everything went well
-            container.onUsedForProcessing();
-            this.state = ProcessingState.READY;
-        } else { //couldn't insert everything
-            this.state = ProcessingState.MACHINE_DOES_NOT_ACCEPT;
-        }
+        container.onUsedForProcessing();
+        this.state = ProcessingState.READY;
 
         //this is done in supplyInput instead to avoid an early finish
         //this.amountNeeded -= toCraft;
 
         //if there's no remainder and the task has crafted everything, we're done
-        if (this.amountNeeded < 1 && this.remainingItems.isEmpty() && this.remainingFluids.isEmpty())
+        if (this.amountNeeded < 1)
             this.finished = true;
 
         network.getCraftingManager().onTaskChanged();
@@ -411,14 +342,25 @@ public class ProcessingTask extends Task {
             return stack;
         }
 
-        for (int i = 0; i < dest.getSlots(); ++i) {
-            // .copy() is mandatory! <- looks like all handlers copy the item as well ¯\_(ツ)_/¯
-            stack = dest.insertItem(i, simulate ? stack : stack.copy(), simulate);
+        int total = stack.getCount();
 
-            if (stack.isEmpty())
+        for (int i = 0; i < dest.getSlots(); ++i) {
+            int maxStackSize = Math.min(total, Math.min(stack.getMaxStackSize(), dest.getSlotLimit(i)));
+
+            if (simulate) {
+                stack.setCount(maxStackSize);
+                total -= maxStackSize - dest.insertItem(i, stack, true).getCount();
+            } else {
+                // .copy() is mandatory! <- looks like all handlers copy the item as well ¯\_(ツ)_/¯
+                stack = dest.insertItem(i, stack.copy(), false);
+            }
+
+            if ((simulate && total < 1) || (!simulate && stack.isEmpty()))
                 break;
         }
 
+        if (simulate)
+            stack.setCount(total);
         return stack;
     }
 
@@ -541,12 +483,6 @@ public class ProcessingTask extends Task {
 
                 //increase amount that is currently in the machine
                 input.setProcessingAmount(input.getProcessingAmount() + (newStack.amount - remainder));
-
-                //save everything that couldn't be inserted
-                if (remainder > 0) {
-                    newStack.amount = remainder;
-                    remainingFluids.add(newStack);
-                }
             } else {
                 //this ensures that the correct item stacks are created when ore dict is being used
                 for (int i = 0; i < oldInputCounts.size(); i++) {
@@ -563,61 +499,8 @@ public class ProcessingTask extends Task {
 
                     //increase amount that is currently in the machine
                     input.setProcessingAmount(input.getProcessingAmount() + (diff - remainder.getCount()));
-
-                    //save everything that couldn't be inserted
-                    if (!remainder.isEmpty())
-                        remainingItems.add(remainder);
                 }
             }
-        }
-    }
-
-    /**
-     * Tries to insert all {@code remainingItems} and {@code remainingFluids} into the given {@code container}. Also
-     * updates the processing amount of inputs.
-     *
-     * @param container the container
-     */
-    private void insertIntoContainer(@Nonnull ICraftingPatternContainer container) {
-        IItemHandler connectedInventory = container.getConnectedInventory();
-        IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
-        //insert generated items
-        for (Iterator<ItemStack> iterator = remainingItems.iterator(); iterator.hasNext(); ) {
-            ItemStack remainingItem = iterator.next();
-
-            ItemStack remainder = insertIntoInventory(connectedInventory, remainingItem, false);
-
-            //ugly -> store remaining stuff as (Input, int) pair
-            Input input = this.inputs.stream().filter(i -> !i.isFluid() &&
-                    i.getItemStacks().stream().anyMatch(
-                            inputStack -> API.instance().getComparer().isEqualNoQuantity(inputStack, remainingItem)))
-                    .findFirst().orElseThrow(IllegalStateException::new);
-            //increase amount that is currently in the machine
-            input.setProcessingAmount(input.getProcessingAmount() + (remainingItem.getCount() - remainder.getCount()));
-
-            if (remainder.isEmpty())
-                iterator.remove();
-            else
-                remainingItem.setCount(remainder.getCount());
-        }
-
-        //insert generated fluids
-        for (Iterator<FluidStack> iterator = remainingFluids.iterator(); iterator.hasNext(); ) {
-            FluidStack remainingFluid = iterator.next();
-
-            //noinspection ConstantConditions
-            int remainder = remainingFluid.amount - connectedFluidInventory.fill(remainingFluid, true);
-            //ugly
-            Input input = this.inputs.stream().filter(i -> i.isFluid() &&
-                    API.instance().getComparer().isEqual(i.getFluidStack(), remainingFluid, IComparer.COMPARE_NBT))
-                    .findFirst().orElseThrow(IllegalStateException::new);
-            //increase amount that is currently in the machine
-            input.setProcessingAmount(input.getProcessingAmount() + (remainingFluid.amount - remainder));
-
-            if (remainder <= 0)
-                iterator.remove();
-            else
-                remainingFluid.amount = remainder;
         }
     }
 
@@ -627,28 +510,7 @@ public class ProcessingTask extends Task {
         super.writeToNbt(compound);
         compound.setBoolean(NBT_HAS_ITEM_INPUTS, this.hasItemInputs);
         compound.setBoolean(NBT_HAS_FLUID_INPUTS, this.hasFluidInputs);
-
-        if (this.remainderContainer != null)
-            compound.setLong(NBT_REMAINDER_CONTAINER_POS, this.remainderContainer.getPosition().toLong());
         compound.setString(NBT_STATE, this.state.toString());
-
-        if (!this.remainingItems.isEmpty()) {
-            NBTTagList items = new NBTTagList();
-            for (ItemStack remainingItem : this.remainingItems) {
-                items.appendTag(remainingItem.writeToNBT(new NBTTagCompound()));
-            }
-
-            compound.setTag(NBT_REMAINING_ITEMS, items);
-        }
-
-        if (!this.remainingFluids.isEmpty()) {
-            NBTTagList fluids = new NBTTagList();
-            for (FluidStack remainingFluid : this.remainingFluids) {
-                fluids.appendTag(remainingFluid.writeToNBT(new NBTTagCompound()));
-            }
-
-            compound.setTag(NBT_REMAINING_FLUIDS, fluids);
-        }
 
         return compound;
     }
@@ -667,15 +529,6 @@ public class ProcessingTask extends Task {
 
         boolean hasError = this.state != ProcessingState.READY;
         List<ICraftingMonitorElement> elements = new ObjectArrayList<>(this.inputs.size() + this.outputs.size());
-
-        //count loose items as stored
-        for (ItemStack remainingItem : this.remainingItems) {
-            elements.add(new CraftingMonitorElementItemRender(remainingItem, remainingItem.getCount(), 0, 0, 0));
-        }
-
-        for (FluidStack remainingFluid : this.remainingFluids) {
-            elements.add(new CraftingMonitorElementFluidRender(remainingFluid, remainingFluid.amount, 0, 0, 0));
-        }
 
         //inputs
         for (Input input : this.inputs) {
@@ -713,13 +566,13 @@ public class ProcessingTask extends Task {
     @Nonnull
     @Override
     public List<ItemStack> getLooseItemStacks() {
-        return this.remainingItems;
+        return Collections.emptyList();
     }
 
     @Nonnull
     @Override
     public List<FluidStack> getLooseFluidStacks() {
-        return this.remainingFluids;
+        return Collections.emptyList();
     }
 
     /**
