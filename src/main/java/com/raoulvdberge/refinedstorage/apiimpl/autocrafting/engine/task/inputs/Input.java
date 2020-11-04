@@ -35,7 +35,7 @@ public class Input {
     private FluidStack fluidStack;
 
     protected long totalInputAmount;
-    private final List<Long> currentInputCounts = new LongArrayList(9);
+    private final LongArrayList currentInputCounts = new LongArrayList(9);
 
     protected long toCraftAmount;
 
@@ -362,7 +362,7 @@ public class Input {
      * is used, because each oredict possibility can have a different amount. This information is needed, so that the
      * correct items can be later inserted back into the network (if the task gets cancelled).
      */
-    public List<Long> getCurrentInputCounts() {
+    public LongArrayList getCurrentInputCounts() {
         return currentInputCounts;
     }
 

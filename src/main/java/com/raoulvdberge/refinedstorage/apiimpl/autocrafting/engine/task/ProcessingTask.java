@@ -25,9 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Represents a processing task
@@ -328,46 +326,86 @@ public class ProcessingTask extends Task {
     }
 
     /**
-     * Inserts the give {@code stack} into the given {@code destination}
+     * Inserts the given {@code stack} into the given {@code destination}
      *
-     * @param dest     the destination
-     * @param stack    the stack that should be inserted
-     * @param simulate whether or not the {@code stack} should not actually be inserted
+     * @param dest  the destination
+     * @param stack the stack that should be inserted
      * @return the remainder that couldn't be inserted; an empty ItemStack otherwise
      */
-    private ItemStack insertIntoInventory(@Nullable IItemHandler dest, @Nonnull ItemStack stack, boolean simulate) {
+    private ItemStack insertIntoInventory(@Nullable IItemHandler dest, @Nonnull ItemStack stack) {
         if (dest == null) {
             return stack;
         }
 
-        int total = stack.getCount();
-
         for (int i = 0; i < dest.getSlots(); ++i) {
-            int maxStackSize = Math.min(total, Math.min(stack.getMaxStackSize(), dest.getSlotLimit(i)));
+            stack = dest.insertItem(i, stack, false);
 
-            if (simulate) {
-                stack.setCount(maxStackSize);
-                total -= maxStackSize - dest.insertItem(i, stack, true).getCount();
-            } else {
-                // .copy() is mandatory! <- looks like all handlers copy the item as well ¯\_(ツ)_/¯
-                stack = dest.insertItem(i, stack.copy(), false);
-            }
-
-            if ((simulate && total < 1) || (!simulate && stack.isEmpty()))
+            if (stack.isEmpty())
                 break;
         }
 
-        if (simulate)
-            stack.setCount(total);
         return stack;
     }
 
     /**
+     * Simulates the insertion of all the given {@code stacks} at once. Does not modify the given list itself, although
+     * the counts of the ItemStacks within it will be modified. The count of each ItemStack will represent how much of
+     * it could not be inserted.
+     * <p>
+     * This method tries to be very efficient by modifying the given ItemStacks instead of returning a new list.
+     * It also does not perform a single call to {@link ItemStack#copy()}
+     *
+     * @param dest   the destination inventory
+     * @param stacks the list of stacks which is operated on
+     */
+    private void simulateInsertionIntoInventory(@Nullable IItemHandler dest, @Nonnull List<ItemStack> stacks) {
+        if (dest == null)
+            return;
+
+        //destination slot : Stack -> Inserted Amount
+        Map<Integer, ItemStack> slotToStackMap = new HashMap<>();
+
+        for (int i = 0; i < dest.getSlots(); i++) {
+            for (int j = 0; j < stacks.size(); j++) {
+                ItemStack stack = stacks.get(j);
+
+                if (stack.isEmpty())
+                    continue;
+
+                ItemStack mapStack = slotToStackMap.get(i);
+                ItemStack destStack = mapStack != null ? mapStack : dest.getStackInSlot(i);
+
+                int prevCount = 0;
+                //ensure not empty to fix comparison
+                if (mapStack != null) {
+                    prevCount = mapStack.getCount();
+                    mapStack.setCount(1);
+                }
+
+                //check if item is allowed
+                if ((!(destStack.isEmpty() && mapStack == null) && !API.instance().getComparer().isEqualNoQuantity(stack, destStack)) || !dest.isItemValid(i, stack)) {
+                    if (mapStack != null)
+                        mapStack.setCount(prevCount);
+                    continue;
+                }
+
+                if (mapStack != null)
+                    mapStack.setCount(prevCount);
+
+                int insertedAmount = stack.getCount() - dest.insertItem(i, stack, true).getCount();
+
+                if (mapStack == null) {
+                    slotToStackMap.put(i, stack);
+                }
+
+                stack.shrink(insertedAmount);
+            }
+        }
+    }
+
+    /**
      * Generates new items and fluids and tries to insert them directly into the given {@code container}, but only
-     * simulating the insertion. Returns information about how much could be inserted for each {@link Input}. For items,
-     * this simulation will be very inaccurate, because often there are multiple slots and or the
-     * {@link Input#getItemStacks()} list contains multiple variations which are never inserted all at the same time,
-     * just one after another.
+     * simulating the insertion. Returns information about how much could be inserted for each {@link Input}.
      *
      * @param container the container
      * @param toCraft   the amount of sets to insert
@@ -376,10 +414,13 @@ public class ProcessingTask extends Task {
      */
     private List<Pair<Input, Integer>> tryInsertIntoContainer(@Nonnull ICraftingPatternContainer container,
                                                               int toCraft) {
-        generatedPairs.clear();
+        this.generatedPairs.clear();
 
         IItemHandler connectedInventory = container.getConnectedInventory();
         IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
+
+        List<ItemStack> allItemStacks = new ArrayList<>(this.inputs.stream()
+                .filter(i -> !i.isFluid()).mapToInt(i -> i.getCurrentInputCounts().size()).sum());
 
         //notify inputs and generate input items
         for (Input input : this.inputs) {
@@ -396,63 +437,71 @@ public class ProcessingTask extends Task {
                 if (insertedAmount < 1)
                     return Collections.emptyList();
                 //save inserted amount
-                generatedPairs.add(Pair.of(input, insertedAmount));
+                this.generatedPairs.add(Pair.of(input, insertedAmount));
 
                 newStack.amount = oldAmount;
             } else {
                 long tempAmount = amount;
-                //copy current input counts
-                List<Long> newInputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
+
+                LongArrayList inputCounts = input.getCurrentInputCounts();
                 //generate new input counts. copied from Input#decreaseInputAmount
                 //noinspection DuplicatedCode
-                for (int i = 0; i < newInputCounts.size(); i++) {
-                    Long currentInputCount = newInputCounts.get(i);
+                for (int i = 0; i < inputCounts.size(); i++) {
+                    long currentInputCount = inputCounts.getLong(i);
                     if (currentInputCount == 0)
                         continue;
                     if (tempAmount < 1)
                         break;
 
-                    currentInputCount -= tempAmount;
-                    if (currentInputCount < 0) {
-                        tempAmount = -currentInputCount;
-                        currentInputCount = 0L;
+                    long newInputCount = currentInputCount - tempAmount;
+                    if (newInputCount < 0) {
+                        tempAmount = -newInputCount;
+                        newInputCount = 0L;
                     } else {
                         tempAmount = 0;
                     }
 
-                    newInputCounts.set(i, currentInputCount);
+                    ItemStack stack = input.getItemStacks().get(i);
+                    stack.setCount((int) (currentInputCount - newInputCount));
+                    allItemStacks.add(stack);
                 }
-
-                int notInsertedAmount = 0;
-
-                //this ensures that the correct item stacks are created when ore dict is being used
-                for (int i = 0; i < input.getCurrentInputCounts().size(); i++) {
-                    long diff = input.getCurrentInputCounts().get(i) - newInputCounts.get(i);
-                    if (diff < 1)
-                        continue;
-
-                    //fake count
-                    ItemStack itemStack = input.getItemStacks().get(i);
-                    int oldCount = itemStack.getCount();
-                    itemStack.setCount((int) diff);
-
-                    int returnedCount = insertIntoInventory(connectedInventory, itemStack, true).getCount();
-
-                    //return if nothing changed
-                    if (returnedCount == oldCount)
-                        return Collections.emptyList();
-
-                    //try to insert new item
-                    notInsertedAmount += returnedCount;
-
-                    itemStack.setCount(oldCount);
-                }
-
-                generatedPairs.add(Pair.of(input, amount - notInsertedAmount));
             }
         }
 
-        return generatedPairs;
+        simulateInsertionIntoInventory(connectedInventory, allItemStacks);
+
+        for (int i = 0; i < allItemStacks.size(); i++) {
+            ItemStack itemStack = allItemStacks.get(i);
+
+            //obtain input back from flat mapped list
+            int total = 0;
+            boolean reverse = i > allItemStacks.size() / 2;
+            for (ListIterator<Input> iterator = this.inputs.listIterator(reverse ? allItemStacks.size() : 0);
+                 reverse ? iterator.hasPrevious() : iterator.hasNext(); ) {
+
+                if (reverse) {
+                    Input element = iterator.previous();
+                    total += element.getCurrentInputCounts().size();
+                }
+
+                if (reverse ? this.inputs.size() - total >= i : total >= i) { //add found input to generated pairs
+                    Input foundInput = this.inputs.get(reverse ? this.inputs.size() - total : total);
+
+                    this.generatedPairs.add(Pair.of(foundInput, toCraft * foundInput.getQuantityPerCraft() - itemStack.getCount()));
+
+                    //make sure none of these are empty, otherwise it will break comparisons
+                    itemStack.setCount(1);
+                    break;
+                }
+
+                if (!reverse) {
+                    Input element = iterator.next();
+                    total += element.getCurrentInputCounts().size();
+                }
+            }
+        }
+
+        return this.generatedPairs;
     }
 
     /**
@@ -469,7 +518,7 @@ public class ProcessingTask extends Task {
         //notify inputs and generate input items
         for (Input input : this.inputs) {
             //copy current input counts
-            List<Long> oldInputCounts = ((LongArrayList) input.getCurrentInputCounts()).clone();
+            LongArrayList oldInputCounts = input.getCurrentInputCounts().clone();
 
             input.decreaseInputAmount((long) toCraft * input.getQuantityPerCraft());
 
@@ -484,8 +533,8 @@ public class ProcessingTask extends Task {
             } else {
                 //this ensures that the correct item stacks are created when ore dict is being used
                 for (int i = 0; i < oldInputCounts.size(); i++) {
-                    Long oldInputCount = oldInputCounts.get(i);
-                    Long newInputCount = input.getCurrentInputCounts().get(i);
+                    long oldInputCount = oldInputCounts.getLong(i);
+                    long newInputCount = input.getCurrentInputCounts().getLong(i);
 
                     long diff = oldInputCount - newInputCount;
                     if (diff < 1)
@@ -493,7 +542,7 @@ public class ProcessingTask extends Task {
 
                     //generate new item using the difference in counts
                     ItemStack remainder = insertIntoInventory(connectedInventory,
-                            ItemHandlerHelper.copyStackWithSize(input.getItemStacks().get(i), (int) diff), false);
+                            ItemHandlerHelper.copyStackWithSize(input.getItemStacks().get(i), (int) diff));
 
                     //increase amount that is currently in the machine
                     input.setProcessingAmount(input.getProcessingAmount() + (diff - remainder.getCount()));
