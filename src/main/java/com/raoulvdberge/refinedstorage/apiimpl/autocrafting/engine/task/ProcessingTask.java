@@ -183,7 +183,6 @@ public class ProcessingTask extends Task {
                 trackedAmount += newlyTrackedAmount;
             }
 
-            int originalStackSize = stack.getCount();
             //subtract amount that was given to input and only allow giving to the parent what was actually tracked
             stack.setCount((int) Math.min(newlyTrackedAmount, inputRemainder));
             int newStackSize = stack.getCount();
@@ -197,7 +196,7 @@ public class ProcessingTask extends Task {
                 }
             }
 
-            stack.setCount(originalStackSize - (newStackSize - stack.getCount()));
+            stack.setCount((int) (inputRemainder - (newStackSize - stack.getCount())));
         }
 
         return trackedAmount;
@@ -239,7 +238,6 @@ public class ProcessingTask extends Task {
                 trackedAmount += newlyTrackedAmount;
             }
 
-            int originalStackSize = stack.amount;
             //subtract amount that was given to input and only allow giving to the parent what was actually tracked
             stack.amount = (int) Math.min(newlyTrackedAmount, inputRemainder);
             int newStackSize = stack.amount;
@@ -253,7 +251,7 @@ public class ProcessingTask extends Task {
                 }
             }
 
-            stack.amount = originalStackSize - (newStackSize - stack.amount);
+            stack.amount = (int) (inputRemainder - (newStackSize - stack.amount));
         }
 
         return trackedAmount;
