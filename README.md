@@ -13,8 +13,11 @@ Most notable additions are a completely new crafting engine, re-written from scr
 
 Builds can be found in the release section on github.
 
-Check the CHANGELOG.md file to see what has been added in this version.
+Check the CHANGELOG.md file for a full list of changes.
 
-> Make sure to stop all running auto-crafting tasks before upgrading!
+### Before updating
+> Remove Refined Storage Addons, the wireless crafting grid is included in this version already
+
+> Stop all running auto-crafting tasks
 
 > If you are using RebornStorage, please use this version: https://github.com/Minecraft-TA/RebornStorage/releases
