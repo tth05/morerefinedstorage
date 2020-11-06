@@ -26,27 +26,30 @@ public interface ICraftingPatternContainer {
 
     /**
      * Returns the interval of when a crafting step with a pattern in this container can update.
-     * Minimum value is 0 (each tick).
+     * Minimum value is 1 (each tick).
      * <p>
-     * Note: rather than maxing out the update interval, implementors might want to balance around {@link #getMaximumSuccessfulCraftingUpdates()}.
-     * This method merely speeds up the update rate, it might be more interesting to increase the output rate in {@link #getMaximumSuccessfulCraftingUpdates()}.
      *
      * @return the update interval
      */
-    default int getUpdateInterval() {
-        return 10;
-    }
+    int getUpdateInterval();
 
     /**
-     * Returns the amount of successful crafting updates that this container can have per crafting step update.
+     * Returns the amount of successful crafting updates that this container is still able to perform.
      * If this limit is reached, crafting patterns from this container won't be able to update until the next
      * eligible crafting step update interval from {@link #getUpdateInterval()}.
      *
-     * @return the maximum amount of successful crafting updates
+     * @return the  amount of successful crafting updates left
      */
-    default int getMaximumSuccessfulCraftingUpdates() {
+    default int getCraftingUpdatesLeft() {
         return 1;
     }
+
+    /**
+     * Uses up the specified amount of crafting updates
+     *
+     * @param updates the amount of updates to use up
+     */
+    void useCraftingUpdates(int updates);
 
     /**
      * @return the inventory that this container is connected to, or null if no inventory is present

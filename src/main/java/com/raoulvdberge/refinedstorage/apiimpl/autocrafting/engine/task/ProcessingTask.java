@@ -38,14 +38,19 @@ public class ProcessingTask extends Task {
     private static final String NBT_HAS_ITEM_INPUTS = "HasItemInputs";
     private static final String NBT_HAS_FLUID_INPUTS = "HasFluidInputs";
 
-    private boolean finished;
 
-    private final List<Pair<Input, Integer>> generatedPairs = new ObjectArrayList<>(this.inputs.size());
-
+    //state
     private ProcessingState state = ProcessingState.READY;
+    private int crafterIndex;
+    private boolean finished;
 
     private final boolean hasFluidInputs;
     private final boolean hasItemInputs;
+
+    /**
+     * list to save some garbage collection
+     */
+    private final List<Pair<Input, Integer>> generatedPairs = new ObjectArrayList<>(this.inputs.size());
 
     public ProcessingTask(@Nonnull ICraftingPattern pattern, long amountNeeded, boolean isFluidRequested) {
         super(pattern, amountNeeded, isFluidRequested);
@@ -647,6 +652,18 @@ public class ProcessingTask extends Task {
     @Override
     public boolean isFinished() {
         return this.finished;
+    }
+
+    /**
+     * @return the crafter index this processing task is currently at. Needed if a processing task is using multiple
+     * crafters at once
+     */
+    public int getCrafterIndex() {
+        return crafterIndex;
+    }
+
+    public void setCrafterIndex(int crafterIndex) {
+        this.crafterIndex = crafterIndex;
     }
 
     /**

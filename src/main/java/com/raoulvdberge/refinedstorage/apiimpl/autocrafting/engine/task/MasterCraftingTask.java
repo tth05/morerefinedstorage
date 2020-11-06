@@ -32,6 +32,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -168,7 +169,7 @@ public class MasterCraftingTask implements ICraftingTask {
     }
 
     @Override
-    public boolean update(Map<ICraftingPatternContainer, Integer> updateCountMap) {
+    public boolean update() {
         if (!canUpdate)
             return false;
         if (executionStarted == -1)
@@ -184,30 +185,33 @@ public class MasterCraftingTask implements ICraftingTask {
                 continue;
 
             Set<ICraftingPatternContainer> containers = network.getCraftingManager().getAllContainer(task.getPattern());
-            for (ICraftingPatternContainer container : containers) {
-                if (container.getUpdateInterval() < 0)
-                    throw new IllegalStateException(container + " has an update interval of < 0");
+            int[] actualUpdateCounts = null;
 
+            if (task instanceof ProcessingTask) {
+                ProcessingTask pTask = (ProcessingTask) task;
+                actualUpdateCounts = splitBetweenCraftingPatternContainers(pTask, containers);
+            }
+
+            int j = 0;
+            for (ICraftingPatternContainer container : containers) {
                 //check if container is allowed to update
-                if (ticks % container.getUpdateInterval() != 0)
+                if (this.ticks % container.getUpdateInterval() != 0)
                     continue;
 
                 //get current update count
-                Integer remainingUpdates = updateCountMap.get(container);
-                if (remainingUpdates == null)
-                    remainingUpdates = container.getMaximumSuccessfulCraftingUpdates();
+                int remainingUpdates = container.getCraftingUpdatesLeft();
 
                 //stop if no updates are left
                 if (remainingUpdates < 1)
                     continue;
 
-                remainingUpdates -= task.update(network, container, remainingUpdates);
+                if (actualUpdateCounts != null)
+                    remainingUpdates = actualUpdateCounts[j];
+                j++;
+
+                container.useCraftingUpdates(task.update(network, container, remainingUpdates));
                 if (task.isFinished())
                     break;
-
-                //avoid put call
-                if (remainingUpdates != container.getMaximumSuccessfulCraftingUpdates())
-                    updateCountMap.put(container, remainingUpdates);
             }
 
             totalAmount += task.getAmountNeeded();
@@ -218,8 +222,72 @@ public class MasterCraftingTask implements ICraftingTask {
 
         this.completionPercentage = (int) (100 - Math.ceil(totalAmount * 100d / (double) this.totalAmountNeeded));
 
-        ticks++;
+        this.ticks++;
         return allFinished;
+    }
+
+    /**
+     * Returns an array which contains the allowed updates for each valid crafting pattern container.
+     * Not the most efficient method, but it works.
+     *
+     * @param task       the task
+     * @param containers the set of containers
+     */
+    private int[] splitBetweenCraftingPatternContainers(ProcessingTask task, Set<ICraftingPatternContainer> containers) {
+        if (containers.size() < 2)
+            return null;
+
+        int total = 0;
+        for (ICraftingPatternContainer container : containers) {
+            total += container.getCraftingUpdatesLeft();
+        }
+
+        total = (int) Math.min(total, task.getAmountNeeded());
+
+        if (total < 1)
+            return null;
+
+        Deque<Pair<ICraftingPatternContainer, Integer>> queue = new LinkedList<>();
+        ICraftingPatternContainer[] array = containers.toArray(new ICraftingPatternContainer[0]);
+
+        if (task.getCrafterIndex() >= array.length)
+            task.setCrafterIndex(0);
+
+        for (int i = task.getCrafterIndex(); i < array.length; i++) {
+            ICraftingPatternContainer filteredContainer = array[i];
+            if (filteredContainer.getCraftingUpdatesLeft() < 1 || this.ticks % filteredContainer.getUpdateInterval() != 0) {
+                continue;
+            }
+
+            queue.offerLast(Pair.of(filteredContainer, i));
+
+            if (i == task.getCrafterIndex() - 1)
+                break;
+
+            if (i == array.length - 1 && task.getCrafterIndex() != 0) {
+                i = -1;
+            }
+        }
+
+        int[] actualUpdateCounts = new int[queue.size()];
+
+        while (!queue.isEmpty()) {
+            Pair<ICraftingPatternContainer, Integer> c = queue.pollFirst();
+
+            int index = c.getRight();
+            actualUpdateCounts[index]++;
+            total--;
+
+            if (total < 1) {
+                task.setCrafterIndex(index);
+                break;
+            }
+
+            if (c.getLeft().getCraftingUpdatesLeft() - actualUpdateCounts[index] > 0)
+                queue.offerLast(c);
+        }
+
+        return actualUpdateCounts;
     }
 
     @Override
@@ -497,7 +565,7 @@ public class MasterCraftingTask implements ICraftingTask {
     public List<ICraftingMonitorElement> getCraftingMonitorElements() {
         ICraftingMonitorElementList elements = API.instance().createCraftingMonitorElementList();
 
-        if(!this.isHalted()) {
+        if (!this.isHalted()) {
             List<Task> taskList = this.tasks;
             for (int i = 0; i < taskList.size(); i++) {
                 Task task = taskList.get(i);

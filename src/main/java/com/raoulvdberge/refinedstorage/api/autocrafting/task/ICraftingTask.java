@@ -1,7 +1,6 @@
 package com.raoulvdberge.refinedstorage.api.autocrafting.task;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
@@ -13,7 +12,6 @@ import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,7 +32,7 @@ public interface ICraftingTask {
      *
      * @return whether or not this task is finished
      */
-    boolean update(Map<ICraftingPatternContainer, Integer> updateCountMap);
+    boolean update();
 
     /**
      * Called when this task is cancelled.

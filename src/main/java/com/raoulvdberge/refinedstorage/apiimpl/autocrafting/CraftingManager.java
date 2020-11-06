@@ -12,7 +12,6 @@ import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
 import com.raoulvdberge.refinedstorage.tile.TileController;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -39,11 +38,6 @@ public class CraftingManager implements ICraftingManager {
     private static final String NBT_TASK_DATA = "Task";
 
     private final TileController network;
-
-    /**
-     * Used to know how many crafting updates are left for a specific container
-     */
-    private final Map<ICraftingPatternContainer, Integer> updateCountMap = new Object2IntOpenHashMap<>();
 
     private final Map<String, List<IItemHandlerModifiable>> containerInventories = new LinkedHashMap<>();
     private final Map<ICraftingPattern, Set<ICraftingPatternContainer>> patternToContainer = new HashMap<>();
@@ -114,13 +108,11 @@ public class CraftingManager implements ICraftingManager {
 
         boolean anyFinished = false;
 
-        updateCountMap.clear();
-
         Iterator<Map.Entry<UUID, ICraftingTask>> it = tasks.entrySet().iterator();
         while (it.hasNext()) {
             ICraftingTask task = it.next().getValue();
 
-            if (!task.isHalted() && task.canUpdate() && task.update(updateCountMap)) {
+            if (!task.isHalted() && task.canUpdate() && task.update()) {
                 anyFinished = true;
 
                 it.remove();
@@ -411,12 +403,7 @@ public class CraftingManager implements ICraftingManager {
                         network.getFluidStorageCache().getCraftablesList().add(output);
                     }
 
-                    Set<ICraftingPatternContainer> list = this.patternToContainer.get(pattern);
-                    if (list == null) {
-                        list = new LinkedHashSet<>();
-                    }
-                    list.add(container);
-                    this.patternToContainer.put(pattern, list);
+                    this.patternToContainer.computeIfAbsent(pattern, key -> new LinkedHashSet<>()).add(container);
                 }
 
                 IItemHandlerModifiable handler = container.getPatternInventory();
@@ -433,8 +420,8 @@ public class CraftingManager implements ICraftingManager {
         this.network.getFluidStorageCache().reAttachListeners();
 
         //cancel or resume crafting tasks
-        for (ICraftingTask value : this.tasks.values()) {
-            value.updateHaltedState();
+        for (ICraftingTask task : this.tasks.values()) {
+            task.updateHaltedState();
         }
     }
 

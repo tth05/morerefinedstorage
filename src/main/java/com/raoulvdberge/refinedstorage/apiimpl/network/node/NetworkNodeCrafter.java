@@ -72,12 +72,17 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
             new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED);
 
     // Used to prevent infinite recursion on getRootContainer() when there's e.g. two crafters facing each other.
+
     private boolean visited = false;
 
+    private int maxCraftingUpdates;
+    private int craftingUpdatesLeft;
+    private int updateInterval = 10;
+
     private CrafterMode mode = CrafterMode.IGNORE;
+
     private boolean locked = false;
     private boolean wasPowered;
-
     private boolean reading;
 
     @Nullable
@@ -113,6 +118,15 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
 
         if (ticks == 1) {
             invalidate();
+        }
+
+        if (ticks % 5 == 0) {
+            updateUpdateInterval();
+            updateMaxCraftingUpdates();
+        }
+
+        if (this.updateInterval != 0 && ticks % this.updateInterval == 0) {
+            this.craftingUpdatesLeft = this.maxCraftingUpdates;
         }
 
         if (mode == CrafterMode.PULSE_INSERTS_NEXT_SET) {
@@ -348,18 +362,60 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
-    public int getMaximumSuccessfulCraftingUpdates() {
+    public int getUpdateInterval() {
+        return this.updateInterval;
+    }
+
+    @Override
+    public int getCraftingUpdatesLeft() {
+        return this.craftingUpdatesLeft;
+    }
+
+    @Override
+    public void useCraftingUpdates(int updates) {
+        this.craftingUpdatesLeft = Math.max(0, this.craftingUpdatesLeft - updates);
+    }
+
+    private void updateMaxCraftingUpdates() {
         switch (upgrades.getUpgradeCount(ItemUpgrade.TYPE_SPEED)) {
             case 1:
-                return 2;
+                this.maxCraftingUpdates = 2;
+                break;
             case 2:
-                return 3;
+                this.maxCraftingUpdates = 3;
+                break;
             case 3:
-                return 4;
+                this.maxCraftingUpdates = 4;
+                break;
             case 4:
-                return 5;
+                this.maxCraftingUpdates = 5;
+                break;
             default:
-                return 1;
+                this.maxCraftingUpdates = 1;
+                break;
+        }
+    }
+
+    private void updateUpdateInterval() {
+        switch (upgrades.getUpgradeCount(ItemUpgrade.TYPE_SPEED)) {
+            case 0:
+                this.updateInterval = 10;
+                break;
+            case 1:
+                this.updateInterval = 8;
+                break;
+            case 2:
+                this.updateInterval = 6;
+                break;
+            case 3:
+                this.updateInterval = 4;
+                break;
+            case 4:
+                this.updateInterval = 2;
+                break;
+            default:
+                this.updateInterval = 1;
+                break;
         }
     }
 
@@ -372,24 +428,6 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         }
 
         return WorldUtils.getItemHandler(proxy.getFacingTile(), proxy.getDirection().getOpposite());
-    }
-
-    @Override
-    public int getUpdateInterval() {
-        switch (upgrades.getUpgradeCount(ItemUpgrade.TYPE_SPEED)) {
-            case 0:
-                return 10;
-            case 1:
-                return 8;
-            case 2:
-                return 6;
-            case 3:
-                return 4;
-            case 4:
-                return 2;
-            default:
-                return 0;
-        }
     }
 
     @Nullable
