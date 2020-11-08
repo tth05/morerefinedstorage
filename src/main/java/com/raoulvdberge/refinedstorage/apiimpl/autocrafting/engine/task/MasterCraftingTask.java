@@ -242,7 +242,8 @@ public class MasterCraftingTask implements ICraftingTask {
             total += container.getCraftingUpdatesLeft();
         }
 
-        total = (int) Math.min(total, task.getAmountNeeded());
+        Input input = task.getInputs().get(0);
+        total = (int) Math.min(total, task.getAmountNeeded() - Math.ceil((double) input.getProcessingAmount() / input.getQuantityPerCraft()));
 
         if (total < 1)
             return null;
@@ -255,18 +256,15 @@ public class MasterCraftingTask implements ICraftingTask {
 
         for (int i = task.getCrafterIndex(); i < array.length; i++) {
             ICraftingPatternContainer filteredContainer = array[i];
-            if (filteredContainer.getCraftingUpdatesLeft() < 1 || this.ticks % filteredContainer.getUpdateInterval() != 0) {
-                continue;
-            }
 
-            queue.offerLast(Pair.of(filteredContainer, i));
+            if (filteredContainer.getCraftingUpdatesLeft() > 0 && this.ticks % filteredContainer.getUpdateInterval() == 0)
+                queue.offerLast(Pair.of(filteredContainer, queue.size()));
 
-            if (i == task.getCrafterIndex() - 1)
+            if (task.getCrafterIndex() != 0 && i == task.getCrafterIndex() - 1)
                 break;
 
-            if (i == array.length - 1 && task.getCrafterIndex() != 0) {
+            if (task.getCrafterIndex() != 0 && i == array.length - 1)
                 i = -1;
-            }
         }
 
         int[] actualUpdateCounts = new int[queue.size()];
