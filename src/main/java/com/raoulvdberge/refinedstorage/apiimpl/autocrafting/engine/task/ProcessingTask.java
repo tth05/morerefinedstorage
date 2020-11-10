@@ -361,9 +361,9 @@ public class ProcessingTask extends Task {
      * It also does not perform a single call to {@link ItemStack#copy()}
      *
      * @param dest   the destination inventory
-     * @param stacks the list of stacks which is operated on
+     * @param counts the list of counts which is operated on
      */
-    private void simulateInsertionIntoInventory(@Nullable IItemHandler dest, @Nonnull List<ItemStack> stacks) {
+    private void simulateInsertionIntoInventory(@Nullable IItemHandler dest, @Nonnull List<LongArrayList> counts) {
         if (dest == null)
             return;
 
@@ -371,39 +371,35 @@ public class ProcessingTask extends Task {
         Map<Integer, ItemStack> slotToStackMap = new HashMap<>();
 
         for (int i = 0; i < dest.getSlots(); i++) {
-            for (int j = 0; j < stacks.size(); j++) {
-                ItemStack stack = stacks.get(j);
+            for (int j = 0; j < counts.size(); j++) {
+                LongArrayList list = counts.get(j);
+                Input input = this.inputs.get(j);
 
-                if (stack.isEmpty())
-                    continue;
+                for (int k = 0; k < list.size(); k++) {
+                    ItemStack stack = input.getItemStacks().get(k);
+                    int stackCount = (int) list.getLong(k);
 
-                ItemStack mapStack = slotToStackMap.get(i);
-                ItemStack destStack = mapStack != null ? mapStack : dest.getStackInSlot(i);
+                    if (stackCount < 1)
+                        continue;
 
-                int prevCount = 0;
-                //ensure not empty to fix comparison
-                if (mapStack != null) {
-                    prevCount = mapStack.getCount();
-                    mapStack.setCount(1);
+                    ItemStack mapStack = slotToStackMap.get(i);
+                    ItemStack destStack = mapStack != null ? mapStack : dest.getStackInSlot(i);
+
+                    //check if item is allowed
+                    if ((!(destStack.isEmpty() && mapStack == null) && !API.instance().getComparer().isEqualNoQuantity(stack, destStack)) || !dest.isItemValid(i, stack))
+                        continue;
+
+                    int prevCount = stack.getCount();
+                    stack.setCount(stackCount);
+                    int insertedAmount = stackCount - dest.insertItem(i, stack, true).getCount();
+                    stack.setCount(prevCount);
+
+                    if (mapStack == null && insertedAmount > 0) {
+                        slotToStackMap.put(i, stack);
+                    }
+
+                    list.set(k, Math.max(stackCount - insertedAmount, 0));
                 }
-
-                //check if item is allowed
-                if ((!(destStack.isEmpty() && mapStack == null) && !API.instance().getComparer().isEqualNoQuantity(stack, destStack)) || !dest.isItemValid(i, stack)) {
-                    if (mapStack != null)
-                        mapStack.setCount(prevCount);
-                    continue;
-                }
-
-                if (mapStack != null)
-                    mapStack.setCount(prevCount);
-
-                int insertedAmount = stack.getCount() - dest.insertItem(i, stack, true).getCount();
-
-                if (mapStack == null) {
-                    slotToStackMap.put(i, stack);
-                }
-
-                stack.shrink(insertedAmount);
             }
         }
     }
@@ -424,11 +420,14 @@ public class ProcessingTask extends Task {
         IItemHandler connectedInventory = container.getConnectedInventory();
         IFluidHandler connectedFluidInventory = container.getConnectedFluidInventory();
 
-        List<ItemStack> allItemStacks = new ArrayList<>(this.inputs.stream()
-                .filter(i -> !i.isFluid()).mapToInt(i -> i.getCurrentInputCounts().size()).sum());
+        //-1 means nothing was available (ignore it), anything else means how much remains
+        List<LongArrayList> allInputCounts = new ArrayList<>();
+        for (Input input : this.inputs)
+            allInputCounts.add(new LongArrayList(input.getCurrentInputCounts().size()));
 
         //notify inputs and generate input items
-        for (Input input : this.inputs) {
+        for (int j = 0; j < this.inputs.size(); j++) {
+            Input input = this.inputs.get(j);
             int amount = toCraft * input.getQuantityPerCraft();
 
             if (input.isFluid()) {
@@ -453,8 +452,11 @@ public class ProcessingTask extends Task {
                 //noinspection DuplicatedCode
                 for (int i = 0; i < inputCounts.size(); i++) {
                     long currentInputCount = inputCounts.getLong(i);
-                    if (currentInputCount == 0)
+                    if(currentInputCount < 1) {
+                        allInputCounts.get(j).add(-1);
                         continue;
+                    }
+
                     if (tempAmount < 1)
                         break;
 
@@ -466,43 +468,26 @@ public class ProcessingTask extends Task {
                         tempAmount = 0;
                     }
 
-                    ItemStack stack = input.getItemStacks().get(i);
-                    stack.setCount((int) (currentInputCount - newInputCount));
-                    allItemStacks.add(stack);
+                    allInputCounts.get(j).add(currentInputCount - newInputCount);
                 }
             }
         }
 
-        simulateInsertionIntoInventory(connectedInventory, allItemStacks);
+        simulateInsertionIntoInventory(connectedInventory, allInputCounts);
 
-        for (int i = 0; i < allItemStacks.size(); i++) {
-            ItemStack itemStack = allItemStacks.get(i);
+        for (int i = 0; i < allInputCounts.size(); i++) {
+            LongArrayList list = allInputCounts.get(i);
+            Input input = this.inputs.get(i);
+            for (int j = 0; j < list.size(); j++) {
+                long c = list.getLong(j);
 
-            //obtain input back from flat mapped list
-            int total = 0;
-            boolean reverse = i > allItemStacks.size() / 2;
-            for (ListIterator<Input> iterator = this.inputs.listIterator(reverse ? allItemStacks.size() : 0);
-                 reverse ? iterator.hasPrevious() : iterator.hasNext(); ) {
+                if (c == -1)
+                    continue;
 
-                if (reverse) {
-                    Input element = iterator.previous();
-                    total += element.getCurrentInputCounts().size();
-                }
+                this.generatedPairs.add(Pair.of(input, toCraft * input.getQuantityPerCraft() - (int) c));
 
-                if (reverse ? this.inputs.size() - total >= i : total >= i) { //add found input to generated pairs
-                    Input foundInput = this.inputs.get(reverse ? this.inputs.size() - total : total);
-
-                    this.generatedPairs.add(Pair.of(foundInput, toCraft * foundInput.getQuantityPerCraft() - itemStack.getCount()));
-
-                    //make sure none of these are empty, otherwise it will break comparisons
-                    itemStack.setCount(1);
-                    break;
-                }
-
-                if (!reverse) {
-                    Input element = iterator.next();
-                    total += element.getCurrentInputCounts().size();
-                }
+                //make sure none of these are empty, otherwise it will break comparisons
+                input.getItemStacks().get(j).setCount(1);
             }
         }
 
