@@ -481,6 +481,7 @@ public class ProcessingTask extends Task {
             for (int j = 0; j < list.size(); j++) {
                 long c = list.getLong(j);
 
+                //skip the items that had nothing to begin with
                 if (c == -1)
                     continue;
 

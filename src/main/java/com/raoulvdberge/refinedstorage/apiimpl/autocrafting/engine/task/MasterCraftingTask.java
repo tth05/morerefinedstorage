@@ -192,8 +192,9 @@ public class MasterCraftingTask implements ICraftingTask {
                 actualUpdateCounts = splitBetweenCraftingPatternContainers(pTask, containers);
             }
 
-            int j = 0;
+            int j = -1;
             for (ICraftingPatternContainer container : containers) {
+                j++;
                 //check if container is allowed to update
                 if (this.ticks % container.getUpdateInterval() != 0)
                     continue;
@@ -207,7 +208,6 @@ public class MasterCraftingTask implements ICraftingTask {
 
                 if (actualUpdateCounts != null)
                     remainingUpdates = actualUpdateCounts[j];
-                j++;
 
                 container.useCraftingUpdates(task.update(network, container, remainingUpdates));
                 if (task.isFinished())
@@ -232,6 +232,8 @@ public class MasterCraftingTask implements ICraftingTask {
      *
      * @param task       the task
      * @param containers the set of containers
+     *
+     * @return an array which contains the available crafting updates for each container in a filtered subset.
      */
     private int[] splitBetweenCraftingPatternContainers(ProcessingTask task, Set<ICraftingPatternContainer> containers) {
         if (containers.size() < 2)
@@ -242,8 +244,9 @@ public class MasterCraftingTask implements ICraftingTask {
             total += container.getCraftingUpdatesLeft();
         }
 
+        //the amount of sets that can be inserted
         Input input = task.getInputs().get(0);
-        total = (int) Math.min(total, task.getAmountNeeded() - Math.ceil((double) input.getProcessingAmount() / input.getQuantityPerCraft()));
+        total = (int) Math.min(total, input.getTotalInputAmount() / input.getQuantityPerCraft());
 
         if (total < 1)
             return null;
@@ -258,7 +261,7 @@ public class MasterCraftingTask implements ICraftingTask {
             ICraftingPatternContainer filteredContainer = array[i];
 
             if (filteredContainer.getCraftingUpdatesLeft() > 0 && this.ticks % filteredContainer.getUpdateInterval() == 0)
-                queue.offerLast(Pair.of(filteredContainer, queue.size()));
+                queue.offerLast(Pair.of(filteredContainer, i));
 
             if (task.getCrafterIndex() != 0 && i == task.getCrafterIndex() - 1)
                 break;
@@ -267,7 +270,8 @@ public class MasterCraftingTask implements ICraftingTask {
                 i = -1;
         }
 
-        int[] actualUpdateCounts = new int[queue.size()];
+        int[] actualUpdateCounts = new int[array.length];
+        Arrays.fill(actualUpdateCounts, 0);
 
         while (!queue.isEmpty()) {
             Pair<ICraftingPatternContainer, Integer> c = queue.pollFirst();
@@ -277,7 +281,7 @@ public class MasterCraftingTask implements ICraftingTask {
             total--;
 
             if (total < 1) {
-                task.setCrafterIndex(index);
+                task.setCrafterIndex(index + 1);
                 break;
             }
 
