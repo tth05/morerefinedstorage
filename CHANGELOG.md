@@ -1,5 +1,9 @@
 # More Refined Storage Changelog
 
+# 2.2.2
+- Crafting patterns are now independent of crafters, tasks will stop and wait if a pattern is instead of crashing the server
+- Processing tasks now perfectly split the load between all crafters with the same pattern
+
 # 2.1.1
 - Moved error icon in crafting monitor to better position
 - Fixed the last world crash properly now
