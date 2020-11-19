@@ -85,6 +85,11 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
     }
 
     @Override
+    public INetwork getNetworkForBCReasons() {
+        return network;
+    }
+
+    @Override
     public void runActionWhenPossible(Consumer<INetwork> handler) {
         if (invalidating) {
             actions.add(handler);
