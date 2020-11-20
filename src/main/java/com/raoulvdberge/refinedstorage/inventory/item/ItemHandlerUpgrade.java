@@ -8,12 +8,21 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 public class ItemHandlerUpgrade extends ItemHandlerBase {
+
+    private int energyUsage = -1;
+
     public ItemHandlerUpgrade(int size, @Nullable Consumer<Integer> listener, int... supportedUpgrades) {
         super(size, listener, new ItemValidatorBasic[supportedUpgrades.length]);
 
         for (int i = 0; i < supportedUpgrades.length; ++i) {
             this.validators[i] = new ItemValidatorBasic(RSItems.UPGRADE, supportedUpgrades[i]);
         }
+    }
+
+    @Override
+    protected void onContentsChanged(int slot) {
+        super.onContentsChanged(slot);
+        updateEnergyUsage();
     }
 
     public int getSpeed() {
@@ -46,14 +55,19 @@ public class ItemHandlerUpgrade extends ItemHandlerBase {
         return upgrades;
     }
 
-    public int getEnergyUsage() {
-        int usage = 0;
+    private void updateEnergyUsage() {
+        this.energyUsage = 0;
 
         for (int i = 0; i < getSlots(); ++i) {
-            usage += ItemUpgrade.getEnergyUsage(getStackInSlot(i));
+            this.energyUsage += ItemUpgrade.getEnergyUsage(getStackInSlot(i));
         }
+    }
 
-        return usage;
+    public int getEnergyUsage() {
+        if (this.energyUsage == -1)
+            updateEnergyUsage();
+
+        return this.energyUsage;
     }
 
     public int getFortuneLevel() {
