@@ -160,6 +160,7 @@ public class TileController extends TileBase
     private ControllerEnergyType energyType = ControllerEnergyType.OFF;
 
     private RedstoneMode redstoneMode = RedstoneMode.IGNORE;
+    private boolean redstoneModeEnabled;
 
     public TileController() {
         dataManager.addWatchedParameter(REDSTONE_MODE);
@@ -185,6 +186,9 @@ public class TileController extends TileBase
     @Override
     public void update() {
         if (!world.isRemote) {
+            updateEnergyUsage();
+            updateRedstoneMode();
+
             boolean canRun = canRun();
 
             if (canRun) {
@@ -196,8 +200,6 @@ public class TileController extends TileBase
                     markDirty();
                 }
             }
-
-            updateEnergyUsage();
 
             if (getType() == ControllerType.NORMAL) {
                 int energyUsage = getEnergyUsage();
@@ -239,7 +241,7 @@ public class TileController extends TileBase
 
     @Override
     public boolean canRun() {
-        return this.energy.getStored() >= this.getEnergyUsage() && redstoneMode.isEnabled(world, pos);
+        return this.energy.getStored() >= this.getEnergyUsage() && this.redstoneModeEnabled;
     }
 
     @Nullable
@@ -643,6 +645,10 @@ public class TileController extends TileBase
         }
 
         this.lastEnergyUsage = usage;
+    }
+
+    private void updateRedstoneMode() {
+        this.redstoneModeEnabled = this.redstoneMode.isEnabled(world, pos);
     }
 
     @Override
