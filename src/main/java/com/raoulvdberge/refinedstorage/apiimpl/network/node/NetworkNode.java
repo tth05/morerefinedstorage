@@ -32,7 +32,8 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     protected World world;
     protected BlockPos pos;
     protected int ticks;
-    protected RedstoneMode redstoneMode = RedstoneMode.IGNORE;
+    private RedstoneMode redstoneMode = RedstoneMode.IGNORE;
+    protected boolean redstoneModeEnabled = true;
     @Nullable
     protected UUID owner;
     protected String version;
@@ -104,7 +105,11 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     }
 
     public boolean isEnabled() {
-        return redstoneMode.isEnabled(world, pos);
+        return redstoneModeEnabled;
+    }
+
+    protected void updateRedstoneModeState() {
+        this.redstoneModeEnabled = this.redstoneMode.isEnabled(world, pos);
     }
 
     @Override
@@ -133,7 +138,7 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     @Override
     public void update() {
         ++ticks;
-
+        updateRedstoneModeState();
         boolean canUpdate = canUpdate();
 
         if (couldUpdate != canUpdate) {

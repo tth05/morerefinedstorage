@@ -61,6 +61,11 @@ public class NetworkNodeCable extends NetworkNode implements ICoverable, INetwor
         }
     }
 
+    @Override
+    protected void updateRedstoneModeState() {
+        //NO OP
+    }
+
     @Nullable
     @Override
     public IItemHandler getDrops() {

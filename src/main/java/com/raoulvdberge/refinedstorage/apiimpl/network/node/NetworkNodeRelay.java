@@ -14,7 +14,7 @@ public class NetworkNodeRelay extends NetworkNode {
     public NetworkNodeRelay(World world, BlockPos pos) {
         super(world, pos);
 
-        this.redstoneMode = RedstoneMode.LOW;
+        setRedstoneMode(RedstoneMode.LOW);
     }
 
     @Override
