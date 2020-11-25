@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 public class ItemHandlerUpgrade extends ItemHandlerBase {
 
     private int energyUsage = -1;
+    private int speed = -1;
 
     public ItemHandlerUpgrade(int size, @Nullable Consumer<Integer> listener, int... supportedUpgrades) {
         super(size, listener, new ItemValidatorBasic[supportedUpgrades.length]);
@@ -23,10 +24,23 @@ public class ItemHandlerUpgrade extends ItemHandlerBase {
     protected void onContentsChanged(int slot) {
         super.onContentsChanged(slot);
         updateEnergyUsage();
+        updateSpeed();
+    }
+
+    private void updateSpeed() {
+        this.speed = 9;
+
+        for (int i = 0; i < getSlots(); ++i) {
+            if (!getStackInSlot(i).isEmpty() && getStackInSlot(i).getItemDamage() == ItemUpgrade.TYPE_SPEED) {
+                speed -= 2;
+            }
+        }
     }
 
     public int getSpeed() {
-        return getSpeed(9, 2);
+        if (this.speed == -1)
+            updateSpeed();
+        return this.speed;
     }
 
     public int getSpeed(int speed, int speedIncrease) {

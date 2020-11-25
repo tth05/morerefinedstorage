@@ -631,7 +631,7 @@ public class TileController extends TileBase
     }
 
     private void updateEnergyUsage() {
-        if (!redstoneMode.isEnabled(world, pos)) {
+        if (!this.redstoneModeEnabled) {
             this.lastEnergyUsage = 0;
             return;
         }
