@@ -1,5 +1,9 @@
 # More Refined Storage Changelog
 
+# 2.2.3
+- Fixed broken EnderIO compat
+- Big performance improvements on big storage systems
+
 # 2.2.2
 - Crafting patterns are now independent of crafters, tasks will stop and wait if a pattern is instead of crashing the server
 - Processing tasks now perfectly split the load between all crafters with the same pattern
