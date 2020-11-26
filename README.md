@@ -26,6 +26,8 @@ Check the CHANGELOG.md file for a full list of changes.
 - Tons of performance improvements
 
 ### Before updating
+> Make a backup!
+
 > Remove Refined Storage Addons, the wireless crafting grid is included in this version already
 
 > Stop all running auto-crafting tasks

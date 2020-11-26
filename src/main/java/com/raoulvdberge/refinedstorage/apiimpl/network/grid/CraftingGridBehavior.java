@@ -7,12 +7,14 @@ import com.raoulvdberge.refinedstorage.api.network.grid.IGridNetworkAware;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
@@ -220,8 +222,8 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
         int toCraft = result.getMaxStackSize() / result.getCount();
 
         //contains the amount that is in the network for each input slot
-        List<Integer> networkCounts = new IntArrayList(matrix.getSizeInventory());
-        List<Pair<ItemStack, Integer>> networkCountCache = new ArrayList<>(matrix.getSizeInventory());
+        LongList networkCounts = new LongArrayList(matrix.getSizeInventory());
+        List<Pair<ItemStack, Long>> networkCountCache = new ArrayList<>(matrix.getSizeInventory());
         for (int i = 0; i < matrix.getSizeInventory(); i++) {
             ItemStack slot = matrix.getStackInSlot(i);
             if (slot.isEmpty()) {
@@ -230,16 +232,16 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             }
 
             //check if item is cached
-            Pair<ItemStack, Integer> cachedPair = networkCountCache.stream()
+            Pair<ItemStack, Long> cachedPair = networkCountCache.stream()
                     .filter(element -> API.instance().getComparer().isEqualNoQuantity(element.getLeft(), slot))
                     .findFirst().orElse(null);
 
             //cache network count which would result in a single request on the storage if all slots are equal
-            int itemCountInNetwork;
+            long itemCountInNetwork;
             if (cachedPair != null) {
                 itemCountInNetwork = cachedPair.getRight();
             } else {
-                ItemStack networkItem = ((StorageCacheItem) grid.getStorageCache()).getList().get(slot);
+                StackListEntry<ItemStack> networkItem = ((StorageCacheItem) grid.getStorageCache()).getList().getEntry(slot, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
                 itemCountInNetwork = networkItem == null ? 0 : networkItem.getCount();
                 networkCountCache.add(Pair.of(slot, itemCountInNetwork));
             }
@@ -316,7 +318,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                 }
             }
 
-            int toSplitUp = networkCounts.get(i);
+            long toSplitUp = networkCounts.getLong(i);
 
             //the second param is calculated later
             commonSlots.add(MutablePair.of(correspondingSlots, false));
@@ -383,11 +385,11 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
             int refillAmount = 0;
 
             int toExtract = 0;
-            int networkCount = -1;
+            long networkCount = -1;
             //get total extraction amount
             for (Pair<ItemStack, Integer> commonSlotEntry : commonSlotsPair.getLeft()) {
                 if (networkCount == -1)
-                    networkCount = networkCounts.get(commonSlotEntry.getRight());
+                    networkCount = networkCounts.getLong(commonSlotEntry.getRight());
 
                 int realStackCount = matrix.getStackInSlot(commonSlotEntry.getRight()).getCount();
                 toExtract += Math.max(0, toCraft - realStackCount);

@@ -283,7 +283,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         FluidStack needle = checkFluid(args.checkTable(0), 1000);
 
-        return new Object[]{node.getNetwork().getFluidStorageCache().getList().get(needle)};
+        return new Object[]{node.getNetwork().getFluidStorageCache().getList().getEntry(needle, COMPARE_NBT)};
     }
 
     @Callback(doc = "function():table -- Gets a list of all fluids in this network.")

@@ -1,6 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.disk;
 
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.storage.AccessType;
@@ -8,10 +8,12 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryItem;
+import com.raoulvdberge.refinedstorage.apiimpl.util.StackListItem;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -22,6 +24,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StorageDiskItem implements IStorageDisk<ItemStack> {
@@ -38,7 +42,8 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
      */
     private long stored;
 
-    private final Multimap<Item, StackListEntry<ItemStack>> stacks = ArrayListMultimap.create();
+    private final Map<StackListItem.Key, StackListEntry<ItemStack>> stacks = new HashMap<>();
+    private final Multimap<Item, StackListItem.Key> stacksByItem = HashMultimap.create();
 
     @Nullable
     private IStorageDiskListener listener;
@@ -86,33 +91,33 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     @Override
     @Nullable
     public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
-        for (StackListEntry<ItemStack> otherEntry : stacks.get(stack.getItem())) {
-            if (API.instance().getComparer().isEqualNoQuantity(otherEntry.getStack(), stack)) {
-                if (getCapacity() != -1 && getStored() + size > getCapacity()) {
-                    long remainingSpace = getCapacity() - getStored();
+        StackListItem.Key key = new StackListItem.Key(stack);
+        StackListEntry<ItemStack> entry = stacks.get(key);
+        if (entry != null) {
+            if (getCapacity() != -1 && getStored() + size > getCapacity()) {
+                long remainingSpace = getCapacity() - getStored();
 
-                    if (remainingSpace <= 0) {
-                        return new StackListResult<>(stack.copy(), size);
-                    }
-
-                    if (action == Action.PERFORM) {
-                        otherEntry.grow(remainingSpace);
-                        stored += remainingSpace;
-
-                        onChanged();
-                    }
-
-                    return new StackListResult<>(otherEntry.getStack().copy(), size - remainingSpace);
-                } else {
-                    if (action == Action.PERFORM) {
-                        otherEntry.grow(size);
-                        stored += size;
-
-                        onChanged();
-                    }
-
-                    return null;
+                if (remainingSpace <= 0) {
+                    return new StackListResult<>(stack.copy(), size);
                 }
+
+                if (action == Action.PERFORM) {
+                    entry.grow(remainingSpace);
+                    stored += remainingSpace;
+
+                    onChanged();
+                }
+
+                return new StackListResult<>(entry.getStack().copy(), size - remainingSpace);
+            } else {
+                if (action == Action.PERFORM) {
+                    entry.grow(size);
+                    stored += size;
+
+                    onChanged();
+                }
+
+                return null;
             }
         }
 
@@ -124,7 +129,8 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
             }
 
             if (action == Action.PERFORM) {
-                stacks.put(stack.getItem(), new StackListEntry<>(stack.copy(), remainingSpace));
+                stacks.put(key, new StackListEntry<>(stack.copy(), remainingSpace));
+                stacksByItem.put(stack.getItem(), key);
                 stored += remainingSpace;
 
                 onChanged();
@@ -133,7 +139,8 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
             return new StackListResult<>(stack.copy(), size - remainingSpace);
         } else {
             if (action == Action.PERFORM) {
-                stacks.put(stack.getItem(), new StackListEntry<>(stack.copy(), size));
+                stacks.put(key, new StackListEntry<>(stack.copy(), size));
+                stacksByItem.put(stack.getItem(), key);
                 stored += size;
 
                 onChanged();
@@ -146,25 +153,57 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     @Override
     @Nullable
     public StackListResult<ItemStack> extract(@Nonnull ItemStack stack, long size, int flags, Action action) {
-        for (StackListEntry<ItemStack> otherEntry : stacks.get(stack.getItem())) {
-            if (API.instance().getComparer().isEqual(otherEntry.getStack(), stack, flags)) {
-                if (size > otherEntry.getCount()) {
-                    size = otherEntry.getCount();
+        //extract exact
+        if ((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
+                (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
+            StackListItem.Key key = new StackListItem.Key(stack);
+            StackListEntry<ItemStack> entry = stacks.get(key);
+
+            if (entry == null)
+                return null;
+
+            if (size > entry.getCount()) {
+                size = entry.getCount();
+            }
+
+            if (action == Action.PERFORM) {
+                if (entry.getCount() - size == 0) {
+                    stacks.remove(key);
+                    stacksByItem.remove(stack.getItem(), key);
+                    stored -= entry.getCount();
+                } else {
+                    entry.shrink(size);
+                    stored -= size;
+                }
+
+                onChanged();
+            }
+
+            return new StackListResult<>(entry.getStack().copy(), size);
+        }
+
+        for (StackListItem.Key key : stacksByItem.get(stack.getItem())) {
+            StackListEntry<ItemStack> entry = stacks.get(key);
+
+            if (API.instance().getComparer().isEqual(entry.getStack(), stack, flags)) {
+                if (size > entry.getCount()) {
+                    size = entry.getCount();
                 }
 
                 if (action == Action.PERFORM) {
-                    if (otherEntry.getCount() - size == 0) {
-                        stacks.remove(otherEntry.getStack().getItem(), otherEntry);
-                        stored -= otherEntry.getCount();
+                    if (entry.getCount() - size == 0) {
+                        stacks.remove(key);
+                        stacksByItem.remove(stack.getItem(), key);
+                        stored -= entry.getCount();
                     } else {
-                        otherEntry.shrink(size);
+                        entry.shrink(size);
                         stored -= size;
                     }
 
                     onChanged();
                 }
 
-                return new StackListResult<>(otherEntry.getStack().copy(), size);
+                return new StackListResult<>(entry.getStack().copy(), size);
             }
         }
 
@@ -213,8 +252,14 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         return remainder < 1 ? size : (size - remainder);
     }
 
-    public Multimap<Item, StackListEntry<ItemStack>> getRawStacks() {
-        return stacks;
+    /**
+     * Convenience method for {@link StorageDiskFactoryItem}. Do not use this.
+     */
+    @Deprecated
+    public void putRaw(ItemStack stack, long count) {
+        StackListItem.Key key = new StackListItem.Key(stack);
+        stacks.put(key, new StackListEntry<>(stack, count));
+        stacksByItem.put(stack.getItem(), key);
     }
 
     private void onChanged() {

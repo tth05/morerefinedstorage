@@ -2,7 +2,6 @@ package com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory;
 
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskFactory;
-import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskItem;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
@@ -31,7 +30,7 @@ public class StorageDiskFactoryItem implements IStorageDiskFactory<ItemStack> {
                 realCount = stackTag.getLong(StorageDiskItem.NBT_REAL_SIZE);
 
             if (!stack.isEmpty()) {
-                disk.getRawStacks().put(stack.getItem(), new StackListEntry<>(stack, realCount));
+                disk.putRaw(stack, realCount);
             }
         }
 

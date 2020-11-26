@@ -73,22 +73,6 @@ public class StackListFluid implements IStackList<FluidStack> {
         return remove(stack, stack.amount);
     }
 
-    @Override
-    @Nullable
-    public FluidStack get(@Nonnull FluidStack stack, int flags) {
-        //TODO: check for get and getEntry calls
-        for (StackListEntry<FluidStack> entry : stacks.get(stack.getFluid())) {
-            FluidStack otherStack = entry.getStack();
-
-            if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
-                otherStack.amount = entry.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) entry.getCount();
-                return otherStack;
-            }
-        }
-
-        return null;
-    }
-
     @Nullable
     @Override
     public StackListEntry<FluidStack> getEntry(@Nonnull FluidStack stack, int flags) {

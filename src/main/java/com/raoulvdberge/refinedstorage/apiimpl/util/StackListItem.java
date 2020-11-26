@@ -1,19 +1,23 @@
 package com.raoulvdberge.refinedstorage.apiimpl.util;
 
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
 public class StackListItem implements IStackList<ItemStack> {
-    private final ArrayListMultimap<Item, StackListEntry<ItemStack>> stacks = ArrayListMultimap.create();
+    private final Map<Key, StackListEntry<ItemStack>> stacks = new HashMap<>();
+    private final Multimap<Item, Key> stacksByItem = HashMultimap.create();
     private final Map<UUID, StackListEntry<ItemStack>> index = new HashMap<>();
 
     @Override
@@ -22,19 +26,19 @@ public class StackListItem implements IStackList<ItemStack> {
             throw new IllegalArgumentException("Cannot accept empty stack");
         }
 
-        for (StackListEntry<ItemStack> entry : stacks.get(stack.getItem())) {
+        Key key = new Key(stack);
+        StackListEntry<ItemStack> entry = stacks.get(key);
+        if (entry != null) {
             ItemStack otherStack = entry.getStack();
+            entry.grow(size);
 
-            if (API.instance().getComparer().isEqualNoQuantity(otherStack, stack)) {
-                entry.grow(size);
-
-                return new StackListResult<>(otherStack.copy(), entry.getId(), size);
-            }
+            return new StackListResult<>(otherStack.copy(), entry.getId(), size);
         }
 
         StackListEntry<ItemStack> newEntry = new StackListEntry<>(stack.copy(), size);
 
-        stacks.put(stack.getItem(), newEntry);
+        stacks.put(key, newEntry);
+        stacksByItem.put(stack.getItem(), key);
         index.put(newEntry.getId(), newEntry);
 
         return new StackListResult<>(newEntry.getStack().copy(), newEntry.getId(), size);
@@ -47,20 +51,19 @@ public class StackListItem implements IStackList<ItemStack> {
 
     @Override
     public StackListResult<ItemStack> remove(@Nonnull ItemStack stack, long size) {
-        for (StackListEntry<ItemStack> entry : stacks.get(stack.getItem())) {
-            ItemStack otherStack = entry.getStack();
+        Key key = new Key(stack);
+        StackListEntry<ItemStack> entry = stacks.get(key);
+        if (entry != null) {
+            if (entry.getCount() - size <= 0) {
+                stacks.remove(key);
+                stacksByItem.remove(stack.getItem(), key);
+                index.remove(entry.getId());
 
-            if (API.instance().getComparer().isEqualNoQuantity(otherStack, stack)) {
-                if (entry.getCount() - size <= 0) {
-                    stacks.remove(otherStack.getItem(), entry);
-                    index.remove(entry.getId());
+                return new StackListResult<>(stack.copy(), entry.getId(), -entry.getCount());
+            } else {
+                entry.shrink(size);
 
-                    return new StackListResult<>(otherStack.copy(), entry.getId(), -entry.getCount());
-                } else {
-                    entry.shrink(size);
-
-                    return new StackListResult<>(otherStack.copy(), entry.getId(), -size);
-                }
+                return new StackListResult<>(stack.copy(), entry.getId(), -size);
             }
         }
 
@@ -72,29 +75,18 @@ public class StackListItem implements IStackList<ItemStack> {
         return remove(stack, stack.getCount());
     }
 
-    @Override
-    @Nullable
-    public ItemStack get(@Nonnull ItemStack stack, int flags) {
-        //TODO: check for get and getEntry calls
-        for (StackListEntry<ItemStack> entry : stacks.get(stack.getItem())) {
-            ItemStack otherStack = entry.getStack();
-
-            if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
-                otherStack.setCount(entry.getCount() > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) entry.getCount());
-                return otherStack;
-            }
-        }
-
-        return null;
-    }
-
     @Nullable
     @Override
     public StackListEntry<ItemStack> getEntry(@Nonnull ItemStack stack, int flags) {
-        for (StackListEntry<ItemStack> entry : stacks.get(stack.getItem())) {
-            ItemStack otherStack = entry.getStack();
+        if((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
+                (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
+            return stacks.get(new Key(stack));
+        }
 
-            if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
+        for (Key key : stacksByItem.get(stack.getItem())) {
+            StackListEntry<ItemStack> entry = stacks.get(key);
+
+            if (API.instance().getComparer().isEqual(entry.getStack(), stack, flags)) {
                 return entry;
             }
         }
@@ -111,22 +103,24 @@ public class StackListItem implements IStackList<ItemStack> {
     @Override
     public void clear() {
         stacks.clear();
+        stacksByItem.clear();
         index.clear();
     }
 
     @Override
     public void clearCounts() {
-        for (Map.Entry<Item, StackListEntry<ItemStack>> entry : stacks.entries()) {
+        for (Map.Entry<Key, StackListEntry<ItemStack>> entry : stacks.entrySet()) {
             entry.getValue().setCount(0);
         }
     }
 
     @Override
     public void clearEmpty() {
-        for (Iterator<Map.Entry<Item, StackListEntry<ItemStack>>> iterator = stacks.entries().iterator(); iterator.hasNext(); ) {
-            Map.Entry<Item, StackListEntry<ItemStack>> entry = iterator.next();
+        for (Iterator<Map.Entry<Key, StackListEntry<ItemStack>>> iterator = stacks.entrySet().iterator(); iterator.hasNext(); ) {
+            Map.Entry<Key, StackListEntry<ItemStack>> entry = iterator.next();
             if (entry.getValue().getCount() < 1) {
                 iterator.remove();
+                stacksByItem.remove(entry.getValue().getStack().getItem(), entry.getKey());
                 index.remove(entry.getValue().getId());
             }
         }
@@ -148,14 +142,58 @@ public class StackListItem implements IStackList<ItemStack> {
     public IStackList<ItemStack> copy() {
         StackListItem list = new StackListItem();
 
-        for (StackListEntry<ItemStack> entry : stacks.values()) {
-            ItemStack newStack = entry.getStack().copy();
+        for (Map.Entry<Key, StackListEntry<ItemStack>> entry : stacks.entrySet()) {
+            ItemStack newStack = entry.getValue().getStack().copy();
 
-            StackListEntry<ItemStack> newEntry = new StackListEntry<>(entry.getId(), newStack, entry.getCount());
-            list.stacks.put(entry.getStack().getItem(), newEntry);
-            list.index.put(entry.getId(), newEntry);
+            StackListEntry<ItemStack> newEntry = new StackListEntry<>(entry.getValue().getId(), newStack, entry.getValue().getCount());
+            Key newKey = new Key(newStack);
+            list.stacks.put(newKey, newEntry);
+            list.stacksByItem.put(newStack.getItem(), newKey);
+            list.index.put(entry.getValue().getId(), newEntry);
         }
 
         return list;
+    }
+
+    public static final class Key {
+        private final boolean isEmpty;
+        private final int damage;
+        private final Item item;
+        private final NBTTagCompound nbt;
+        private final int hashCode;
+
+        public Key(ItemStack template) {
+            isEmpty = template.isEmpty();
+            item = template.getItem();
+            damage = template.getItemDamage();
+            NBTTagCompound originalNbt = template.getTagCompound();
+            nbt = originalNbt == null ? null : originalNbt.copy();
+
+            int hashCode1;
+            hashCode1 = 31 + Boolean.hashCode(isEmpty);
+            hashCode1 = 31 * hashCode1 + item.hashCode();
+            hashCode1 = 31 * hashCode1 + (nbt == null ? 0 : nbt.hashCode());
+            hashCode = hashCode1;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Key key = (Key) o;
+            return isEmpty == key.isEmpty &&
+                    damage == key.damage &&
+                    item.equals(key.item) &&
+                    Objects.equals(nbt, key.nbt);
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
     }
 }

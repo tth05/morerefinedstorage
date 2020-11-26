@@ -46,30 +46,6 @@ public interface IStackList<T> {
     StackListResult<T> remove(@Nonnull T stack);
 
     /**
-     * Returns a stack.
-     *
-     * @param stack the stack to search for
-     * @return the stack, or null if no stack was found
-     */
-    @Nullable
-    default T get(@Nonnull T stack) {
-        return get(stack, IComparer.COMPARE_DAMAGE | IComparer.COMPARE_NBT);
-    }
-
-    /**
-     * Returns a stack.
-     *
-     * @param stack the stack to search for
-     * @param flags the flags to compare on, see {@link IComparer}
-     * @return the stack, or null if no stack was found
-     *
-     * @deprecated does not return real stack counts; use {@link #getEntry(Object, int)}
-     */
-    @Nullable
-    @Deprecated
-    T get(@Nonnull T stack, int flags);
-
-    /**
      * Returns a {@link StackListEntry}.
      *
      * @param id the id of the entry to search for
