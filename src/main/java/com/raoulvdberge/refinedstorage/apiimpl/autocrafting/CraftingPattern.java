@@ -38,6 +38,9 @@ public class CraftingPattern implements ICraftingPattern {
     private final NonNullList<ItemStack> blacklistedItems = NonNullList.create();
     private final NonNullList<FluidStack> blacklistedFluids = NonNullList.create();
 
+    //cache the hash code because crafting patterns are immutable and the calculation is slow
+    private int cachedHashCode;
+
     public CraftingPattern(World world, ItemStack stack) {
         this.stack = stack.copy();
         this.processing = ItemPattern.isProcessing(stack);
@@ -171,6 +174,8 @@ public class CraftingPattern implements ICraftingPattern {
         //if all items and fluids are blacklisted, then this pattern is useless
         if (blacklistedFluids.size() == fluidOutputs.size() && blacklistedItems.size() == inputs.size())
             this.valid = false;
+
+        this.cachedHashCode = getHashCode();
     }
 
     @Override
@@ -355,8 +360,7 @@ public class CraftingPattern implements ICraftingPattern {
         return true;
     }
 
-    @Override
-    public int getChainHashCode() {
+    public int getHashCode() {
         int result = (processing ? 1 : 0);
 
         result = 31 * result + (oredict ? 1 : 0);
@@ -388,7 +392,7 @@ public class CraftingPattern implements ICraftingPattern {
 
     @Override
     public int hashCode() {
-        return getChainHashCode();
+        return this.cachedHashCode;
     }
 
     @Override
