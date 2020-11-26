@@ -245,9 +245,20 @@ public class MasterCraftingTask implements ICraftingTask {
         }
 
         //the amount of sets that can be inserted
-        total = (int) Math.min(total, task.getInputs().stream()
-                .mapToLong(in -> in.getTotalInputAmount() / in.getQuantityPerCraft()).min()
-                .orElseThrow(IllegalStateException::new));
+        boolean seen = false;
+        long best = 0;
+        for (Input in : task.getInputs()) {
+            long l = in.getTotalInputAmount() / in.getQuantityPerCraft();
+            if (!seen || l < best) {
+                seen = true;
+                best = l;
+            }
+        }
+
+        if(!seen)
+            throw new IllegalStateException();
+
+        total = (int) Math.min(total, best);
 
         if (total < 1)
             return null;
