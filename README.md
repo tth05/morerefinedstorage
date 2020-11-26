@@ -9,11 +9,21 @@ This mod not only adds storage solutions, but also devices that can be used to m
 # More Refined Storage
 
 This fork mainly focuses on performance improvements and useful feature additions to make your life easier.
-Most notable additions are a completely new crafting engine, re-written from scratch with only performance and reliability in mind (it also comes closer to minecrafts actual crafting behavior than the old version) and new code for shift crafting in a crafting grid to make the server not crash anymore on big systems.
-
 Builds can be found in the release section on github.
 
 Check the CHANGELOG.md file for a full list of changes.
+
+### Most notable changes:
+- Completely new autocrafting engine
+- No lag when shift crafting
+- Wireless Crafting Grid is included now
+- Wireless items can be worn in bauble slots
+- Backported scrolling support for grid (using shift and ctrl, original by Darkere)
+- Allow for scrolling in pattern grid to change amounts of the items
+- Increased disk manipulator speed by a lot
+- Allow to use space to insert the whole inventory
+- Tons of bug fixes and small feature additions
+- Tons of performance improvements
 
 ### Before updating
 > Remove Refined Storage Addons, the wireless crafting grid is included in this version already
