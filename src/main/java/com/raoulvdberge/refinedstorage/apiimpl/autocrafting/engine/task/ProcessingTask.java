@@ -13,6 +13,8 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.Craf
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.RestockableInput;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
@@ -25,7 +27,10 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Represents a processing task
@@ -368,7 +373,7 @@ public class ProcessingTask extends Task {
             return;
 
         //destination slot : Stack -> Inserted Amount
-        Map<Integer, ItemStack> slotToStackMap = new HashMap<>();
+        Int2ObjectMap<ItemStack> slotToStackMap = new Int2ObjectOpenHashMap<>();
 
         for (int i = 0; i < dest.getSlots(); i++) {
             for (int j = 0; j < counts.size(); j++) {
