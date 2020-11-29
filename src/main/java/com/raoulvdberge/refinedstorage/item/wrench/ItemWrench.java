@@ -52,8 +52,8 @@ public class ItemWrench extends ItemBase {
 
     @Nonnull
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if (!player.isSneaking() || hand == EnumHand.OFF_HAND) {
+    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
+        if (hand == EnumHand.OFF_HAND) {
             return EnumActionResult.FAIL;
         }
 

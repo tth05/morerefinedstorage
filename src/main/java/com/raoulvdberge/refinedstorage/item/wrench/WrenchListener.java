@@ -7,9 +7,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-public class WrenchTickListener {
+public class WrenchListener {
 
     @SubscribeEvent
     public void onMouseWheelEvent(MouseEvent event) {
@@ -29,5 +31,12 @@ public class WrenchTickListener {
             RS.INSTANCE.network.sendToServer(new MessageChangeWrenchMode(currentMode.ordinal(), player.inventory.currentItem));
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public void onClick(PlayerInteractEvent.RightClickBlock event) {
+        if(!(event.getItemStack().getItem() instanceof ItemWrench))
+            return;
+        event.setUseBlock(Event.Result.DENY);
     }
 }
