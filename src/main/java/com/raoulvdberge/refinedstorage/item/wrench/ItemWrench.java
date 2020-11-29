@@ -1,4 +1,4 @@
-package com.raoulvdberge.refinedstorage.item;
+package com.raoulvdberge.refinedstorage.item.wrench;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
@@ -7,11 +7,17 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.ICoverable;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.Cover;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.block.BlockCable;
+import com.raoulvdberge.refinedstorage.item.ItemBase;
+import com.raoulvdberge.refinedstorage.item.ItemCover;
 import com.raoulvdberge.refinedstorage.item.info.ItemInfo;
 import com.raoulvdberge.refinedstorage.render.IModelRegistration;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTraceResult;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTracer;
 import com.raoulvdberge.refinedstorage.tile.TileNode;
+import com.raoulvdberge.refinedstorage.tile.config.IComparable;
+import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
+import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -19,6 +25,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -46,9 +53,11 @@ public class ItemWrench extends ItemBase {
     @Nonnull
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if (!player.isSneaking()) {
+        if (!player.isSneaking() || hand == EnumHand.OFF_HAND) {
             return EnumActionResult.FAIL;
         }
+
+        addDefaultMode(player.getHeldItemMainhand());
 
         if (world.isRemote) {
             return EnumActionResult.SUCCESS;
@@ -59,10 +68,8 @@ public class ItemWrench extends ItemBase {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
 
-        if(!(tile instanceof TileNode<?>)) {
-            block.rotateBlock(world, pos, player.getHorizontalFacing().getOpposite());
-
-            return EnumActionResult.SUCCESS;
+        if (!(tile instanceof TileNode<?>)) {
+            return EnumActionResult.FAIL;
         }
 
         INetworkNode node = ((TileNode<?>) tile).getNode();
@@ -74,15 +81,17 @@ public class ItemWrench extends ItemBase {
             return EnumActionResult.FAIL;
         }
 
-        if (block instanceof BlockCable && node instanceof ICoverable) {
+        WrenchMode mode = WrenchMode.valueOf(player.getHeldItemMainhand().getTagCompound().getString("mode"));
+
+        if (mode == WrenchMode.COVER && block instanceof BlockCable && node instanceof ICoverable) {
             CoverManager manager = ((ICoverable) ((TileNode<?>) tile).getNode()).getCoverManager();
 
             @SuppressWarnings("deprecation")
             AdvancedRayTraceResult<?> result = AdvancedRayTracer.rayTrace(
-                pos,
-                AdvancedRayTracer.getStart(player),
-                AdvancedRayTracer.getEnd(player),
-                ((BlockCable) block).getCollisions(tile, block.getActualState(state, world, pos))
+                    pos,
+                    AdvancedRayTracer.getStart(player),
+                    AdvancedRayTracer.getEnd(player),
+                    ((BlockCable) block).getCollisions(tile, block.getActualState(state, world, pos))
             );
 
             if (result != null && result.getGroup().getDirection() != null) {
@@ -103,9 +112,62 @@ public class ItemWrench extends ItemBase {
                     return EnumActionResult.SUCCESS;
                 }
             }
+        } else {
+            NBTTagCompound configTag = player.getHeldItemMainhand().getTagCompound().getCompoundTag("config");
+            if (mode == WrenchMode.COPY) {
+                //type
+                if (node instanceof IType) {
+                    configTag.setTag("type", IType.writeToNBT((IType) node, new NBTTagCompound()));
+                }
+                //upgrades
+                if (node instanceof IUpgradeContainer) {
+                    configTag.setTag("upgrades", IUpgradeContainer.writeToNBT((IUpgradeContainer) node, new NBTTagCompound()));
+                }
+                //compareable
+                if (node instanceof IComparable) {
+                    IComparable.writeToNBT((IComparable) node, configTag);
+                }
+                //filterable
+                if (node instanceof IFilterable) {
+                    IFilterable.writeToNBT((IFilterable) node, configTag);
+                }
+
+                player.getHeldItemMainhand().getTagCompound().setTag("config", configTag);
+            } else if (mode == WrenchMode.PASTE && !configTag.isEmpty()) {
+                //type
+                if (node instanceof IType && configTag.hasKey("type")) {
+                    IType.readFromNBT((IType) node, configTag.getCompoundTag("type"));
+                }
+                //upgrades
+                if(node instanceof IUpgradeContainer && configTag.hasKey("upgrades")) {
+                    IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, configTag.getCompoundTag("upgrades"));
+                }
+                //compareable
+                if (node instanceof IComparable && configTag.hasKey("compare")) {
+                    IComparable.readFromNBT((IComparable) node, configTag);
+                }
+                //filterable
+                if (node instanceof IFilterable && configTag.hasKey("filterMode")) {
+                    IFilterable.readFromNBT((IFilterable) node, configTag);
+                }
+            } else if (mode == WrenchMode.ROTATE) {
+                block.rotateBlock(world, pos, player.getHorizontalFacing().getOpposite());
+            }
         }
 
-        block.rotateBlock(world, pos, player.getHorizontalFacing().getOpposite());
         return EnumActionResult.SUCCESS;
+    }
+
+    public static void addDefaultMode(ItemStack stack) {
+        NBTTagCompound tag;
+        if (stack.getTagCompound() == null)
+            tag = new NBTTagCompound();
+        else
+            tag = stack.getTagCompound();
+
+        if (!tag.hasKey("mode"))
+            tag.setString("mode", WrenchMode.COVER.name());
+
+        stack.setTagCompound(tag);
     }
 }

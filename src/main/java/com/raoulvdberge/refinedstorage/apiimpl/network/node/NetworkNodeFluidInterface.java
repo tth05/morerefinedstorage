@@ -14,6 +14,7 @@ import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.TileFluidInterface;
 import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -27,7 +28,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class NetworkNodeFluidInterface extends NetworkNode {
+public class NetworkNodeFluidInterface extends NetworkNode implements IUpgradeContainer {
     public static final String ID = "fluid_interface";
 
     public static final int TANK_CAPACITY = 16_000;
@@ -273,5 +274,10 @@ public class NetworkNodeFluidInterface extends NetworkNode {
     @Override
     public boolean hasConnectivityState() {
         return true;
+    }
+
+    @Override
+    public ItemHandlerUpgrade getUpgradeHandler() {
+        return this.upgrades;
     }
 }

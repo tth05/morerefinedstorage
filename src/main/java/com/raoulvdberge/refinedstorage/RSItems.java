@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage;
 
 import com.raoulvdberge.refinedstorage.item.*;
+import com.raoulvdberge.refinedstorage.item.wrench.ItemWrench;
 
 public final class RSItems {
     public static final ItemStorageDisk STORAGE_DISK = new ItemStorageDisk();

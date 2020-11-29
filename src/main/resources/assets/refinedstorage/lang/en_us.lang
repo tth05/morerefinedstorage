@@ -139,6 +139,11 @@ misc.refinedstorage:last_modified.weeks=Last modified %d weeks ago by %s
 misc.refinedstorage:last_modified.year=Last modified %d year ago by %s
 misc.refinedstorage:last_modified.years=Last modified %d years ago by %s
 
+misc.refinedstorage:wrench.mode.cover=Cover
+misc.refinedstorage:wrench.mode.copy=Copy
+misc.refinedstorage:wrench.mode.paste=Paste
+misc.refinedstorage:wrench.mode.rotate=Rotate
+
 sidebutton.refinedstorage:compare.1=Use damage
 sidebutton.refinedstorage:compare.2=Use NBT
 

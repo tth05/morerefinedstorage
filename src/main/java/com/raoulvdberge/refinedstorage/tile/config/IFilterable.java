@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fluids.FluidStack;
@@ -72,6 +73,15 @@ public interface IFilterable {
         }
 
         return false;
+    }
+
+    static void readFromNBT(IFilterable filterable, NBTTagCompound tag) {
+        filterable.setMode(tag.getInteger("filterMode"));
+    }
+
+    static NBTTagCompound writeToNBT(IFilterable filterable, NBTTagCompound tag) {
+        tag.setInteger("filterMode", filterable.getMode());
+        return tag;
     }
 
     void setMode(int mode);

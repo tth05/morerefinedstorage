@@ -11,6 +11,7 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternContainer {
+public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternContainer, IUpgradeContainer {
 
     public static final String ID = "crafter";
 
@@ -484,5 +485,10 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     @Override
     public IItemHandler getDrops() {
         return new CombinedInvWrapper(patternsInventory, upgrades);
+    }
+
+    @Override
+    public ItemHandlerUpgrade getUpgradeHandler() {
+        return this.upgrades;
     }
 }

@@ -13,6 +13,7 @@ import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.config.IComparable;
 import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -22,7 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
-public class NetworkNodeInterface extends NetworkNode implements IComparable {
+public class NetworkNodeInterface extends NetworkNode implements IComparable, IUpgradeContainer {
     public static final String ID = "interface";
 
     private static final String NBT_COMPARE = "Compare";
@@ -247,5 +248,10 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable {
     @Override
     public boolean hasConnectivityState() {
         return true;
+    }
+
+    @Override
+    public ItemHandlerUpgrade getUpgradeHandler() {
+        return this.upgrades;
     }
 }

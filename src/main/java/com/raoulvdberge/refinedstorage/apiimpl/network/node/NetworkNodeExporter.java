@@ -15,6 +15,7 @@ import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.TileExporter;
 import com.raoulvdberge.refinedstorage.tile.config.IComparable;
 import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
@@ -33,7 +34,7 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
 import javax.annotation.Nullable;
 
-public class NetworkNodeExporter extends NetworkNode implements IComparable, IType, ICoverable {
+public class NetworkNodeExporter extends NetworkNode implements IComparable, IType, ICoverable, IUpgradeContainer {
     public static final String ID = "exporter";
 
     private static final String NBT_COMPARE = "Compare";
@@ -364,5 +365,10 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     @Override
     public CoverManager getCoverManager() {
         return coverManager;
+    }
+
+    @Override
+    public ItemHandlerUpgrade getUpgradeHandler() {
+        return this.upgrades;
     }
 }

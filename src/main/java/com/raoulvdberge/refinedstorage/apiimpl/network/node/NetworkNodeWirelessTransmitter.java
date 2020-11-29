@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -15,7 +16,7 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nullable;
 
-public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWirelessTransmitter {
+public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWirelessTransmitter, IUpgradeContainer {
     public static final String ID = "wireless_transmitter";
 
     private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_RANGE, ItemUpgrade.TYPE_CREATIVE_RANGE);
@@ -89,5 +90,10 @@ public class NetworkNodeWirelessTransmitter extends NetworkNode implements IWire
     @Override
     public void visit(Operator operator) {
         operator.apply(world, pos.offset(EnumFacing.DOWN), EnumFacing.UP);
+    }
+
+    @Override
+    public ItemHandlerUpgrade getUpgradeHandler() {
+        return this.upgrades;
     }
 }

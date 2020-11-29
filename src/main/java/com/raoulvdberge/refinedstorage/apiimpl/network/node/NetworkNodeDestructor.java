@@ -14,6 +14,7 @@ import com.raoulvdberge.refinedstorage.tile.TileDestructor;
 import com.raoulvdberge.refinedstorage.tile.config.IComparable;
 import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
@@ -56,7 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class NetworkNodeDestructor extends NetworkNode implements IComparable, IFilterable, IType, ICoverable {
+public class NetworkNodeDestructor extends NetworkNode implements IComparable, IFilterable, IType, ICoverable, IUpgradeContainer {
     public static final String ID = "destructor";
 
     private static final String NBT_COMPARE = "Compare";
@@ -360,5 +361,10 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     @Override
     public CoverManager getCoverManager() {
         return coverManager;
+    }
+
+    @Override
+    public ItemHandlerUpgrade getUpgradeHandler() {
+        return this.upgrades;
     }
 }

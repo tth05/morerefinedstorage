@@ -20,6 +20,7 @@ import com.raoulvdberge.refinedstorage.tile.TileDiskManipulator;
 import com.raoulvdberge.refinedstorage.tile.config.IComparable;
 import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -37,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class NetworkNodeDiskManipulator extends NetworkNode implements IComparable, IFilterable, IType, IStorageDiskContainerContext {
+public class NetworkNodeDiskManipulator extends NetworkNode implements IComparable, IFilterable, IType, IStorageDiskContainerContext, IUpgradeContainer {
     public static final String ID = "disk_manipulator";
 
     public static final int IO_MODE_INSERT = 0;
@@ -545,5 +546,10 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     @Override
     public AccessType getAccessType() {
         return AccessType.INSERT_EXTRACT;
+    }
+
+    @Override
+    public ItemHandlerUpgrade getUpgradeHandler() {
+        return this.upgrades;
     }
 }
