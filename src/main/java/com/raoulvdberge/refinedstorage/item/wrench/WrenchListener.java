@@ -35,7 +35,7 @@ public class WrenchListener {
 
     @SubscribeEvent
     public void onClick(PlayerInteractEvent.RightClickBlock event) {
-        if(!(event.getItemStack().getItem() instanceof ItemWrench))
+        if (!(event.getItemStack().getItem() instanceof ItemWrench))
             return;
         event.setUseBlock(Event.Result.DENY);
     }
