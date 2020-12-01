@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.*;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.nbt.NBTTagCompound;
@@ -30,18 +31,24 @@ public class ReaderWriterChannel implements IReaderWriterChannel {
 
     @Override
     public List<IReader> getReaders() {
-        return network.getNodeGraph().all().stream()
-            .filter(n -> n instanceof IReader && name.equals(((IReader) n).getChannel()))
-            .map(n -> (IReader) n)
-            .collect(Collectors.toList());
+        List<IReader> list = new ArrayList<>();
+        for (INetworkNode node : network.getNodeGraph().all()) {
+            if (node instanceof IReader && name.equals(((IReader) node).getChannel())) {
+                list.add((IReader) node);
+            }
+        }
+        return list;
     }
 
     @Override
     public List<IWriter> getWriters() {
-        return network.getNodeGraph().all().stream()
-            .filter(n -> n instanceof IWriter && name.equals(((IWriter) n).getChannel()))
-            .map(n -> (IWriter) n)
-            .collect(Collectors.toList());
+        List<IWriter> list = new ArrayList<>();
+        for (INetworkNode node : network.getNodeGraph().all()) {
+            if (node instanceof IWriter && name.equals(((IWriter) node).getChannel())) {
+                list.add((IWriter) node);
+            }
+        }
+        return list;
     }
 
     @Override
