@@ -18,6 +18,7 @@ Check the CHANGELOG.md file for a full list of changes.
 - No lag when shift crafting
 - Wireless Crafting Grid is included now
 - Wireless items can be worn in bauble slots
+- Copy and paste functionality for the wrench
 - Backported scrolling support for grid (using shift and ctrl, original by Darkere)
 - Allow for scrolling in pattern grid to change amounts of the items
 - Increased disk manipulator speed by a lot
