@@ -95,7 +95,7 @@ public class TileController extends TileBase
             new TileDataParameter<>(RSSerializers.CLIENT_NODE_SERIALIZER, new ArrayList<>(), t -> {
                 List<ClientNode> nodes = new ArrayList<>();
 
-                for (INetworkNode node : t.nodeGraph.all()) {
+                for (INetworkNode node : t.nodeGraph.allActualNodes()) {
                     if (node.canUpdate()) {
                         ItemStack stack = node.getItemStack();
 

@@ -62,6 +62,12 @@ public interface INetworkNodeGraph {
     /**
      * @return a collection of all connected nodes
      */
+    Collection<INetworkNode> allActualNodes();
+
+    /**
+     * @return a collection of all connected nodes, excluding cables and some RebornStorage blocks. This makes the list
+     * smaller for performance reasons
+     */
     Collection<INetworkNode> all();
 
     /**
