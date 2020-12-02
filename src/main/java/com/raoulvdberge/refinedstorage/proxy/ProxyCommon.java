@@ -41,6 +41,7 @@ import com.raoulvdberge.refinedstorage.integration.oc.DriverNetwork;
 import com.raoulvdberge.refinedstorage.integration.oc.IntegrationOC;
 import com.raoulvdberge.refinedstorage.item.ItemProcessor;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
+import com.raoulvdberge.refinedstorage.item.wrench.WrenchClickBlockListener;
 import com.raoulvdberge.refinedstorage.network.*;
 import com.raoulvdberge.refinedstorage.recipe.RecipeCover;
 import com.raoulvdberge.refinedstorage.recipe.RecipeHollowCover;
@@ -88,6 +89,7 @@ public class ProxyCommon {
 
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new WrenchClickBlockListener());
 
         CapabilityNetworkNodeProxy.register();
 
