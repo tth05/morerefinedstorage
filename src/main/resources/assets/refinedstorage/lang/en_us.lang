@@ -139,6 +139,11 @@ misc.refinedstorage:last_modified.weeks=Last modified %d weeks ago by %s
 misc.refinedstorage:last_modified.year=Last modified %d year ago by %s
 misc.refinedstorage:last_modified.years=Last modified %d years ago by %s
 
+misc.refinedstorage:wrench.copied=Copied configuration!
+misc.refinedstorage:wrench.pasted=Pasted configuration: %s
+misc.refinedstorage:wrench.pasted.type=Filter
+misc.refinedstorage:wrench.pasted.compareable=Compare
+misc.refinedstorage:wrench.pasted.upgrades=Upgrades
 misc.refinedstorage:wrench.mode.cover=Cover
 misc.refinedstorage:wrench.mode.copy=Copy
 misc.refinedstorage:wrench.mode.paste=Paste

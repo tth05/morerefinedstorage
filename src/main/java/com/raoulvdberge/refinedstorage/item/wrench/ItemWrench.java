@@ -31,6 +31,8 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -133,23 +135,35 @@ public class ItemWrench extends ItemBase {
                 }
 
                 player.getHeldItemMainhand().getTagCompound().setTag("config", configTag);
+                player.sendMessage(new TextComponentTranslation("misc.refinedstorage:wrench.copied"));
             } else if (mode == WrenchMode.PASTE && !configTag.isEmpty()) {
+                TextComponentString args = new TextComponentString("");
+
                 //type
                 if (node instanceof IType && configTag.hasKey("type")) {
                     IType.readFromNBT((IType) node, configTag.getCompoundTag("type"));
+                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ")
+                            .appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.type"));
                 }
                 //upgrades
-                if(node instanceof IUpgradeContainer && configTag.hasKey("upgrades")) {
+                if (node instanceof IUpgradeContainer && configTag.hasKey("upgrades")) {
                     IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, configTag.getCompoundTag("upgrades"));
+                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ")
+                            .appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.upgrades"));
                 }
                 //compareable
                 if (node instanceof IComparable && configTag.hasKey("compare")) {
                     IComparable.readFromNBT((IComparable) node, configTag);
+                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ")
+                            .appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.compareable"));
                 }
                 //filterable
                 if (node instanceof IFilterable && configTag.hasKey("filterMode")) {
                     IFilterable.readFromNBT((IFilterable) node, configTag);
                 }
+
+                if (!args.getSiblings().isEmpty())
+                    player.sendMessage(new TextComponentTranslation("misc.refinedstorage:wrench.pasted", args));
             } else if (mode == WrenchMode.ROTATE) {
                 block.rotateBlock(world, pos, player.getHorizontalFacing().getOpposite());
             }
