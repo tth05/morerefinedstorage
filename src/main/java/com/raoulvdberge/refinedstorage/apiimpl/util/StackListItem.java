@@ -119,9 +119,9 @@ public class StackListItem implements IStackList<ItemStack> {
             Map.Entry<ItemStack, StackListEntry<ItemStack>> entry = iterator.next();
             StackListEntry<ItemStack> stackListEntry = entry.getValue();
             if (stackListEntry.getCount() < 1) {
-                iterator.remove();
                 stacksByItem.remove(stackListEntry.getStack().getItem(), new ItemStackWrapper(entry.getKey()));
                 index.remove(stackListEntry.getId());
+                iterator.remove();
             }
         }
     }
