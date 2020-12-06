@@ -246,7 +246,7 @@ public class TileController extends TileBase
 
     @Nullable
     @Override
-    public StackListResult<ItemStack> insertItem(@Nonnull ItemStack stack, long size, Action action) {
+    public synchronized StackListResult<ItemStack> insertItem(@Nonnull ItemStack stack, long size, Action action) {
         if (size < 1 || itemStorage.getStorages().isEmpty()) {
             return new StackListResult<>(stack.copy(), size);
         }
@@ -299,7 +299,7 @@ public class TileController extends TileBase
 
     @Nullable
     @Override
-    public StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action,
+    public synchronized StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action,
                                                   Predicate<IStorage<ItemStack>> filter) {
         long received = 0;
         long extractedExternally = 0;
@@ -344,7 +344,7 @@ public class TileController extends TileBase
 
     @Nullable
     @Override
-    public StackListResult<FluidStack> insertFluid(@Nonnull FluidStack stack, long size, Action action) {
+    public synchronized StackListResult<FluidStack> insertFluid(@Nonnull FluidStack stack, long size, Action action) {
         if (size < 1 || fluidStorage.getStorages().isEmpty()) {
             return new StackListResult<>(StackUtils.copy(stack, 0), size);
         }
@@ -396,7 +396,7 @@ public class TileController extends TileBase
     }
 
     @Override
-    public StackListResult<FluidStack> extractFluid(@Nonnull FluidStack stack, long size, int flags, Action action,
+    public synchronized StackListResult<FluidStack> extractFluid(@Nonnull FluidStack stack, long size, int flags, Action action,
                                                     Predicate<IStorage<FluidStack>> filter) {
         long received = 0;
         long extractedExternally = 0;
