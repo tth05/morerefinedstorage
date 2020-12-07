@@ -80,16 +80,16 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
                 return;
             }
 
-            if (currentSlot >= handler.getSlots()) {
+            int handlerSlotCount = handler.getSlots();
+            if (currentSlot >= handlerSlotCount) {
                 currentSlot = 0;
             }
 
-            if (handler.getSlots() > 0) {
-                while (currentSlot + 1 < handler.getSlots() && handler.getStackInSlot(currentSlot).isEmpty()) {
+            if (handlerSlotCount > 0) {
+                ItemStack stack = handler.getStackInSlot(currentSlot);
+                while (currentSlot + 1 < handlerSlotCount && stack.isEmpty()) {
                     currentSlot++;
                 }
-
-                ItemStack stack = handler.getStackInSlot(currentSlot);
 
                 if (!IFilterable.acceptsItem(itemFilters, mode, compare, stack)) {
                     currentSlot++;
