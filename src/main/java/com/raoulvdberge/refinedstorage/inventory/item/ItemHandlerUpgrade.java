@@ -3,14 +3,19 @@ package com.raoulvdberge.refinedstorage.inventory.item;
 import com.raoulvdberge.refinedstorage.RSItems;
 import com.raoulvdberge.refinedstorage.inventory.item.validator.ItemValidatorBasic;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import net.minecraft.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 public class ItemHandlerUpgrade extends ItemHandlerBase {
 
-    private int energyUsage = -1;
-    private int speed = -1;
+    private final Int2IntMap upgradeCountMap = new Int2IntOpenHashMap();
+
+    private int energyUsage;
+    private int fortuneLevel;
 
     public ItemHandlerUpgrade(int size, @Nullable Consumer<Integer> listener, int... supportedUpgrades) {
         super(size, listener, new ItemValidatorBasic[supportedUpgrades.length]);
@@ -23,34 +28,28 @@ public class ItemHandlerUpgrade extends ItemHandlerBase {
     @Override
     protected void onContentsChanged(int slot) {
         super.onContentsChanged(slot);
-        updateEnergyUsage();
-        updateSpeed();
-    }
-
-    private void updateSpeed() {
-        this.speed = 9;
+        this.energyUsage = 0;
+        this.fortuneLevel = 0;
+        this.upgradeCountMap.clear();
 
         for (int i = 0; i < getSlots(); ++i) {
-            if (!getStackInSlot(i).isEmpty() && getStackInSlot(i).getItemDamage() == ItemUpgrade.TYPE_SPEED) {
-                speed -= 2;
-            }
+            ItemStack stack = getStackInSlot(i);
+            if (stack.isEmpty())
+                continue;
+
+            this.energyUsage += ItemUpgrade.getEnergyUsage(stack);
+            this.fortuneLevel = Math.max(this.fortuneLevel, ItemUpgrade.getFortuneLevel(stack));
+
+            this.upgradeCountMap.merge(stack.getItemDamage(), 1, Integer::sum);
         }
     }
 
     public int getSpeed() {
-        if (this.speed == -1)
-            updateSpeed();
-        return this.speed;
+        return getSpeed(9, 2);
     }
 
     public int getSpeed(int speed, int speedIncrease) {
-        for (int i = 0; i < getSlots(); ++i) {
-            if (!getStackInSlot(i).isEmpty() && getStackInSlot(i).getItemDamage() == ItemUpgrade.TYPE_SPEED) {
-                speed -= speedIncrease;
-            }
-        }
-
-        return speed;
+        return speed - speedIncrease * this.upgradeCountMap.get(ItemUpgrade.TYPE_SPEED);
     }
 
     public boolean hasUpgrade(int type) {
@@ -58,46 +57,15 @@ public class ItemHandlerUpgrade extends ItemHandlerBase {
     }
 
     public int getUpgradeCount(int type) {
-        int upgrades = 0;
-
-        for (int i = 0; i < getSlots(); ++i) {
-            if (!getStackInSlot(i).isEmpty() && getStackInSlot(i).getItemDamage() == type) {
-                upgrades++;
-            }
-        }
-
-        return upgrades;
-    }
-
-    private void updateEnergyUsage() {
-        this.energyUsage = 0;
-
-        for (int i = 0; i < getSlots(); ++i) {
-            this.energyUsage += ItemUpgrade.getEnergyUsage(getStackInSlot(i));
-        }
+        return this.upgradeCountMap.get(type);
     }
 
     public int getEnergyUsage() {
-        if (this.energyUsage == -1)
-            updateEnergyUsage();
-
         return this.energyUsage;
     }
 
     public int getFortuneLevel() {
-        int maxFortune = 0;
-
-        for (int i = 0; i < getSlots(); ++i) {
-            if (!getStackInSlot(i).isEmpty()) {
-                int fortune = ItemUpgrade.getFortuneLevel(getStackInSlot(i));
-
-                if (fortune > maxFortune) {
-                    maxFortune = fortune;
-                }
-            }
-        }
-
-        return maxFortune;
+        return this.fortuneLevel;
     }
 
     public int getItemInteractCount() {
