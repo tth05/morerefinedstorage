@@ -39,6 +39,11 @@ public interface INetworkNodeManager {
     Collection<INetworkNode> all();
 
     /**
+     * @return all nodes in this registry that need to tick
+     */
+    Collection<INetworkNode> allTickable();
+
+    /**
      * Marks the network node manager for saving.
      */
     void markForSaving();

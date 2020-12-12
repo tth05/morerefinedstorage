@@ -94,4 +94,11 @@ public interface INetworkNode {
      * @return the id of this node as specified in {@link INetworkNodeRegistry}
      */
     String getId();
+
+    /**
+     * @return whether or not this network node's {@link #update()} method should be called every tick
+     */
+    default boolean isTickable() {
+        return true;
+    }
 }

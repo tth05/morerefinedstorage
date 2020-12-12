@@ -66,6 +66,11 @@ public class NetworkNodeCable extends NetworkNode implements ICoverable, INetwor
         //NO OP
     }
 
+    @Override
+    public boolean isTickable() {
+        return false;
+    }
+
     @Nullable
     @Override
     public IItemHandler getDrops() {

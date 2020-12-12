@@ -14,8 +14,8 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class NetworkNodeManager extends WorldSavedData implements INetworkNodeManager {
     public static final String NAME = "refinedstorage_nodes";
@@ -28,7 +28,8 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
     private boolean canReadNodes;
     private NBTTagList nodesTag;
 
-    private final Map<BlockPos, INetworkNode> nodes = new ConcurrentHashMap<>();
+    private final Map<BlockPos, INetworkNode> nodes = new HashMap<>();
+    private final Map<BlockPos, INetworkNode> tickableNodes = new HashMap<>();
 
     public NetworkNodeManager(String name) {
         super(name);
@@ -47,6 +48,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
             this.canReadNodes = false;
 
             this.nodes.clear();
+            this.tickableNodes.clear();
 
             for (int i = 0; i < nodesTag.tagCount(); ++i) {
                 NBTTagCompound nodeTag = nodesTag.getCompoundTagAt(i);
@@ -68,6 +70,9 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
 
                     if (node != null) {
                         this.nodes.put(pos, node);
+
+                        if (node.isTickable())
+                            this.tickableNodes.put(pos, node);
                     }
                 }
             }
@@ -111,6 +116,7 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
         }
 
         nodes.remove(pos);
+        tickableNodes.remove(pos);
     }
 
     @Override
@@ -124,6 +130,14 @@ public class NetworkNodeManager extends WorldSavedData implements INetworkNodeMa
         }
 
         nodes.put(pos, node);
+
+        if (node.isTickable())
+            tickableNodes.put(pos, node);
+    }
+
+    @Override
+    public Collection<INetworkNode> allTickable() {
+        return tickableNodes.values();
     }
 
     @Override
