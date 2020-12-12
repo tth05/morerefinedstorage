@@ -33,14 +33,14 @@ public class ItemStackListTest implements MinecraftForgeTest {
         assertEquals(result.getCount(), 1);
         assertEquals(result.getFixedStack().getCount(), 1);
 
-        result = new StackListResult<>(new ItemStack(Items.APPLE, 1), (long)Integer.MAX_VALUE * 2);
+        result = new StackListResult<>(new ItemStack(Items.APPLE, 1), (long) Integer.MAX_VALUE * 2);
 
-        assertEquals(result.getCount(), (long)Integer.MAX_VALUE * 2);
+        assertEquals(result.getCount(), (long) Integer.MAX_VALUE * 2);
         assertEquals(result.getFixedStack().getCount(), Integer.MAX_VALUE);
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {1, 50, 1000000, Integer.MAX_VALUE, (long)Integer.MAX_VALUE * 2})
+    @ValueSource(longs = {1, 50, 1000000, Integer.MAX_VALUE, (long) Integer.MAX_VALUE * 2})
     @Order(2)
     public void testGetEntry(long count) {
         ItemStack stack = new ItemStack(Items.DIAMOND_PICKAXE, 1, 50);
@@ -83,7 +83,7 @@ public class ItemStackListTest implements MinecraftForgeTest {
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {1, 50, 1000000, Integer.MAX_VALUE, (long)Integer.MAX_VALUE * 2})
+    @ValueSource(longs = {1, 50, 1000000, Integer.MAX_VALUE, (long) Integer.MAX_VALUE * 2})
     @Order(4)
     public void testAddStack(long count) {
         ItemStack stack = new ItemStack(Items.APPLE, 1);
@@ -144,7 +144,7 @@ public class ItemStackListTest implements MinecraftForgeTest {
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {1, 50, 1000000, Integer.MAX_VALUE, (long)Integer.MAX_VALUE * 2})
+    @ValueSource(longs = {1, 50, 1000000, Integer.MAX_VALUE, (long) Integer.MAX_VALUE * 2})
     @Order(8)
     public void testRemoveStack(long count) {
         ItemStack stack = new ItemStack(Items.APPLE, 1);
@@ -172,5 +172,67 @@ public class ItemStackListTest implements MinecraftForgeTest {
         assertEquals(10, result.getCount());
         assertEquals(0, list.getStacks().size());
         assertNull(list.getEntry(stack, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE));
+    }
+
+    @Test
+    @Order(10)
+    public void testClearCounts() {
+        ItemStack stack1 = new ItemStack(Items.APPLE, 1);
+        stack1.setItemDamage(1);
+        ItemStack stack2 = new ItemStack(Items.APPLE, 2);
+        NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setInteger("hey", 1);
+        stack2.setTagCompound(nbt);
+        ItemStack stack3 = new ItemStack(Items.APPLE, 3);
+
+        list.add(stack1, stack1.getCount());
+        list.add(stack2, stack2.getCount());
+        list.add(stack3, stack3.getCount());
+
+        assertEquals(3, list.getStacks().size());
+        for (StackListEntry<ItemStack> stack : list.getStacks()) {
+            assertTrue(stack.getCount() > 0);
+        }
+
+        list.clearCounts();
+
+        assertEquals(3, list.getStacks().size());
+        for (StackListEntry<ItemStack> stack : list.getStacks()) {
+            assertEquals(0, stack.getCount());
+        }
+    }
+
+    @Test
+    @Order(11)
+    public void testClearEmpty() {
+        ItemStack stack1 = new ItemStack(Items.APPLE, 1);
+        stack1.setItemDamage(1);
+        ItemStack stack2 = new ItemStack(Items.APPLE, 2);
+        NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setInteger("hey", 1);
+        stack2.setTagCompound(nbt);
+        ItemStack stack3 = new ItemStack(Items.APPLE, 3);
+
+        list.add(stack1, stack1.getCount());
+        list.add(stack2, stack2.getCount());
+        list.add(stack3, stack3.getCount());
+
+        assertEquals(3, list.getStacks().size());
+        for (StackListEntry<ItemStack> stack : list.getStacks()) {
+            assertTrue(stack.getCount() > 0);
+        }
+
+        list.clearCounts();
+
+        assertEquals(3, list.getStacks().size());
+        for (StackListEntry<ItemStack> stack : list.getStacks()) {
+            assertEquals(0, stack.getCount());
+        }
+
+        list.add(stack3, 1);
+        list.clearEmpty();
+
+        assertEquals(1, list.getStacks().size());
+        assertTrue(API.instance().getComparer().isEqualNoQuantity(list.getEntry(stack3, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE).getStack(), stack3));
     }
 }
