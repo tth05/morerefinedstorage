@@ -89,6 +89,7 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
                 ItemStack stack = handler.getStackInSlot(currentSlot);
                 while (currentSlot + 1 < handlerSlotCount && stack.isEmpty()) {
                     currentSlot++;
+                    stack = handler.getStackInSlot(currentSlot);
                 }
 
                 if (!IFilterable.acceptsItem(itemFilters, mode, compare, stack)) {

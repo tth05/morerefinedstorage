@@ -50,6 +50,8 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     private boolean couldUpdate;
     private int ticksSinceUpdateChanged;
 
+    private TileEntity facingTileEntity;
+
     private boolean active;
 
     public NetworkNode(World world, BlockPos pos) {
@@ -238,7 +240,9 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
 
     @Nullable
     public TileEntity getFacingTile() {
-        return world.getTileEntity(pos.offset(getDirection()));
+        if (this.facingTileEntity == null || this.facingTileEntity.isInvalid() || !this.facingTileEntity.hasWorld())
+            this.facingTileEntity = world.getTileEntity(pos.offset(getDirection()));
+        return this.facingTileEntity;
     }
 
     public EnumFacing getDirection() {
