@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network;
 
+import com.google.common.collect.Sets;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.INetworkNodeGraph;
 import com.raoulvdberge.refinedstorage.api.network.INetworkNodeGraphListener;
@@ -9,6 +10,8 @@ import com.raoulvdberge.refinedstorage.api.network.node.INetworkNodeProxy;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.ObjectSets;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
@@ -20,6 +23,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY;
@@ -27,8 +31,8 @@ import static com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodePr
 public class NetworkNodeGraph implements INetworkNodeGraph {
     private final INetwork network;
 
-    private Set<INetworkNode> nodes = new HashSet<>(1, 1.0f);
-    private Set<INetworkNode> filteredNodes = new HashSet<>(1, 1.0f);
+    private Set<INetworkNode> nodes = Collections.newSetFromMap(new ConcurrentHashMap<>(1, 1.0f));
+    private Set<INetworkNode> filteredNodes = Collections.newSetFromMap(new ConcurrentHashMap<>(1, 1.0f));
 
     private final List<INetworkNodeGraphListener> listeners = new LinkedList<>();
 
@@ -64,8 +68,6 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
         while ((currentVisitor = operator.toCheck.poll()) != null) {
             currentVisitor.visit(operator);
         }
-
-        operator.foundNodes.trim(operator.foundNodes.size());
 
         this.nodes = operator.foundNodes;
         this.filteredNodes = operator.filteredNodes;
@@ -132,11 +134,11 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
     }
 
     private class Operator implements INetworkNodeVisitor.Operator {
-        private final ObjectOpenHashSet<INetworkNode> foundNodes; // All scanned nodes
-        private final Set<INetworkNode> filteredNodes = new HashSet<>(); // All scanned and filtered nodes
+        private final ObjectSet<INetworkNode> foundNodes; // All scanned nodes
+        private final Set<INetworkNode> filteredNodes = Sets.newConcurrentHashSet(); // All scanned and filtered nodes
 
         // All scanned new nodes, that didn't appear in the list before
-        private final Set<INetworkNode> newNodes = new HashSet<>();
+        private final Set<INetworkNode> newNodes = Sets.newConcurrentHashSet();
         // All unscanned nodes (nodes that were in the previous list, but not in the new list)
         private final Set<INetworkNode> previousNodes;
 
@@ -147,11 +149,11 @@ public class NetworkNodeGraph implements INetworkNodeGraph {
         public Operator(Action action) {
             this.action = action;
             //use load factor of 1 because the list size won't change
-            this.previousNodes = new HashSet<>(nodes.size(), 1.0f);
+            this.previousNodes = Collections.newSetFromMap(new ConcurrentHashMap<>(nodes.size(), 1.0f));
             this.previousNodes.addAll(nodes);
 
             //load factor of 1 to allow fast iteration later
-            this.foundNodes = new ObjectOpenHashSet<>(nodes.size(), 1.0f);
+            this.foundNodes = ObjectSets.synchronize(new ObjectOpenHashSet<>(nodes.size(), 1.0f));
         }
 
         @Override

@@ -32,7 +32,7 @@ public class ReaderWriterChannel implements IReaderWriterChannel {
     @Override
     public List<IReader> getReaders() {
         List<IReader> list = new ArrayList<>();
-        for (INetworkNode node : network.getNodeGraph().all()) {
+        for (INetworkNode node : network.getNodeGraph().allActualNodes()) {
             if (node instanceof IReader && name.equals(((IReader) node).getChannel())) {
                 list.add((IReader) node);
             }
@@ -43,7 +43,7 @@ public class ReaderWriterChannel implements IReaderWriterChannel {
     @Override
     public List<IWriter> getWriters() {
         List<IWriter> list = new ArrayList<>();
-        for (INetworkNode node : network.getNodeGraph().all()) {
+        for (INetworkNode node : network.getNodeGraph().allActualNodes()) {
             if (node instanceof IWriter && name.equals(((IWriter) node).getChannel())) {
                 list.add((IWriter) node);
             }

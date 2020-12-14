@@ -240,8 +240,10 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
 
     @Nullable
     public TileEntity getFacingTile() {
-        if (this.facingTileEntity == null || this.facingTileEntity.isInvalid() || !this.facingTileEntity.hasWorld())
+        if (this.facingTileEntity == null)
             this.facingTileEntity = world.getTileEntity(pos.offset(getDirection()));
+        else if (this.facingTileEntity.isInvalid() || !this.facingTileEntity.hasWorld())
+            this.facingTileEntity = null;
         return this.facingTileEntity;
     }
 
