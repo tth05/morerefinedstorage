@@ -126,7 +126,7 @@ public class CraftingManager implements ICraftingManager {
         }
 
         if (!tasks.isEmpty()) {
-            network.markDirty();
+            network.markNetworkNodeDirty();
         }
     }
 
@@ -162,7 +162,7 @@ public class CraftingManager implements ICraftingManager {
     public void add(@Nonnull ICraftingTask task) {
         tasks.put(task.getId(), task);
 
-        network.markDirty();
+        network.markNetworkNodeDirty();
     }
 
     @Override
@@ -173,7 +173,7 @@ public class CraftingManager implements ICraftingManager {
             tasksToCancel.add(id);
         }
 
-        network.markDirty();
+        network.markNetworkNodeDirty();
     }
 
     @Override

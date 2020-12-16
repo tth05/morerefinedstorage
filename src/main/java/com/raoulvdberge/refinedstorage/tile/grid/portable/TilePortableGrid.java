@@ -78,35 +78,35 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
     private static final TileDataParameter<Integer, TilePortableGrid> SORTING_DIRECTION = new TileDataParameter<>(DataSerializers.VARINT, 0, TilePortableGrid::getSortingDirection, (t, v) -> {
         if (IGrid.isValidSortingDirection(v)) {
             t.setSortingDirection(v);
-            t.markDirty();
+            t.markNetworkNodeDirty();
         }
     }, (initial, p) -> TileGrid.trySortGrid(initial));
     private static final TileDataParameter<Integer, TilePortableGrid> SORTING_TYPE = new TileDataParameter<>(DataSerializers.VARINT, 0, TilePortableGrid::getSortingType, (t, v) -> {
         if (IGrid.isValidSortingType(v)) {
             t.setSortingType(v);
-            t.markDirty();
+            t.markNetworkNodeDirty();
         }
     }, (initial, p) -> TileGrid.trySortGrid(initial));
     private static final TileDataParameter<Integer, TilePortableGrid> SEARCH_BOX_MODE = new TileDataParameter<>(DataSerializers.VARINT, 0, TilePortableGrid::getSearchBoxMode, (t, v) -> {
         if (IGrid.isValidSearchBoxMode(v)) {
             t.setSearchBoxMode(v);
-            t.markDirty();
+            t.markNetworkNodeDirty();
         }
     }, (initial, p) -> GuiBase.executeLater(GuiGrid.class, grid -> grid.getSearchField().setMode(p)));
     private static final TileDataParameter<Integer, TilePortableGrid> SIZE = new TileDataParameter<>(DataSerializers.VARINT, 0, TilePortableGrid::getSize, (t, v) -> {
         if (IGrid.isValidSize(v)) {
             t.setSize(v);
-            t.markDirty();
+            t.markNetworkNodeDirty();
         }
     }, (initial, p) -> GuiBase.executeLater(GuiGrid.class, GuiBase::initGui));
     private static final TileDataParameter<Integer, TilePortableGrid> TAB_SELECTED = new TileDataParameter<>(DataSerializers.VARINT, 0, TilePortableGrid::getTabSelected, (t, v) -> {
         t.setTabSelected(v == t.getTabSelected() ? -1 : v);
-        t.markDirty();
+        t.markNetworkNodeDirty();
     }, (initial, p) -> GuiBase.executeLater(GuiGrid.class, grid -> grid.getView().sort()));
     private static final TileDataParameter<Integer, TilePortableGrid> TAB_PAGE = new TileDataParameter<>(DataSerializers.VARINT, 0, TilePortableGrid::getTabPage, (t, v) -> {
         if (v >= 0 && v <= t.getTotalTabPages()) {
             t.setTabPage(v);
-            t.markDirty();
+            t.markNetworkNodeDirty();
         }
     });
 
@@ -155,8 +155,8 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
     private PortableGridDiskState diskState = PortableGridDiskState.NONE;
     private boolean connected;
 
-    private final StorageTrackerItem storageTracker = new StorageTrackerItem(this::markDirty);
-    private final StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(this::markDirty);
+    private final StorageTrackerItem storageTracker = new StorageTrackerItem(this::markNetworkNodeDirty);
+    private final StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(this::markNetworkNodeDirty);
     private NBTTagList enchants = null;
 
     public TilePortableGrid() {
@@ -261,7 +261,7 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
 
         this.diskState = getDiskState(this);
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     private EnergyStorage recreateEnergyStorage(int energyStored) {
@@ -737,7 +737,7 @@ public class TilePortableGrid extends TileBase implements IGrid, IPortableGrid, 
     public void setRedstoneMode(RedstoneMode mode) {
         this.redstoneMode = mode;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     public static PortableGridDiskState getDiskState(IPortableGridRenderInfo renderInfo) {

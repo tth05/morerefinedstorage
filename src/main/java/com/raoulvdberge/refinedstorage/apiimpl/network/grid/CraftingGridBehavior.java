@@ -112,7 +112,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
 
         if (grid.getGridType() == GridType.PATTERN) {
             ((NetworkNodeGrid) grid).setProcessingPattern(false);
-            ((NetworkNodeGrid) grid).markDirty();
+            ((NetworkNodeGrid) grid).markNetworkNodeDirty();
         }
     }
 

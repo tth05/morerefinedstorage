@@ -86,8 +86,8 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     }
 
     @Override
-    public void update() {
-        super.update();
+    public void updateNetworkNode() {
+        super.updateNetworkNode();
 
         if (network != null && canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
             if (type == IType.ITEMS && !itemFilters.getStackInSlot(0).isEmpty()) {
@@ -290,7 +290,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     public void setCompare(int compare) {
         this.compare = compare;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
@@ -394,7 +394,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     public void setType(int type) {
         this.type = type;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override

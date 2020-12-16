@@ -114,8 +114,8 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
     }
 
     @Override
-    public void update() {
-        super.update();
+    public void updateNetworkNode() {
+        super.updateNetworkNode();
 
         if (ticks == 1) {
             invalidate();
@@ -134,12 +134,12 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
             if (world.isBlockPowered(pos)) {
                 this.wasPowered = true;
 
-                markDirty();
+                markNetworkNodeDirty();
             } else if (wasPowered) {
                 this.wasPowered = false;
                 this.locked = false;
 
-                markDirty();
+                markNetworkNodeDirty();
             }
         }
     }
@@ -156,7 +156,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         if (mode == CrafterMode.PULSE_INSERTS_NEXT_SET) {
             this.locked = true;
 
-            markDirty();
+            markNetworkNodeDirty();
         }
     }
 
@@ -280,7 +280,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         this.wasPowered = false;
         this.locked = false;
 
-        this.markDirty();
+        this.markNetworkNodeDirty();
     }
 
     @Override
@@ -303,7 +303,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         if (this.uuid == null) {
             this.uuid = UUID.randomUUID();
 
-            markDirty();
+            markNetworkNodeDirty();
         }
 
         return uuid;

@@ -104,8 +104,8 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     }
 
     @Override
-    public void update() {
-        super.update();
+    public void updateNetworkNode() {
+        super.updateNetworkNode();
 
         if (network != null && canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
             BlockPos front = pos.offset(getDirection());
@@ -220,7 +220,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     public void setCompare(int compare) {
         this.compare = compare;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
@@ -232,7 +232,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     public void setMode(int mode) {
         this.mode = mode;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
@@ -332,7 +332,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     public void setType(int type) {
         this.type = type;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override

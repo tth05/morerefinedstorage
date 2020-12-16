@@ -51,8 +51,8 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
     }
 
     @Override
-    public void update() {
-        super.update();
+    public void updateNetworkNode() {
+        super.updateNetworkNode();
 
         long newAmount = getAmount();
 
@@ -159,7 +159,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
 
         WorldUtils.updateBlock(world, pos);
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override

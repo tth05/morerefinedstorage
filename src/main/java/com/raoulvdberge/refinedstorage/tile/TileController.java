@@ -141,10 +141,10 @@ public class TileController extends TileBase
     private final ISecurityManager securityManager = new SecurityManager(this);
 
     private final IStorageCache<ItemStack> itemStorage = new StorageCacheItem(this);
-    private final StorageTrackerItem itemStorageTracker = new StorageTrackerItem(this::markDirty);
+    private final StorageTrackerItem itemStorageTracker = new StorageTrackerItem(this::markNetworkNodeDirty);
 
     private final IStorageCache<FluidStack> fluidStorage = new StorageCacheFluid(this);
-    private final StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(this::markDirty);
+    private final StorageTrackerFluid fluidStorageTracker = new StorageTrackerFluid(this::markNetworkNodeDirty);
 
     private final IReaderWriterManager readerWriterManager = new ReaderWriterManager(this);
 
@@ -176,11 +176,16 @@ public class TileController extends TileBase
 
             @Override
             public void onChanged() {
-                markDirty();
+                markNetworkNodeDirty();
             }
         });
 
         nodeGraph.addListener(() -> dataManager.sendParameterToWatchers(TileController.NODES));
+    }
+
+    @Override
+    public void updateNetworkNode() {
+        //NO OP
     }
 
     @Override
@@ -197,7 +202,7 @@ public class TileController extends TileBase
                 readerWriterManager.update();
 
                 if (!craftingManager.getTasks().isEmpty()) {
-                    markDirty();
+                    markNetworkNodeDirty();
                 }
             }
 
@@ -548,7 +553,7 @@ public class TileController extends TileBase
     public void setRedstoneMode(RedstoneMode mode) {
         this.redstoneMode = mode;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
@@ -589,9 +594,7 @@ public class TileController extends TileBase
 
     @Nonnull
     @Override
-    public World getWorld() {
-        // This is provided by net.minecraft.TileEntity - and needed as a part of INetworkNode
-        // After obfuscation - these two methods will not be the same - so we have to redefine this here
+    public World getNetworkNodeWorld() {
         return this.world;
     }
 

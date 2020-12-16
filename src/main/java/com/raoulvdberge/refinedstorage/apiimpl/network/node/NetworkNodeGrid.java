@@ -120,7 +120,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
                         setOredictPattern(ItemPattern.isOredict(pattern));
                         setProcessingPattern(isProcessing);
-                        markDirty();
+                        markNetworkNodeDirty();
                     }
                 }
 
@@ -383,7 +383,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
         craftingListeners.forEach(IGridCraftingListener::onCraftingMatrixChanged);
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
@@ -456,7 +456,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
     public void setType(int type) {
         this.processingType = type;
 
-        this.markDirty();
+        this.markNetworkNodeDirty();
     }
 
     public void setViewType(int viewType) {

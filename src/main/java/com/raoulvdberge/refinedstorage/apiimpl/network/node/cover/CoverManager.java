@@ -44,7 +44,7 @@ public class CoverManager {
         }
 
         INetworkNode neighbor =
-                API.instance().getNetworkNodeManager(node.getWorld()).getNode(node.getPos().offset(direction));
+                API.instance().getNetworkNodeManager(node.getNetworkNodeWorld()).getNode(node.getNetworkNodePos().offset(direction));
         if (neighbor instanceof ICoverable) {
             cover = ((ICoverable) neighbor).getCoverManager().getCover(direction.getOpposite());
 
@@ -76,7 +76,7 @@ public class CoverManager {
                 covers.put(facing, cover);
             }
 
-            node.markDirty();
+            node.markNetworkNodeDirty();
 
             if (node.getNetwork() != null) {
                 node.getNetwork().getNodeGraph()

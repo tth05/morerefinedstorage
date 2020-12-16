@@ -24,7 +24,10 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskManager;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskRegistry;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSync;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageProvider;
-import com.raoulvdberge.refinedstorage.api.util.*;
+import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.IQuantityFormatter;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementList;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementRegistry;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingRequestInfo;
@@ -37,7 +40,10 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.grid.GridManager;
 import com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter.ReaderWriterChannel;
 import com.raoulvdberge.refinedstorage.apiimpl.network.readerwriter.ReaderWriterHandlerRegistry;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.*;
-import com.raoulvdberge.refinedstorage.apiimpl.util.*;
+import com.raoulvdberge.refinedstorage.apiimpl.util.Comparer;
+import com.raoulvdberge.refinedstorage.apiimpl.util.QuantityFormatter;
+import com.raoulvdberge.refinedstorage.apiimpl.util.StackListFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.util.StackListItem;
 import com.raoulvdberge.refinedstorage.capability.CapabilityNetworkNodeProxy;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -288,9 +294,7 @@ public class API implements IRSAPI {
 
             if (tile != null && tile.hasCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY,
                     facing.getOpposite())) {
-                INetworkNodeProxy<?> nodeProxy = tile.getCapability(
-                        CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY,
-                                facing.getOpposite());
+                INetworkNodeProxy<?> nodeProxy = tile.getCapability(CapabilityNetworkNodeProxy.NETWORK_NODE_PROXY_CAPABILITY, facing.getOpposite());
                 INetworkNode node = nodeProxy.getNode();
 
                 if (node.getNetwork() == null)
@@ -357,8 +361,8 @@ public class API implements IRSAPI {
 
     @Override
     public int getNetworkNodeHashCode(INetworkNode node) {
-        int result = node.getPos().hashCode();
-        result = 31 * result + node.getWorld().provider.getDimension();
+        int result = node.getNetworkNodePos().hashCode();
+        result = 31 * result + node.getNetworkNodeWorld().provider.getDimension();
 
         return result;
     }
@@ -375,10 +379,10 @@ public class API implements IRSAPI {
 
         INetworkNode rightNode = (INetworkNode) right;
 
-        if (left.getWorld().provider.getDimension() != rightNode.getWorld().provider.getDimension()) {
+        if (left.getNetworkNodeWorld().provider.getDimension() != rightNode.getNetworkNodeWorld().provider.getDimension()) {
             return false;
         }
 
-        return left.getPos().equals(rightNode.getPos());
+        return left.getNetworkNodePos().equals(rightNode.getNetworkNodePos());
     }
 }

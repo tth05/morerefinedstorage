@@ -136,8 +136,8 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
     }
 
     @Override
-    public void update() {
-        super.update();
+    public void updateNetworkNode() {
+        super.updateNetworkNode();
 
         if (!canUpdate() || ticks % upgrades.getSpeed() != 0) {
             return;

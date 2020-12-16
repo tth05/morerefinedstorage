@@ -175,7 +175,7 @@ public class ContainerCrafterManager extends ContainerBase {
                     if (stack.isEmpty()) {
                         visible = false;
                     } else {
-                        CraftingPattern pattern = ItemPattern.getPatternFromCache(crafterManager.getWorld(), stack);
+                        CraftingPattern pattern = ItemPattern.getPatternFromCache(crafterManager.getNetworkNodeWorld(), stack);
 
                         visible = false;
 

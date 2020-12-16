@@ -32,7 +32,7 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
                 if (lastState != currentState) {
                     lastState = currentState;
 
-                    WorldUtils.updateBlock(diskManipulator.getWorld(), diskManipulator.getPos());
+                    WorldUtils.updateBlock(diskManipulator.getNetworkNodeWorld(), diskManipulator.getNetworkNodePos());
                 }
             },
             diskManipulator

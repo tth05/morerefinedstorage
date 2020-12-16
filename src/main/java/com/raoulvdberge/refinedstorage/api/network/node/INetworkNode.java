@@ -62,10 +62,54 @@ public interface INetworkNode {
     @Nullable
     INetwork getNetwork();
 
+    /*
+    Disgusting code to keep this compatible with old code that still overrides the old methods. In those case the new
+    methods just call the old methods. In all other cases the new methods should be overridden
+     */
+
+    default void update() {
+        throw new RuntimeException("Override #updateNetworkNode");
+    }
+
+    default BlockPos getPos() {
+        throw new RuntimeException("Override #getNetworkNodePos");
+    }
+
+    default World getWorld() {
+        throw new RuntimeException("Override #getNetworkNodeWorld");
+    }
+
+    default void markDirty() {
+        throw new RuntimeException("Override #markNetworkNodeDirty");
+    }
+
     /**
      * Updates a network node.
      */
-    void update();
+    default void updateNetworkNode() {
+        update();
+    }
+
+    /**
+     * @return the position of this network node
+     */
+    default BlockPos getNetworkNodePos() {
+        return getPos();
+    }
+
+    /**
+     * @return the world of this network node
+     */
+    default World getNetworkNodeWorld() {
+        return getWorld();
+    }
+
+    /**
+     * Marks this node as dirty for saving.
+     */
+    default void markNetworkNodeDirty() {
+        markDirty();
+    }
 
     /**
      * Writes the network node data to NBT.
@@ -76,27 +120,12 @@ public interface INetworkNode {
     NBTTagCompound write(NBTTagCompound tag);
 
     /**
-     * @return the position of this network node
-     */
-    BlockPos getPos();
-
-    /**
-     * @return the world of this network node
-     */
-    World getWorld();
-
-    /**
-     * Marks this node as dirty for saving.
-     */
-    void markDirty();
-
-    /**
      * @return the id of this node as specified in {@link INetworkNodeRegistry}
      */
     String getId();
 
     /**
-     * @return whether or not this network node's {@link #update()} method should be called every tick
+     * @return whether or not this network node's {@link #updateNetworkNode()} method should be called every tick
      */
     default boolean isTickable() {
         return true;

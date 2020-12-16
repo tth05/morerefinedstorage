@@ -65,8 +65,8 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
     }
 
     @Override
-    public void update() {
-        super.update();
+    public void updateNetworkNode() {
+        super.updateNetworkNode();
 
         if (network == null || !canUpdate()) {
             return;
@@ -139,7 +139,7 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
     public void setCompare(int compare) {
         this.compare = compare;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
@@ -151,7 +151,7 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
     public void setMode(int mode) {
         this.mode = mode;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
@@ -242,7 +242,7 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
     public void setType(int type) {
         this.type = type;
 
-        markDirty();
+        markNetworkNodeDirty();
     }
 
     @Override
