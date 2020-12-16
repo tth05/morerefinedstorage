@@ -31,8 +31,10 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -147,9 +149,11 @@ public class ItemWrench extends ItemBase {
                 }
                 //upgrades
                 if (node instanceof IUpgradeContainer && configTag.hasKey("upgrades")) {
-                    IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, configTag.getCompoundTag("upgrades"));
-                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ")
-                            .appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.upgrades"));
+                    boolean success = IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, configTag.getCompoundTag("upgrades"));
+
+                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(
+                            new TextComponentTranslation("misc.refinedstorage:wrench.pasted.upgrades").setStyle(new Style().setColor(success ? TextFormatting.WHITE : TextFormatting.RED))
+                    );
                 }
                 //compareable
                 if (node instanceof IComparable && configTag.hasKey("compare")) {
