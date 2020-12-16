@@ -23,12 +23,12 @@ public class ContainerInterface extends ContainerBase {
         }
 
         for (int i = 0; i < 4; ++i) {
-            addSlotToContainer(new SlotItemHandler(tile.getNode().getUpgrades(), i, 187, 6 + (i * 18)));
+            addSlotToContainer(new SlotItemHandler(tile.getNode().getUpgradeHandler(), i, 187, 6 + (i * 18)));
         }
 
         addPlayerInventory(8, 134);
 
-        transferManager.addBiTransfer(player.inventory, tile.getNode().getUpgrades());
+        transferManager.addBiTransfer(player.inventory, tile.getNode().getUpgradeHandler());
         transferManager.addBiTransfer(player.inventory, tile.getNode().getImportItems());
         transferManager.addTransfer(tile.getNode().getExportItems(), player.inventory);
     }

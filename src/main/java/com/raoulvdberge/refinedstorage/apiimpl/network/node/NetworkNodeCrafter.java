@@ -358,10 +358,6 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
         return DEFAULT_NAME;
     }
 
-    public IItemHandler getUpgrades() {
-        return upgrades;
-    }
-
     @Override
     public int getUpdateInterval() {
         return this.updateInterval;

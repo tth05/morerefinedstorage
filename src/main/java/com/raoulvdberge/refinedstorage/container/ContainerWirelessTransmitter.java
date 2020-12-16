@@ -9,11 +9,11 @@ public class ContainerWirelessTransmitter extends ContainerBase {
         super(wirelessTransmitter, player);
 
         for (int i = 0; i < 4; ++i) {
-            addSlotToContainer(new SlotItemHandler(wirelessTransmitter.getNode().getUpgrades(), i, 187, 6 + (i * 18)));
+            addSlotToContainer(new SlotItemHandler(wirelessTransmitter.getNode().getUpgradeHandler(), i, 187, 6 + (i * 18)));
         }
 
         addPlayerInventory(8, 55);
 
-        transferManager.addBiTransfer(player.inventory, wirelessTransmitter.getNode().getUpgrades());
+        transferManager.addBiTransfer(player.inventory, wirelessTransmitter.getNode().getUpgradeHandler());
     }
 }

@@ -236,10 +236,6 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
         return items;
     }
 
-    public IItemHandler getUpgrades() {
-        return upgrades;
-    }
-
     @Override
     public IItemHandler getDrops() {
         return new CombinedInvWrapper(importItems, exportItems, upgrades);

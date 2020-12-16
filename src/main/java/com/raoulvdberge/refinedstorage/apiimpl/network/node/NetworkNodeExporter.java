@@ -47,7 +47,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
 
     private final ItemHandlerUpgrade upgrades =
             new ItemHandlerUpgrade(4, slot -> {
-                if (!getUpgrades().hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
+                if (!getUpgradeHandler().hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
                     for (int i = 0; i < itemFilters.getSlots(); ++i) {
                         ItemStack filteredItem = itemFilters.getStackInSlot(i);
 
@@ -324,10 +324,6 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
         if (tag.hasKey(NBT_FLUID_FILTERS)) {
             fluidFilters.readFromNbt(tag.getCompoundTag(NBT_FLUID_FILTERS));
         }
-    }
-
-    public ItemHandlerUpgrade getUpgrades() {
-        return upgrades;
     }
 
     @Override

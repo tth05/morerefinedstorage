@@ -366,10 +366,6 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
         this.drop = drop;
     }
 
-    public IItemHandler getUpgrades() {
-        return upgrades;
-    }
-
     @Override
     public IItemHandler getDrops() {
         return new CombinedInvWrapper(upgrades, coverManager.getAsInventory());

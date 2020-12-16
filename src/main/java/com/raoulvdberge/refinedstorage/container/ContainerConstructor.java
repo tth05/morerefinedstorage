@@ -12,7 +12,7 @@ public class ContainerConstructor extends ContainerBase {
         super(constructor, player);
 
         for (int i = 0; i < 4; ++i) {
-            addSlotToContainer(new SlotItemHandler(constructor.getNode().getUpgrades(), i, 187, 6 + (i * 18)));
+            addSlotToContainer(new SlotItemHandler(constructor.getNode().getUpgradeHandler(), i, 187, 6 + (i * 18)));
         }
 
         addSlotToContainer(new SlotFilter(constructor.getNode().getItemFilters(), 0, 80, 20).setEnableHandler(() -> constructor.getNode().getType() == IType.ITEMS));
@@ -20,7 +20,7 @@ public class ContainerConstructor extends ContainerBase {
 
         addPlayerInventory(8, 55);
 
-        transferManager.addBiTransfer(player.inventory, constructor.getNode().getUpgrades());
+        transferManager.addBiTransfer(player.inventory, constructor.getNode().getUpgradeHandler());
         transferManager.addFilterTransfer(player.inventory, constructor.getNode().getItemFilters(), constructor.getNode().getFluidFilters(), constructor.getNode()::getType);
     }
 }

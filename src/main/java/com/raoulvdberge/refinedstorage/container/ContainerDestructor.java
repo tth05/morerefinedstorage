@@ -12,7 +12,7 @@ public class ContainerDestructor extends ContainerBase {
         super(destructor, player);
 
         for (int i = 0; i < 4; ++i) {
-            addSlotToContainer(new SlotItemHandler(destructor.getNode().getUpgrades(), i, 187, 6 + (i * 18)));
+            addSlotToContainer(new SlotItemHandler(destructor.getNode().getUpgradeHandler(), i, 187, 6 + (i * 18)));
         }
 
         for (int i = 0; i < 9; ++i) {
@@ -25,7 +25,7 @@ public class ContainerDestructor extends ContainerBase {
 
         addPlayerInventory(8, 55);
 
-        transferManager.addBiTransfer(player.inventory, destructor.getNode().getUpgrades());
+        transferManager.addBiTransfer(player.inventory, destructor.getNode().getUpgradeHandler());
         transferManager.addFilterTransfer(player.inventory, destructor.getNode().getItemFilters(), destructor.getNode().getFluidFilters(), destructor.getNode()::getType);
     }
 }

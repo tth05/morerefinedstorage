@@ -305,10 +305,6 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
         }
     }
 
-    public IItemHandler getUpgrades() {
-        return upgrades;
-    }
-
     public IItemHandler getInventory() {
         return itemFilters;
     }

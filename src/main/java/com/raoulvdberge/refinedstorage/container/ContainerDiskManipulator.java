@@ -12,7 +12,7 @@ public class ContainerDiskManipulator extends ContainerBase {
         super(diskManipulator, player);
 
         for (int i = 0; i < 4; ++i) {
-            addSlotToContainer(new SlotItemHandler(diskManipulator.getNode().getUpgrades(), i, 187, 6 + (i * 18)));
+            addSlotToContainer(new SlotItemHandler(diskManipulator.getNode().getUpgradeHandler(), i, 187, 6 + (i * 18)));
         }
 
         for (int i = 0; i < 3; ++i) {
@@ -33,7 +33,7 @@ public class ContainerDiskManipulator extends ContainerBase {
 
         addPlayerInventory(8, 129);
 
-        transferManager.addBiTransfer(player.inventory, diskManipulator.getNode().getUpgrades());
+        transferManager.addBiTransfer(player.inventory, diskManipulator.getNode().getUpgradeHandler());
         transferManager.addBiTransfer(player.inventory, diskManipulator.getNode().getInputDisks());
         transferManager.addTransfer(diskManipulator.getNode().getOutputDisks(), player.inventory);
         transferManager.addFilterTransfer(player.inventory, diskManipulator.getNode().getItemFilters(), diskManipulator.getNode().getFluidFilters(), diskManipulator.getNode()::getType);

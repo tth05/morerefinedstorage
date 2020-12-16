@@ -459,10 +459,6 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IComparab
         return disks;
     }
 
-    public IItemHandler getUpgrades() {
-        return upgrades;
-    }
-
     public IStorageDisk<ItemStack>[] getItemDisks() {
         return itemDisks;
     }

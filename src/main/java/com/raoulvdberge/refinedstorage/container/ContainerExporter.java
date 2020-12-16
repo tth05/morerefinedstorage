@@ -31,7 +31,7 @@ public class ContainerExporter extends ContainerBase {
     }
 
     private boolean hasRegulatorUpgrade() {
-        return exporter.getNode().getUpgrades().hasUpgrade(ItemUpgrade.TYPE_REGULATOR);
+        return exporter.getNode().getUpgradeHandler().hasUpgrade(ItemUpgrade.TYPE_REGULATOR);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class ContainerExporter extends ContainerBase {
         this.transferManager.clearTransfers();
 
         TileExporter exporter = (TileExporter) getTile();
-        ItemHandlerUpgrade upgrades = exporter.getNode().getUpgrades();
+        ItemHandlerUpgrade upgrades = exporter.getNode().getUpgradeHandler();
 
         for (int i = 0; i < 4; ++i) {
             addSlotToContainer(new SlotItemHandler(upgrades, i, 187, 6 + (i * 18)));

@@ -219,10 +219,6 @@ public class NetworkNodeImporter extends NetworkNode implements IComparable, IFi
         }
     }
 
-    public IItemHandler getUpgrades() {
-        return upgrades;
-    }
-
     @Override
     public IItemHandler getDrops() {
         return new CombinedInvWrapper(upgrades, coverManager.getAsInventory());

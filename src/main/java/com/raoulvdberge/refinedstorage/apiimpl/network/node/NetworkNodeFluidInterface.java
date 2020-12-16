@@ -234,10 +234,6 @@ public class NetworkNodeFluidInterface extends NetworkNode implements IUpgradeCo
         }
     }
 
-    public ItemHandlerUpgrade getUpgrades() {
-        return upgrades;
-    }
-
     public ItemHandlerBase getIn() {
         return in;
     }

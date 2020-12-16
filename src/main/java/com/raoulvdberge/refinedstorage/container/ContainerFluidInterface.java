@@ -11,7 +11,7 @@ public class ContainerFluidInterface extends ContainerBase {
         super(fluidInterface, player);
 
         for (int i = 0; i < 4; ++i) {
-            addSlotToContainer(new SlotItemHandler(fluidInterface.getNode().getUpgrades(), i, 187, 6 + (i * 18)));
+            addSlotToContainer(new SlotItemHandler(fluidInterface.getNode().getUpgradeHandler(), i, 187, 6 + (i * 18)));
         }
 
         addSlotToContainer(new SlotItemHandler(fluidInterface.getNode().getIn(), 0, 44, 32));
