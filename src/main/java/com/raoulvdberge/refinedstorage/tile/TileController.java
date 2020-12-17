@@ -598,6 +598,11 @@ public class TileController extends TileBase
         return this.world;
     }
 
+    @Override
+    public BlockPos getNetworkNodePos() {
+        return this.pos;
+    }
+
     public static int getEnergyScaled(int stored, int capacity, int scale) {
         return (int) ((float) stored / (float) capacity * (float) scale);
     }
