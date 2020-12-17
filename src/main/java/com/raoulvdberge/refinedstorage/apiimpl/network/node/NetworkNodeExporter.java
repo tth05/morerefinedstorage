@@ -7,15 +7,11 @@ import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
-import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
-import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
-import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.TileExporter;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
@@ -28,13 +24,13 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class NetworkNodeExporter extends NetworkNode implements IComparable, IType, ICoverable, IUpgradeContainer {
+public class NetworkNodeExporter extends NetworkNode implements IRSTileConfigurationProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "exporter";
 
     private static final String NBT_COMPARE = "Compare";
@@ -42,22 +38,26 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     private static final String NBT_COVERS = "Covers";
     private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
-    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterModeWhitelist()
+            .allowedFilterTypeItemsAndFluids()
+            .filterTypeItems()
+            .filterSizeNine()
+            .compareDamageAndNbt().build();
 
     private final ItemHandlerUpgrade upgrades =
             new ItemHandlerUpgrade(4, slot -> {
                 if (!getUpgradeHandler().hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
-                    for (int i = 0; i < itemFilters.getSlots(); ++i) {
-                        ItemStack filteredItem = itemFilters.getStackInSlot(i);
+                    for (int i = 0; i < config.getItemFilters().getSlots(); ++i) {
+                        ItemStack filteredItem = config.getItemFilters().getStackInSlot(i);
 
                         if (filteredItem.getCount() > 1) {
                             filteredItem.setCount(1);
                         }
                     }
 
-                    for (int i = 0; i < fluidFilters.getSlots(); ++i) {
-                        FluidStack filteredFluid = fluidFilters.getFluid(i);
+                    for (int i = 0; i < config.getItemFilters().getSlots(); ++i) {
+                        FluidStack filteredFluid = config.getFluidFilters().getFluid(i);
 
                         if (filteredFluid == null)
                             continue;
@@ -72,8 +72,6 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
             }, ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING,
                     ItemUpgrade.TYPE_STACK, ItemUpgrade.TYPE_REGULATOR);
 
-    private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
-    private int type = IType.ITEMS;
 
     private final CoverManager coverManager = new CoverManager(this);
 
@@ -93,9 +91,9 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
         super.updateNetworkNode();
 
         if (network != null && canUpdate() && ticks % upgrades.getSpeed() == 0) {
-            if (type == IType.ITEMS) {
+            if (this.config.isFilterTypeItem()) {
                 updateItemMode();
-            } else if (type == IType.FLUIDS) {
+            } else if (this.config.isFilterTypeFluid()) {
                 updateFluidMode();
             }
         }
@@ -105,7 +103,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
         IItemHandler handler = WorldUtils.getItemHandler(getFacingTile(), getDirection().getOpposite());
 
         if (handler != null) {
-            while (filterSlot + 1 < itemFilters.getSlots() && itemFilters.getStackInSlot(filterSlot).isEmpty()) {
+            while (filterSlot + 1 < this.config.getItemFilters().getSlots() && this.config.getItemFilters().getStackInSlot(filterSlot).isEmpty()) {
                 filterSlot++;
             }
 
@@ -113,12 +111,12 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
             // we waste a tick with doing nothing because it's empty. Hence this check. If we are at the last slot
             // and it's empty, go back to slot 0.
             // We also handle if we exceeded the maximum slot in general.
-            if ((filterSlot == itemFilters.getSlots() - 1 && itemFilters.getStackInSlot(filterSlot).isEmpty()) ||
-                    (filterSlot >= itemFilters.getSlots())) {
+            if ((filterSlot == this.config.getItemFilters().getSlots() - 1 && this.config.getItemFilters().getStackInSlot(filterSlot).isEmpty()) ||
+                    (filterSlot >= this.config.getItemFilters().getSlots())) {
                 filterSlot = 0;
             }
 
-            ItemStack slot = itemFilters.getStackInSlot(filterSlot);
+            ItemStack slot = this.config.getItemFilters().getStackInSlot(filterSlot);
 
             if (!slot.isEmpty()) {
                 int stackSize = upgrades.getItemInteractCount();
@@ -129,7 +127,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
 
                 if (stackSize > 0) {
                     ItemStack took =
-                            network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize), compare,
+                            network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize), this.config.getCompare(),
                                     Action.SIMULATE);
 
                     if (took.isEmpty()) {
@@ -143,7 +141,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
                         int correctedStackSize = took.getCount() - remainder.getCount();
 
                         if (correctedStackSize > 0) {
-                            took = network.extractItem(slot, correctedStackSize, compare, Action.PERFORM);
+                            took = network.extractItem(slot, correctedStackSize, this.config.getCompare(), Action.PERFORM);
 
                             ItemHandlerHelper.insertItem(handler, took, false);
                         }
@@ -161,16 +159,16 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
         for (int i = 0; i < handler.getSlots(); i++) {
             ItemStack stackInConnectedHandler = handler.getStackInSlot(i);
 
-            if (API.instance().getComparer().isEqual(slot, stackInConnectedHandler, compare)) {
+            if (API.instance().getComparer().isEqual(slot, stackInConnectedHandler, this.config.getCompare())) {
                 found += stackInConnectedHandler.getCount();
             }
         }
 
         int needed = 0;
 
-        for (int i = 0; i < itemFilters.getSlots(); ++i) {
-            if (API.instance().getComparer().isEqualNoQuantity(slot, itemFilters.getStackInSlot(i))) {
-                needed += itemFilters.getStackInSlot(i).getCount();
+        for (int i = 0; i < this.config.getItemFilters().getSlots(); ++i) {
+            if (API.instance().getComparer().isEqualNoQuantity(slot, this.config.getItemFilters().getStackInSlot(i))) {
+                needed += this.config.getItemFilters().getStackInSlot(i).getCount();
             }
         }
 
@@ -178,7 +176,7 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     }
 
     private void updateFluidMode() {
-        FluidStack[] fluids = fluidFilters.getFluids();
+        FluidStack[] fluids = this.config.getFluidFilters().getFluids();
 
         while (filterSlot + 1 < fluids.length && fluids[filterSlot] == null) {
             filterSlot++;
@@ -212,15 +210,15 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
             for (int i = 0; i < handler.getTankProperties().length; i++) {
                 FluidStack stackInConnectedHandler = handler.getTankProperties()[i].getContents();
 
-                if (API.instance().getComparer().isEqual(stack, stackInConnectedHandler, compare)) {
+                if (API.instance().getComparer().isEqual(stack, stackInConnectedHandler, this.config.getCompare())) {
                     found += stackInConnectedHandler.amount;
                 }
             }
 
             int needed = 0;
 
-            for (int i = 0; i < fluidFilters.getSlots(); ++i) {
-                FluidStack fluid = fluidFilters.getFluid(i);
+            for (int i = 0; i < this.config.getFluidFilters().getSlots(); ++i) {
+                FluidStack fluid = this.config.getFluidFilters().getFluid(i);
                 if (API.instance().getComparer().isEqual(stack, fluid, IComparer.COMPARE_NBT)) {
                     needed += fluid.amount;
                 }
@@ -229,18 +227,18 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
             toExtract = Math.min(toExtract, needed - found);
         }
 
-        StackListEntry<FluidStack> stackInStorage = network.getFluidStorageCache().getList().getEntry(stack, compare);
+        StackListEntry<FluidStack> stackInStorage = network.getFluidStorageCache().getList().getEntry(stack, this.config.getCompare());
 
         if (stackInStorage != null) {
             toExtract = Math.min(toExtract, stackInStorage.getCount());
 
-            StackListResult<FluidStack> took = network.extractFluid(stack, toExtract, compare, Action.SIMULATE);
+            StackListResult<FluidStack> took = network.extractFluid(stack, toExtract, this.config.getCompare(), Action.SIMULATE);
 
             if (took != null) {
                 int filled = handler.fill(took.getFixedStack(), false);
 
                 if (filled > 0) {
-                    took = network.extractFluid(stack, (long) filled, compare, Action.PERFORM);
+                    took = network.extractFluid(stack, (long) filled, this.config.getCompare(), Action.PERFORM);
                     if (took != null) {
                         handler.fill(took.getFixedStack(), true);
                     }
@@ -252,19 +250,6 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
 
         filterSlot++;
     }
-
-    @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        markNetworkNodeDirty();
-    }
-
 
     @Override
     public String getId() {
@@ -285,14 +270,6 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     @Override
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
-
-        tag.setInteger(NBT_COMPARE, compare);
-        tag.setInteger(NBT_TYPE, type);
-
-        StackUtils.writeItems(itemFilters, 0, tag);
-
-        tag.setTag(NBT_FLUID_FILTERS, fluidFilters.writeToNbt());
-
         return tag;
     }
 
@@ -310,20 +287,6 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     @Override
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
-
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
-
-        if (tag.hasKey(NBT_TYPE)) {
-            type = tag.getInteger(NBT_TYPE);
-        }
-
-        StackUtils.readItems(itemFilters, 0, tag);
-
-        if (tag.hasKey(NBT_FLUID_FILTERS)) {
-            fluidFilters.readFromNbt(tag.getCompoundTag(NBT_FLUID_FILTERS));
-        }
     }
 
     @Override
@@ -331,27 +294,11 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
         return new CombinedInvWrapper(upgrades, coverManager.getAsInventory());
     }
 
-    @Override
-    public int getType() {
-        return world.isRemote ? TileExporter.TYPE.getValue() : type;
-    }
-
-    @Override
-    public void setType(int type) {
-        this.type = type;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public IItemHandlerModifiable getItemFilters() {
-        return itemFilters;
-    }
-
-    @Override
-    public FluidInventory getFluidFilters() {
-        return fluidFilters;
-    }
+    //TODO:
+//    @Override
+//    public int getType() {
+//        return world.isRemote ? TileExporter.TYPE.getValue() : type;
+//    }
 
     @Override
     public boolean canConduct(@Nullable EnumFacing direction) {
@@ -366,5 +313,11 @@ public class NetworkNodeExporter extends NetworkNode implements IComparable, ITy
     @Override
     public ItemHandlerUpgrade getUpgradeHandler() {
         return this.upgrades;
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }

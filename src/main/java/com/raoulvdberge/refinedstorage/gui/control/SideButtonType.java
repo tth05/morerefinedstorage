@@ -1,7 +1,7 @@
 package com.raoulvdberge.refinedstorage.gui.control;
 
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataManager;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.util.text.TextFormatting;
@@ -27,6 +27,8 @@ public class SideButtonType extends SideButton {
 
     @Override
     public void actionPerformed() {
-        TileDataManager.setParameter(type, type.getValue() == IType.ITEMS ? IType.FLUIDS : IType.ITEMS);
+        TileDataManager.setParameter(type, type.getValue() == RSTileConfiguration.FilterType.ITEMS.ordinal() ?
+                RSTileConfiguration.FilterType.FLUIDS.ordinal() :
+                RSTileConfiguration.FilterType.ITEMS.ordinal());
     }
 }

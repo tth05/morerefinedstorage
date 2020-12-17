@@ -39,6 +39,7 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     protected String version;
 
     private EnumFacing direction = EnumFacing.NORTH;
+    private BlockPos facingPos;
 
     // Disable throttling for the first tick.
     // This is to make sure couldUpdate is going to be correctly set.
@@ -50,7 +51,6 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     private boolean couldUpdate;
     private int ticksSinceUpdateChanged;
 
-    private TileEntity facingTileEntity;
 
     private boolean active;
 
@@ -240,11 +240,7 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
 
     @Nullable
     public TileEntity getFacingTile() {
-        if (this.facingTileEntity == null)
-            this.facingTileEntity = world.getTileEntity(pos.offset(getDirection()));
-        else if (this.facingTileEntity.isInvalid() || !this.facingTileEntity.hasWorld())
-            this.facingTileEntity = null;
-        return this.facingTileEntity;
+        return world.getTileEntity(this.facingPos.offset(getDirection()));
     }
 
     public EnumFacing getDirection() {
@@ -260,7 +256,7 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     }
 
     protected void onDirectionChanged() {
-        // NO OP
+        this.facingPos = this.pos.offset(getDirection());
     }
 
     @Nullable

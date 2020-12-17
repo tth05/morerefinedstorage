@@ -8,7 +8,6 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.render.constants.ConstantsDisk;
-import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -73,7 +72,7 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     @Override
     @Nullable
     public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
-        if (!IFilterable.acceptsFluid(diskManipulator.getFluidFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
+        if (!diskManipulator.getConfig().acceptsFluid(stack)) {
             return new StackListResult<>(stack.copy(), size);
         }
 
@@ -83,7 +82,7 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     @Override
     @Nullable
     public StackListResult<FluidStack> extract(@Nonnull FluidStack stack, long size, int flags, Action action) {
-        if (!IFilterable.acceptsFluid(diskManipulator.getFluidFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
+        if (!diskManipulator.getConfig().acceptsFluid(stack)) {
             return null;
         }
 

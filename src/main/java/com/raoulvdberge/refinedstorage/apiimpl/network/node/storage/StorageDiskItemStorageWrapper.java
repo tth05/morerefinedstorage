@@ -7,7 +7,6 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskListener;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
-import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -48,7 +47,7 @@ public class StorageDiskItemStorageWrapper implements IStorageDisk<ItemStack> {
     @Override
     @Nullable
     public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
-        if (!IFilterable.acceptsItem(storage.getFilters(), storage.getMode(), storage.getCompare(), stack)) {
+        if (!storage.getConfig().acceptsItem(stack)) {
             return new StackListResult<>(stack.copy(), size);
         }
 

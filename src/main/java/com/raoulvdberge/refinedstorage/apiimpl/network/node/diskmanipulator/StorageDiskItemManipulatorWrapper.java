@@ -8,7 +8,6 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.render.constants.ConstantsDisk;
-import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -72,7 +71,7 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
             return new StackListResult<>(stack.copy(), size);
 
 
-        if (!IFilterable.acceptsItem(diskManipulator.getItemFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
+        if (!diskManipulator.getConfig().acceptsItem(stack)) {
             return new StackListResult<>(stack.copy(), size);
         }
 
@@ -85,7 +84,7 @@ public class StorageDiskItemManipulatorWrapper implements IStorageDisk<ItemStack
         if(stack.isEmpty())
             return new StackListResult<>(stack.copy(), size);
 
-        if (!IFilterable.acceptsItem(diskManipulator.getItemFilters(), diskManipulator.getMode(), diskManipulator.getCompare(), stack)) {
+        if (!diskManipulator.getConfig().acceptsItem(stack)) {
             return null;
         }
 

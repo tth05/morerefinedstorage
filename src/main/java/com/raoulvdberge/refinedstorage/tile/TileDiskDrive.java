@@ -20,9 +20,9 @@ import java.util.Arrays;
 
 public class TileDiskDrive extends TileNode<NetworkNodeDiskDrive> {
     public static final TileDataParameter<Integer, TileDiskDrive> PRIORITY = IPrioritizable.createParameter();
-    public static final TileDataParameter<Integer, TileDiskDrive> COMPARE = IComparable.createParameter();
-    public static final TileDataParameter<Integer, TileDiskDrive> MODE = IFilterable.createParameter();
-    public static final TileDataParameter<Integer, TileDiskDrive> TYPE = IType.createParameter();
+    public static final TileDataParameter<Integer, TileDiskDrive> COMPARE = RSTileConfiguration.createCompareParameter();
+    public static final TileDataParameter<Integer, TileDiskDrive> MODE = RSTileConfiguration.createFilterModeParameter();
+    public static final TileDataParameter<Integer, TileDiskDrive> TYPE = RSTileConfiguration.createFilterTypeParameter();
     public static final TileDataParameter<AccessType, TileDiskDrive> ACCESS_TYPE = IAccessType.createParameter();
     public static final TileDataParameter<Long, TileDiskDrive> STORED = new TileDataParameter<>(RSSerializers.LONG_SERIALIZER, 0L, t -> {
         long stored = 0;

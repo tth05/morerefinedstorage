@@ -3,19 +3,15 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 import com.mojang.authlib.GameProfile;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.util.Action;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
-import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
-import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.TileConstructor;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSkull;
@@ -48,30 +44,29 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-public class NetworkNodeConstructor extends NetworkNode implements IComparable, IType, ICoverable, IUpgradeContainer {
+public class NetworkNodeConstructor extends NetworkNode implements IRSTileConfigurationProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "constructor";
 
-    private static final String NBT_COMPARE = "Compare";
-    private static final String NBT_TYPE = "Type";
     private static final String NBT_DROP = "Drop";
     private static final String NBT_COVERS = "Covers";
-    private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
     private static final int BASE_SPEED = 20;
 
-    private final ItemHandlerBase itemFilters = new ItemHandlerBase(1, new ListenerNetworkNode(this));
-    private final FluidInventory fluidFilters = new FluidInventory(1, new ListenerNetworkNode(this));
-
     private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING, ItemUpgrade.TYPE_STACK);
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterTypeItemsAndFluids()
+            .filterTypeItems()
+            .allowedFilterModeWhitelist()
+            .filterModeWhitelist()
+            .filterSizeOne()
+            .compareDamageAndNbt().build();
 
-    private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
-    private int type = IType.ITEMS;
     private boolean drop = false;
 
     private final CoverManager coverManager = new CoverManager(this);
@@ -90,8 +85,8 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
         super.updateNetworkNode();
 
         if (network != null && canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
-            if (type == IType.ITEMS && !itemFilters.getStackInSlot(0).isEmpty()) {
-                ItemStack item = itemFilters.getStackInSlot(0);
+            if (this.config.isFilterTypeItem() && !this.config.getItemFilters().getStackInSlot(0).isEmpty()) {
+                ItemStack item = this.config.getItemFilters().getStackInSlot(0);
 
                 IBlockState block = SlotFilter.getBlockState(world, pos.offset(getDirection()), item);
 
@@ -112,8 +107,8 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
                         dropItem();
                     }
                 }
-            } else if (type == IType.FLUIDS && fluidFilters.getFluid(0) != null) {
-                FluidStack stack = fluidFilters.getFluid(0);
+            } else if (this.config.isFilterTypeFluid() && this.config.getFluidFilters().getFluid(0) != null) {
+                FluidStack stack = this.config.getFluidFilters().getFluid(0);
 
                 if (stack != null && stack.getFluid().canBePlacedInWorld()) {
                     BlockPos front = pos.offset(getDirection());
@@ -121,10 +116,10 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
                     Block block = stack.getFluid().getBlock();
 
                     if (world.isAirBlock(front) && block.canPlaceBlockAt(world, front)) {
-                        StackListEntry<FluidStack> stored = network.getFluidStorageCache().getList().getEntry(stack, compare);
+                        StackListEntry<FluidStack> stored = network.getFluidStorageCache().getList().getEntry(stack, this.config.getCompare());
 
                         if (stored != null && stored.getCount() >= Fluid.BUCKET_VOLUME) {
-                            FluidStack took = network.extractFluid(stack, Fluid.BUCKET_VOLUME, compare, Action.PERFORM);
+                            FluidStack took = network.extractFluid(stack, Fluid.BUCKET_VOLUME, this.config.getCompare(), Action.PERFORM);
 
                             if (took != null) {
                                 IBlockState state = block.getDefaultState();
@@ -175,8 +170,8 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
 
         BlockPos front = pos.offset(getDirection());
 
-        ItemStack item = itemFilters.getStackInSlot(0);
-        ItemStack took = network.extractItem(item, 1, compare, Action.SIMULATE);
+        ItemStack item = this.config.getItemFilters().getStackInSlot(0);
+        ItemStack took = network.extractItem(item, 1, this.config.getCompare(), Action.SIMULATE);
 
         if (!took.isEmpty()) {
             IBlockState state = SlotFilter.getBlockState(world, front, took);
@@ -188,7 +183,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
                     return;
                 }
 
-                took = network.extractItem(item, 1, compare, Action.PERFORM);
+                took = network.extractItem(item, 1, this.config.getCompare(), Action.PERFORM);
 
                 if (!took.isEmpty()) {
                     if (item.getItem() instanceof ItemBlock) {
@@ -245,7 +240,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
                 }
             }
         } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
-            ItemStack craft = itemFilters.getStackInSlot(0);
+            ItemStack craft = this.config.getItemFilters().getStackInSlot(0);
 
             network.getCraftingManager().request(this, craft, 1);
         }
@@ -255,12 +250,12 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
         if(network == null)
             return;
 
-        ItemStack took = network.extractItem(itemFilters.getStackInSlot(0), upgrades.getItemInteractCount(), Action.PERFORM);
+        ItemStack took = network.extractItem(this.config.getItemFilters().getStackInSlot(0), upgrades.getItemInteractCount(), Action.PERFORM);
 
         if (!took.isEmpty()) {
             BehaviorDefaultDispenseItem.doDispense(world, took, 6, getDirection(), new PositionImpl(getDispensePositionX(), getDispensePositionY(), getDispensePositionZ()));
         } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
-            ItemStack craft = itemFilters.getStackInSlot(0);
+            ItemStack craft = this.config.getItemFilters().getStackInSlot(0);
 
             network.getCraftingManager().request(this, craft, 1);
         }
@@ -282,22 +277,14 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     }
 
     @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
     public void read(NBTTagCompound tag) {
         super.read(tag);
 
         StackUtils.readItems(upgrades, 1, tag);
+
+        if (tag.hasKey(NBT_COVERS)) {
+            coverManager.readFromNbt(tag.getTagList(NBT_COVERS, Constants.NBT.TAG_COMPOUND));
+        }
     }
 
     @Override
@@ -320,13 +307,8 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
 
-        tag.setInteger(NBT_COMPARE, compare);
-        tag.setInteger(NBT_TYPE, type);
         tag.setBoolean(NBT_DROP, drop);
-
-        StackUtils.writeItems(itemFilters, 0, tag);
-
-        tag.setTag(NBT_FLUID_FILTERS, fluidFilters.writeToNbt());
+        tag.setTag("config", this.config.writeToNBT(new NBTTagCompound()));
 
         return tag;
     }
@@ -335,27 +317,11 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
 
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
-
-        if (tag.hasKey(NBT_TYPE)) {
-            type = tag.getInteger(NBT_TYPE);
-        }
-
         if (tag.hasKey(NBT_DROP)) {
             drop = tag.getBoolean(NBT_DROP);
         }
 
-        if (tag.hasKey(NBT_COVERS)) {
-            coverManager.readFromNbt(tag.getTagList(NBT_COVERS, Constants.NBT.TAG_COMPOUND));
-        }
-
-        StackUtils.readItems(itemFilters, 0, tag);
-
-        if (tag.hasKey(NBT_FLUID_FILTERS)) {
-            fluidFilters.readFromNbt(tag.getCompoundTag(NBT_FLUID_FILTERS));
-        }
+        this.config.readFromNBT(tag.getCompoundTag("config"));
     }
 
     public boolean isDrop() {
@@ -381,27 +347,11 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
         return true;
     }
 
-    @Override
-    public int getType() {
-        return world.isRemote ? TileConstructor.TYPE.getValue() : type;
-    }
-
-    @Override
-    public void setType(int type) {
-        this.type = type;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public IItemHandlerModifiable getItemFilters() {
-        return itemFilters;
-    }
-
-    @Override
-    public FluidInventory getFluidFilters() {
-        return fluidFilters;
-    }
+    //TODO
+//    @Override
+//    public int getType() {
+//        return world.isRemote ? TileConstructor.TYPE.getValue() : type;
+//    }
 
     @Override
     public CoverManager getCoverManager() {
@@ -411,5 +361,11 @@ public class NetworkNodeConstructor extends NetworkNode implements IComparable, 
     @Override
     public ItemHandlerUpgrade getUpgradeHandler() {
         return this.upgrades;
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }

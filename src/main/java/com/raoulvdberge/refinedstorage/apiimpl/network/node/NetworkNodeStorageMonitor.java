@@ -2,12 +2,10 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
-import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
@@ -21,28 +19,32 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NetworkNodeStorageMonitor extends NetworkNode implements IComparable {
+public class NetworkNodeStorageMonitor extends NetworkNode implements IRSTileConfigurationProvider {
     public static final int DEPOSIT_ALL_MAX_DELAY = 500;
 
     public static final String ID = "storage_monitor";
 
-    private static final String NBT_COMPARE = "Compare";
-
-    private final ItemHandlerBase itemFilter = new ItemHandlerBase(1, new ListenerNetworkNode(this)) {
-        @Override
-        public void onContentsChanged(int slot) {
-            super.onContentsChanged(slot);
-
-            WorldUtils.updateBlock(world, pos);
-        }
-    };
+    //TODO: updateBlock
+//    private final ItemHandlerBase itemFilter = new ItemHandlerBase(1, new ListenerNetworkNode(this)) {
+//        @Override
+//        public void onContentsChanged(int slot) {
+//            super.onContentsChanged(slot);
+//
+//            WorldUtils.updateBlock(world, pos);
+//        }
+//    };
 
     private final Map<String, Pair<ItemStack, Long>> deposits = new HashMap<>();
 
-    private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterModeWhitelist()
+            .allowedFilterTypeItems()
+            .filterSizeOne()
+            .compareDamageAndNbt().build();
 
     private long oldAmount = -1;
 
@@ -87,7 +89,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
             for (int i = 0; i < player.inventory.getSizeInventory(); ++i) {
                 ItemStack toInsert = player.inventory.getStackInSlot(i);
 
-                if (API.instance().getComparer().isEqual(inserted, toInsert, compare)) {
+                if (API.instance().getComparer().isEqual(inserted, toInsert, this.config.getCompare())) {
                     player.inventory.setInventorySlotContents(i, StackUtils.nullToEmpty(network.insertItemTracked(toInsert, toInsert.getCount())));
                 }
             }
@@ -105,9 +107,9 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
             return false;
         }
 
-        ItemStack filter = itemFilter.getStackInSlot(0);
+        ItemStack filter = this.config.getItemFilters().getStackInSlot(0);
 
-        if (!filter.isEmpty() && API.instance().getComparer().isEqual(filter, toInsert, compare)) {
+        if (!filter.isEmpty() && API.instance().getComparer().isEqual(filter, toInsert, this.config.getCompare())) {
             player.inventory.setInventorySlotContents(player.inventory.currentItem, StackUtils.nullToEmpty(network.insertItemTracked(toInsert, toInsert.getCount())));
 
             deposits.put(player.getGameProfile().getName(), Pair.of(toInsert, MinecraftServer.getCurrentTimeMillis()));
@@ -125,12 +127,12 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
             return;
         }
 
-        ItemStack filter = itemFilter.getStackInSlot(0);
+        ItemStack filter = this.config.getItemFilters().getStackInSlot(0);
 
         int toExtract = player.isSneaking() ? 1 : 64;
 
         if (!filter.isEmpty()) {
-            ItemStack result = network.extractItem(filter, toExtract, compare, Action.PERFORM);
+            ItemStack result = network.extractItem(filter, toExtract, this.config.getCompare(), Action.PERFORM);
 
             if (!result.isEmpty() && !player.inventory.addItemStackToInventory(result.copy())) {
                 InventoryHelper.spawnItemStack(world, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), result);
@@ -149,39 +151,14 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
     }
 
     @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        WorldUtils.updateBlock(world, pos);
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
-
-        tag.setInteger(NBT_COMPARE, compare);
-
-        StackUtils.writeItems(itemFilter, 0, tag);
-
         return tag;
     }
 
     @Override
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
-
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
-
-        StackUtils.readItems(itemFilter, 0, tag);
     }
 
     public long getAmount() {
@@ -189,19 +166,15 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
             return 0;
         }
 
-        ItemStack toCheck = itemFilter.getStackInSlot(0);
+        ItemStack toCheck = this.config.getItemFilters().getStackInSlot(0);
 
         if (toCheck.isEmpty()) {
             return 0;
         }
 
-        StackListEntry<ItemStack> stored = network.getItemStorageCache().getList().getEntry(toCheck, compare);
+        StackListEntry<ItemStack> stored = network.getItemStorageCache().getList().getEntry(toCheck, this.config.getCompare());
 
         return stored != null ? stored.getCount() : 0;
-    }
-
-    public ItemHandlerBase getItemFilters() {
-        return itemFilter;
     }
 
     @Override
@@ -212,5 +185,11 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IComparabl
     @Override
     public void setRedstoneMode(RedstoneMode mode) {
         // NO OP
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }

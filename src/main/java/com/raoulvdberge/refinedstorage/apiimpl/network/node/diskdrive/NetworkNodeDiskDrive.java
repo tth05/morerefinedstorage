@@ -8,16 +8,17 @@ import com.raoulvdberge.refinedstorage.api.storage.IStorageProvider;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskContainerContext;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskProvider;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.IGuiStorage;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
-import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.tile.TileDiskDrive;
-import com.raoulvdberge.refinedstorage.tile.config.*;
+import com.raoulvdberge.refinedstorage.tile.config.IAccessType;
+import com.raoulvdberge.refinedstorage.tile.config.IPrioritizable;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -30,21 +31,17 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IStorageProvider, IComparable, IFilterable, IPrioritizable, IType, IAccessType, IStorageDiskContainerContext {
+public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IStorageProvider, IRSTileConfigurationProvider, IPrioritizable, IAccessType, IStorageDiskContainerContext {
     public static final Predicate<ItemStack> VALIDATOR_STORAGE_DISK = s -> s.getItem() instanceof IStorageDiskProvider && ((IStorageDiskProvider) s.getItem()).isValid(s);
 
     public static final String ID = "disk_drive";
 
     private static final String NBT_PRIORITY = "Priority";
-    private static final String NBT_COMPARE = "Compare";
-    private static final String NBT_MODE = "Mode";
-    private static final String NBT_TYPE = "Type";
-    private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
     private static final int DISK_STATE_UPDATE_THROTTLE = 30;
 
@@ -77,17 +74,18 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
         }
     };
 
-    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
-
     private final IStorageDisk[] itemDisks = new IStorageDisk[8];
     private final IStorageDisk[] fluidDisks = new IStorageDisk[8];
 
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int priority = 0;
-    private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
-    private int mode = IFilterable.BLACKLIST;
-    private int type = IType.ITEMS;
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterModeBlackAndWhitelist()
+            .filterModeBlacklist()
+            .allowedFilterTypeItemsAndFluids()
+            .allowedFilterTypeItems()
+            .filterSizeNine()
+            .compareDamageAndNbt().build();
 
     public NetworkNodeDiskDrive(World world, BlockPos pos) {
         super(world, pos);
@@ -194,13 +192,7 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
 
-        StackUtils.writeItems(itemFilters, 1, tag);
-
-        tag.setTag(NBT_FLUID_FILTERS, fluidFilters.writeToNbt());
         tag.setInteger(NBT_PRIORITY, priority);
-        tag.setInteger(NBT_COMPARE, compare);
-        tag.setInteger(NBT_MODE, mode);
-        tag.setInteger(NBT_TYPE, type);
 
         AccessTypeUtils.writeAccessType(tag, accessType);
 
@@ -211,53 +203,11 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
 
-        StackUtils.readItems(itemFilters, 1, tag);
-
-        if (tag.hasKey(NBT_FLUID_FILTERS)) {
-            fluidFilters.readFromNbt(tag.getCompoundTag(NBT_FLUID_FILTERS));
-        }
-
         if (tag.hasKey(NBT_PRIORITY)) {
             priority = tag.getInteger(NBT_PRIORITY);
         }
 
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
-
-        if (tag.hasKey(NBT_MODE)) {
-            mode = tag.getInteger(NBT_MODE);
-        }
-
-        if (tag.hasKey(NBT_TYPE)) {
-            type = tag.getInteger(NBT_TYPE);
-        }
-
         accessType = AccessTypeUtils.readAccessType(tag);
-    }
-
-    @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public int getMode() {
-        return mode;
-    }
-
-    @Override
-    public void setMode(int mode) {
-        this.mode = mode;
-
-        markNetworkNodeDirty();
     }
 
     @Override
@@ -344,29 +294,13 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
     }
 
     @Override
-    public int getType() {
-        return world.isRemote ? TileDiskDrive.TYPE.getValue() : type;
-    }
-
-    @Override
-    public void setType(int type) {
-        this.type = type;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public IItemHandlerModifiable getItemFilters() {
-        return itemFilters;
-    }
-
-    @Override
-    public FluidInventory getFluidFilters() {
-        return fluidFilters;
-    }
-
-    @Override
     public IItemHandler getDrops() {
         return disks;
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }

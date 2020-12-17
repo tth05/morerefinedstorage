@@ -3,7 +3,6 @@ package com.raoulvdberge.refinedstorage.container;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
 import com.raoulvdberge.refinedstorage.tile.TileDiskManipulator;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.items.SlotItemHandler;
 
@@ -24,11 +23,11 @@ public class ContainerDiskManipulator extends ContainerBase {
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(diskManipulator.getNode().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskManipulator.getNode().getType() == IType.ITEMS));
+            addSlotToContainer(new SlotFilter(diskManipulator.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskManipulator.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(diskManipulator.getNode().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskManipulator.getNode().getType() == IType.FLUIDS));
+            addSlotToContainer(new SlotFilterFluid(diskManipulator.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskManipulator.getNode().getConfig().isFilterTypeFluid()));
         }
 
         addPlayerInventory(8, 129);
@@ -36,6 +35,6 @@ public class ContainerDiskManipulator extends ContainerBase {
         transferManager.addBiTransfer(player.inventory, diskManipulator.getNode().getUpgradeHandler());
         transferManager.addBiTransfer(player.inventory, diskManipulator.getNode().getInputDisks());
         transferManager.addTransfer(diskManipulator.getNode().getOutputDisks(), player.inventory);
-        transferManager.addFilterTransfer(player.inventory, diskManipulator.getNode().getItemFilters(), diskManipulator.getNode().getFluidFilters(), diskManipulator.getNode()::getType);
+        transferManager.addFilterTransfer(player.inventory, diskManipulator.getNode().getConfig().getItemFilters(), diskManipulator.getNode().getConfig().getFluidFilters(), diskManipulator.getNode().getConfig()::getFilterType);
     }
 }

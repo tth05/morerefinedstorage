@@ -8,7 +8,6 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.render.constants.ConstantsDisk;
-import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -62,7 +61,7 @@ public class StorageDiskFluidDriveWrapper implements IStorageDisk<FluidStack> {
     @Override
     @Nullable
     public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
-        if (!IFilterable.acceptsFluid(diskDrive.getFluidFilters(), diskDrive.getMode(), diskDrive.getCompare(), stack)) {
+        if (!diskDrive.getConfig().acceptsFluid(stack)) {
             return new StackListResult<>(stack.copy(), size);
         }
 

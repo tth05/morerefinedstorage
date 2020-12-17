@@ -15,9 +15,9 @@ import javax.annotation.Nonnull;
 
 public class TileExternalStorage extends TileNode<NetworkNodeExternalStorage> {
     public static final TileDataParameter<Integer, TileExternalStorage> PRIORITY = IPrioritizable.createParameter();
-    public static final TileDataParameter<Integer, TileExternalStorage> COMPARE = IComparable.createParameter();
-    public static final TileDataParameter<Integer, TileExternalStorage> MODE = IFilterable.createParameter();
-    public static final TileDataParameter<Integer, TileExternalStorage> TYPE = IType.createParameter();
+    public static final TileDataParameter<Integer, TileExternalStorage> COMPARE = RSTileConfiguration.createCompareParameter();
+    public static final TileDataParameter<Integer, TileExternalStorage> MODE = RSTileConfiguration.createFilterModeParameter();
+    public static final TileDataParameter<Integer, TileExternalStorage> TYPE = RSTileConfiguration.createFilterTypeParameter();
     public static final TileDataParameter<AccessType, TileExternalStorage> ACCESS_TYPE = IAccessType.createParameter();
     public static final TileDataParameter<Long, TileExternalStorage> STORED = new TileDataParameter<>(RSSerializers.LONG_SERIALIZER, 0L, t -> {
         long stored = 0;

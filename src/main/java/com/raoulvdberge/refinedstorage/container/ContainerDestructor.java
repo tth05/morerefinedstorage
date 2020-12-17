@@ -3,7 +3,6 @@ package com.raoulvdberge.refinedstorage.container;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
 import com.raoulvdberge.refinedstorage.tile.TileDestructor;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.items.SlotItemHandler;
 
@@ -16,16 +15,16 @@ public class ContainerDestructor extends ContainerBase {
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(destructor.getNode().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> destructor.getNode().getType() == IType.ITEMS));
+            addSlotToContainer(new SlotFilter(destructor.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> destructor.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(destructor.getNode().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> destructor.getNode().getType() == IType.FLUIDS));
+            addSlotToContainer(new SlotFilterFluid(destructor.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> destructor.getNode().getConfig().isFilterTypeFluid()));
         }
 
         addPlayerInventory(8, 55);
 
         transferManager.addBiTransfer(player.inventory, destructor.getNode().getUpgradeHandler());
-        transferManager.addFilterTransfer(player.inventory, destructor.getNode().getItemFilters(), destructor.getNode().getFluidFilters(), destructor.getNode()::getType);
+        transferManager.addFilterTransfer(player.inventory, destructor.getNode().getConfig().getItemFilters(), destructor.getNode().getConfig().getFluidFilters(), destructor.getNode().getConfig()::getFilterType);
     }
 }

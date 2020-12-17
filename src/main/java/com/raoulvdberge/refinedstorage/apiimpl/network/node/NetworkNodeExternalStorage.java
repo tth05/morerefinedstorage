@@ -9,19 +9,17 @@ import com.raoulvdberge.refinedstorage.api.storage.StorageType;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageContext;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageProvider;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExternal;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
-import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
-import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
-import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.tile.TileExternalStorage;
-import com.raoulvdberge.refinedstorage.tile.config.*;
+import com.raoulvdberge.refinedstorage.tile.config.IAccessType;
+import com.raoulvdberge.refinedstorage.tile.config.IPrioritizable;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
-import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -31,29 +29,26 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class NetworkNodeExternalStorage extends NetworkNode implements IStorageProvider, IGuiStorage, IComparable, IFilterable, IPrioritizable, IType, IAccessType, IExternalStorageContext, ICoverable {
+public class NetworkNodeExternalStorage extends NetworkNode implements IStorageProvider, IGuiStorage, IPrioritizable, IRSTileConfigurationProvider, IAccessType, IExternalStorageContext, ICoverable {
     public static final String ID = "external_storage";
 
     private static final String NBT_PRIORITY = "Priority";
-    private static final String NBT_COMPARE = "Compare";
-    private static final String NBT_MODE = "Mode";
-    private static final String NBT_TYPE = "Type";
     private static final String NBT_COVERS = "Covers";
-    private static final String NBT_FLUID_FILTERS = "FluidFilters";
-
-    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
 
     private int priority = 0;
-    private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
-    private int mode = IFilterable.BLACKLIST;
-    private int type = IType.ITEMS;
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterModeBlackAndWhitelist()
+            .filterModeBlacklist()
+            .allowedFilterTypeItemsAndFluids()
+            .filterTypeItems()
+            .filterSizeNine()
+            .compareDamageAndNbt().build();
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int networkTicks;
 
@@ -135,16 +130,11 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
 
-        StackUtils.writeItems(itemFilters, 0, tag);
-
-        tag.setTag(NBT_FLUID_FILTERS, fluidFilters.writeToNbt());
-
         tag.setInteger(NBT_PRIORITY, priority);
-        tag.setInteger(NBT_COMPARE, compare);
-        tag.setInteger(NBT_MODE, mode);
-        tag.setInteger(NBT_TYPE, type);
 
         AccessTypeUtils.writeAccessType(tag, accessType);
+
+        tag.setTag("config", this.config.writeToNBT(new NBTTagCompound()));
 
         return tag;
     }
@@ -153,53 +143,13 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
 
-        StackUtils.readItems(itemFilters, 0, tag);
-
-        if (tag.hasKey(NBT_FLUID_FILTERS)) {
-            fluidFilters.readFromNbt(tag.getCompoundTag(NBT_FLUID_FILTERS));
-        }
-
         if (tag.hasKey(NBT_PRIORITY)) {
             priority = tag.getInteger(NBT_PRIORITY);
         }
 
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
-
-        if (tag.hasKey(NBT_MODE)) {
-            mode = tag.getInteger(NBT_MODE);
-        }
-
-        if (tag.hasKey(NBT_TYPE)) {
-            type = tag.getInteger(NBT_TYPE);
-        }
-
         accessType = AccessTypeUtils.readAccessType(tag);
-    }
 
-    @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public int getMode() {
-        return mode;
-    }
-
-    @Override
-    public void setMode(int mode) {
-        this.mode = mode;
-
-        markNetworkNodeDirty();
+        this.config.readFromNBT(tag.getCompoundTag("config"));
     }
 
     @Override
@@ -226,7 +176,7 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
         TileEntity facing = getFacingTile();
 
         if (facing != null) {
-            if (type == IType.ITEMS) {
+            if (config.isFilterTypeItem()) {
                 for (IExternalStorageProvider provider : API.instance().getExternalStorageProviders(StorageType.ITEM)) {
                     if (provider.canProvide(facing, getDirection())) {
                         itemStorages.add(provider.provide(this, this::getFacingTile, getDirection()));
@@ -234,7 +184,7 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
                         break;
                     }
                 }
-            } else if (type == IType.FLUIDS) {
+            } else if (config.isFilterTypeFluid()) {
                 for (IExternalStorageProvider provider : API.instance().getExternalStorageProviders(StorageType.FLUID)) {
                     if (provider.canProvide(facing, getDirection())) {
                         fluidStorages.add(provider.provide(this, this::getFacingTile, getDirection()));
@@ -306,12 +256,12 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
 
     @Override
     public boolean acceptsItem(ItemStack stack) {
-        return IFilterable.acceptsItem(itemFilters, mode, compare, stack);
+        return config.acceptsItem(stack);
     }
 
     @Override
     public boolean acceptsFluid(FluidStack stack) {
-        return IFilterable.acceptsFluid(fluidFilters, mode, compare, stack);
+        return config.acceptsFluid(stack);
     }
 
     @Override
@@ -331,31 +281,22 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
         return TileExternalStorage.TYPE;
     }
 
-    @Override
-    public int getType() {
-        return world.isRemote ? TileExternalStorage.TYPE.getValue() : type;
-    }
-
-    @Override
-    public void setType(int type) {
-        this.type = type;
-
-        markNetworkNodeDirty();
-
-        if (network != null) {
-            updateStorage(network);
-        }
-    }
-
-    @Override
-    public IItemHandlerModifiable getItemFilters() {
-        return itemFilters;
-    }
-
-    @Override
-    public FluidInventory getFluidFilters() {
-        return fluidFilters;
-    }
+    //TODO:
+//    @Override
+//    public int getType() {
+//        return world.isRemote ? TileExternalStorage.TYPE.getValue() : type;
+//    }
+//
+//    @Override
+//    public void setType(int type) {
+//        this.type = type;
+//
+//        markNetworkNodeDirty();
+//
+//        if (network != null) {
+//            updateStorage(network);
+//        }
+//    }
 
     public List<IStorageExternal<ItemStack>> getItemStorages() {
         return itemStorages;
@@ -379,5 +320,11 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
     @Override
     public CoverManager getCoverManager() {
         return coverManager;
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }

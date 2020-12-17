@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.container.transfer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -47,7 +48,7 @@ public class TransferManager {
     }
 
     public void addFilterTransfer(IInventory from, IItemHandlerModifiable itemTo, FluidInventory fluidTo,
-                                  Supplier<Integer> typeGetter) {
+                                  Supplier<RSTileConfiguration.FilterType> typeGetter) {
         addTransfer(new InventoryWrapperInventory(from), new InventoryWrapperFilter(itemTo, fluidTo, typeGetter));
     }
 

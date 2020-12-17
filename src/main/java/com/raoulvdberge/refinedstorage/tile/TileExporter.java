@@ -1,8 +1,7 @@
 package com.raoulvdberge.refinedstorage.tile;
 
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeExporter;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -10,8 +9,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 
 public class TileExporter extends TileNode<NetworkNodeExporter> {
-    public static final TileDataParameter<Integer, TileExporter> COMPARE = IComparable.createParameter();
-    public static final TileDataParameter<Integer, TileExporter> TYPE = IType.createParameter();
+    public static final TileDataParameter<Integer, TileExporter> COMPARE = RSTileConfiguration.createCompareParameter();
+    public static final TileDataParameter<Integer, TileExporter> TYPE = RSTileConfiguration.createFilterTypeParameter();
 
     public TileExporter() {
         dataManager.addWatchedParameter(COMPARE);

@@ -67,18 +67,22 @@ public interface INetworkNode {
     methods just call the old methods. In all other cases the new methods should be overridden
      */
 
+    @Deprecated
     default void update() {
         throw new RuntimeException("Override #updateNetworkNode");
     }
 
+    @Deprecated
     default BlockPos getPos() {
         throw new RuntimeException("Override #getNetworkNodePos");
     }
 
+    @Deprecated
     default World getWorld() {
         throw new RuntimeException("Override #getNetworkNodeWorld");
     }
 
+    @Deprecated
     default void markDirty() {
         throw new RuntimeException("Override #markNetworkNodeDirty");
     }

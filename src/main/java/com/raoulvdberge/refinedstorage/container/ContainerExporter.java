@@ -5,7 +5,6 @@ import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.TileExporter;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.item.ItemStack;
@@ -74,28 +73,28 @@ public class ContainerExporter extends ContainerBase {
 
         for (int i = 0; i < 9; ++i) {
             addSlotToContainer(new SlotFilter(
-                    exporter.getNode().getItemFilters(),
+                    exporter.getNode().getConfig().getItemFilters(),
                     i,
                     8 + (18 * i),
                     20,
                     upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR) ? SlotFilter.FILTER_ALLOW_SIZE : 0
-            ).setEnableHandler(() -> exporter.getNode().getType() == IType.ITEMS));
+            ).setEnableHandler(() -> exporter.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {
             addSlotToContainer(new SlotFilterFluid(
-                    exporter.getNode().getFluidFilters(),
+                    exporter.getNode().getConfig().getFluidFilters(),
                     i,
                     8 + (18 * i),
                     20,
                     upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR) ? SlotFilterFluid.FILTER_ALLOW_SIZE : 0
-            ).setEnableHandler(() -> exporter.getNode().getType() == IType.FLUIDS));
+            ).setEnableHandler(() -> exporter.getNode().getConfig().isFilterTypeFluid()));
         }
 
         addPlayerInventory(8, 55);
 
         transferManager.addBiTransfer(getPlayer().inventory, upgrades);
-        transferManager.addFilterTransfer(getPlayer().inventory, exporter.getNode().getItemFilters(),
-                exporter.getNode().getFluidFilters(), exporter.getNode()::getType);
+        transferManager.addFilterTransfer(getPlayer().inventory, exporter.getNode().getConfig().getItemFilters(),
+                exporter.getNode().getConfig().getFluidFilters(), exporter.getNode().getConfig()::getFilterType);
     }
 }

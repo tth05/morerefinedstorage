@@ -9,7 +9,7 @@ import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventoryFilter;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerFilterItems;
 import com.raoulvdberge.refinedstorage.item.info.ItemInfo;
 import com.raoulvdberge.refinedstorage.render.IModelRegistration;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.RenderUtils;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
@@ -172,15 +172,17 @@ public class ItemFilter extends ItemBase {
         return stack.hasTagCompound() && stack.getTagCompound().hasKey(NBT_FLUID_ICON) ? FluidStack.loadFluidStackFromNBT(stack.getTagCompound().getCompoundTag(NBT_FLUID_ICON)) : null;
     }
 
-    public static int getType(ItemStack stack) {
-        return stack.hasTagCompound() && stack.getTagCompound().hasKey(NBT_TYPE) ? stack.getTagCompound().getInteger(NBT_TYPE) : IType.ITEMS;
+    public static RSTileConfiguration.FilterType getType(ItemStack stack) {
+        return stack.hasTagCompound() && stack.getTagCompound().hasKey(NBT_TYPE) ?
+                RSTileConfiguration.FilterType.values()[stack.getTagCompound().getInteger(NBT_TYPE)] :
+                RSTileConfiguration.FilterType.ITEMS;
     }
 
-    public static void setType(ItemStack stack, int type) {
+    public static void setType(ItemStack stack, RSTileConfiguration.FilterType type) {
         if (!stack.hasTagCompound()) {
             stack.setTagCompound(new NBTTagCompound());
         }
 
-        stack.getTagCompound().setInteger(NBT_TYPE, type);
+        stack.getTagCompound().setInteger(NBT_TYPE, type.ordinal());
     }
 }

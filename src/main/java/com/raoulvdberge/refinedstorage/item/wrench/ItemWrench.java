@@ -14,10 +14,9 @@ import com.raoulvdberge.refinedstorage.render.IModelRegistration;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTraceResult;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTracer;
 import com.raoulvdberge.refinedstorage.tile.TileNode;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
-import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -119,21 +118,12 @@ public class ItemWrench extends ItemBase {
         } else {
             NBTTagCompound configTag = player.getHeldItemMainhand().getTagCompound().getCompoundTag("config");
             if (mode == WrenchMode.COPY) {
-                //type
-                if (node instanceof IType) {
-                    configTag.setTag("type", IType.writeToNBT((IType) node, new NBTTagCompound()));
-                }
                 //upgrades
                 if (node instanceof IUpgradeContainer) {
                     configTag.setTag("upgrades", IUpgradeContainer.writeToNBT((IUpgradeContainer) node, new NBTTagCompound()));
                 }
-                //compareable
-                if (node instanceof IComparable) {
-                    IComparable.writeToNBT((IComparable) node, configTag);
-                }
-                //filterable
-                if (node instanceof IFilterable) {
-                    IFilterable.writeToNBT((IFilterable) node, configTag);
+                if(node instanceof IRSTileConfigurationProvider) {
+                    ((IRSTileConfigurationProvider) node).getConfig().writeToNBT(configTag);
                 }
 
                 player.getHeldItemMainhand().getTagCompound().setTag("config", configTag);
@@ -141,12 +131,6 @@ public class ItemWrench extends ItemBase {
             } else if (mode == WrenchMode.PASTE && !configTag.isEmpty()) {
                 TextComponentString args = new TextComponentString("");
 
-                //type
-                if (node instanceof IType && configTag.hasKey("type")) {
-                    IType.readFromNBT((IType) node, configTag.getCompoundTag("type"));
-                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ")
-                            .appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.type"));
-                }
                 //upgrades
                 if (node instanceof IUpgradeContainer && configTag.hasKey("upgrades")) {
                     boolean success = IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, configTag.getCompoundTag("upgrades"));
@@ -155,15 +139,19 @@ public class ItemWrench extends ItemBase {
                             new TextComponentTranslation("misc.refinedstorage:wrench.pasted.upgrades").setStyle(new Style().setColor(success ? TextFormatting.WHITE : TextFormatting.RED))
                     );
                 }
-                //compareable
-                if (node instanceof IComparable && configTag.hasKey("compare")) {
-                    IComparable.readFromNBT((IComparable) node, configTag);
-                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ")
-                            .appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.compareable"));
-                }
-                //filterable
-                if (node instanceof IFilterable && configTag.hasKey("filterMode")) {
-                    IFilterable.readFromNBT((IFilterable) node, configTag);
+
+                if(node instanceof IRSTileConfigurationProvider) {
+                    RSTileConfiguration config = ((IRSTileConfigurationProvider) node).getConfig();
+                    //type
+                    if (config.usesFilterType() && configTag.hasKey("type")) {
+                        args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.type"));
+                    }
+                    //compareable
+                    if (config.usesCompare() && configTag.hasKey("compare")) {
+                        args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.compareable"));
+                    }
+
+                    config.readFromNBT(configTag);
                 }
 
                 if (!args.getSiblings().isEmpty())

@@ -6,7 +6,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.grid.GuiGrid;
 import com.raoulvdberge.refinedstorage.tile.TileNode;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.util.EnumFacing;
@@ -68,7 +68,7 @@ public class TileGrid extends TileNode<NetworkNodeGrid> {
         t.getNode().clearMatrix();
         t.getNode().markNetworkNodeDirty();
     }, (initial, p) -> GuiBase.executeLater(GuiGrid.class, GuiBase::initGui));
-    public static final TileDataParameter<Integer, TileGrid> PROCESSING_TYPE = IType.createParameter((initial, p) -> GuiBase.executeLater(GuiGrid.class, GuiBase::initGui));
+    public static final TileDataParameter<Integer, TileGrid> PROCESSING_TYPE = RSTileConfiguration.createFilterTypeParameter((initial, p) -> GuiBase.executeLater(GuiGrid.class, GuiBase::initGui));
 
     public static void trySortGrid(boolean initial) {
         if (!initial) {

@@ -9,11 +9,11 @@ public class ContainerFluidStorage extends ContainerBase {
         super(fluidStorage, player);
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(fluidStorage.getNode().getFilters(), i, 8 + (18 * i), 20));
+            addSlotToContainer(new SlotFilterFluid(fluidStorage.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20));
         }
 
         addPlayerInventory(8, 141);
 
-        transferManager.addFluidFilterTransfer(player.inventory, fluidStorage.getNode().getFilters());
+        transferManager.addFluidFilterTransfer(player.inventory, fluidStorage.getNode().getConfig().getFluidFilters());
     }
 }

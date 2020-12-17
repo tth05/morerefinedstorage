@@ -9,11 +9,11 @@ public class ContainerStorage extends ContainerBase {
         super(storage, player);
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(storage.getNode().getFilters(), i, 8 + (18 * i), 20));
+            addSlotToContainer(new SlotFilter(storage.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20));
         }
 
         addPlayerInventory(8, 141);
 
-        transferManager.addItemFilterTransfer(player.inventory, storage.getNode().getFilters());
+        transferManager.addItemFilterTransfer(player.inventory, storage.getNode().getConfig().getItemFilters());
     }
 }

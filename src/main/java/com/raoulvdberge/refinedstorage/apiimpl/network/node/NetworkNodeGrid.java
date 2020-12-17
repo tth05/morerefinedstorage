@@ -20,7 +20,7 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerFilter;
 import com.raoulvdberge.refinedstorage.inventory.item.validator.ItemValidatorBasic;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemPattern;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataManager;
 import com.raoulvdberge.refinedstorage.tile.grid.TileGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -51,7 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, IType {
+public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware {
     public static final String ID = "grid";
     public static int FACTORY_ID;
 
@@ -161,7 +161,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
     private boolean oredictPattern = false;
     private boolean processingPattern = false;
-    private int processingType = IType.ITEMS;
+    private RSTileConfiguration.FilterType processingType = RSTileConfiguration.FilterType.ITEMS;
 
     public NetworkNodeGrid(World world, BlockPos pos) {
         super(world, pos);
@@ -217,7 +217,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
 
         tag.setBoolean(NBT_OREDICT_PATTERN, oredictPattern);
         tag.setBoolean(NBT_PROCESSING_PATTERN, processingPattern);
-        tag.setInteger(NBT_PROCESSING_TYPE, processingType);
+        tag.setInteger(NBT_PROCESSING_TYPE, processingType.ordinal());
 
         return tag;
     }
@@ -255,7 +255,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         }
 
         if (tag.hasKey(NBT_PROCESSING_TYPE)) {
-            processingType = tag.getInteger(NBT_PROCESSING_TYPE);
+            processingType = RSTileConfiguration.FilterType.values()[tag.getInteger(NBT_PROCESSING_TYPE)];
         }
     }
 
@@ -452,13 +452,6 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         // NO OP
     }
 
-    @Override
-    public void setType(int type) {
-        this.processingType = type;
-
-        this.markNetworkNodeDirty();
-    }
-
     public void setViewType(int viewType) {
         this.viewType = viewType;
     }
@@ -640,19 +633,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware, I
         return (int) Math.floor((float) Math.max(0, tabs.size() - 1) / (float) IGrid.TABS_PER_PAGE);
     }
 
-    @Override
-    public int getType() {
-        return world.isRemote ? TileGrid.PROCESSING_TYPE.getValue() : processingType;
-    }
-
-    @Override
-    public IItemHandlerModifiable getItemFilters() {
-        return getProcessingMatrix();
-    }
-
-    @Override
-    public FluidInventory getFluidFilters() {
-        return getProcessingMatrixFluids();
+    public RSTileConfiguration.FilterType getType() {
+        return world.isRemote ? RSTileConfiguration.FilterType.values()[TileGrid.PROCESSING_TYPE.getValue()] : processingType;
     }
 
     @Override

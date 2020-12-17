@@ -3,7 +3,6 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage.StorageExternalItem;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
@@ -11,9 +10,9 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerProxy;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,14 +22,13 @@ import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
-public class NetworkNodeInterface extends NetworkNode implements IComparable, IUpgradeContainer {
-    public static final String ID = "interface";
+import javax.annotation.Nonnull;
 
-    private static final String NBT_COMPARE = "Compare";
+public class NetworkNodeInterface extends NetworkNode implements IRSTileConfigurationProvider, IUpgradeContainer {
+    public static final String ID = "interface";
 
     private final ItemHandlerBase importItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
 
-    private final ItemHandlerBase exportFilterItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
     private final ItemHandlerBase exportItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
 
     private final IItemHandler items = new ItemHandlerProxy(importItems, exportItems);
@@ -39,7 +37,11 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
             new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK,
                     ItemUpgrade.TYPE_CRAFTING);
 
-    private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterTypeItems()
+            .allowedFilterModeWhitelist()
+            .filterSizeNine()
+            .compareDamageAndNbt().build();
 
     private int currentSlot = 0;
 
@@ -83,7 +85,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
         }
 
         for (int i = 0; i < 9; ++i) {
-            ItemStack wanted = exportFilterItems.getStackInSlot(i);
+            ItemStack wanted = this.config.getItemFilters().getStackInSlot(i);
             ItemStack got = exportItems.getStackInSlot(i);
 
             if (wanted.isEmpty()) {
@@ -91,7 +93,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
                     exportItems
                             .setStackInSlot(i, StackUtils.nullToEmpty(network.insertItemTracked(got, got.getCount())));
                 }
-            } else if (!got.isEmpty() && !API.instance().getComparer().isEqual(wanted, got, getCompare())) {
+            } else if (!got.isEmpty() && !API.instance().getComparer().isEqual(wanted, got, this.config.getCompare())) {
                 exportItems.setStackInSlot(i, StackUtils.nullToEmpty(network.insertItemTracked(got, got.getCount())));
             } else {
                 int delta = got.isEmpty() ? wanted.getCount() : (wanted.getCount() - got.getCount());
@@ -99,7 +101,7 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
                 if (delta > 0) {
                     final boolean actingAsStorage = isActingAsStorage();
 
-                    ItemStack result = network.extractItem(wanted, delta, compare, Action.PERFORM, s -> {
+                    ItemStack result = network.extractItem(wanted, delta, this.config.getCompare(), Action.PERFORM, s -> {
                         // If we are not an interface acting as a storage, we can extract from anywhere.
                         if (!actingAsStorage) {
                             return true;
@@ -153,24 +155,12 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
             if (facingNode instanceof NetworkNodeExternalStorage &&
                     facingNode.canUpdate() &&
                     ((NetworkNodeExternalStorage) facingNode).getDirection() == facing.getOpposite() &&
-                    ((NetworkNodeExternalStorage) facingNode).getType() == IType.ITEMS) {
+                    ((NetworkNodeExternalStorage) facingNode).getConfig().isFilterTypeItem()) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        markNetworkNodeDirty();
     }
 
     @Override
@@ -202,30 +192,16 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
 
-        StackUtils.writeItems(exportFilterItems, 1, tag);
-
-        tag.setInteger(NBT_COMPARE, compare);
-
         return tag;
     }
 
     @Override
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
-
-        StackUtils.readItems(exportFilterItems, 1, tag);
-
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
     }
 
     public IItemHandler getImportItems() {
         return importItems;
-    }
-
-    public IItemHandler getExportFilterItems() {
-        return exportFilterItems;
     }
 
     public IItemHandler getExportItems() {
@@ -249,5 +225,11 @@ public class NetworkNodeInterface extends NetworkNode implements IComparable, IU
     @Override
     public ItemHandlerUpgrade getUpgradeHandler() {
         return this.upgrades;
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }

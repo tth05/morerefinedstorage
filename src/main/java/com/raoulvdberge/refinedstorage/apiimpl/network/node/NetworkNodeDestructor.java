@@ -3,18 +3,13 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 import com.mojang.authlib.GameProfile;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.util.Action;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
-import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
-import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.TileDestructor;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
-import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
@@ -49,34 +44,30 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.wrappers.BlockLiquidWrapper;
 import net.minecraftforge.fluids.capability.wrappers.FluidBlockWrapper;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class NetworkNodeDestructor extends NetworkNode implements IComparable, IFilterable, IType, ICoverable, IUpgradeContainer {
+public class NetworkNodeDestructor extends NetworkNode implements IRSTileConfigurationProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "destructor";
 
-    private static final String NBT_COMPARE = "Compare";
-    private static final String NBT_MODE = "Mode";
-    private static final String NBT_TYPE = "Type";
     private static final String NBT_PICKUP = "Pickup";
     private static final String NBT_COVERS = "Covers";
-    private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
     private static final int BASE_SPEED = 20;
 
-    private final ItemHandlerBase itemFilters = new ItemHandlerBase(9, new ListenerNetworkNode(this));
-    private final FluidInventory fluidFilters = new FluidInventory(9, new ListenerNetworkNode(this));
-
     private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_SILK_TOUCH, ItemUpgrade.TYPE_FORTUNE_1, ItemUpgrade.TYPE_FORTUNE_2, ItemUpgrade.TYPE_FORTUNE_3);
-
-    private int compare = IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE;
-    private int mode = IFilterable.BLACKLIST;
-    private int type = IType.ITEMS;
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterTypeItemsAndFluids()
+            .filterTypeItems()
+            .allowedFilterModeBlackAndWhitelist()
+            .filterModeBlacklist()
+            .filterSizeNine()
+            .compareDamageAndNbt().build();
     private boolean pickupItem = false;
 
     private final CoverManager coverManager = new CoverManager(this);
@@ -110,7 +101,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
         if (network != null && canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
             BlockPos front = pos.offset(getDirection());
 
-            if (pickupItem && type == IType.ITEMS) {
+            if (pickupItem && this.config.isFilterTypeItem()) {
                 List<Entity> droppedItems = new ArrayList<>();
 
                 Chunk chunk = world.getChunk(front);
@@ -120,7 +111,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                     if (entity instanceof EntityItem) {
                         ItemStack droppedItem = ((EntityItem) entity).getItem();
 
-                        if (IFilterable.acceptsItem(itemFilters, mode, compare, droppedItem) &&
+                        if (this.config.acceptsItem(droppedItem) &&
                                 network.insertItem(droppedItem, droppedItem.getCount(), Action.SIMULATE) == null) {
                             network.insertItemTracked(droppedItem.copy(), droppedItem.getCount());
 
@@ -130,7 +121,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                         }
                     }
                 }
-            } else if (type == IType.ITEMS) {
+            } else if (this.config.isFilterTypeItem()) {
                 IBlockState frontBlockState = world.getBlockState(front);
                 Block frontBlock = frontBlockState.getBlock();
 
@@ -142,7 +133,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                     getFakePlayer()
                 );
 
-                if (!frontStack.isEmpty() && IFilterable.acceptsItem(itemFilters, mode, compare, frontStack) &&
+                if (!frontStack.isEmpty() && this.config.acceptsItem(frontStack) &&
                         frontBlockState.getBlockHardness(world, front) != -1.0) {
                     NonNullList<ItemStack> drops = NonNullList.create();
 
@@ -186,7 +177,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                         }
                     }
                 }
-            } else if (type == IType.FLUIDS) {
+            } else if (this.config.isFilterTypeFluid()) {
                 Block frontBlock = world.getBlockState(front).getBlock();
 
                 IFluidHandler handler = null;
@@ -200,7 +191,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                 if (handler != null) {
                     FluidStack stack = handler.drain(Fluid.BUCKET_VOLUME, false);
 
-                    if (stack != null && IFilterable.acceptsFluid(fluidFilters, mode, compare, stack) && network.insertFluid(stack, stack.amount, Action.SIMULATE) == null) {
+                    if (stack != null && this.config.acceptsFluid(stack) && network.insertFluid(stack, stack.amount, Action.SIMULATE) == null) {
                         FluidStack drained = handler.drain(Fluid.BUCKET_VOLUME, true);
 
                         if(drained != null)
@@ -209,30 +200,6 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
                 }
             }
         }
-    }
-
-    @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public int getMode() {
-        return mode;
-    }
-
-    @Override
-    public void setMode(int mode) {
-        this.mode = mode;
-
-        markNetworkNodeDirty();
     }
 
     @Override
@@ -266,14 +233,8 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
 
-        tag.setInteger(NBT_COMPARE, compare);
-        tag.setInteger(NBT_MODE, mode);
-        tag.setInteger(NBT_TYPE, type);
         tag.setBoolean(NBT_PICKUP, pickupItem);
-
-        StackUtils.writeItems(itemFilters, 0, tag);
-
-        tag.setTag(NBT_FLUID_FILTERS, fluidFilters.writeToNbt());
+        tag.setTag("config", this.config.writeToNBT(new NBTTagCompound()));
 
         return tag;
     }
@@ -282,31 +243,11 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
 
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
-
-        if (tag.hasKey(NBT_MODE)) {
-            mode = tag.getInteger(NBT_MODE);
-        }
-
-        if (tag.hasKey(NBT_TYPE)) {
-            type = tag.getInteger(NBT_TYPE);
-        }
-
         if (tag.hasKey(NBT_PICKUP)) {
             pickupItem = tag.getBoolean(NBT_PICKUP);
         }
 
-        StackUtils.readItems(itemFilters, 0, tag);
-
-        if (tag.hasKey(NBT_FLUID_FILTERS)) {
-            fluidFilters.readFromNbt(tag.getCompoundTag(NBT_FLUID_FILTERS));
-        }
-    }
-
-    public IItemHandler getInventory() {
-        return itemFilters;
+        this.config.readFromNBT(tag.getCompoundTag("config"));
     }
 
     @Override
@@ -319,27 +260,11 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
         return new CombinedInvWrapper(upgrades, coverManager.getAsInventory());
     }
 
-    @Override
-    public int getType() {
-        return world.isRemote ? TileDestructor.TYPE.getValue() : type;
-    }
-
-    @Override
-    public void setType(int type) {
-        this.type = type;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public IItemHandlerModifiable getItemFilters() {
-        return itemFilters;
-    }
-
-    @Override
-    public FluidInventory getFluidFilters() {
-        return fluidFilters;
-    }
+    //TODO:
+//    @Override
+//    public int getType() {
+//        return world.isRemote ? TileDestructor.TYPE.getValue() : type;
+//    }
 
     @Override
     public boolean canConduct(@Nullable EnumFacing direction) {
@@ -362,5 +287,11 @@ public class NetworkNodeDestructor extends NetworkNode implements IComparable, I
     @Override
     public ItemHandlerUpgrade getUpgradeHandler() {
         return this.upgrades;
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }

@@ -3,7 +3,6 @@ package com.raoulvdberge.refinedstorage.container;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilterFluid;
 import com.raoulvdberge.refinedstorage.tile.TileDiskDrive;
-import com.raoulvdberge.refinedstorage.tile.config.IType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.items.SlotItemHandler;
 
@@ -19,16 +18,16 @@ public class ContainerDiskDrive extends ContainerBase {
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(diskDrive.getNode().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getType() == IType.ITEMS));
+            addSlotToContainer(new SlotFilter(diskDrive.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(diskDrive.getNode().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getType() == IType.FLUIDS));
+            addSlotToContainer(new SlotFilterFluid(diskDrive.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeItem()));
         }
 
         addPlayerInventory(8, 141);
 
         transferManager.addBiTransfer(player.inventory, diskDrive.getNode().getDisks());
-        transferManager.addFilterTransfer(player.inventory, diskDrive.getNode().getItemFilters(), diskDrive.getNode().getFluidFilters(), diskDrive.getNode()::getType);
+        transferManager.addFilterTransfer(player.inventory, diskDrive.getNode().getConfig().getItemFilters(), diskDrive.getNode().getConfig().getFluidFilters(), diskDrive.getNode().getConfig()::getFilterType);
     }
 }

@@ -15,13 +15,11 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
 import com.raoulvdberge.refinedstorage.block.BlockFluidStorage;
 import com.raoulvdberge.refinedstorage.block.enums.FluidStorageType;
-import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventory;
-import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.tile.TileFluidStorage;
 import com.raoulvdberge.refinedstorage.tile.config.IAccessType;
-import com.raoulvdberge.refinedstorage.tile.config.IComparable;
-import com.raoulvdberge.refinedstorage.tile.config.IFilterable;
 import com.raoulvdberge.refinedstorage.tile.config.IPrioritizable;
+import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
 import net.minecraft.block.state.IBlockState;
@@ -31,26 +29,26 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
-public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage, IStorageProvider, IComparable, IFilterable, IPrioritizable, IAccessType, IStorageDiskContainerContext {
+public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage, IStorageProvider, IRSTileConfigurationProvider, IPrioritizable, IAccessType, IStorageDiskContainerContext {
     public static final String ID = "fluid_storage";
 
     private static final String NBT_PRIORITY = "Priority";
-    private static final String NBT_COMPARE = "Compare";
-    private static final String NBT_MODE = "Mode";
-    private static final String NBT_FILTERS = "Filters";
     public static final String NBT_ID = "Id";
-
-    private final FluidInventory filters = new FluidInventory(9, new ListenerNetworkNode(this));
 
     private FluidStorageType type;
 
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int priority = 0;
-    private int compare = IComparer.COMPARE_NBT;
-    private int mode = IFilterable.BLACKLIST;
+    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+            .allowedFilterTypeFluids()
+            .allowedFilterModeBlackAndWhitelist()
+            .filterModeBlacklist()
+            .filterSizeNine()
+            .setInitialCompare(IComparer.COMPARE_NBT).build();
 
     private UUID storageId = UUID.randomUUID();
     private IStorageDisk<FluidStack> storage;
@@ -140,10 +138,7 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         super.writeConfiguration(tag);
 
-        tag.setTag(NBT_FILTERS, filters.writeToNbt());
         tag.setInteger(NBT_PRIORITY, priority);
-        tag.setInteger(NBT_COMPARE, compare);
-        tag.setInteger(NBT_MODE, mode);
 
         AccessTypeUtils.writeAccessType(tag, accessType);
 
@@ -154,20 +149,8 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
     public void readConfiguration(NBTTagCompound tag) {
         super.readConfiguration(tag);
 
-        if (tag.hasKey(NBT_FILTERS)) {
-            filters.readFromNbt(tag.getCompoundTag(NBT_FILTERS));
-        }
-
         if (tag.hasKey(NBT_PRIORITY)) {
             priority = tag.getInteger(NBT_PRIORITY);
-        }
-
-        if (tag.hasKey(NBT_COMPARE)) {
-            compare = tag.getInteger(NBT_COMPARE);
-        }
-
-        if (tag.hasKey(NBT_MODE)) {
-            mode = tag.getInteger(NBT_MODE);
         }
 
         accessType = AccessTypeUtils.readAccessType(tag);
@@ -182,34 +165,6 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
         }
 
         return type == null ? FluidStorageType.TYPE_64K : type;
-    }
-
-    @Override
-    public int getCompare() {
-        return compare;
-    }
-
-    @Override
-    public void setCompare(int compare) {
-        this.compare = compare;
-
-        markNetworkNodeDirty();
-    }
-
-    @Override
-    public int getMode() {
-        return mode;
-    }
-
-    @Override
-    public void setMode(int mode) {
-        this.mode = mode;
-
-        markNetworkNodeDirty();
-    }
-
-    public FluidInventory getFilters() {
-        return filters;
     }
 
     @Override
@@ -287,5 +242,11 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
         if (network != null) {
             network.getFluidStorageCache().sort();
         }
+    }
+
+    @Nonnull
+    @Override
+    public RSTileConfiguration getConfig() {
+        return this.config;
     }
 }
