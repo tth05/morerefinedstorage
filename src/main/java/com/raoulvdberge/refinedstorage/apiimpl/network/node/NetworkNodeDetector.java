@@ -4,8 +4,8 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.RSBlocks;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
@@ -16,7 +16,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 
-public class NetworkNodeDetector extends NetworkNode implements IRSTileConfigurationProvider {
+public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigProvider {
     public static final String ID = "detector";
 
     private static final int SPEED = 5;
@@ -28,7 +28,7 @@ public class NetworkNodeDetector extends NetworkNode implements IRSTileConfigura
     private static final String NBT_MODE = "Mode";
     private static final String NBT_AMOUNT = "Amount";
 
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeWhitelist()
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
@@ -177,7 +177,7 @@ public class NetworkNodeDetector extends NetworkNode implements IRSTileConfigura
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

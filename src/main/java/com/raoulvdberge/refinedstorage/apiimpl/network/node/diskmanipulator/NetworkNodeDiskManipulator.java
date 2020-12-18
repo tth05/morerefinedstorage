@@ -14,9 +14,9 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerProxy;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class NetworkNodeDiskManipulator extends NetworkNode implements IRSTileConfigurationProvider, IStorageDiskContainerContext, IUpgradeContainer {
+public class NetworkNodeDiskManipulator extends NetworkNode implements IRSFilterConfigProvider, IStorageDiskContainerContext, IUpgradeContainer {
     public static final String ID = "disk_manipulator";
 
     public static final int IO_MODE_INSERT = 0;
@@ -42,7 +42,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSTileCo
 
     private static final String NBT_IO_MODE = "IOMode";
 
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeBlackAndWhitelist()
             .filterModeBlacklist()
             .allowedFilterTypeItemsAndFluids()
@@ -478,7 +478,7 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSTileCo
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

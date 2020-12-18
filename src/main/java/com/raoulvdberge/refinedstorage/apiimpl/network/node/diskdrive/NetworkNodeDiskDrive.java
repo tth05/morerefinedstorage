@@ -17,8 +17,8 @@ import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.tile.TileDiskDrive;
 import com.raoulvdberge.refinedstorage.tile.config.IAccessType;
 import com.raoulvdberge.refinedstorage.tile.config.IPrioritizable;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -36,7 +36,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IStorageProvider, IRSTileConfigurationProvider, IPrioritizable, IAccessType, IStorageDiskContainerContext {
+public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IStorageProvider, IRSFilterConfigProvider, IPrioritizable, IAccessType, IStorageDiskContainerContext {
     public static final Predicate<ItemStack> VALIDATOR_STORAGE_DISK = s -> s.getItem() instanceof IStorageDiskProvider && ((IStorageDiskProvider) s.getItem()).isValid(s);
 
     public static final String ID = "disk_drive";
@@ -79,7 +79,7 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
 
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int priority = 0;
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeBlackAndWhitelist()
             .filterModeBlacklist()
             .allowedFilterTypeItemsAndFluids()
@@ -300,7 +300,7 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

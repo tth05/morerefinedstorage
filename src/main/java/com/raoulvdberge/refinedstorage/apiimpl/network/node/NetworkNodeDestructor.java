@@ -7,9 +7,11 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.TileDestructor;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
@@ -52,7 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class NetworkNodeDestructor extends NetworkNode implements IRSTileConfigurationProvider, ICoverable, IUpgradeContainer {
+public class NetworkNodeDestructor extends NetworkNode implements IRSFilterConfigProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "destructor";
 
     private static final String NBT_PICKUP = "Pickup";
@@ -61,13 +63,14 @@ public class NetworkNodeDestructor extends NetworkNode implements IRSTileConfigu
     private static final int BASE_SPEED = 20;
 
     private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_SILK_TOUCH, ItemUpgrade.TYPE_FORTUNE_1, ItemUpgrade.TYPE_FORTUNE_2, ItemUpgrade.TYPE_FORTUNE_3);
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .allowedFilterModeBlackAndWhitelist()
             .filterModeBlacklist()
             .filterSizeNine()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier(ft -> world.isRemote ? FilterType.values()[TileDestructor.TYPE.getValue()] : ft).build();
     private boolean pickupItem = false;
 
     private final CoverManager coverManager = new CoverManager(this);
@@ -260,12 +263,6 @@ public class NetworkNodeDestructor extends NetworkNode implements IRSTileConfigu
         return new CombinedInvWrapper(upgrades, coverManager.getAsInventory());
     }
 
-    //TODO:
-//    @Override
-//    public int getType() {
-//        return world.isRemote ? TileDestructor.TYPE.getValue() : type;
-//    }
-
     @Override
     public boolean canConduct(@Nullable EnumFacing direction) {
         return coverManager.canConduct(direction);
@@ -291,7 +288,7 @@ public class NetworkNodeDestructor extends NetworkNode implements IRSTileConfigu
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

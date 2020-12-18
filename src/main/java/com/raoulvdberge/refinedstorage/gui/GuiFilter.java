@@ -7,7 +7,7 @@ import com.raoulvdberge.refinedstorage.container.ContainerFilter;
 import com.raoulvdberge.refinedstorage.gui.control.SideButtonFilterType;
 import com.raoulvdberge.refinedstorage.item.ItemFilter;
 import com.raoulvdberge.refinedstorage.network.MessageFilterUpdate;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.item.ItemStack;
@@ -23,7 +23,7 @@ public class GuiFilter extends GuiBase {
     private int mode;
     private boolean modFilter;
     private final String name;
-    private RSTileConfiguration.FilterType type;
+    private FilterType type;
 
     private GuiCheckBox compareDamage;
     private GuiCheckBox compareNbt;
@@ -47,7 +47,7 @@ public class GuiFilter extends GuiBase {
     public void init(int x, int y) {
         compareNbt = addCheckBox(x + 7, y + 77, t("gui.refinedstorage:filter.compare_nbt"), (compare & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT);
         compareDamage = addCheckBox(x + 7 + compareNbt.getButtonWidth() + 4, y + 77, t("gui.refinedstorage:filter.compare_damage"), (compare & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE);
-        compareDamage.visible = type == RSTileConfiguration.FilterType.ITEMS;
+        compareDamage.visible = type == FilterType.ITEMS;
 
         toggleModFilter = addCheckBox(0, y + 71 + 25, t("gui.refinedstorage:filter.mod_filter"), modFilter);
         toggleMode = addButton(x + 7, y + 71 + 21, 0, 20, "");
@@ -128,16 +128,16 @@ public class GuiFilter extends GuiBase {
         sendUpdate();
     }
 
-    public RSTileConfiguration.FilterType getType() {
+    public FilterType getType() {
         return type;
     }
 
-    public void setType(RSTileConfiguration.FilterType type) {
+    public void setType(FilterType type) {
         this.type = type;
 
         ItemFilter.setType(stack, type);
 
-        compareDamage.visible = type == RSTileConfiguration.FilterType.ITEMS;
+        compareDamage.visible = type == FilterType.ITEMS;
     }
 
     public void sendUpdate() {

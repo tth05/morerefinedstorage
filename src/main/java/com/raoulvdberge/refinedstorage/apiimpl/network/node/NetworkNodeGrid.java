@@ -20,7 +20,7 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerFilter;
 import com.raoulvdberge.refinedstorage.inventory.item.validator.ItemValidatorBasic;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemPattern;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataManager;
 import com.raoulvdberge.refinedstorage.tile.grid.TileGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -161,7 +161,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware {
 
     private boolean oredictPattern = false;
     private boolean processingPattern = false;
-    private RSTileConfiguration.FilterType processingType = RSTileConfiguration.FilterType.ITEMS;
+    private FilterType processingType = FilterType.ITEMS;
 
     public NetworkNodeGrid(World world, BlockPos pos) {
         super(world, pos);
@@ -255,7 +255,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware {
         }
 
         if (tag.hasKey(NBT_PROCESSING_TYPE)) {
-            processingType = RSTileConfiguration.FilterType.values()[tag.getInteger(NBT_PROCESSING_TYPE)];
+            processingType = FilterType.values()[tag.getInteger(NBT_PROCESSING_TYPE)];
         }
     }
 
@@ -633,8 +633,8 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware {
         return (int) Math.floor((float) Math.max(0, tabs.size() - 1) / (float) IGrid.TABS_PER_PAGE);
     }
 
-    public RSTileConfiguration.FilterType getType() {
-        return world.isRemote ? RSTileConfiguration.FilterType.values()[TileGrid.PROCESSING_TYPE.getValue()] : processingType;
+    public FilterType getType() {
+        return world.isRemote ? FilterType.values()[TileGrid.PROCESSING_TYPE.getValue()] : processingType;
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.raoulvdberge.refinedstorage.gui.control;
 
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.GuiFilter;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import net.minecraft.util.text.TextFormatting;
 
 public class SideButtonFilterType extends SideButton {
@@ -26,7 +26,7 @@ public class SideButtonFilterType extends SideButton {
 
     @Override
     public void actionPerformed() {
-        gui.setType(gui.getType() == RSTileConfiguration.FilterType.ITEMS ? RSTileConfiguration.FilterType.FLUIDS : RSTileConfiguration.FilterType.ITEMS);
+        gui.setType(gui.getType() == FilterType.ITEMS ? FilterType.FLUIDS : FilterType.ITEMS);
         gui.sendUpdate();
     }
 }

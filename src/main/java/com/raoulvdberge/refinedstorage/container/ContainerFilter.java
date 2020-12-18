@@ -8,7 +8,7 @@ import com.raoulvdberge.refinedstorage.inventory.fluid.FluidInventoryFilterIcon;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerFilterIcon;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerFilterItems;
 import com.raoulvdberge.refinedstorage.item.ItemFilter;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -29,8 +29,8 @@ public class ContainerFilter extends ContainerBase {
         FluidInventory fluidFilter = new FluidInventoryFilter(stack);
 
         for (int i = 0; i < 27; ++i) {
-            addSlotToContainer(new SlotFilter(filter, i, x, y).setEnableHandler(() -> ItemFilter.getType(stack) == RSTileConfiguration.FilterType.ITEMS));
-            addSlotToContainer(new SlotFilterFluid(fluidFilter, i, x, y).setEnableHandler(() -> ItemFilter.getType(stack) == RSTileConfiguration.FilterType.FLUIDS));
+            addSlotToContainer(new SlotFilter(filter, i, x, y).setEnableHandler(() -> ItemFilter.getType(stack) == FilterType.ITEMS));
+            addSlotToContainer(new SlotFilterFluid(fluidFilter, i, x, y).setEnableHandler(() -> ItemFilter.getType(stack) == FilterType.FLUIDS));
 
             if ((i + 1) % 9 == 0) {
                 x = 8;
@@ -40,8 +40,8 @@ public class ContainerFilter extends ContainerBase {
             }
         }
 
-        addSlotToContainer(new SlotFilter(new ItemHandlerFilterIcon(stack), 0, 8, 117).setEnableHandler(() -> ItemFilter.getType(stack) == RSTileConfiguration.FilterType.ITEMS));
-        addSlotToContainer(new SlotFilterFluid(fluidIcon, 0, 8, 117).setEnableHandler(() -> ItemFilter.getType(stack) == RSTileConfiguration.FilterType.FLUIDS));
+        addSlotToContainer(new SlotFilter(new ItemHandlerFilterIcon(stack), 0, 8, 117).setEnableHandler(() -> ItemFilter.getType(stack) == FilterType.ITEMS));
+        addSlotToContainer(new SlotFilterFluid(fluidIcon, 0, 8, 117).setEnableHandler(() -> ItemFilter.getType(stack) == FilterType.FLUIDS));
 
         addPlayerInventory(8, 149);
 

@@ -7,9 +7,11 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.TileDiskDrive;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.TileImporter;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
@@ -28,19 +30,20 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class NetworkNodeImporter extends NetworkNode implements IRSTileConfigurationProvider, ICoverable, IUpgradeContainer {
+public class NetworkNodeImporter extends NetworkNode implements IRSFilterConfigProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "importer";
 
     private static final String NBT_COVERS = "Covers";
 
     private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK);
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeBlackAndWhitelist()
             .filterModeBlacklist()
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .filterSizeNine()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier((ft) -> world.isRemote ? FilterType.values()[TileImporter.TYPE.getValue()] : ft).build();
 
     private final CoverManager coverManager = new CoverManager(this);
 
@@ -169,12 +172,6 @@ public class NetworkNodeImporter extends NetworkNode implements IRSTileConfigura
         return coverManager.canConduct(direction);
     }
 
-    //TODO:
-//    @Override
-//    public int getType() {
-//        return world.isRemote ? TileImporter.TYPE.getValue() : type;
-//    }
-
     @Override
     public CoverManager getCoverManager() {
         return coverManager;
@@ -187,7 +184,7 @@ public class NetworkNodeImporter extends NetworkNode implements IRSTileConfigura
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

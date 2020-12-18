@@ -2,7 +2,7 @@ package com.raoulvdberge.refinedstorage.network;
 
 import com.raoulvdberge.refinedstorage.container.ContainerFilter;
 import com.raoulvdberge.refinedstorage.item.ItemFilter;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -13,12 +13,12 @@ public class MessageFilterUpdate extends MessageHandlerPlayerToServer<MessageFil
     private int mode;
     private boolean modFilter;
     private String name;
-    private RSTileConfiguration.FilterType type;
+    private FilterType type;
 
     public MessageFilterUpdate() {
     }
 
-    public MessageFilterUpdate(int compare, int mode, boolean modFilter, String name, RSTileConfiguration.FilterType type) {
+    public MessageFilterUpdate(int compare, int mode, boolean modFilter, String name, FilterType type) {
         this.compare = compare;
         this.mode = mode;
         this.modFilter = modFilter;
@@ -32,7 +32,7 @@ public class MessageFilterUpdate extends MessageHandlerPlayerToServer<MessageFil
         mode = buf.readInt();
         modFilter = buf.readBoolean();
         name = ByteBufUtils.readUTF8String(buf);
-        type = RSTileConfiguration.FilterType.values()[buf.readInt()];
+        type = FilterType.values()[buf.readInt()];
     }
 
     @Override

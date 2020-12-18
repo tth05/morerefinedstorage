@@ -4,8 +4,8 @@ import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
@@ -23,28 +23,19 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NetworkNodeStorageMonitor extends NetworkNode implements IRSTileConfigurationProvider {
+public class NetworkNodeStorageMonitor extends NetworkNode implements IRSFilterConfigProvider {
     public static final int DEPOSIT_ALL_MAX_DELAY = 500;
 
     public static final String ID = "storage_monitor";
 
-    //TODO: updateBlock
-//    private final ItemHandlerBase itemFilter = new ItemHandlerBase(1, new ListenerNetworkNode(this)) {
-//        @Override
-//        public void onContentsChanged(int slot) {
-//            super.onContentsChanged(slot);
-//
-//            WorldUtils.updateBlock(world, pos);
-//        }
-//    };
-
     private final Map<String, Pair<ItemStack, Long>> deposits = new HashMap<>();
 
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeWhitelist()
             .allowedFilterTypeItems()
             .filterSizeOne()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .onItemFilterChanged((slot) -> WorldUtils.updateBlock(world, pos)).build();
 
     private long oldAmount = -1;
 
@@ -189,7 +180,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IRSTileCon
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

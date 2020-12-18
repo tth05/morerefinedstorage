@@ -13,8 +13,8 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.TileFluidInterface;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -169,7 +169,7 @@ public class NetworkNodeFluidInterface extends NetworkNode implements IUpgradeCo
             if (facingNode instanceof NetworkNodeExternalStorage &&
                 facingNode.canUpdate() &&
                 ((NetworkNodeExternalStorage) facingNode).getDirection() == facing.getOpposite() &&
-                ((NetworkNodeExternalStorage) facingNode).getConfig().getFilterType() == RSTileConfiguration.FilterType.ITEMS) {
+                ((NetworkNodeExternalStorage) facingNode).getConfig().getFilterType() == FilterType.ITEMS) {
                 return true;
             }
         }

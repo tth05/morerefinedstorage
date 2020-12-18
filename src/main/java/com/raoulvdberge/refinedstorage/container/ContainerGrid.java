@@ -17,7 +17,7 @@ import com.raoulvdberge.refinedstorage.container.slot.legacy.SlotLegacyDisabled;
 import com.raoulvdberge.refinedstorage.container.slot.legacy.SlotLegacyFilter;
 import com.raoulvdberge.refinedstorage.gui.IResizableDisplay;
 import com.raoulvdberge.refinedstorage.tile.TileBase;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -176,11 +176,11 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             addSlotToContainer(new SlotFilter(((NetworkNodeGrid) grid).getProcessingMatrix(), i, x, y,
                     SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(
                     () -> ((NetworkNodeGrid) grid).isProcessingPattern() &&
-                            ((NetworkNodeGrid) grid).getType() == RSTileConfiguration.FilterType.ITEMS));
+                            ((NetworkNodeGrid) grid).getType() == FilterType.ITEMS));
             addSlotToContainer(new SlotFilterFluid(((NetworkNodeGrid) grid).getProcessingMatrixFluids(), i, x, y,
                     SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(
                     () -> ((NetworkNodeGrid) grid).isProcessingPattern() &&
-                            ((NetworkNodeGrid) grid).getType() == RSTileConfiguration.FilterType.FLUIDS));
+                            ((NetworkNodeGrid) grid).getType() == FilterType.FLUIDS));
 
             x += 18;
 

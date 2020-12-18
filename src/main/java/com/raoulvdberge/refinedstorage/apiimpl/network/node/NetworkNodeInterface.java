@@ -10,9 +10,9 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerProxy;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -24,7 +24,7 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
 import javax.annotation.Nonnull;
 
-public class NetworkNodeInterface extends NetworkNode implements IRSTileConfigurationProvider, IUpgradeContainer {
+public class NetworkNodeInterface extends NetworkNode implements IRSFilterConfigProvider, IUpgradeContainer {
     public static final String ID = "interface";
 
     private final ItemHandlerBase importItems = new ItemHandlerBase(9, new ListenerNetworkNode(this));
@@ -37,7 +37,7 @@ public class NetworkNodeInterface extends NetworkNode implements IRSTileConfigur
             new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_STACK,
                     ItemUpgrade.TYPE_CRAFTING);
 
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterTypeItems()
             .allowedFilterModeWhitelist()
             .filterSizeNine()
@@ -229,7 +229,7 @@ public class NetworkNodeInterface extends NetworkNode implements IRSTileConfigur
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

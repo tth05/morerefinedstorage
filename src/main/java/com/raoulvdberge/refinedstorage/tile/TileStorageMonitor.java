@@ -1,7 +1,7 @@
 package com.raoulvdberge.refinedstorage.tile;
 
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeStorageMonitor;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 
 public class TileStorageMonitor extends TileNode<NetworkNodeStorageMonitor> {
-    public static final TileDataParameter<Integer, TileStorageMonitor> COMPARE = RSTileConfiguration.createCompareParameter();
+    public static final TileDataParameter<Integer, TileStorageMonitor> COMPARE = FilterConfig.createCompareParameter();
 
     private static final String NBT_STACK = "Stack";
     private static final String NBT_AMOUNT = "Amount";

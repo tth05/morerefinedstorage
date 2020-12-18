@@ -9,9 +9,9 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
@@ -30,15 +30,12 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class NetworkNodeExporter extends NetworkNode implements IRSTileConfigurationProvider, ICoverable, IUpgradeContainer {
+public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "exporter";
 
-    private static final String NBT_COMPARE = "Compare";
-    private static final String NBT_TYPE = "Type";
     private static final String NBT_COVERS = "Covers";
-    private static final String NBT_FLUID_FILTERS = "FluidFilters";
 
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeWhitelist()
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
@@ -294,12 +291,6 @@ public class NetworkNodeExporter extends NetworkNode implements IRSTileConfigura
         return new CombinedInvWrapper(upgrades, coverManager.getAsInventory());
     }
 
-    //TODO:
-//    @Override
-//    public int getType() {
-//        return world.isRemote ? TileExporter.TYPE.getValue() : type;
-//    }
-
     @Override
     public boolean canConduct(@Nullable EnumFacing direction) {
         return coverManager.canConduct(direction);
@@ -317,7 +308,7 @@ public class NetworkNodeExporter extends NetworkNode implements IRSTileConfigura
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

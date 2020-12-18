@@ -14,10 +14,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheFluid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
 import com.raoulvdberge.refinedstorage.tile.TileExternalStorage;
-import com.raoulvdberge.refinedstorage.tile.config.IAccessType;
-import com.raoulvdberge.refinedstorage.tile.config.IPrioritizable;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.*;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
 import net.minecraft.item.ItemStack;
@@ -35,20 +32,25 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class NetworkNodeExternalStorage extends NetworkNode implements IStorageProvider, IGuiStorage, IPrioritizable, IRSTileConfigurationProvider, IAccessType, IExternalStorageContext, ICoverable {
+public class NetworkNodeExternalStorage extends NetworkNode implements IStorageProvider, IGuiStorage, IPrioritizable, IRSFilterConfigProvider, IAccessType, IExternalStorageContext, ICoverable {
     public static final String ID = "external_storage";
 
     private static final String NBT_PRIORITY = "Priority";
     private static final String NBT_COVERS = "Covers";
 
     private int priority = 0;
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeBlackAndWhitelist()
             .filterModeBlacklist()
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .filterSizeNine()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier(ft -> world.isRemote ? FilterType.values()[TileExternalStorage.TYPE.getValue()] : ft)
+            .onFilterTypeChanged(ft -> {
+                if (network != null)
+                    updateStorage(network);
+            }).build();
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int networkTicks;
 
@@ -281,23 +283,6 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
         return TileExternalStorage.TYPE;
     }
 
-    //TODO:
-//    @Override
-//    public int getType() {
-//        return world.isRemote ? TileExternalStorage.TYPE.getValue() : type;
-//    }
-//
-//    @Override
-//    public void setType(int type) {
-//        this.type = type;
-//
-//        markNetworkNodeDirty();
-//
-//        if (network != null) {
-//            updateStorage(network);
-//        }
-//    }
-
     public List<IStorageExternal<ItemStack>> getItemStorages() {
         return itemStorages;
     }
@@ -324,7 +309,7 @@ public class NetworkNodeExternalStorage extends NetworkNode implements IStorageP
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

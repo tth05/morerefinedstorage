@@ -9,9 +9,11 @@ import com.raoulvdberge.refinedstorage.container.slot.filter.SlotFilter;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.TileConstructor;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSkull;
@@ -50,7 +52,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-public class NetworkNodeConstructor extends NetworkNode implements IRSTileConfigurationProvider, ICoverable, IUpgradeContainer {
+public class NetworkNodeConstructor extends NetworkNode implements IRSFilterConfigProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "constructor";
 
     private static final String NBT_DROP = "Drop";
@@ -59,13 +61,14 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSTileConfig
     private static final int BASE_SPEED = 20;
 
     private final ItemHandlerUpgrade upgrades = new ItemHandlerUpgrade(4, new ListenerNetworkNode(this), ItemUpgrade.TYPE_SPEED, ItemUpgrade.TYPE_CRAFTING, ItemUpgrade.TYPE_STACK);
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .allowedFilterModeWhitelist()
             .filterModeWhitelist()
             .filterSizeOne()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier(ft -> world.isRemote ? FilterType.values()[TileConstructor.TYPE.getValue()] : ft).build();
 
     private boolean drop = false;
 
@@ -347,12 +350,6 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSTileConfig
         return true;
     }
 
-    //TODO
-//    @Override
-//    public int getType() {
-//        return world.isRemote ? TileConstructor.TYPE.getValue() : type;
-//    }
-
     @Override
     public CoverManager getCoverManager() {
         return coverManager;
@@ -365,7 +362,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSTileConfig
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }

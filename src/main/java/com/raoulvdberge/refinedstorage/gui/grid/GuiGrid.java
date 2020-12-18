@@ -19,7 +19,7 @@ import com.raoulvdberge.refinedstorage.gui.grid.stack.IGridStack;
 import com.raoulvdberge.refinedstorage.gui.grid.view.GridViewImpl;
 import com.raoulvdberge.refinedstorage.gui.grid.view.IGridView;
 import com.raoulvdberge.refinedstorage.network.*;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataManager;
 import com.raoulvdberge.refinedstorage.tile.grid.TileGrid;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.IPortableGrid;
@@ -132,7 +132,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                     t("misc.refinedstorage:processing"), TileGrid.PROCESSING_PATTERN.getValue());
 
             boolean showOredict = true;
-            if (((NetworkNodeGrid) grid).isProcessingPattern() && ((NetworkNodeGrid) grid).getType() == RSTileConfiguration.FilterType.FLUIDS) {
+            if (((NetworkNodeGrid) grid).isProcessingPattern() && ((NetworkNodeGrid) grid).getType() == FilterType.FLUIDS) {
                 showOredict = false;
             }
 

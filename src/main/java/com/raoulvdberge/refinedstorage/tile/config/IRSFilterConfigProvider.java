@@ -2,8 +2,8 @@ package com.raoulvdberge.refinedstorage.tile.config;
 
 import javax.annotation.Nonnull;
 
-public interface IRSTileConfigurationProvider {
+public interface IRSFilterConfigProvider {
 
     @Nonnull
-    RSTileConfiguration getConfig();
+    FilterConfig getConfig();
 }

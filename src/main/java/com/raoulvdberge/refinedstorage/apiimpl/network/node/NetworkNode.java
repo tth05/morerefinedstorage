@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.network.INetworkNodeVisitor;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.block.state.IBlockState;
@@ -207,6 +208,10 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
 
     public void readConfiguration(NBTTagCompound tag) {
         redstoneMode = RedstoneMode.read(tag);
+
+        if(this instanceof IRSFilterConfigProvider) {
+            ((IRSFilterConfigProvider) this).getConfig().readFromNBT(tag);
+        }
     }
 
     @Nullable

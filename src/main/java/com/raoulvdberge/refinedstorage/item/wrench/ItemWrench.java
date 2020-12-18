@@ -14,9 +14,9 @@ import com.raoulvdberge.refinedstorage.render.IModelRegistration;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTraceResult;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTracer;
 import com.raoulvdberge.refinedstorage.tile.TileNode;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -122,8 +122,8 @@ public class ItemWrench extends ItemBase {
                 if (node instanceof IUpgradeContainer) {
                     configTag.setTag("upgrades", IUpgradeContainer.writeToNBT((IUpgradeContainer) node, new NBTTagCompound()));
                 }
-                if(node instanceof IRSTileConfigurationProvider) {
-                    ((IRSTileConfigurationProvider) node).getConfig().writeToNBT(configTag);
+                if(node instanceof IRSFilterConfigProvider) {
+                    ((IRSFilterConfigProvider) node).getConfig().writeToNBT(configTag);
                 }
 
                 player.getHeldItemMainhand().getTagCompound().setTag("config", configTag);
@@ -140,8 +140,8 @@ public class ItemWrench extends ItemBase {
                     );
                 }
 
-                if(node instanceof IRSTileConfigurationProvider) {
-                    RSTileConfiguration config = ((IRSTileConfigurationProvider) node).getConfig();
+                if(node instanceof IRSFilterConfigProvider) {
+                    FilterConfig config = ((IRSFilterConfigProvider) node).getConfig();
                     //type
                     if (config.usesFilterType() && configTag.hasKey("type")) {
                         args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.type"));

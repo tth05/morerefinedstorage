@@ -17,8 +17,8 @@ import com.raoulvdberge.refinedstorage.block.enums.ItemStorageType;
 import com.raoulvdberge.refinedstorage.tile.TileStorage;
 import com.raoulvdberge.refinedstorage.tile.config.IAccessType;
 import com.raoulvdberge.refinedstorage.tile.config.IPrioritizable;
-import com.raoulvdberge.refinedstorage.tile.config.IRSTileConfigurationProvider;
-import com.raoulvdberge.refinedstorage.tile.config.RSTileConfiguration;
+import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
 import net.minecraft.block.state.IBlockState;
@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
-public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, IStorageProvider, IRSTileConfigurationProvider, IPrioritizable, IAccessType, IStorageDiskContainerContext {
+public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, IStorageProvider, IRSFilterConfigProvider, IPrioritizable, IAccessType, IStorageDiskContainerContext {
     public static final String ID = "storage";
 
     private static final String NBT_PRIORITY = "Priority";
@@ -42,7 +42,7 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
 
     private AccessType accessType = AccessType.INSERT_EXTRACT;
     private int priority = 0;
-    private final RSTileConfiguration config = new RSTileConfiguration.Builder(this)
+    private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterTypeItems()
             .allowedFilterModeBlackAndWhitelist()
             .filterModeBlacklist()
@@ -248,7 +248,7 @@ public class NetworkNodeStorage extends NetworkNode implements IGuiStorage, ISto
 
     @Nonnull
     @Override
-    public RSTileConfiguration getConfig() {
+    public FilterConfig getConfig() {
         return this.config;
     }
 }
