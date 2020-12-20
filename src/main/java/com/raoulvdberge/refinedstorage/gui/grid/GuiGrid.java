@@ -132,7 +132,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                     t("misc.refinedstorage:processing"), TileGrid.PROCESSING_PATTERN.getValue());
 
             boolean showOredict = true;
-            if (((NetworkNodeGrid) grid).isProcessingPattern() && ((NetworkNodeGrid) grid).getType() == FilterType.FLUIDS) {
+            if (((NetworkNodeGrid) grid).isProcessingPattern() && ((NetworkNodeGrid) grid).getProcessingType() == FilterType.FLUIDS) {
                 showOredict = false;
             }
 

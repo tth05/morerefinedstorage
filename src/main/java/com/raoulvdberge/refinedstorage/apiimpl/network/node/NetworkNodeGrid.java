@@ -452,6 +452,12 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware {
         // NO OP
     }
 
+    public void setProcessingType(FilterType processingType) {
+        this.processingType = processingType;
+
+        this.markNetworkNodeDirty();
+    }
+
     public void setViewType(int viewType) {
         this.viewType = viewType;
     }
@@ -633,7 +639,7 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware {
         return (int) Math.floor((float) Math.max(0, tabs.size() - 1) / (float) IGrid.TABS_PER_PAGE);
     }
 
-    public FilterType getType() {
+    public FilterType getProcessingType() {
         return world.isRemote ? FilterType.values()[TileGrid.PROCESSING_TYPE.getValue()] : processingType;
     }
 

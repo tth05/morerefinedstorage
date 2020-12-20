@@ -176,11 +176,11 @@ public class ContainerGrid extends ContainerBase implements IGridCraftingListene
             addSlotToContainer(new SlotFilter(((NetworkNodeGrid) grid).getProcessingMatrix(), i, x, y,
                     SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(
                     () -> ((NetworkNodeGrid) grid).isProcessingPattern() &&
-                            ((NetworkNodeGrid) grid).getType() == FilterType.ITEMS));
+                            ((NetworkNodeGrid) grid).getProcessingType() == FilterType.ITEMS));
             addSlotToContainer(new SlotFilterFluid(((NetworkNodeGrid) grid).getProcessingMatrixFluids(), i, x, y,
                     SlotFilter.FILTER_ALLOW_SIZE).setEnableHandler(
                     () -> ((NetworkNodeGrid) grid).isProcessingPattern() &&
-                            ((NetworkNodeGrid) grid).getType() == FilterType.FLUIDS));
+                            ((NetworkNodeGrid) grid).getProcessingType() == FilterType.FLUIDS));
 
             x += 18;
 
