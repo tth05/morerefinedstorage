@@ -128,6 +128,10 @@ public class RSConfig {
     public int calculationTimeoutMs;
     //endregion
 
+    //region Misc
+    public boolean cacheFacingTile;
+    //endregion
+
     //region Categories
     private static final String ENERGY = "energy";
     private static final String CONTROLLER = "controller";
@@ -142,6 +146,7 @@ public class RSConfig {
     private static final String READER_WRITER = "readerWriter";
     private static final String COVERS = "covers";
     private static final String AUTOCRAFTING = "autocrafting";
+    private static final String MISC = "misc";
     //endregion
 
     public RSConfig(@Nullable RSConfig originalClientVersion, File configFile) {
@@ -185,9 +190,9 @@ public class RSConfig {
         crafterManagerUsage = config.getInt("crafterManager", ENERGY, 4, 0, Integer.MAX_VALUE, "The energy used by Crafter Managers");
         destructorUsage = config.getInt("destructor", ENERGY, 1, 0, Integer.MAX_VALUE, "The energy used by Destructors");
         detectorUsage = config.getInt("detector", ENERGY, 2, 0, Integer.MAX_VALUE, "The energy used by Detectors");
-        diskDriveUsage = config.getInt("diskDrive", ENERGY, 0, 0, Integer.MAX_VALUE, "The base energy used by Disk Drives");
+        diskDriveUsage = config.getInt("diskDrive", ENERGY, 5, 0, Integer.MAX_VALUE, "The base energy used by Disk Drives");
         diskDrivePerDiskUsage = config.getInt("diskDrivePerDisk", ENERGY, 1, 0, Integer.MAX_VALUE, "The additional energy used by Storage Disks in Disk Drives");
-        externalStorageUsage = config.getInt("externalStorage", ENERGY, 0, 0, Integer.MAX_VALUE, "The base energy used by External Storages");
+        externalStorageUsage = config.getInt("externalStorage", ENERGY, 1, 0, Integer.MAX_VALUE, "The base energy used by External Storages");
         externalStoragePerStorageUsage = config.getInt("externalStoragePerStorage", ENERGY, 1, 0, Integer.MAX_VALUE, "The additional energy used per connected storage to an External Storage");
         exporterUsage = config.getInt("exporter", ENERGY, 1, 0, Integer.MAX_VALUE, "The energy used by Exporters");
         importerUsage = config.getInt("importer", ENERGY, 1, 0, Integer.MAX_VALUE, "The energy used by Importers");
@@ -202,7 +207,7 @@ public class RSConfig {
         patternGridUsage = config.getInt("patternGrid", ENERGY, 3, 0, Integer.MAX_VALUE, "The energy used by Pattern Grids");
         fluidGridUsage = config.getInt("fluidGrid", ENERGY, 2, 0, Integer.MAX_VALUE, "The energy used by Fluid Grids");
         networkTransmitterUsage = config.getInt("networkTransmitter", ENERGY, 64, 0, Integer.MAX_VALUE, "The energy used by Network Transmitters");
-        networkReceiverUsage = config.getInt("networkReceiver", ENERGY, 0, 0, Integer.MAX_VALUE, "The energy used by Network Receivers");
+        networkReceiverUsage = config.getInt("networkReceiver", ENERGY, 1, 0, Integer.MAX_VALUE, "The energy used by Network Receivers");
         diskManipulatorUsage = config.getInt("diskManipulator", ENERGY, 3, 0, Integer.MAX_VALUE, "The energy used by Disk Manipulators");
         securityManagerUsage = config.getInt("securityManager", ENERGY, 4, 0, Integer.MAX_VALUE, "The base energy used by Security Managers");
         securityManagerPerSecurityCardUsage = config.getInt("securityManagerPerSecurityCard", ENERGY, 10, 0, Integer.MAX_VALUE, "The additional energy used by Security Cards in Security Managers");
@@ -284,6 +289,10 @@ public class RSConfig {
 
         //region Autocrafting
         calculationTimeoutMs = config.getInt("calculationTimeoutMs", AUTOCRAFTING, 5000, 5000, Integer.MAX_VALUE, "The autocrafting calculation timeout in milliseconds, tasks taking longer than this to calculate (NOT execute) are cancelled to avoid server strain");
+        //endregion
+
+        //region Misc
+        cacheFacingTile = config.getBoolean("cacheFacingTile", MISC, false, "If true, the tile entity that RS blocks are facing at is cached. This will increase performance, but for example importers will take a moment before they recognize that a new tile entity is in front of them, in case the old one gets broken (it relies on GC cycles). Only recommended if performance is an issue.");
         //endregion
 
         if (config.hasChanged()) {
