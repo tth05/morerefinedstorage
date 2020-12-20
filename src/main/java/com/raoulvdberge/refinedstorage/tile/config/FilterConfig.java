@@ -358,8 +358,6 @@ public class FilterConfig {
      * Reads all data from the given {@link NBTTagCompound} and applies it to this configuration
      */
     public void readFromNBT(NBTTagCompound tag) {
-        tag = tag.getCompoundTag("config");
-
         String oldInventoryKey = "Inventory_" + (this.node instanceof NetworkNodeInterface ||
                 this.node instanceof NetworkNodeDiskManipulator ||
                 this.node instanceof NetworkNodeDiskDrive ? 1 : 0);
@@ -369,6 +367,11 @@ public class FilterConfig {
             readFromNBTOld(tag);
             return;
         }
+
+        if (!tag.hasKey("config"))
+            return;
+
+        tag = tag.getCompoundTag("config");
 
         //filter mode
         if (tag.hasKey("filterMode") && usesFilterMode()) {
@@ -405,7 +408,7 @@ public class FilterConfig {
     /**
      * Serializes this configuration into nbt data.
      *
-     * @param tag the tag to serialize this configuration to
+     * @param mainTag the tag to serialize this configuration to
      * @return the given {@code} tag parameter
      */
     public NBTTagCompound writeToNBT(NBTTagCompound mainTag) {

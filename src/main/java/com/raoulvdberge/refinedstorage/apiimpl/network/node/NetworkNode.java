@@ -189,6 +189,10 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
     public NBTTagCompound writeConfiguration(NBTTagCompound tag) {
         redstoneMode.write(tag);
 
+        if (this instanceof IRSFilterConfigProvider) {
+            ((IRSFilterConfigProvider) this).getConfig().writeToNBT(tag);
+        }
+
         return tag;
     }
 
