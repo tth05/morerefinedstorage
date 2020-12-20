@@ -1,5 +1,12 @@
 # More Refined Storage Changelog
 
+# 2.2.4
+- Requires RebornStorage update (see README.md)
+- Fixed "abstract method getWorld" crash
+- Various performance improvements for filtering, upgrade evaluation, reader-writer and looping through network nodes 
+- New copy and paste mode for wrench
+- New config option "cacheFacingTile" which can improve performance if a lot of directional interacting nodes are present
+
 # 2.2.3
 - Fixed broken EnderIO compat
 - Big performance improvements on big storage systems
