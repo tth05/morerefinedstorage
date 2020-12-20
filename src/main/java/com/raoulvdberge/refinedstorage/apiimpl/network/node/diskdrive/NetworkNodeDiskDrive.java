@@ -83,7 +83,7 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
             .allowedFilterModeBlackAndWhitelist()
             .filterModeBlacklist()
             .allowedFilterTypeItemsAndFluids()
-            .allowedFilterTypeItems()
+            .filterTypeItems()
             .filterSizeNine()
             .compareDamageAndNbt().build();
 
