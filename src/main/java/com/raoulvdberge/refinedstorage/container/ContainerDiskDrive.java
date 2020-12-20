@@ -22,7 +22,7 @@ public class ContainerDiskDrive extends ContainerBase {
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(diskDrive.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeItem()));
+            addSlotToContainer(new SlotFilterFluid(diskDrive.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeFluid()));
         }
 
         addPlayerInventory(8, 141);

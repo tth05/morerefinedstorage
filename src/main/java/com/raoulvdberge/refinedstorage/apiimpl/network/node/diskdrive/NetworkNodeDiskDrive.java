@@ -15,10 +15,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.StorageCacheItem;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.tile.TileDiskDrive;
-import com.raoulvdberge.refinedstorage.tile.config.IAccessType;
-import com.raoulvdberge.refinedstorage.tile.config.IPrioritizable;
-import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
-import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
+import com.raoulvdberge.refinedstorage.tile.config.*;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
 import com.raoulvdberge.refinedstorage.util.AccessTypeUtils;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -85,7 +82,8 @@ public class NetworkNodeDiskDrive extends NetworkNode implements IGuiStorage, IS
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .filterSizeNine()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier((ft) -> world.isRemote ? FilterType.values()[TileDiskDrive.TYPE.getValue()] : ft).build();
 
     public NetworkNodeDiskDrive(World world, BlockPos pos) {
         super(world, pos);

@@ -14,6 +14,8 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerProxy;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
+import com.raoulvdberge.refinedstorage.tile.TileDiskManipulator;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
@@ -48,7 +50,8 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSFilter
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .filterSizeNine()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier(ft -> world.isRemote ? FilterType.values()[TileDiskManipulator.TYPE.getValue()] : ft).build();
     private int ioMode = IO_MODE_INSERT;
 
     private final IStorageDisk<ItemStack>[] itemDisks = new IStorageDisk[6];

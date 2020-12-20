@@ -4,6 +4,8 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.RSBlocks;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
+import com.raoulvdberge.refinedstorage.tile.TileDetector;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
@@ -33,7 +35,8 @@ public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigP
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .filterSizeOne()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier((ft) -> world.isRemote ? FilterType.values()[TileDetector.TYPE.getValue()] : ft).build();
     private int mode = MODE_EQUAL;
     private int amount = 0;
 

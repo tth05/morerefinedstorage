@@ -10,7 +10,7 @@ public class ContainerExternalStorage extends ContainerBase {
         super(externalStorage, player);
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(externalStorage.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> externalStorage.getNode().getConfig().isFilterTypeFluid()));
+            addSlotToContainer(new SlotFilter(externalStorage.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> externalStorage.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {

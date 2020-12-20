@@ -35,7 +35,7 @@ public class FilterConfig {
         return new TileDataParameter<>(DataSerializers.VARINT, FilterType.ITEMS.ordinal(),
                 t -> ((IRSFilterConfigProvider) t.getNode()).getConfig().getFilterType().ordinal(),
                 (t, v) -> {
-                    if (v < 0 || v > FilterType.values().length)
+                    if (v < 0 || v >= FilterType.values().length)
                         return;
                     ((IRSFilterConfigProvider) t.getNode()).getConfig().setFilterType(FilterType.values()[v]);
                 }, clientListener);
@@ -52,11 +52,11 @@ public class FilterConfig {
         );
     }
 
-    public static <T extends TileEntity & INetworkNodeProxy> TileDataParameter<Integer, T> createFilterModeParameter() {
+    public static <T extends TileEntity & INetworkNodeProxy<?>> TileDataParameter<Integer, T> createFilterModeParameter() {
         return new TileDataParameter<>(DataSerializers.VARINT, 0,
                 t -> ((IRSFilterConfigProvider) t.getNode()).getConfig().getFilterMode().ordinal(),
                 (t, v) -> {
-                    if (v < 0 || v > FilterMode.values().length)
+                    if (v < 0 || v >= FilterMode.values().length)
                         return;
                     ((IRSFilterConfigProvider) t.getNode()).getConfig().setFilterMode(FilterMode.values()[v]);
                 });
@@ -210,9 +210,9 @@ public class FilterConfig {
     }
 
     public void setCompare(int compare) {
-        if (compare < 1)
+        if (compare < 0)
             throw new IllegalArgumentException();
-        if (this.compare == 0)
+        if (!usesCompare())
             throw new UnsupportedOperationException();
         this.compare = compare;
 
@@ -292,7 +292,7 @@ public class FilterConfig {
     }
 
     public int getCompare() {
-        if (compare == -1)
+        if (!usesCompare())
             throw new UnsupportedOperationException();
         return compare;
     }
@@ -388,7 +388,7 @@ public class FilterConfig {
             FilterType type = FilterType.values()[tag.getInteger("type")];
             setFilterType(type);
 
-            if (type == FilterType.ITEMS && tag.hasKey("items")) {
+            if ((allowedFilterType == FilterType.ITEMS || allowedFilterType == FilterType.ITEMS_AND_FLUIDS) && tag.hasKey("items")) {
                 NBTTagCompound itemTag = tag.getCompoundTag("items");
                 IItemHandlerModifiable handler = getItemFilters();
                 for (int i = 0; i < handler.getSlots(); i++) {
@@ -397,7 +397,8 @@ public class FilterConfig {
 
                     handler.setStackInSlot(i, new ItemStack(itemTag.getCompoundTag(i + "")));
                 }
-            } else if (type == FilterType.FLUIDS && tag.hasKey("fluids")) {
+            }
+            if ((allowedFilterType == FilterType.FLUIDS || allowedFilterType == FilterType.ITEMS_AND_FLUIDS) && tag.hasKey("fluids")) {
                 getFluidFilters().readFromNbt(tag.getCompoundTag("fluids"));
             }
         }

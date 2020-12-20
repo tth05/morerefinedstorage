@@ -9,6 +9,8 @@ import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
+import com.raoulvdberge.refinedstorage.tile.TileExporter;
+import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
@@ -40,7 +42,8 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
             .allowedFilterTypeItemsAndFluids()
             .filterTypeItems()
             .filterSizeNine()
-            .compareDamageAndNbt().build();
+            .compareDamageAndNbt()
+            .customFilterTypeSupplier(ft -> world.isRemote ? FilterType.values()[TileExporter.TYPE.getValue()] : ft).build();
 
     private final ItemHandlerUpgrade upgrades =
             new ItemHandlerUpgrade(4, slot -> {
