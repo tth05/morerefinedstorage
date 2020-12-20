@@ -259,7 +259,7 @@ public class FilterConfigTest implements MinecraftForgeTest {
 
         cfg2.getFluidFilters().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
 
-        NBTTagCompound tag = cfg1.writeToNBT(new NBTTagCompound());
+        NBTTagCompound tag = cfg1.writeToNBT(new NBTTagCompound()).getCompoundTag("config");
 
         assertEquals(IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE, tag.getInteger("compare"));
         assertEquals(FilterMode.BLACKLIST.ordinal(), tag.getInteger("filterMode"));
@@ -267,7 +267,7 @@ public class FilterConfigTest implements MinecraftForgeTest {
         assertTrue(tag.hasKey("items"));
         assertTrue(tag.hasKey("fluids"));
 
-        NBTTagCompound tag2 = cfg2.writeToNBT(new NBTTagCompound());
+        NBTTagCompound tag2 = cfg2.writeToNBT(new NBTTagCompound()).getCompoundTag("config");
 
         assertEquals(IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE, tag.getInteger("compare"));
         assertFalse(tag2.hasKey("filterMode"));

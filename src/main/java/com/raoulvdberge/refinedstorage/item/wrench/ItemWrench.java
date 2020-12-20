@@ -116,32 +116,32 @@ public class ItemWrench extends ItemBase {
                 }
             }
         } else {
-            NBTTagCompound configTag = player.getHeldItemMainhand().getTagCompound().getCompoundTag("config");
+            NBTTagCompound tag = player.getHeldItemMainhand().getTagCompound();
             if (mode == WrenchMode.COPY) {
                 //upgrades
                 if (node instanceof IUpgradeContainer) {
-                    configTag.setTag("upgrades", IUpgradeContainer.writeToNBT((IUpgradeContainer) node, new NBTTagCompound()));
+                    tag.setTag("upgrades", IUpgradeContainer.writeToNBT((IUpgradeContainer) node, new NBTTagCompound()));
                 }
-                if(node instanceof IRSFilterConfigProvider) {
-                    ((IRSFilterConfigProvider) node).getConfig().writeToNBT(configTag);
+                if (node instanceof IRSFilterConfigProvider) {
+                    ((IRSFilterConfigProvider) node).getConfig().writeToNBT(tag);
                 }
 
-                player.getHeldItemMainhand().getTagCompound().setTag("config", configTag);
                 player.sendMessage(new TextComponentTranslation("misc.refinedstorage:wrench.copied"));
-            } else if (mode == WrenchMode.PASTE && !configTag.isEmpty()) {
+            } else if (mode == WrenchMode.PASTE && !tag.isEmpty()) {
                 TextComponentString args = new TextComponentString("");
 
                 //upgrades
-                if (node instanceof IUpgradeContainer && configTag.hasKey("upgrades")) {
-                    boolean success = IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, configTag.getCompoundTag("upgrades"));
+                if (node instanceof IUpgradeContainer && tag.hasKey("upgrades")) {
+                    boolean success = IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, tag.getCompoundTag("upgrades"));
 
                     args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(
                             new TextComponentTranslation("misc.refinedstorage:wrench.pasted.upgrades").setStyle(new Style().setColor(success ? TextFormatting.WHITE : TextFormatting.RED))
                     );
                 }
 
-                if(node instanceof IRSFilterConfigProvider) {
+                if (node instanceof IRSFilterConfigProvider) {
                     FilterConfig config = ((IRSFilterConfigProvider) node).getConfig();
+                    NBTTagCompound configTag = tag.getCompoundTag("config");
                     //type
                     if (config.usesFilterType() && configTag.hasKey("type")) {
                         args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.type"));
@@ -151,7 +151,7 @@ public class ItemWrench extends ItemBase {
                         args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("misc.refinedstorage:wrench.pasted.compareable"));
                     }
 
-                    config.readFromNBT(configTag);
+                    config.readFromNBT(tag);
                 }
 
                 if (!args.getSiblings().isEmpty())

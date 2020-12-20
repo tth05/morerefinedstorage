@@ -374,7 +374,7 @@ public class FilterConfig {
         tag = tag.getCompoundTag("config");
 
         //filter mode
-        if (tag.hasKey("filterMode") && usesFilterMode()) {
+        if (tag.hasKey("filterMode") && usesFilterMode() && this.allowedFilterMode == FilterMode.WHITELIST_AND_BLACKLIST) {
             setFilterMode(FilterMode.values()[tag.getInteger("filterMode")]);
         }
 
@@ -386,7 +386,8 @@ public class FilterConfig {
         //Filters
         if (tag.hasKey("type") && usesFilterType()) {
             FilterType type = FilterType.values()[tag.getInteger("type")];
-            setFilterType(type);
+            if (this.allowedFilterType == FilterType.ITEMS_AND_FLUIDS)
+                setFilterType(type);
 
             if ((allowedFilterType == FilterType.ITEMS || allowedFilterType == FilterType.ITEMS_AND_FLUIDS) && tag.hasKey("items")) {
                 NBTTagCompound itemTag = tag.getCompoundTag("items");
