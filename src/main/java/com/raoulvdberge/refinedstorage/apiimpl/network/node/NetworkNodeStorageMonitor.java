@@ -98,7 +98,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IRSFilterC
             return false;
         }
 
-        ItemStack filter = this.config.getItemFilters().getStackInSlot(0);
+        ItemStack filter = this.config.getItemHandler().getStackInSlot(0);
 
         if (!filter.isEmpty() && API.instance().getComparer().isEqual(filter, toInsert, this.config.getCompare())) {
             player.inventory.setInventorySlotContents(player.inventory.currentItem, StackUtils.nullToEmpty(network.insertItemTracked(toInsert, toInsert.getCount())));
@@ -118,7 +118,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IRSFilterC
             return;
         }
 
-        ItemStack filter = this.config.getItemFilters().getStackInSlot(0);
+        ItemStack filter = this.config.getItemHandler().getStackInSlot(0);
 
         int toExtract = player.isSneaking() ? 1 : 64;
 
@@ -157,7 +157,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IRSFilterC
             return 0;
         }
 
-        ItemStack toCheck = this.config.getItemFilters().getStackInSlot(0);
+        ItemStack toCheck = this.config.getItemHandler().getStackInSlot(0);
 
         if (toCheck.isEmpty()) {
             return 0;

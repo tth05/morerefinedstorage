@@ -8,10 +8,10 @@ public class ContainerStorageMonitor extends ContainerBase {
     public ContainerStorageMonitor(TileStorageMonitor storageMonitor, EntityPlayer player) {
         super(storageMonitor, player);
 
-        addSlotToContainer(new SlotFilter(storageMonitor.getNode().getConfig().getItemFilters(), 0, 80, 20));
+        addSlotToContainer(new SlotFilter(storageMonitor.getNode().getConfig().getItemHandler(), 0, 80, 20));
 
         addPlayerInventory(8, 55);
 
-        transferManager.addItemFilterTransfer(player.inventory, storageMonitor.getNode().getConfig().getItemFilters());
+        transferManager.addItemFilterTransfer(player.inventory, storageMonitor.getNode().getConfig().getItemHandler());
     }
 }

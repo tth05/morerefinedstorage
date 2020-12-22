@@ -10,15 +10,15 @@ public class ContainerExternalStorage extends ContainerBase {
         super(externalStorage, player);
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(externalStorage.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> externalStorage.getNode().getConfig().isFilterTypeItem()));
+            addSlotToContainer(new SlotFilter(externalStorage.getNode().getConfig().getItemHandler(), i, 8 + (18 * i), 20).setEnableHandler(() -> externalStorage.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(externalStorage.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> externalStorage.getNode().getConfig().isFilterTypeFluid()));
+            addSlotToContainer(new SlotFilterFluid(externalStorage.getNode().getConfig().getFluidHandler(), i, 8 + (18 * i), 20).setEnableHandler(() -> externalStorage.getNode().getConfig().isFilterTypeFluid()));
         }
 
         addPlayerInventory(8, 141);
 
-        transferManager.addFilterTransfer(player.inventory, externalStorage.getNode().getConfig().getItemFilters(), externalStorage.getNode().getConfig().getFluidFilters(), externalStorage.getNode().getConfig()::getFilterType);
+        transferManager.addFilterTransfer(player.inventory, externalStorage.getNode().getConfig().getItemHandler(), externalStorage.getNode().getConfig().getFluidHandler(), externalStorage.getNode().getConfig()::getFilterType);
     }
 }

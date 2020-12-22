@@ -86,18 +86,18 @@ public class FilterConfigTest implements MinecraftForgeTest {
         assertEquals(FilterType.ITEMS, cfg2.getFilterType());
         assertEquals(FilterType.FLUIDS, cfg3.getFilterType());
 
-        assertNotNull(cfg1.getItemFilters());
-        assertNotNull(cfg1.getFluidFilters());
-        assertEquals(1, cfg1.getItemFilters().getSlots());
-        assertEquals(1, cfg1.getFluidFilters().getSlots());
+        assertNotNull(cfg1.getItemHandler());
+        assertNotNull(cfg1.getFluidHandler());
+        assertEquals(1, cfg1.getItemHandler().getSlots());
+        assertEquals(1, cfg1.getFluidHandler().getSlots());
 
-        assertNotNull(cfg2.getItemFilters());
-        assertThrows(UnsupportedOperationException.class, cfg2::getFluidFilters);
-        assertEquals(9, cfg2.getItemFilters().getSlots());
+        assertNotNull(cfg2.getItemHandler());
+        assertThrows(UnsupportedOperationException.class, cfg2::getFluidHandler);
+        assertEquals(9, cfg2.getItemHandler().getSlots());
 
-        assertThrows(UnsupportedOperationException.class, cfg3::getItemFilters);
-        assertNotNull(cfg3.getFluidFilters());
-        assertEquals(9, cfg3.getFluidFilters().getSlots());
+        assertThrows(UnsupportedOperationException.class, cfg3::getItemHandler);
+        assertNotNull(cfg3.getFluidHandler());
+        assertEquals(9, cfg3.getFluidHandler().getSlots());
 
         assertThrows(UnsupportedOperationException.class, () -> cfg2.setFilterType(FilterType.FLUIDS));
         assertThrows(UnsupportedOperationException.class, () -> cfg3.setFilterType(FilterType.ITEMS));
@@ -128,14 +128,14 @@ public class FilterConfigTest implements MinecraftForgeTest {
         assertEquals(FilterMode.BLACKLIST, cfg2.getFilterMode());
         assertEquals(FilterMode.WHITELIST, cfg3.getFilterMode());
 
-        assertThrows(UnsupportedOperationException.class, cfg1::getItemFilters);
-        assertThrows(UnsupportedOperationException.class, cfg1::getFluidFilters);
+        assertThrows(UnsupportedOperationException.class, cfg1::getItemHandler);
+        assertThrows(UnsupportedOperationException.class, cfg1::getFluidHandler);
 
-        assertThrows(UnsupportedOperationException.class, cfg2::getItemFilters);
-        assertThrows(UnsupportedOperationException.class, cfg2::getFluidFilters);
+        assertThrows(UnsupportedOperationException.class, cfg2::getItemHandler);
+        assertThrows(UnsupportedOperationException.class, cfg2::getFluidHandler);
 
-        assertThrows(UnsupportedOperationException.class, cfg3::getItemFilters);
-        assertThrows(UnsupportedOperationException.class, cfg3::getFluidFilters);
+        assertThrows(UnsupportedOperationException.class, cfg3::getItemHandler);
+        assertThrows(UnsupportedOperationException.class, cfg3::getFluidHandler);
 
         assertThrows(UnsupportedOperationException.class, () -> cfg2.setFilterMode(FilterMode.WHITELIST));
         assertThrows(UnsupportedOperationException.class, () -> cfg3.setFilterMode(FilterMode.BLACKLIST));
@@ -159,10 +159,10 @@ public class FilterConfigTest implements MinecraftForgeTest {
         cfg.setFilterType(FilterType.FLUIDS);
         assertEquals(2, node.markDirtyCallCount);
 
-        cfg.getItemFilters().setStackInSlot(0, new ItemStack(Items.APPLE, 1));
+        cfg.getItemHandler().setStackInSlot(0, new ItemStack(Items.APPLE, 1));
         assertEquals(3, node.markDirtyCallCount);
 
-        cfg.getFluidFilters().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
+        cfg.getFluidHandler().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
         assertEquals(4, node.markDirtyCallCount);
     }
 
@@ -202,8 +202,8 @@ public class FilterConfigTest implements MinecraftForgeTest {
         assertFalse(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1)));
         assertFalse(cfg2.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
 
-        cfg1.getItemFilters().setStackInSlot(5, new ItemStack(Items.APPLE, 5));
-        cfg2.getFluidFilters().setFluid(1, new FluidStack(FluidRegistry.LAVA, 1));
+        cfg1.getItemHandler().setStackInSlot(5, new ItemStack(Items.APPLE, 5));
+        cfg2.getFluidHandler().setFluid(1, new FluidStack(FluidRegistry.LAVA, 1));
 
         assertTrue(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1)));
         assertTrue(cfg2.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
@@ -231,8 +231,8 @@ public class FilterConfigTest implements MinecraftForgeTest {
         FilterConfig cfg2 = new FilterConfig.Builder(node).allowedFilterTypeItemsAndFluids().filterTypeItems().filterSizeNine()
                 .onItemFilterChanged(slot -> c.getAndIncrement())
                 .onFluidFilterChanged(slot -> c.getAndIncrement()).build();
-        cfg2.getItemFilters().setStackInSlot(1, new ItemStack(Items.APPLE, 1));
-        cfg2.getFluidFilters().setFluid(1, new FluidStack(FluidRegistry.LAVA, 1));
+        cfg2.getItemHandler().setStackInSlot(1, new ItemStack(Items.APPLE, 1));
+        cfg2.getFluidHandler().setFluid(1, new FluidStack(FluidRegistry.LAVA, 1));
 
         assertEquals(3, c.get());
     }
@@ -254,10 +254,10 @@ public class FilterConfigTest implements MinecraftForgeTest {
                 .filterSizeNine()
                 .compareDamageAndNbt().build();
 
-        cfg1.getFluidFilters().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
-        cfg1.getItemFilters().setStackInSlot(0, new ItemStack(Items.APPLE, 1));
+        cfg1.getFluidHandler().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
+        cfg1.getItemHandler().setStackInSlot(0, new ItemStack(Items.APPLE, 1));
 
-        cfg2.getFluidFilters().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
+        cfg2.getFluidHandler().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
 
         NBTTagCompound tag = cfg1.writeToNBT(new NBTTagCompound()).getCompoundTag("config");
 
@@ -292,11 +292,11 @@ public class FilterConfigTest implements MinecraftForgeTest {
                 .filterSizeNine()
                 .compareDamageAndNbt().build();
 
-        cfg1.getFluidFilters().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
-        cfg1.getItemFilters().setStackInSlot(0, new ItemStack(Items.APPLE, 1));
+        cfg1.getFluidHandler().setFluid(0, new FluidStack(FluidRegistry.LAVA, 1));
+        cfg1.getItemHandler().setStackInSlot(0, new ItemStack(Items.APPLE, 1));
         cfg1.setFilterType(FilterType.FLUIDS);
 
-        cfg2.getFluidFilters().setFluid(0, new FluidStack(FluidRegistry.WATER, 1));
+        cfg2.getFluidHandler().setFluid(0, new FluidStack(FluidRegistry.WATER, 1));
         cfg2.setCompare(IComparer.COMPARE_NBT);
 
         assertDoesNotThrow(() -> cfg1.readFromNBT(cfg1.writeToNBT(new NBTTagCompound())));
@@ -305,8 +305,8 @@ public class FilterConfigTest implements MinecraftForgeTest {
         assertEquals(FilterType.FLUIDS, cfg1.getFilterType());
         assertEquals(FilterMode.BLACKLIST, cfg1.getFilterMode());
         assertEquals(IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE, cfg1.getCompare());
-        assertEquals(9, cfg1.getItemFilters().getSlots());
-        assertEquals(9, cfg1.getFluidFilters().getSlots());
+        assertEquals(9, cfg1.getItemHandler().getSlots());
+        assertEquals(9, cfg1.getFluidHandler().getSlots());
 
         cfg1.setFilterMode(FilterMode.WHITELIST);
         assertTrue(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1)));
@@ -315,8 +315,8 @@ public class FilterConfigTest implements MinecraftForgeTest {
         assertEquals(FilterType.FLUIDS, cfg2.getFilterType());
         assertEquals(FilterMode.UNDEFINED, cfg2.getFilterMode());
         assertEquals(IComparer.COMPARE_NBT, cfg2.getCompare());
-        assertThrows(UnsupportedOperationException.class, cfg2::getItemFilters);
-        assertEquals(9, cfg2.getFluidFilters().getSlots());
+        assertThrows(UnsupportedOperationException.class, cfg2::getItemHandler);
+        assertEquals(9, cfg2.getFluidHandler().getSlots());
 
         assertThrows(UnsupportedOperationException.class, () -> cfg2.setFilterMode(FilterMode.WHITELIST));
         assertFalse(cfg2.acceptsItem(new ItemStack(Items.APPLE, 1)));

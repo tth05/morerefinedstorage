@@ -66,7 +66,7 @@ public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigP
 
         if (network != null && canUpdate() && ticks % SPEED == 0) {
             if (this.config.isFilterTypeItem()) {
-                ItemStack slot = this.config.getItemFilters().getStackInSlot(0);
+                ItemStack slot = this.config.getItemHandler().getStackInSlot(0);
 
                 if (!slot.isEmpty()) {
                     StackListEntry<ItemStack> stack = network.getItemStorageCache().getList().getEntry(slot, this.config.getCompare());
@@ -76,7 +76,7 @@ public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigP
                     powered = isPowered(network.getItemStorageCache().getList().getStacks().stream().mapToInt(e -> e.getStack().getCount()).sum());
                 }
             } else if (this.config.isFilterTypeFluid()) {
-                FluidStack slot = this.config.getFluidFilters().getFluid(0);
+                FluidStack slot = this.config.getFluidHandler().getFluid(0);
 
                 if (slot != null) {
                     StackListEntry<FluidStack> stack = network.getFluidStorageCache().getList().getEntry(slot, this.config.getCompare());

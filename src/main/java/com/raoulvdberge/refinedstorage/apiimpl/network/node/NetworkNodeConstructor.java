@@ -88,8 +88,8 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSFilterConf
         super.updateNetworkNode();
 
         if (network != null && canUpdate() && ticks % upgrades.getSpeed(BASE_SPEED, 4) == 0) {
-            if (this.config.isFilterTypeItem() && !this.config.getItemFilters().getStackInSlot(0).isEmpty()) {
-                ItemStack item = this.config.getItemFilters().getStackInSlot(0);
+            if (this.config.isFilterTypeItem() && !this.config.getItemHandler().getStackInSlot(0).isEmpty()) {
+                ItemStack item = this.config.getItemHandler().getStackInSlot(0);
 
                 IBlockState block = SlotFilter.getBlockState(world, pos.offset(getDirection()), item);
 
@@ -110,8 +110,8 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSFilterConf
                         dropItem();
                     }
                 }
-            } else if (this.config.isFilterTypeFluid() && this.config.getFluidFilters().getFluid(0) != null) {
-                FluidStack stack = this.config.getFluidFilters().getFluid(0);
+            } else if (this.config.isFilterTypeFluid() && this.config.getFluidHandler().getFluid(0) != null) {
+                FluidStack stack = this.config.getFluidHandler().getFluid(0);
 
                 if (stack != null && stack.getFluid().canBePlacedInWorld()) {
                     BlockPos front = pos.offset(getDirection());
@@ -173,7 +173,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSFilterConf
 
         BlockPos front = pos.offset(getDirection());
 
-        ItemStack item = this.config.getItemFilters().getStackInSlot(0);
+        ItemStack item = this.config.getItemHandler().getStackInSlot(0);
         ItemStack took = network.extractItem(item, 1, this.config.getCompare(), Action.SIMULATE);
 
         if (!took.isEmpty()) {
@@ -243,7 +243,7 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSFilterConf
                 }
             }
         } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
-            ItemStack craft = this.config.getItemFilters().getStackInSlot(0);
+            ItemStack craft = this.config.getItemHandler().getStackInSlot(0);
 
             network.getCraftingManager().request(this, craft, 1);
         }
@@ -253,12 +253,12 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSFilterConf
         if(network == null)
             return;
 
-        ItemStack took = network.extractItem(this.config.getItemFilters().getStackInSlot(0), upgrades.getItemInteractCount(), Action.PERFORM);
+        ItemStack took = network.extractItem(this.config.getItemHandler().getStackInSlot(0), upgrades.getItemInteractCount(), Action.PERFORM);
 
         if (!took.isEmpty()) {
             BehaviorDefaultDispenseItem.doDispense(world, took, 6, getDirection(), new PositionImpl(getDispensePositionX(), getDispensePositionY(), getDispensePositionZ()));
         } else if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
-            ItemStack craft = this.config.getItemFilters().getStackInSlot(0);
+            ItemStack craft = this.config.getItemHandler().getStackInSlot(0);
 
             network.getCraftingManager().request(this, craft, 1);
         }

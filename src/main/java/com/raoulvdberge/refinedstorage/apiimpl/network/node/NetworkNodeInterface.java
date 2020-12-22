@@ -85,7 +85,7 @@ public class NetworkNodeInterface extends NetworkNode implements IRSFilterConfig
         }
 
         for (int i = 0; i < 9; ++i) {
-            ItemStack wanted = this.config.getItemFilters().getStackInSlot(i);
+            ItemStack wanted = this.config.getItemHandler().getStackInSlot(i);
             ItemStack got = exportItems.getStackInSlot(i);
 
             if (wanted.isEmpty()) {

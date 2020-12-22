@@ -39,7 +39,7 @@ public class TileStorageMonitor extends TileNode<NetworkNodeStorageMonitor> {
     public NBTTagCompound writeUpdate(NBTTagCompound tag) {
         super.writeUpdate(tag);
 
-        ItemStack stack = getNode().getConfig().getItemFilters().getStackInSlot(0);
+        ItemStack stack = getNode().getConfig().getItemHandler().getStackInSlot(0);
 
         if (!stack.isEmpty()) {
             tag.setTag(NBT_STACK, stack.writeToNBT(new NBTTagCompound()));

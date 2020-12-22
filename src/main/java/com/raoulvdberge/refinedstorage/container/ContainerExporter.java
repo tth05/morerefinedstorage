@@ -73,7 +73,7 @@ public class ContainerExporter extends ContainerBase {
 
         for (int i = 0; i < 9; ++i) {
             addSlotToContainer(new SlotFilter(
-                    exporter.getNode().getConfig().getItemFilters(),
+                    exporter.getNode().getConfig().getItemHandler(),
                     i,
                     8 + (18 * i),
                     20,
@@ -83,7 +83,7 @@ public class ContainerExporter extends ContainerBase {
 
         for (int i = 0; i < 9; ++i) {
             addSlotToContainer(new SlotFilterFluid(
-                    exporter.getNode().getConfig().getFluidFilters(),
+                    exporter.getNode().getConfig().getFluidHandler(),
                     i,
                     8 + (18 * i),
                     20,
@@ -94,7 +94,7 @@ public class ContainerExporter extends ContainerBase {
         addPlayerInventory(8, 55);
 
         transferManager.addBiTransfer(getPlayer().inventory, upgrades);
-        transferManager.addFilterTransfer(getPlayer().inventory, exporter.getNode().getConfig().getItemFilters(),
-                exporter.getNode().getConfig().getFluidFilters(), exporter.getNode().getConfig()::getFilterType);
+        transferManager.addFilterTransfer(getPlayer().inventory, exporter.getNode().getConfig().getItemHandler(),
+                exporter.getNode().getConfig().getFluidHandler(), exporter.getNode().getConfig()::getFilterType);
     }
 }

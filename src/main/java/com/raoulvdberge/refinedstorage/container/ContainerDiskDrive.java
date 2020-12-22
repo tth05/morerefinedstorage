@@ -18,16 +18,16 @@ public class ContainerDiskDrive extends ContainerBase {
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(diskDrive.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeItem()));
+            addSlotToContainer(new SlotFilter(diskDrive.getNode().getConfig().getItemHandler(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(diskDrive.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeFluid()));
+            addSlotToContainer(new SlotFilterFluid(diskDrive.getNode().getConfig().getFluidHandler(), i, 8 + (18 * i), 20).setEnableHandler(() -> diskDrive.getNode().getConfig().isFilterTypeFluid()));
         }
 
         addPlayerInventory(8, 141);
 
         transferManager.addBiTransfer(player.inventory, diskDrive.getNode().getDisks());
-        transferManager.addFilterTransfer(player.inventory, diskDrive.getNode().getConfig().getItemFilters(), diskDrive.getNode().getConfig().getFluidFilters(), diskDrive.getNode().getConfig()::getFilterType);
+        transferManager.addFilterTransfer(player.inventory, diskDrive.getNode().getConfig().getItemHandler(), diskDrive.getNode().getConfig().getFluidHandler(), diskDrive.getNode().getConfig()::getFilterType);
     }
 }

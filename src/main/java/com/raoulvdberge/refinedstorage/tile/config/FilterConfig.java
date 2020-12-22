@@ -25,6 +25,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -191,6 +192,8 @@ public class FilterConfig {
 
                 this.itemStacks.add(stack);
             }
+
+            this.itemStacks = Collections.unmodifiableList(this.itemStacks);
         } else {
             this.itemStacks = null;
         }
@@ -204,6 +207,8 @@ public class FilterConfig {
 
                 this.fluidStacks.add(stack);
             }
+
+            this.fluidStacks = Collections.unmodifiableList(this.fluidStacks);
         } else {
             this.fluidStacks = null;
         }
@@ -310,17 +315,31 @@ public class FilterConfig {
     }
 
     @Nonnull
-    public IItemHandlerModifiable getItemFilters() {
+    public IItemHandlerModifiable getItemHandler() {
         if (this.allowedFilterType == FilterType.FLUIDS || !usesFilterType())
             throw new UnsupportedOperationException("current filter type does not allow item filters");
         return this.itemFilters;
     }
 
     @Nonnull
-    public FluidInventory getFluidFilters() {
+    public List<ItemStack> getItemFilters() {
+        if (this.allowedFilterType == FilterType.FLUIDS || !usesFilterType())
+            throw new UnsupportedOperationException("current filter type does not allow item filters");
+        return this.itemStacks;
+    }
+
+    @Nonnull
+    public FluidInventory getFluidHandler() {
         if (this.allowedFilterType == FilterType.ITEMS || !usesFilterType())
             throw new UnsupportedOperationException("current filter type does not allow fluid filters");
         return this.fluidFilters;
+    }
+
+    @Nonnull
+    public List<FluidStack> getFluidFilters() {
+        if (this.allowedFilterType == FilterType.ITEMS || !usesFilterType())
+            throw new UnsupportedOperationException("current filter type does not allow fluid filters");
+        return this.fluidStacks;
     }
 
     private void readFromNBTOld(NBTTagCompound tag) {
@@ -391,7 +410,7 @@ public class FilterConfig {
 
             if ((allowedFilterType == FilterType.ITEMS || allowedFilterType == FilterType.ITEMS_AND_FLUIDS) && tag.hasKey("items")) {
                 NBTTagCompound itemTag = tag.getCompoundTag("items");
-                IItemHandlerModifiable handler = getItemFilters();
+                IItemHandlerModifiable handler = getItemHandler();
                 for (int i = 0; i < handler.getSlots(); i++) {
                     if (!itemTag.hasKey(i + ""))
                         continue;
@@ -400,7 +419,7 @@ public class FilterConfig {
                 }
             }
             if ((allowedFilterType == FilterType.FLUIDS || allowedFilterType == FilterType.ITEMS_AND_FLUIDS) && tag.hasKey("fluids")) {
-                getFluidFilters().readFromNbt(tag.getCompoundTag("fluids"));
+                getFluidHandler().readFromNbt(tag.getCompoundTag("fluids"));
             }
         }
 
@@ -429,7 +448,7 @@ public class FilterConfig {
             tag.setInteger("type", getFilterType().ordinal());
             if (this.allowedFilterType == FilterType.ITEMS || this.allowedFilterType == FilterType.ITEMS_AND_FLUIDS) {
                 NBTTagCompound itemTag = new NBTTagCompound();
-                IItemHandlerModifiable handler = getItemFilters();
+                IItemHandlerModifiable handler = getItemHandler();
                 for (int i = 0; i < handler.getSlots(); i++) {
                     ItemStack stack = handler.getStackInSlot(i);
                     if (stack.isEmpty())
@@ -444,7 +463,7 @@ public class FilterConfig {
             }
 
             if (this.allowedFilterType == FilterType.FLUIDS || this.allowedFilterType == FilterType.ITEMS_AND_FLUIDS) {
-                tag.setTag("fluids", getFluidFilters().writeToNbt());
+                tag.setTag("fluids", getFluidHandler().writeToNbt());
             }
         }
 

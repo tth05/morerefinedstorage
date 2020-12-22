@@ -247,11 +247,11 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSFilter
                 extracted = network.extractItem(toExtract, (long) upgrades.getItemInteractCount(), this.config.getCompare(), Action.PERFORM);
             }
         } else {
-            while (this.config.getItemFilters().getSlots() > i && extracted == null) {
+            while (this.config.getItemHandler().getSlots() > i && extracted == null) {
                 ItemStack filterStack = ItemStack.EMPTY;
 
-                while (this.config.getItemFilters().getSlots() > i && filterStack.isEmpty()) {
-                    filterStack = this.config.getItemFilters().getStackInSlot(i++);
+                while (this.config.getItemHandler().getSlots() > i && filterStack.isEmpty()) {
+                    filterStack = this.config.getItemHandler().getStackInSlot(i++);
                 }
 
                 if (!filterStack.isEmpty()) {
@@ -352,11 +352,11 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSFilter
                 extracted = network.extractFluid(toExtract, upgrades.getItemInteractCount(), this.config.getCompare(), Action.PERFORM);
             }
         } else {
-            while (this.config.getFluidFilters().getSlots() > i && extracted == null) {
+            while (this.config.getFluidHandler().getSlots() > i && extracted == null) {
                 FluidStack filterStack = null;
 
-                while (this.config.getFluidFilters().getSlots() > i && filterStack == null) {
-                    filterStack = this.config.getFluidFilters().getFluid(i++);
+                while (this.config.getFluidHandler().getSlots() > i && filterStack == null) {
+                    filterStack = this.config.getFluidHandler().getFluid(i++);
                 }
 
                 if (filterStack != null) {

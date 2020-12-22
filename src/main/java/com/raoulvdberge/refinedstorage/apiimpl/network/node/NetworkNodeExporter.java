@@ -10,10 +10,10 @@ import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
 import com.raoulvdberge.refinedstorage.tile.TileExporter;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.config.FilterType;
 import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.item.ItemStack;
@@ -31,6 +31,7 @@ import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 
 public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigProvider, ICoverable, IUpgradeContainer {
     public static final String ID = "exporter";
@@ -48,16 +49,16 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
     private final ItemHandlerUpgrade upgrades =
             new ItemHandlerUpgrade(4, slot -> {
                 if (!getUpgradeHandler().hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
-                    for (int i = 0; i < config.getItemFilters().getSlots(); ++i) {
-                        ItemStack filteredItem = config.getItemFilters().getStackInSlot(i);
+                    for (int i = 0; i < config.getItemHandler().getSlots(); ++i) {
+                        ItemStack filteredItem = config.getItemHandler().getStackInSlot(i);
 
                         if (filteredItem.getCount() > 1) {
                             filteredItem.setCount(1);
                         }
                     }
 
-                    for (int i = 0; i < config.getItemFilters().getSlots(); ++i) {
-                        FluidStack filteredFluid = config.getFluidFilters().getFluid(i);
+                    for (int i = 0; i < config.getItemHandler().getSlots(); ++i) {
+                        FluidStack filteredFluid = config.getFluidHandler().getFluid(i);
 
                         if (filteredFluid == null)
                             continue;
@@ -91,9 +92,9 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
         super.updateNetworkNode();
 
         if (network != null && canUpdate() && ticks % upgrades.getSpeed() == 0) {
-            if (this.config.isFilterTypeItem()) {
+            if (this.config.isFilterTypeItem() && !this.config.getItemFilters().isEmpty()) {
                 updateItemMode();
-            } else if (this.config.isFilterTypeFluid()) {
+            } else if (this.config.isFilterTypeFluid() && !this.config.getFluidFilters().isEmpty()) {
                 updateFluidMode();
             }
         }
@@ -103,20 +104,10 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
         IItemHandler handler = WorldUtils.getItemHandler(getFacingTile(), getDirection().getOpposite());
 
         if (handler != null) {
-            while (filterSlot + 1 < this.config.getItemFilters().getSlots() && this.config.getItemFilters().getStackInSlot(filterSlot).isEmpty()) {
-                filterSlot++;
-            }
-
-            // We jump out of the loop above if we reach the maximum slot. If the maximum slot is empty,
-            // we waste a tick with doing nothing because it's empty. Hence this check. If we are at the last slot
-            // and it's empty, go back to slot 0.
-            // We also handle if we exceeded the maximum slot in general.
-            if ((filterSlot == this.config.getItemFilters().getSlots() - 1 && this.config.getItemFilters().getStackInSlot(filterSlot).isEmpty()) ||
-                    (filterSlot >= this.config.getItemFilters().getSlots())) {
+            if (filterSlot >= this.getConfig().getItemFilters().size())
                 filterSlot = 0;
-            }
 
-            ItemStack slot = this.config.getItemFilters().getStackInSlot(filterSlot);
+            ItemStack slot = this.config.getItemFilters().get(filterSlot);
 
             if (!slot.isEmpty()) {
                 int stackSize = upgrades.getItemInteractCount();
@@ -126,9 +117,8 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
                 }
 
                 if (stackSize > 0) {
-                    ItemStack took =
-                            network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize), this.config.getCompare(),
-                                    Action.SIMULATE);
+                    ItemStack took = network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize),
+                            this.config.getCompare(), Action.SIMULATE);
 
                     if (took.isEmpty()) {
                         if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
@@ -166,9 +156,9 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
 
         int needed = 0;
 
-        for (int i = 0; i < this.config.getItemFilters().getSlots(); ++i) {
-            if (API.instance().getComparer().isEqualNoQuantity(slot, this.config.getItemFilters().getStackInSlot(i))) {
-                needed += this.config.getItemFilters().getStackInSlot(i).getCount();
+        for (int i = 0; i < this.config.getItemFilters().size(); ++i) {
+            if (API.instance().getComparer().isEqualNoQuantity(slot, this.config.getItemFilters().get(i))) {
+                needed += this.config.getItemFilters().get(i).getCount();
             }
         }
 
@@ -176,33 +166,19 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
     }
 
     private void updateFluidMode() {
-        FluidStack[] fluids = this.config.getFluidFilters().getFluids();
+        List<FluidStack> fluids = this.config.getFluidFilters();
 
-        while (filterSlot + 1 < fluids.length && fluids[filterSlot] == null) {
-            filterSlot++;
-        }
-
-        // We jump out of the loop above if we reach the maximum slot. If the maximum slot is empty,
-        // we waste a tick with doing nothing because it's empty. Hence this check. If we are at the last slot
-        // and it's empty, go back to slot 0.
-        // We also handle if we exceeded the maximum slot in general.
-        if ((filterSlot == fluids.length - 1 && fluids[filterSlot] == null) || (filterSlot >= fluids.length)) {
+        if (filterSlot >= this.getConfig().getFluidFilters().size())
             filterSlot = 0;
-        }
 
         IFluidHandler handler = WorldUtils.getFluidHandler(getFacingTile(), getDirection().getOpposite());
 
         if (handler == null)
             return;
 
-        FluidStack stack = fluids[filterSlot];
+        FluidStack stack = fluids.get(filterSlot);
 
-        if (stack == null) {
-            filterSlot++;
-            return;
-        }
-
-        long toExtract = Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount();
+        long toExtract = (long) Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount();
 
         if (upgrades.hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
             int found = 0;
@@ -217,8 +193,7 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
 
             int needed = 0;
 
-            for (int i = 0; i < this.config.getFluidFilters().getSlots(); ++i) {
-                FluidStack fluid = this.config.getFluidFilters().getFluid(i);
+            for (FluidStack fluid : fluids) {
                 if (API.instance().getComparer().isEqual(stack, fluid, IComparer.COMPARE_NBT)) {
                     needed += fluid.amount;
                 }

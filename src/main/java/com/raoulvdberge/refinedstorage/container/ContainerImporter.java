@@ -15,16 +15,16 @@ public class ContainerImporter extends ContainerBase {
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilter(importer.getNode().getConfig().getItemFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> importer.getNode().getConfig().isFilterTypeItem()));
+            addSlotToContainer(new SlotFilter(importer.getNode().getConfig().getItemHandler(), i, 8 + (18 * i), 20).setEnableHandler(() -> importer.getNode().getConfig().isFilterTypeItem()));
         }
 
         for (int i = 0; i < 9; ++i) {
-            addSlotToContainer(new SlotFilterFluid(importer.getNode().getConfig().getFluidFilters(), i, 8 + (18 * i), 20).setEnableHandler(() -> importer.getNode().getConfig().isFilterTypeFluid()));
+            addSlotToContainer(new SlotFilterFluid(importer.getNode().getConfig().getFluidHandler(), i, 8 + (18 * i), 20).setEnableHandler(() -> importer.getNode().getConfig().isFilterTypeFluid()));
         }
 
         addPlayerInventory(8, 55);
 
         transferManager.addBiTransfer(player.inventory, importer.getNode().getUpgradeHandler());
-        transferManager.addFilterTransfer(player.inventory, importer.getNode().getConfig().getItemFilters(), importer.getNode().getConfig().getFluidFilters(), importer.getNode().getConfig()::getFilterType);
+        transferManager.addFilterTransfer(player.inventory, importer.getNode().getConfig().getItemHandler(), importer.getNode().getConfig().getFluidHandler(), importer.getNode().getConfig()::getFilterType);
     }
 }
