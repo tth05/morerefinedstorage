@@ -9,6 +9,7 @@ import com.raoulvdberge.refinedstorage.item.wrench.WrenchOverlayRenderListener;
 import com.raoulvdberge.refinedstorage.item.wrench.WrenchSwitchModeListener;
 import com.raoulvdberge.refinedstorage.render.IModelRegistration;
 import com.raoulvdberge.refinedstorage.render.collision.BlockHighlightListener;
+import com.raoulvdberge.refinedstorage.render.model.baked.BakedModelFullbright;
 import com.raoulvdberge.refinedstorage.render.teisr.TileEntityItemStackRendererPattern;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -82,6 +83,8 @@ public class ProxyClient extends ProxyCommon implements IModelRegistration {
 
     @SubscribeEvent
     public void onModelBake(ModelBakeEvent e) {
+        BakedModelFullbright.invalidateCache();
+
         for (ModelResourceLocation resource : e.getModelRegistry().getKeys()) {
             ResourceLocation key = new ResourceLocation(resource.getNamespace(), resource.getPath());
 

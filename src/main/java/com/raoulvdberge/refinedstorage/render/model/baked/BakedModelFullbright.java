@@ -79,6 +79,10 @@ public class BakedModelFullbright extends BakedModelDelegate {
         return this;
     }
 
+    public static void invalidateCache() {
+        CACHE.invalidateAll();
+    }
+
     @Nonnull
     @Override
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
