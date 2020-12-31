@@ -54,13 +54,4 @@ public interface IComparer {
      * @return true if the left and right stack are the same, false otherwise
      */
     boolean isEqual(@Nullable FluidStack left, @Nullable FluidStack right, int flags);
-
-    /**
-     * Compares the NBT tags of two stacks.
-     *
-     * @param left  the left stack
-     * @param right the right stack
-     * @return true if the NBT tags of the two stacks are the same, false otherwise
-     */
-    boolean isEqualNbt(@Nullable ItemStack left, @Nullable ItemStack right);
 }

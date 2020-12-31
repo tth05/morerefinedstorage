@@ -1,11 +1,10 @@
 package com.raoulvdberge.refinedstorage.util;
 
+import com.raoulvdberge.refinedstorage.apiimpl.API;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-
-import java.util.Objects;
 
 public class ItemStack2ObjectHashMap<V> extends Object2ObjectOpenCustomHashMap<ItemStack, V> {
 
@@ -30,12 +29,7 @@ public class ItemStack2ObjectHashMap<V> extends Object2ObjectOpenCustomHashMap<I
 
         @Override
         public boolean equals(ItemStack o1, ItemStack o2) {
-            return (o1 == null && o2 == null) ||
-                    (o1 != null && o2 != null &&
-                            o1.isEmpty() == o2.isEmpty() &&
-                            o1.getItemDamage() == o2.getItemDamage() &&
-                            o1.getItem().equals(o2.getItem()) &&
-                            Objects.equals(o1.getTagCompound(), o2.getTagCompound()));
+            return API.instance().getComparer().isEqualNoQuantity(o1, o2);
         }
     }
 }
