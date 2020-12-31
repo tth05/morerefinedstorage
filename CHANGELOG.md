@@ -1,5 +1,11 @@
 # More Refined Storage Changelog
 
+# 2.2.5
+- Fixed detector crashing filter sometimes if filter slot is empty
+- Fixed duplication glitch of items that store data in capabilities
+- Fixed models breaking on resource reload
+- Removed item, fluid and energy reader/writer handlers
+
 # 2.2.4
 - Requires RebornStorage update (see README.md)
 - Fixed "abstract method getWorld" crash
