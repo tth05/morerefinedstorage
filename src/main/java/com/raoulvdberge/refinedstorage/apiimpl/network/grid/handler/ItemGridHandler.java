@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.network.grid.handler;
 
 import com.raoulvdberge.refinedstorage.RS;
+import com.raoulvdberge.refinedstorage.RSTriggers;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
@@ -136,6 +137,8 @@ public class ItemGridHandler implements IItemGridHandler {
             return stack;
         }
 
+        grantAdvancement(player);
+
         network.getItemStorageTracker().changed(player, stack.copy());
 
         ItemStack remainder;
@@ -161,6 +164,8 @@ public class ItemGridHandler implements IItemGridHandler {
             return;
         }
 
+        grantAdvancement(player);
+
         ItemStack stack = player.inventory.getItemStack();
         int size = single ? 1 : stack.getCount();
 
@@ -183,6 +188,12 @@ public class ItemGridHandler implements IItemGridHandler {
         player.updateHeldItem();
 
         network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessGridInsertUsage);
+    }
+
+    private void grantAdvancement(EntityPlayerMP player) {
+        if (network.getItemStorageCache().getList().getStored() > 50_000_000_000L) {
+            RSTriggers.FIFTY_BILLION_ITEMS.trigger(player);
+        }
     }
 
     @Override

@@ -305,7 +305,7 @@ public class TileController extends TileBase
     @Nullable
     @Override
     public synchronized StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action,
-                                                  Predicate<IStorage<ItemStack>> filter) {
+                                                               Predicate<IStorage<ItemStack>> filter) {
         long received = 0;
         long extractedExternally = 0;
 
@@ -402,7 +402,7 @@ public class TileController extends TileBase
 
     @Override
     public synchronized StackListResult<FluidStack> extractFluid(@Nonnull FluidStack stack, long size, int flags, Action action,
-                                                    Predicate<IStorage<FluidStack>> filter) {
+                                                                 Predicate<IStorage<FluidStack>> filter) {
         long received = 0;
         long extractedExternally = 0;
 
