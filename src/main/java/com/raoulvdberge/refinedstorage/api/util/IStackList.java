@@ -91,6 +91,11 @@ public interface IStackList<T> {
     Collection<StackListEntry<T>> getStacks();
 
     /**
+     * @return the total amount of stored stacks in this list
+     */
+    long getStored();
+
+    /**
      * @return a new copy of this list, with the stacks in it copied as well
      */
     @Nonnull

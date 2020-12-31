@@ -101,7 +101,7 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
                             handler,
                             ItemHandlerHelper.copyStackWithSize(stack, (int) size),
                             action == Action.SIMULATE));
-            if(result == null)
+            if (result == null)
                 return null;
             return new StackListResult<>(result, result.getCount());
         }

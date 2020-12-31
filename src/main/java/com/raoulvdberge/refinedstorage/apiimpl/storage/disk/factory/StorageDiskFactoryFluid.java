@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskFactory;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.StorageDiskFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.util.StackListFluid;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
@@ -22,13 +23,13 @@ public class StorageDiskFactoryFluid implements IStorageDiskFactory<FluidStack> 
             NBTTagCompound stackTag = list.getCompoundTagAt(i);
             FluidStack stack = FluidStack.loadFluidStackFromNBT(stackTag);
             long realCount = 0;
-            if(!stackTag.hasKey(StorageDiskFluid.NBT_REAL_SIZE))
+            if (!stackTag.hasKey(StorageDiskFluid.NBT_REAL_SIZE))
                 realCount = stack.amount;
             else
                 realCount = stackTag.getLong(StorageDiskFluid.NBT_REAL_SIZE);
 
             if (stack != null) {
-                disk.getRawStacks().put(stack.getFluid(), new StackListEntry<>(stack, realCount));
+                disk.getRawStacks().put(new StackListFluid.FluidStackWrapper(stack), new StackListEntry<>(stack, realCount));
             }
         }
 

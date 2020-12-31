@@ -1,20 +1,24 @@
 package com.raoulvdberge.refinedstorage.apiimpl.util;
 
-import com.google.common.collect.ArrayListMultimap;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StackListFluid implements IStackList<FluidStack> {
-    private final ArrayListMultimap<Fluid, StackListEntry<FluidStack>> stacks = ArrayListMultimap.create();
+    private final Map<FluidStackWrapper, StackListEntry<FluidStack>> stacks = new ConcurrentHashMap<>();
     private final Map<UUID, StackListEntry<FluidStack>> index = new HashMap<>();
+
+    private long stored;
 
     @Override
     public StackListResult<FluidStack> add(@Nonnull FluidStack stack, long size) {
@@ -22,21 +26,26 @@ public class StackListFluid implements IStackList<FluidStack> {
             throw new IllegalArgumentException("Cannot accept empty stack");
         }
 
-        for (StackListEntry<FluidStack> entry : stacks.get(stack.getFluid())) {
+        FluidStackWrapper wrapper = new FluidStackWrapper(stack);
+
+        StackListEntry<FluidStack> entry = stacks.get(wrapper);
+        if (entry != null) {
             FluidStack otherStack = entry.getStack();
 
-            if (stack.isFluidEqual(otherStack)) {
-                entry.grow(size);
+            entry.grow(size);
+            stored += size;
 
-                return new StackListResult<>(otherStack.copy(), entry.getId(), size);
-            }
+            return new StackListResult<>(otherStack.copy(), entry.getId(), size);
         }
 
         FluidStack newStack = stack.copy();
+        wrapper.setStack(newStack);
         StackListEntry<FluidStack> newEntry = new StackListEntry<>(newStack, size);
 
-        stacks.put(newStack.getFluid(), newEntry);
+        stacks.put(wrapper, newEntry);
         index.put(newEntry.getId(), newEntry);
+
+        stored += size;
 
         return new StackListResult<>(newStack.copy(), newEntry.getId(), size);
     }
@@ -48,20 +57,25 @@ public class StackListFluid implements IStackList<FluidStack> {
 
     @Override
     public StackListResult<FluidStack> remove(@Nonnull FluidStack stack, long size) {
-        for (StackListEntry<FluidStack> entry : stacks.get(stack.getFluid())) {
+        FluidStackWrapper wrapper = new FluidStackWrapper(stack);
+
+        StackListEntry<FluidStack> entry = stacks.get(wrapper);
+        if (entry != null) {
             FluidStack otherStack = entry.getStack();
 
-            if (stack.isFluidEqual(otherStack)) {
-                if (entry.getCount() - size <= 0) {
-                    stacks.remove(otherStack.getFluid(), entry);
-                    index.remove(entry.getId());
+            if (entry.getCount() - size <= 0) {
+                stacks.remove(wrapper, entry);
+                index.remove(entry.getId());
 
-                    return new StackListResult<>(otherStack.copy(), entry.getId(), -entry.getCount());
-                } else {
-                    entry.shrink(size);
+                stored -= entry.getCount();
 
-                    return new StackListResult<>(otherStack.copy(), entry.getId(), -size);
-                }
+                return new StackListResult<>(otherStack.copy(), entry.getId(), -entry.getCount());
+            } else {
+                entry.shrink(size);
+
+                stored -= size;
+
+                return new StackListResult<>(otherStack.copy(), entry.getId(), -size);
             }
         }
 
@@ -76,41 +90,40 @@ public class StackListFluid implements IStackList<FluidStack> {
     @Nullable
     @Override
     public StackListEntry<FluidStack> getEntry(@Nonnull FluidStack stack, int flags) {
-        for (StackListEntry<FluidStack> entry : stacks.get(stack.getFluid())) {
-            FluidStack otherStack = entry.getStack();
+        StackListEntry<FluidStack> entry = stacks.get(new FluidStackWrapper(stack));
 
-            if (API.instance().getComparer().isEqual(otherStack, stack, flags)) {
-                return entry;
-            }
-        }
-
-        return null;
+        //TODO: does not support extracting without nbt (weird for fluids anyway)
+        return entry != null ? entry.asUnmodifiable() : null;
     }
 
     @Override
     @Nullable
     public StackListEntry<FluidStack> get(UUID id) {
-        return index.get(id);
+        return index.get(id).asUnmodifiable();
     }
 
     @Override
     public void clear() {
         stacks.clear();
         index.clear();
+
+        stored = 0;
     }
 
     @Override
     public void clearCounts() {
-        for (Map.Entry<Fluid, StackListEntry<FluidStack>> entry : stacks.entries()) {
-            entry.getValue().setCount(0);
+        for (StackListEntry<FluidStack> entry : stacks.values()) {
+            entry.setCount(0);
         }
+
+        stored = 0;
     }
 
     @Override
     public void clearEmpty() {
-        for (Iterator<Map.Entry<Fluid, StackListEntry<FluidStack>>> iterator = stacks.entries().iterator(); iterator.hasNext(); ) {
-            Map.Entry<Fluid, StackListEntry<FluidStack>> entry = iterator.next();
-            if(entry.getValue().getCount() < 1) {
+        for (Iterator<Map.Entry<FluidStackWrapper, StackListEntry<FluidStack>>> iterator = stacks.entrySet().iterator(); iterator.hasNext(); ) {
+            Map.Entry<FluidStackWrapper, StackListEntry<FluidStack>> entry = iterator.next();
+            if (entry.getValue().getCount() < 1) {
                 iterator.remove();
                 index.remove(entry.getValue().getId());
             }
@@ -129,6 +142,11 @@ public class StackListFluid implements IStackList<FluidStack> {
     }
 
     @Override
+    public long getStored() {
+        return this.stored;
+    }
+
+    @Override
     @Nonnull
     public IStackList<FluidStack> copy() {
         StackListFluid list = new StackListFluid();
@@ -136,10 +154,51 @@ public class StackListFluid implements IStackList<FluidStack> {
         for (StackListEntry<FluidStack> entry : stacks.values()) {
 
             StackListEntry<FluidStack> newEntry = new StackListEntry<>(entry.getId(), entry.getStack().copy(), entry.getCount());
-            list.stacks.put(entry.getStack().getFluid(), newEntry);
+            list.stacks.put(new FluidStackWrapper(entry.getStack()), newEntry);
             list.index.put(entry.getId(), newEntry);
+
+            list.stored += newEntry.getCount();
         }
 
         return list;
+    }
+
+    public static final class FluidStackWrapper {
+        private final int hashCode;
+        private FluidStack fluidStack;
+
+        public FluidStackWrapper(FluidStack template) {
+            this.fluidStack = template;
+
+            boolean isEmpty = template.amount < 1;
+            Fluid fluid = template.getFluid();
+            NBTTagCompound originalNbt = template.tag;
+            NBTTagCompound nbt = originalNbt == null ? null : originalNbt.copy();
+
+            int hashCode1;
+            hashCode1 = 31 + Boolean.hashCode(isEmpty);
+            hashCode1 = 31 * hashCode1 + fluid.hashCode();
+            hashCode1 = 31 * hashCode1 + (nbt == null ? 0 : nbt.hashCode());
+            hashCode1 = 31 * hashCode1 + template.hashCode();
+            hashCode = hashCode1;
+        }
+
+        public void setStack(FluidStack fluidStack) {
+            this.fluidStack = fluidStack;
+        }
+
+        public FluidStack getStack() {
+            return this.fluidStack;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return API.instance().getComparer().isEqual(this.fluidStack, ((FluidStackWrapper) o).fluidStack, IComparer.COMPARE_NBT);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.hashCode;
+        }
     }
 }

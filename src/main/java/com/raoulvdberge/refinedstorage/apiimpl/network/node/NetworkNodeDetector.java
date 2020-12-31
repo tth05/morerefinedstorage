@@ -71,9 +71,9 @@ public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigP
                 if (!slot.isEmpty()) {
                     StackListEntry<ItemStack> stack = network.getItemStorageCache().getList().getEntry(slot, this.config.getCompare());
 
-                    powered = isPowered(stack == null ? null : (int)stack.getCount());
+                    powered = isPowered(stack == null ? -1 : stack.getCount());
                 } else {
-                    powered = isPowered(network.getItemStorageCache().getList().getStacks().stream().mapToInt(e -> e.getStack().getCount()).sum());
+                    powered = isPowered(network.getItemStorageCache().getList().getStored());
                 }
             } else if (this.config.isFilterTypeFluid()) {
                 FluidStack slot = this.config.getFluidHandler().getFluid(0);
@@ -81,9 +81,9 @@ public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigP
                 if (slot != null) {
                     StackListEntry<FluidStack> stack = network.getFluidStorageCache().getList().getEntry(slot, this.config.getCompare());
 
-                    powered = isPowered(stack == null ? null : (int)stack.getCount());
+                    powered = isPowered(stack == null ? -1 : stack.getCount());
                 } else {
-                    powered = isPowered(network.getFluidStorageCache().getList().getStacks().stream().mapToInt(e -> e.getStack().amount).sum());
+                    powered = isPowered(network.getFluidStorageCache().getList().getStored());
                 }
             }
         }
@@ -111,8 +111,8 @@ public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigP
         this.powered = powered;
     }
 
-    public boolean isPowered(Integer size) {
-        if (size != null) {
+    public boolean isPowered(long size) {
+        if (size != -1) {
             switch (mode) {
                 case MODE_UNDER:
                     return size < amount;

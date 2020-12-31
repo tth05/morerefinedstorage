@@ -32,7 +32,7 @@ public class Comparer implements IComparer {
             return true;
         }
 
-        if (!left.isItemEqual(right)) {
+        if (left.getItem() != right.getItem()) {
             return false;
         }
 

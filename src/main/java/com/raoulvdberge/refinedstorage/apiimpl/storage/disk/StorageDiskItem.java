@@ -14,7 +14,6 @@ import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryItem;
 import com.raoulvdberge.refinedstorage.apiimpl.util.StackListItem;
-import com.raoulvdberge.refinedstorage.util.ItemStack2ObjectHashMap;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -25,6 +24,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class StorageDiskItem implements IStorageDisk<ItemStack> {
@@ -41,7 +42,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
      */
     private long stored;
 
-    private final ItemStack2ObjectHashMap<StackListEntry<ItemStack>> stacks = new ItemStack2ObjectHashMap<>();
+    private final Map<StackListItem.ItemStackWrapper, StackListEntry<ItemStack>> stacks = new ConcurrentHashMap<>();
     private final Multimap<Item, StackListItem.ItemStackWrapper> stacksByItem = HashMultimap.create();
 
     @Nullable
@@ -90,7 +91,9 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     @Override
     @Nullable
     public StackListResult<ItemStack> insert(@Nonnull ItemStack stack, long size, Action action) {
-        StackListEntry<ItemStack> entry = stacks.get(stack);
+        StackListItem.ItemStackWrapper wrapper = new StackListItem.ItemStackWrapper(stack);
+
+        StackListEntry<ItemStack> entry = stacks.get(wrapper);
         if (entry != null) {
             if (getCapacity() != -1 && getStored() + size > getCapacity()) {
                 long remainingSpace = getCapacity() - getStored();
@@ -128,7 +131,8 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
             if (action == Action.PERFORM) {
                 ItemStack newStack = stack.copy();
-                stacks.put(newStack, new StackListEntry<>(newStack, remainingSpace));
+                wrapper.setStack(newStack);
+                stacks.put(wrapper, new StackListEntry<>(newStack, remainingSpace));
                 stacksByItem.put(stack.getItem(), new StackListItem.ItemStackWrapper(newStack));
                 stored += remainingSpace;
 
@@ -139,7 +143,8 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         } else {
             if (action == Action.PERFORM) {
                 ItemStack newStack = stack.copy();
-                stacks.put(newStack, new StackListEntry<>(newStack, size));
+                wrapper.setStack(newStack);
+                stacks.put(wrapper, new StackListEntry<>(newStack, size));
                 stacksByItem.put(stack.getItem(), new StackListItem.ItemStackWrapper(newStack));
                 stored += size;
 
@@ -156,7 +161,9 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         //extract exact
         if ((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
                 (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
-            StackListEntry<ItemStack> entry = stacks.get(stack);
+            StackListItem.ItemStackWrapper wrapper = new StackListItem.ItemStackWrapper(stack);
+
+            StackListEntry<ItemStack> entry = stacks.get(wrapper);
 
             if (entry == null)
                 return null;
@@ -167,7 +174,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
             if (action == Action.PERFORM) {
                 if (entry.getCount() - size == 0) {
-                    stacks.remove(stack);
+                    stacks.remove(wrapper);
                     stacksByItem.remove(stack.getItem(), new StackListItem.ItemStackWrapper(stack));
                     stored -= entry.getCount();
                 } else {
@@ -182,7 +189,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
         }
 
         for (StackListItem.ItemStackWrapper key : stacksByItem.get(stack.getItem())) {
-            StackListEntry<ItemStack> entry = stacks.get(key.getStack());
+            StackListEntry<ItemStack> entry = stacks.get(key);
 
             if (API.instance().getComparer().isEqual(entry.getStack(), stack, flags)) {
                 if (size > entry.getCount()) {
@@ -191,7 +198,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
 
                 if (action == Action.PERFORM) {
                     if (entry.getCount() - size == 0) {
-                        stacks.remove(key.getStack());
+                        stacks.remove(key);
                         stacksByItem.remove(stack.getItem(), key);
                         stored -= entry.getCount();
                     } else {
@@ -256,7 +263,7 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
      */
     @Deprecated
     public void putRaw(ItemStack stack, long count) {
-        stacks.put(stack, new StackListEntry<>(stack, count));
+        stacks.put(new StackListItem.ItemStackWrapper(stack), new StackListEntry<>(stack, count));
         stacksByItem.put(stack.getItem(), new StackListItem.ItemStackWrapper(stack));
     }
 

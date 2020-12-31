@@ -1,7 +1,5 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.disk;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.storage.AccessType;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
@@ -12,15 +10,17 @@ import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.disk.factory.StorageDiskFactoryFluid;
+import com.raoulvdberge.refinedstorage.apiimpl.util.StackListFluid;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class StorageDiskFluid implements IStorageDisk<FluidStack> {
@@ -37,7 +37,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
      */
     private long stored;
 
-    private final Multimap<Fluid, StackListEntry<FluidStack>> stacks = ArrayListMultimap.create();
+    private final Map<StackListFluid.FluidStackWrapper, StackListEntry<FluidStack>> stacks = new ConcurrentHashMap<>();
 
     @Nullable
     private IStorageDiskListener listener;
@@ -82,33 +82,35 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     @Override
     @Nullable
     public StackListResult<FluidStack> insert(@Nonnull FluidStack stack, long size, Action action) {
-        for (StackListEntry<FluidStack> otherEntry : stacks.get(stack.getFluid())) {
-            if (otherEntry.getStack().isFluidEqual(stack)) {
-                if (getCapacity() != -1 && getStored() + size > getCapacity()) {
-                    long remainingSpace = getCapacity() - getStored();
+        StackListFluid.FluidStackWrapper wrapper = new StackListFluid.FluidStackWrapper(stack);
 
-                    if (remainingSpace <= 0) {
-                        return new StackListResult<>(stack.copy(), size);
-                    }
+        StackListEntry<FluidStack> entry = stacks.get(wrapper);
 
-                    if (action == Action.PERFORM) {
-                        otherEntry.grow(remainingSpace);
-                        stored += remainingSpace;
+        if (entry != null) {
+            if (getCapacity() != -1 && getStored() + size > getCapacity()) {
+                long remainingSpace = getCapacity() - getStored();
 
-                        onChanged();
-                    }
-
-                    return new StackListResult<>(otherEntry.getStack().copy(), size - remainingSpace);
-                } else {
-                    if (action == Action.PERFORM) {
-                        otherEntry.grow(size);
-                        stored += size;
-
-                        onChanged();
-                    }
-
-                    return null;
+                if (remainingSpace <= 0) {
+                    return new StackListResult<>(stack.copy(), size);
                 }
+
+                if (action == Action.PERFORM) {
+                    entry.grow(remainingSpace);
+                    stored += remainingSpace;
+
+                    onChanged();
+                }
+
+                return new StackListResult<>(entry.getStack().copy(), size - remainingSpace);
+            } else {
+                if (action == Action.PERFORM) {
+                    entry.grow(size);
+                    stored += size;
+
+                    onChanged();
+                }
+
+                return null;
             }
         }
 
@@ -119,17 +121,20 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
                 return new StackListResult<>(stack.copy(), size);
             }
 
+            wrapper.setStack(stack.copy());
+
             if (action == Action.PERFORM) {
-                stacks.put(stack.getFluid(), new StackListEntry<>(stack.copy(), remainingSpace));
+                stacks.put(wrapper, new StackListEntry<>(stack.copy(), remainingSpace));
                 stored += remainingSpace;
 
                 onChanged();
             }
 
-            return new StackListResult<>(stack.copy(), size - remainingSpace);
+            return new StackListResult<>(wrapper.getStack(), size - remainingSpace);
         } else {
             if (action == Action.PERFORM) {
-                stacks.put(stack.getFluid(), new StackListEntry<>(stack.copy(), size));
+                wrapper.setStack(stack.copy());
+                stacks.put(wrapper, new StackListEntry<>(stack.copy(), size));
                 stored += size;
 
                 onChanged();
@@ -142,26 +147,27 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     @Override
     @Nullable
     public StackListResult<FluidStack> extract(@Nonnull FluidStack stack, long size, int flags, Action action) {
-        for (StackListEntry<FluidStack> otherEntry : stacks.get(stack.getFluid())) {
-            if (API.instance().getComparer().isEqual(otherEntry.getStack(), stack, flags)) {
-                if (size > otherEntry.getCount()) {
-                    size = otherEntry.getCount();
-                }
+        StackListFluid.FluidStackWrapper wrapper = new StackListFluid.FluidStackWrapper(stack);
 
-                if (action == Action.PERFORM) {
-                    if (otherEntry.getCount() - size == 0) {
-                        stacks.remove(otherEntry.getStack().getFluid(), otherEntry);
-                        stored -= otherEntry.getCount();
-                    } else {
-                        otherEntry.shrink(size);
-                        stored -= size;
-                    }
-
-                    onChanged();
-                }
-
-                return new StackListResult<>(otherEntry.getStack().copy(), size);
+        StackListEntry<FluidStack> entry = stacks.get(wrapper);
+        if (entry != null) {
+            if (size > entry.getCount()) {
+                size = entry.getCount();
             }
+
+            if (action == Action.PERFORM) {
+                if (entry.getCount() - size == 0) {
+                    stacks.remove(wrapper, entry);
+                    stored -= entry.getCount();
+                } else {
+                    entry.shrink(size);
+                    stored -= size;
+                }
+
+                onChanged();
+            }
+
+            return new StackListResult<>(entry.getStack().copy(), size);
         }
 
         return null;
@@ -214,7 +220,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
         return StorageDiskFactoryFluid.ID;
     }
 
-    public Multimap<Fluid, StackListEntry<FluidStack>> getRawStacks() {
+    public Map<StackListFluid.FluidStackWrapper, StackListEntry<FluidStack>> getRawStacks() {
         return stacks;
     }
 
@@ -222,7 +228,7 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
         if (listener != null)
             listener.onChanged();
 
-        if(world != null)
+        if (world != null)
             API.instance().getStorageDiskManager(world).markForSaving();
     }
 }
