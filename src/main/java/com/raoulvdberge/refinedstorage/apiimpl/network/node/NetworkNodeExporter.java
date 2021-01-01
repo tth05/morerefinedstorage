@@ -38,6 +38,8 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
 
     private static final String NBT_COVERS = "Covers";
 
+    //prevents the upgrade handler from resetting the filter count during loading phase
+    private boolean reading = true;
     private final FilterConfig config = new FilterConfig.Builder(this)
             .allowedFilterModeWhitelist()
             .allowedFilterTypeItemsAndFluids()
@@ -48,7 +50,7 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
 
     private final ItemHandlerUpgrade upgrades =
             new ItemHandlerUpgrade(4, slot -> {
-                if (!getUpgradeHandler().hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
+                if (!reading && !getUpgradeHandler().hasUpgrade(ItemUpgrade.TYPE_REGULATOR)) {
                     for (int i = 0; i < config.getItemHandler().getSlots(); ++i) {
                         ItemStack filteredItem = config.getItemHandler().getStackInSlot(i);
 
@@ -257,6 +259,8 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
         if (tag.hasKey(NBT_COVERS)) {
             coverManager.readFromNbt(tag.getTagList(NBT_COVERS, Constants.NBT.TAG_COMPOUND));
         }
+
+        reading = false;
     }
 
     @Override

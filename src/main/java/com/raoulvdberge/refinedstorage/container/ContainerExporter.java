@@ -53,8 +53,8 @@ public class ContainerExporter extends ContainerBase {
     private void detectRegulatorUpgradeChange() {
         boolean newState = hasRegulatorUpgrade();
         if (this.hasRegulatorUpgrade != newState) {
-            this.initSlots();
             this.hasRegulatorUpgrade = newState;
+            this.initSlots();
         }
     }
 
