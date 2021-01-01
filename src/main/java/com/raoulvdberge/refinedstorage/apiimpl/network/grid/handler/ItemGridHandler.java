@@ -191,7 +191,7 @@ public class ItemGridHandler implements IItemGridHandler {
     }
 
     private void grantAdvancement(EntityPlayerMP player) {
-        if (network.getItemStorageCache().getList().getStored() > 50_000_000_000L) {
+        if (network.getItemStorageCache().getList().getStored() > 100_000_000_000L) {
             RSTriggers.FIFTY_BILLION_ITEMS.trigger(player);
         }
     }
