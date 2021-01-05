@@ -1,0 +1,21 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond"
+    },
+    "title": {
+      "translate": "advancements.refinedstorage:one_hundred_billion_items"
+    },
+    "description": {
+      "translate": "advancements.refinedstorage:one_hundred_billion_items.description"
+    },
+    "frame": "challenge",
+    "hidden": true
+  },
+  "parent": "refinedstorage:storing_items",
+  "criteria": {
+    "one_hundred_billion_items_in_system": {
+      "trigger": "minecraft:rs_one_hundred_billion_items"
+    }
+  }
+}

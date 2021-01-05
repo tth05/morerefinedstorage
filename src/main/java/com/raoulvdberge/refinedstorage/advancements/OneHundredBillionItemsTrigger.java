@@ -14,10 +14,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class FiftyBillionItemsTrigger implements ICriterionTrigger<FiftyBillionItemsTrigger.Instance> {
+public class OneHundredBillionItemsTrigger implements ICriterionTrigger<OneHundredBillionItemsTrigger.Instance> {
 
-    private static final ResourceLocation ID = new ResourceLocation("rs_fifty_billion_items");
-    private final Map<PlayerAdvancements, FiftyBillionItemsTrigger.Listeners> listeners = new HashMap<>();
+    private static final ResourceLocation ID = new ResourceLocation("rs_one_hundred_billion_items");
+    private final Map<PlayerAdvancements, OneHundredBillionItemsTrigger.Listeners> listeners = new HashMap<>();
 
     @Nonnull
     @Override
@@ -27,10 +27,10 @@ public class FiftyBillionItemsTrigger implements ICriterionTrigger<FiftyBillionI
 
     @Override
     public void addListener(@Nonnull PlayerAdvancements playerAdvancements, @Nonnull ICriterionTrigger.Listener<Instance> listener) {
-        FiftyBillionItemsTrigger.Listeners existingListeners = this.listeners.get(playerAdvancements);
+        OneHundredBillionItemsTrigger.Listeners existingListeners = this.listeners.get(playerAdvancements);
 
         if (existingListeners == null) {
-            existingListeners = new FiftyBillionItemsTrigger.Listeners(playerAdvancements);
+            existingListeners = new OneHundredBillionItemsTrigger.Listeners(playerAdvancements);
             this.listeners.put(playerAdvancements, existingListeners);
         }
 
@@ -39,7 +39,7 @@ public class FiftyBillionItemsTrigger implements ICriterionTrigger<FiftyBillionI
 
     @Override
     public void removeListener(@Nonnull PlayerAdvancements playerAdvancements, @Nonnull Listener<Instance> listener) {
-        FiftyBillionItemsTrigger.Listeners existingListeners = this.listeners.get(playerAdvancements);
+        OneHundredBillionItemsTrigger.Listeners existingListeners = this.listeners.get(playerAdvancements);
 
         if (existingListeners != null) {
             existingListeners.remove(listener);
@@ -62,7 +62,7 @@ public class FiftyBillionItemsTrigger implements ICriterionTrigger<FiftyBillionI
     }
 
     public void trigger(EntityPlayerMP player) {
-        FiftyBillionItemsTrigger.Listeners listeners = this.listeners.get(player.getAdvancements());
+        OneHundredBillionItemsTrigger.Listeners listeners = this.listeners.get(player.getAdvancements());
 
         if (listeners != null) {
             listeners.trigger();
@@ -72,13 +72,13 @@ public class FiftyBillionItemsTrigger implements ICriterionTrigger<FiftyBillionI
     public static class Instance extends AbstractCriterionInstance {
 
         public Instance() {
-            super(FiftyBillionItemsTrigger.ID);
+            super(OneHundredBillionItemsTrigger.ID);
         }
     }
 
     public static class Listeners {
         private final PlayerAdvancements playerAdvancements;
-        private final Set<Listener<FiftyBillionItemsTrigger.Instance>> listeners = new HashSet<>();
+        private final Set<Listener<OneHundredBillionItemsTrigger.Instance>> listeners = new HashSet<>();
 
         public Listeners(PlayerAdvancements playerAdvancementsIn) {
             this.playerAdvancements = playerAdvancementsIn;
@@ -88,16 +88,16 @@ public class FiftyBillionItemsTrigger implements ICriterionTrigger<FiftyBillionI
             return this.listeners.isEmpty();
         }
 
-        public void add(ICriterionTrigger.Listener<FiftyBillionItemsTrigger.Instance> listener) {
+        public void add(ICriterionTrigger.Listener<OneHundredBillionItemsTrigger.Instance> listener) {
             this.listeners.add(listener);
         }
 
-        public void remove(ICriterionTrigger.Listener<FiftyBillionItemsTrigger.Instance> listener) {
+        public void remove(ICriterionTrigger.Listener<OneHundredBillionItemsTrigger.Instance> listener) {
             this.listeners.remove(listener);
         }
 
         public void trigger() {
-            for (ICriterionTrigger.Listener<FiftyBillionItemsTrigger.Instance> listener : this.listeners) {
+            for (ICriterionTrigger.Listener<OneHundredBillionItemsTrigger.Instance> listener : this.listeners) {
                 listener.grantCriterion(playerAdvancements);
             }
         }

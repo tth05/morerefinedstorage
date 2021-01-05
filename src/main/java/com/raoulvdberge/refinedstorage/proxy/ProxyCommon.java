@@ -277,7 +277,7 @@ public class ProxyCommon {
     }
 
     public void init(FMLInitializationEvent e) {
-        CriteriaTriggers.register(RSTriggers.FIFTY_BILLION_ITEMS);
+        CriteriaTriggers.register(RSTriggers.ONE_HUNDRED_BILLION_ITEMS_TRIGGER);
 
         GameRegistry.addSmelting(Items.QUARTZ, new ItemStack(RSItems.SILICON), 0.5F);
 
