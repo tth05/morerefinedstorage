@@ -63,7 +63,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void update() {
-        if (this.tasksDirty) {
+        if (this.tasksDirty ) {
             //makes sure updates are sent only once per tick
             listeners.forEach(ICraftingMonitorListener::onChanged);
             this.tasksDirty = false;

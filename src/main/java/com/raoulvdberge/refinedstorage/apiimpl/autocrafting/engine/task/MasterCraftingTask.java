@@ -88,7 +88,26 @@ public class MasterCraftingTask implements ICraftingTask {
                               @Nonnull ICraftingPattern pattern) {
         this.network = network;
         this.info = requested;
-        this.quantity = quantity;
+
+        long outputPerCraft = 0;
+        if (requested.getItem() != null) {
+            for (ItemStack output : pattern.getOutputs()) {
+                if (API.instance().getComparer().isEqualNoQuantity(output, requested.getItem())) {
+                    outputPerCraft = output.getCount();
+                    break;
+                }
+            }
+        } else {
+            for (FluidStack output : pattern.getFluidOutputs()) {
+                if (API.instance().getComparer().isEqual(output, requested.getFluid(), IComparer.COMPARE_NBT)) {
+                    outputPerCraft = output.amount;
+                    break;
+                }
+            }
+        }
+
+        //adjust quantity to next full output size
+        this.quantity = (quantity % outputPerCraft) == 0 ? quantity : (quantity / outputPerCraft + 1) * outputPerCraft;
 
         if (pattern.isProcessing())
             tasks.add(new ProcessingTask(pattern, quantity, requested.getFluid() != null));
@@ -232,7 +251,6 @@ public class MasterCraftingTask implements ICraftingTask {
      *
      * @param task       the task
      * @param containers the set of containers
-     *
      * @return an array which contains the available crafting updates for each container in a filtered subset.
      */
     private int[] splitBetweenCraftingPatternContainers(ProcessingTask task, Set<ICraftingPatternContainer> containers) {
@@ -257,7 +275,7 @@ public class MasterCraftingTask implements ICraftingTask {
             }
         }
 
-        if(!seen)
+        if (!seen)
             throw new IllegalStateException();
 
         total = (int) Math.min(total, best);
