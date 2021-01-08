@@ -63,8 +63,8 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public void update() {
-        if (this.tasksDirty ) {
-            //makes sure updates are sent only once per tick
+        //sends updates at a max rate of 1 per tick and force sends every 20 ticks
+        if (this.tasksDirty || this.network.getWorld().getWorldTime() % 20 == 0) {
             listeners.forEach(ICraftingMonitorListener::onChanged);
             this.tasksDirty = false;
         }
