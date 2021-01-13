@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 public class GridViewImpl implements IGridView {
     private final GuiGrid gui;
     private boolean canCraft;
+    private boolean active;
 
     private final IGridSorter defaultSorter;
     private final List<IGridSorter> sorters;
@@ -49,8 +50,10 @@ public class GridViewImpl implements IGridView {
             });
 
             this.stacks.sort(getActiveSort());
+            this.active = true;
         } else {
-            this.stacks = Collections.emptyList();
+            this.stacks = new ArrayList<>();
+            this.active = false;
         }
 
         this.gui.updateScrollbar();
@@ -58,6 +61,8 @@ public class GridViewImpl implements IGridView {
 
     @Override
     public void postChange(IGridStack stack, long delta) {
+        if (!this.active)
+            return;
         /*
         Explanation of otherId:
         otherId for a normal GridStack is the id of the same GridStack but the craftable version
