@@ -1,5 +1,14 @@
 # More Refined Storage Changelog
 
+# 2.2.6
+- Corrected some minimum energy usage values
+- Fixed regulator upgrade not keeping item count on world load
+- Fixed quantity of crafting tasks not being rounded to next full set
+- Fixed crafting task time not progressing if nothing is happening
+- Fixed comparer not treating null and empty compound equally
+- Fixed crash when changing redstone mode in grid
+- Fixed grid not updating sometimes when typing in search bar
+
 # 2.2.5
 - Fixed detector crashing filter sometimes if filter slot is empty
 - Fixed duplication glitch of items that store data in capabilities
