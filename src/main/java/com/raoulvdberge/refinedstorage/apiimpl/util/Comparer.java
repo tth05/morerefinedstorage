@@ -36,8 +36,16 @@ public class Comparer implements IComparer {
             return false;
         }
 
-        if ((flags & COMPARE_NBT) == COMPARE_NBT && !ItemStack.areItemStackTagsEqual(left, right)) {
-            return false;
+        if ((flags & COMPARE_NBT) == COMPARE_NBT) {
+            boolean leftTagEmpty = left.getTagCompound() == null || left.getTagCompound().isEmpty();
+            boolean rightTagEmpty = right.getTagCompound() == null || right.getTagCompound().isEmpty();
+            if (leftTagEmpty) {
+                if (!rightTagEmpty)
+                    return false;
+            } else {
+                if (!left.getTagCompound().equals(right.getTagCompound()) || !left.areCapsCompatible(right))
+                    return false;
+            }
         }
 
         if ((flags & COMPARE_DAMAGE) == COMPARE_DAMAGE && left.getItemDamage() != right.getItemDamage()) {
