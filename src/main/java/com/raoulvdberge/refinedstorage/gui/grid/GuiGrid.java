@@ -111,7 +111,10 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         if (searchField == null) {
             searchField = new TextFieldSearch(0, fontRenderer, sx, sy, 88 - 6);
-            searchField.addListener(() -> this.getView().sort());
+            searchField.addListener(() -> {
+                this.canSort = true;
+                this.getView().sort();
+            });
             searchField.setMode(grid.getSearchBoxMode());
         } else {
             searchField.x = sx;
