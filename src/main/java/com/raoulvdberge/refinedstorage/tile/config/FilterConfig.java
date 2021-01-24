@@ -158,8 +158,11 @@ public class FilterConfig {
             return isBlacklistMode();
 
         for (ItemStack filterStack : this.itemStacks) {
-            if (API.instance().getComparer().isEqual(stack, filterStack, compareValue) == isWhitelistMode())
+            boolean equal = API.instance().getComparer().isEqual(stack, filterStack, compareValue);
+            if (equal && isWhitelistMode())
                 return true;
+            if (equal && isBlacklistMode())
+                return false;
         }
 
         return false;
@@ -175,8 +178,11 @@ public class FilterConfig {
             return isBlacklistMode();
 
         for (FluidStack filterStack : this.fluidStacks) {
-            if (API.instance().getComparer().isEqual(stack, filterStack, compareValue) == isWhitelistMode())
+            boolean equal = API.instance().getComparer().isEqual(stack, filterStack, compareValue);
+            if (equal && isWhitelistMode())
                 return true;
+            if (equal && isBlacklistMode())
+                return false;
         }
 
         return false;

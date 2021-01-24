@@ -14,6 +14,7 @@ import net.minecraftforge.fluids.FluidStack;
 import org.junit.jupiter.api.*;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -168,8 +169,37 @@ public class FilterConfigTest implements MinecraftForgeTest {
 
     @Test
     @Order(4)
-    public void testAcceptsItemAndFluid() {
-        FilterConfig cfg1 = new FilterConfig.Builder(node)
+    public void testAcceptsWhitelist() {
+        FilterConfig cfg = new FilterConfig.Builder(node)
+                .allowedFilterModeBlackAndWhitelist()
+                .filterModeWhitelist()
+                .allowedFilterTypeItemsAndFluids()
+                .filterTypeItems()
+                .filterSizeNine()
+                .compareDamageAndNbt().build();
+
+        assertFalse(cfg.acceptsItem(ItemStack.EMPTY));
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.APPLE)));
+        assertFalse(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, -1)));
+        assertFalse(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1000)));
+
+        cfg.getItemHandler().setStackInSlot(1, new ItemStack(Items.APPLE));
+        cfg.getItemHandler().setStackInSlot(2, new ItemStack(Items.WOODEN_AXE));
+
+        cfg.getFluidHandler().setFluid(2, new FluidStack(FluidRegistry.WATER, 1));
+
+        assertFalse(cfg.acceptsItem(ItemStack.EMPTY));
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.DIAMOND)));
+        assertTrue(cfg.acceptsItem(new ItemStack(Items.APPLE)));
+        assertTrue(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE, 50)));
+        assertFalse(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, -1)));
+        assertFalse(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1000)));
+        assertTrue(cfg.acceptsFluid(new FluidStack(FluidRegistry.WATER, 100)));
+    }
+
+    @Order(5)
+    public void testAcceptsBlacklist() {
+        FilterConfig cfg = new FilterConfig.Builder(node)
                 .allowedFilterModeBlackAndWhitelist()
                 .filterModeBlacklist()
                 .allowedFilterTypeItemsAndFluids()
@@ -177,48 +207,75 @@ public class FilterConfigTest implements MinecraftForgeTest {
                 .filterSizeNine()
                 .compareDamageAndNbt().build();
 
-        FilterConfig cfg2 = new FilterConfig.Builder(node)
-                .allowedFilterModeBlackAndWhitelist()
-                .filterModeBlacklist()
-                .allowedFilterTypeFluids()
-                .filterTypeFluids()
-                .filterSizeNine().build();
+        assertFalse(cfg.acceptsItem(ItemStack.EMPTY));
+        assertTrue(cfg.acceptsItem(new ItemStack(Items.APPLE)));
+        assertFalse(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, -1)));
+        assertTrue(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1000)));
 
-        assertTrue(cfg1.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
-        assertTrue(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1)));
-        assertFalse(cfg1.acceptsItem(ItemStack.EMPTY));
+        cfg.getItemHandler().setStackInSlot(1, new ItemStack(Items.APPLE));
+        cfg.getItemHandler().setStackInSlot(2, new ItemStack(Items.WOODEN_AXE));
 
-        assertTrue(cfg2.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
-        assertFalse(cfg2.acceptsItem(new ItemStack(Items.APPLE, 1)));
+        cfg.getFluidHandler().setFluid(2, new FluidStack(FluidRegistry.WATER, 1));
 
-        cfg1.setFilterType(FilterType.FLUIDS);
-
-        assertTrue(cfg1.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
-        assertTrue(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1)));
-
-        cfg1.setFilterMode(FilterMode.WHITELIST);
-        cfg2.setFilterMode(FilterMode.WHITELIST);
-
-        assertFalse(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1)));
-        assertFalse(cfg2.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
-
-        cfg1.getItemHandler().setStackInSlot(5, new ItemStack(Items.APPLE, 5));
-        cfg2.getFluidHandler().setFluid(1, new FluidStack(FluidRegistry.LAVA, 1));
-
-        assertTrue(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1)));
-        assertTrue(cfg2.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
-        assertFalse(cfg1.acceptsItem(new ItemStack(Items.WOODEN_AXE, 1)));
-        assertFalse(cfg2.acceptsFluid(new FluidStack(FluidRegistry.WATER, 1)));
-
-        assertFalse(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1, 5)));
-
-        cfg1.setCompare(IComparer.COMPARE_NBT);
-
-        assertTrue(cfg1.acceptsItem(new ItemStack(Items.APPLE, 1, 5)));
+        assertFalse(cfg.acceptsItem(ItemStack.EMPTY));
+        assertTrue(cfg.acceptsItem(new ItemStack(Items.DIAMOND)));
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.APPLE)));
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE, 50)));
+        assertFalse(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, -1)));
+        assertTrue(cfg.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1000)));
+        assertFalse(cfg.acceptsFluid(new FluidStack(FluidRegistry.WATER, 100)));
     }
 
     @Test
-    @Order(5)
+    @Order(6)
+    public void testCompare() {
+        FilterConfig cfg = new FilterConfig.Builder(node)
+                .allowedFilterModeBlackAndWhitelist()
+                .filterModeWhitelist()
+                .allowedFilterTypeItemsAndFluids()
+                .filterTypeItems()
+                .filterSizeNine()
+                .compareDamageAndNbt().build();
+
+        ItemStack nbtStack = new ItemStack(Items.WOODEN_AXE, 1, 10);
+        NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setString("test", "test");
+        nbtStack.setTagCompound(nbt);
+
+        cfg.getItemHandler().setStackInSlot(1, nbtStack);
+
+        Function<ItemStack, ItemStack> withNBT = (i) -> {
+            i.setTagCompound(nbt.copy());
+            return i;
+        };
+
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE)));
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE, 1, 10)));
+        assertFalse(cfg.acceptsItem(withNBT.apply(new ItemStack(Items.WOODEN_AXE, 1, 0))));
+        assertTrue(cfg.acceptsItem(withNBT.apply(new ItemStack(Items.WOODEN_AXE, 1, 10))));
+
+        cfg.setCompare(0);
+
+        assertTrue(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE)));
+        assertTrue(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE, 1, 10)));
+        assertTrue(cfg.acceptsItem(withNBT.apply(new ItemStack(Items.WOODEN_AXE, 1, 0, nbt.copy()))));
+
+        cfg.setCompare(IComparer.COMPARE_DAMAGE);
+
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE)));
+        assertTrue(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE, 1, 10)));
+        assertFalse(cfg.acceptsItem(withNBT.apply(new ItemStack(Items.WOODEN_AXE, 1, 0, nbt.copy()))));
+
+        cfg.setCompare(IComparer.COMPARE_NBT);
+
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE)));
+        assertFalse(cfg.acceptsItem(new ItemStack(Items.WOODEN_AXE, 1, 10)));
+        assertTrue(cfg.acceptsItem(withNBT.apply(new ItemStack(Items.WOODEN_AXE, 1, 0, nbt.copy()))));
+
+    }
+
+    @Test
+    @Order(7)
     public void testListenersAndSupplier() {
         AtomicInteger c = new AtomicInteger(0);
         FilterConfig cfg = new FilterConfig.Builder(node).allowedFilterTypeItemsAndFluids().filterTypeItems().filterSizeNine()
@@ -238,7 +295,7 @@ public class FilterConfigTest implements MinecraftForgeTest {
     }
 
     @Test
-    @Order(6)
+    @Order(8)
     public void testWriteToNBT() {
         FilterConfig cfg1 = new FilterConfig.Builder(node)
                 .allowedFilterModeBlackAndWhitelist()
@@ -277,6 +334,7 @@ public class FilterConfigTest implements MinecraftForgeTest {
     }
 
     @Test
+    @Order(9)
     public void testReadFromNBT() {
         FilterConfig cfg1 = new FilterConfig.Builder(node)
                 .allowedFilterModeBlackAndWhitelist()
@@ -287,6 +345,8 @@ public class FilterConfigTest implements MinecraftForgeTest {
                 .compareDamageAndNbt().build();
 
         FilterConfig cfg2 = new FilterConfig.Builder(node)
+                .allowedFilterModeWhitelist()
+                .filterModeWhitelist()
                 .allowedFilterTypeFluids()
                 .filterTypeFluids()
                 .filterSizeNine()
@@ -313,13 +373,12 @@ public class FilterConfigTest implements MinecraftForgeTest {
         assertTrue(cfg1.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
 
         assertEquals(FilterType.FLUIDS, cfg2.getFilterType());
-        assertEquals(FilterMode.UNDEFINED, cfg2.getFilterMode());
         assertEquals(IComparer.COMPARE_NBT, cfg2.getCompare());
         assertThrows(UnsupportedOperationException.class, cfg2::getItemHandler);
         assertEquals(9, cfg2.getFluidHandler().getSlots());
 
-        assertThrows(UnsupportedOperationException.class, () -> cfg2.setFilterMode(FilterMode.WHITELIST));
         assertFalse(cfg2.acceptsItem(new ItemStack(Items.APPLE, 1)));
-        assertTrue(cfg2.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
+        assertFalse(cfg2.acceptsFluid(new FluidStack(FluidRegistry.LAVA, 1)));
+        assertTrue(cfg2.acceptsFluid(new FluidStack(FluidRegistry.WATER, 1)));
     }
 }
