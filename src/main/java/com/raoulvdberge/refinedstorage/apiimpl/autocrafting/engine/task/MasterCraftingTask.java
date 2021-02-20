@@ -266,8 +266,7 @@ public class MasterCraftingTask implements ICraftingTask {
         boolean seen = false;
         long best = 0;
         List<Input> inputs = task.getInputs();
-        for (int i = 0; i < inputs.size(); i++) {
-            Input in = inputs.get(i);
+        for (Input in : inputs) {
             long l = in.getTotalInputAmount() / in.getQuantityPerCraft();
             if (!seen || l < best) {
                 seen = true;

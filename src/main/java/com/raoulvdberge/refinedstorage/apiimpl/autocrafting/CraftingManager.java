@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorListener;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingTaskError;
 import com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
@@ -275,7 +276,7 @@ public class CraftingManager implements ICraftingManager {
     }
 
     private void addAndCalculateTask(Object source, ICraftingTask task) {
-        this.tasksInCalculation.add(task);
+      /*  this.tasksInCalculation.add(task);
         CompletableFuture.supplyAsync(task::calculate).thenAccept((err) -> {
             FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
                 if (err == null && !task.hasMissing()) {
@@ -287,6 +288,18 @@ public class CraftingManager implements ICraftingManager {
 
                 this.tasksInCalculation.remove(task);
             });
+        });*/
+
+        FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
+            this.tasksInCalculation.add(task);
+            ICraftingTaskError err = task.calculate();
+            if (err == null && !task.hasMissing()) {
+                this.add(task);
+                task.setCanUpdate(true);
+            } else {
+                throttle(source);
+            }
+            this.tasksInCalculation.remove(task);
         });
     }
 

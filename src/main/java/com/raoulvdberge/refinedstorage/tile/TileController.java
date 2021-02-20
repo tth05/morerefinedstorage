@@ -302,48 +302,50 @@ public class TileController extends TileBase
         return remainder;
     }
 
+    public static final Object monitor = new Object();
+
     @Nullable
     @Override
-    public synchronized StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action,
-                                                               Predicate<IStorage<ItemStack>> filter) {
+    public StackListResult<ItemStack> extractItem(@Nonnull ItemStack stack, long size, int flags, Action action,
+                                                  Predicate<IStorage<ItemStack>> filter) {
         long received = 0;
         long extractedExternally = 0;
-
         StackListResult<ItemStack> newStack = null;
 
-        for (IStorage<ItemStack> storage : this.itemStorage.getStorages()) {
-            StackListResult<ItemStack> took = null;
+        List<IStorage<ItemStack>> storages = this.itemStorage.getStorages();
+        synchronized (monitor) {
+            for (IStorage<ItemStack> storage : storages) {
+                StackListResult<ItemStack> took = null;
 
-            if (filter.test(storage) && storage.getAccessType() != AccessType.INSERT) {
-                took = storage.extract(stack, size - received, flags, action);
-            }
+                if (filter.test(storage) && storage.getAccessType() != AccessType.INSERT) {
+                    took = storage.extract(stack, size - received, flags, action);
+                }
+                if (took != null) {
+                    // The external storage is responsible for sending changes, we don't need to anymore
+                    if (storage instanceof IStorageExternal && action == Action.PERFORM) {
+                        ((IStorageExternal<?>) storage).update(this);
 
-            if (took != null) {
-                // The external storage is responsible for sending changes, we don't need to anymore
-                if (storage instanceof IStorageExternal && action == Action.PERFORM) {
-                    ((IStorageExternal<?>) storage).update(this);
+                        extractedExternally += took.getCount();
+                    }
 
-                    extractedExternally += took.getCount();
+                    if (newStack == null) {
+                        newStack = took;
+                    } else {
+                        newStack.grow(took.getCount());
+                    }
+
+                    received += took.getCount();
                 }
 
-                if (newStack == null) {
-                    newStack = took;
-                } else {
-                    newStack.grow(took.getCount());
+                if (size == received) {
+                    break;
                 }
-
-                received += took.getCount();
             }
 
-            if (size == received) {
-                break;
+            if (newStack != null && newStack.getCount() - extractedExternally > 0 && action == Action.PERFORM) {
+                itemStorage.remove(newStack.getStack(), newStack.getCount() - extractedExternally, false);
             }
         }
-
-        if (newStack != null && newStack.getCount() - extractedExternally > 0 && action == Action.PERFORM) {
-            itemStorage.remove(newStack.getStack(), newStack.getCount() - extractedExternally, false);
-        }
-
         return newStack;
     }
 
