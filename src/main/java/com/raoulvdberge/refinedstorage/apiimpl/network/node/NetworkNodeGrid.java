@@ -10,6 +10,7 @@ import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IFilter;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.listener.StorageCacheListenerGridFluid;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.listener.StorageCacheListenerGridItem;
@@ -392,13 +393,13 @@ public class NetworkNodeGrid extends NetworkNode implements IGridNetworkAware {
     }
 
     @Override
-    public void onCrafted(EntityPlayer player) {
-        API.instance().getCraftingGridBehavior().onCrafted(this, currentRecipe, player);
+    public void onCrafted(EntityPlayer player, @Nullable IStackList<ItemStack> availableItems, @Nullable IStackList<ItemStack> usedItems) {
+        API.instance().getCraftingGridBehavior().onCrafted(this, currentRecipe, player, availableItems, usedItems);
     }
 
     @Override
     public void onCraftedShift(EntityPlayer player) {
-        API.instance().getCraftingGridBehavior().onCraftedShift(this, currentRecipe, player);
+        API.instance().getCraftingGridBehavior().onCraftedShift(this, player);
     }
 
     @Override

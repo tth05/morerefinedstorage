@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IFilter;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCraftResult;
@@ -202,7 +203,7 @@ public interface IGrid {
      *
      * @param player the player that crafted the item
      */
-    void onCrafted(EntityPlayer player);
+    void onCrafted(EntityPlayer player, @Nullable IStackList<ItemStack> availableItems, @Nullable IStackList<ItemStack> usedItems);
 
     /**
      * Called when an item is crafted with shift click (up to 64 items) in a crafting grid.

@@ -8,6 +8,7 @@ import com.raoulvdberge.refinedstorage.api.network.grid.handler.IItemGridHandler
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCache;
 import com.raoulvdberge.refinedstorage.api.storage.IStorageCacheListener;
 import com.raoulvdberge.refinedstorage.api.util.IFilter;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.cache.listener.StorageCacheListenerGridItem;
 import com.raoulvdberge.refinedstorage.gui.GuiBase;
 import com.raoulvdberge.refinedstorage.gui.grid.GuiGrid;
@@ -283,7 +284,7 @@ public class WirelessGrid implements IGridNetworkAware {
     }
 
     @Override
-    public void onCrafted(EntityPlayer player) {
+    public void onCrafted(EntityPlayer player, @Nullable IStackList<ItemStack> availableItems, @Nullable IStackList<ItemStack> usedItems) {
         // NO OP
     }
 

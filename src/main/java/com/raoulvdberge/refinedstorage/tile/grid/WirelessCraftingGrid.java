@@ -94,7 +94,7 @@ public class WirelessCraftingGrid extends WirelessGrid {
             network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessCraftingGridCraftUsage);
         }
 
-        API.instance().getCraftingGridBehavior().onCrafted(this, this.currentRecipe, player);
+        API.instance().getCraftingGridBehavior().onCrafted(this, this.currentRecipe, player, null, null);
     }
 
     public void onCraftedShift(final EntityPlayer player) {
@@ -103,7 +103,7 @@ public class WirelessCraftingGrid extends WirelessGrid {
             network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessCraftingGridCraftUsage);
         }
 
-        API.instance().getCraftingGridBehavior().onCraftedShift(this, this.currentRecipe, player);
+        API.instance().getCraftingGridBehavior().onCraftedShift(this, player);
     }
 
     public void onRecipeTransfer(final EntityPlayer player, final ItemStack[][] recipe) {
