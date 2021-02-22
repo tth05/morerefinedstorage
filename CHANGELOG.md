@@ -1,5 +1,10 @@
 # More Refined Storage Changelog
 
+# 2.2.7
+- Fixed blacklist not working in filters when multiple items are used
+- Fixed compatibility with Refined Avaritia (and maybe RSLargePatterns)
+- Reverted to upstream shift-crafting code which is easier to maintain
+
 # 2.2.6
 - Corrected some minimum energy usage values
 - Fixed regulator upgrade not keeping item count on world load
