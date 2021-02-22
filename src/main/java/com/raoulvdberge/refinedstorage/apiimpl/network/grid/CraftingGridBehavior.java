@@ -208,7 +208,7 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
                     remainder = network.insertItem(craftedItem, craftedItem.getCount(), Action.PERFORM);
                 }
 
-                if (!remainder.isEmpty()) {
+                if (remainder != null && !remainder.isEmpty()) {
                     InventoryHelper.spawnItemStack(player.getEntityWorld(), player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), remainder);
                 }
             }
