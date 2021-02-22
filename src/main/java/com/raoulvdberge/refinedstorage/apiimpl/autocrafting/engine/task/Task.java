@@ -271,7 +271,7 @@ public abstract class Task {
         ItemStack stack = new ItemStack(tag.getCompoundTag(NBT_PATTERN_STACK));
 
         if (stack.getItem() instanceof ICraftingPatternProvider) {
-            return ((ICraftingPatternProvider) stack.getItem()).create(world, stack);
+            return ((ICraftingPatternProvider) stack.getItem()).create(world, stack, null);
         } else {
             throw new CraftingTaskReadException("Pattern stack is not a crafting pattern provider: " + stack);
         }

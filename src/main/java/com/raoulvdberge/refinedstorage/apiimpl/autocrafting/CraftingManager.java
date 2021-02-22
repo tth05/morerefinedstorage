@@ -10,7 +10,9 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.MasterCraftingTask;
+import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.tile.TileController;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -276,7 +278,10 @@ public class CraftingManager implements ICraftingManager {
 
     private void addAndCalculateTask(Object source, ICraftingTask task) {
         this.tasksInCalculation.add(task);
-        CompletableFuture.supplyAsync(task::calculate).thenAccept((err) -> {
+        CompletableFuture.supplyAsync(task::calculate).exceptionally((t) -> {
+            t.printStackTrace();
+            return new CraftingTaskError();
+        }).thenAccept((err) -> {
             FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
                 if (err == null && !task.hasMissing()) {
                     this.add(task);
@@ -298,7 +303,12 @@ public class CraftingManager implements ICraftingManager {
             return null;
         }
 
-        ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(pattern.getId());
+        String id = pattern.getId();
+        //old id still used by some mods
+        if (id.equals("normal"))
+            id = CraftingTaskFactory.ID;
+
+        ICraftingTaskFactory factory = API.instance().getCraftingTaskRegistry().get(id);
         if (factory == null) {
             return null;
         }
@@ -456,8 +466,8 @@ public class CraftingManager implements ICraftingManager {
         for (ICraftingPattern patternInList : patterns) {
             for (ItemStack output : patternInList.getOutputs()) {
                 if (API.instance().getComparer().isEqual(output, pattern, flags) &&
-                        patternInList.getBlacklistedItems().stream()
-                                .noneMatch(f -> API.instance().getComparer().isEqualNoQuantity(f, pattern))) {
+                    patternInList.getBlacklistedItems().stream()
+                            .noneMatch(f -> API.instance().getComparer().isEqualNoQuantity(f, pattern))) {
                     return patternInList;
                 }
             }
@@ -472,8 +482,8 @@ public class CraftingManager implements ICraftingManager {
         for (ICraftingPattern patternInList : patterns) {
             for (FluidStack output : patternInList.getFluidOutputs()) {
                 if (API.instance().getComparer().isEqual(output, pattern, IComparer.COMPARE_NBT) &&
-                        patternInList.getBlacklistedFluids().stream().noneMatch(f -> API.instance().getComparer()
-                                .isEqual(f, pattern, IComparer.COMPARE_NBT))) {
+                    patternInList.getBlacklistedFluids().stream().noneMatch(f -> API.instance().getComparer()
+                            .isEqual(f, pattern, IComparer.COMPARE_NBT))) {
                     return patternInList;
                 }
             }

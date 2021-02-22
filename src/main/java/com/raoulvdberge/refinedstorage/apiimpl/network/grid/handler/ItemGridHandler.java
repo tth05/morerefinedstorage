@@ -63,7 +63,7 @@ public class ItemGridHandler implements IItemGridHandler {
 
         if (single) {
             if (!held.isEmpty() && (!API.instance().getComparer().isEqualNoQuantity(entry.getStack(), held) ||
-                    held.getCount() + 1 > held.getMaxStackSize())) {
+                                    held.getCount() + 1 > held.getMaxStackSize())) {
                 return;
             }
         } else if (!player.inventory.getItemStack().isEmpty()) {
@@ -160,7 +160,7 @@ public class ItemGridHandler implements IItemGridHandler {
     @Override
     public void onInsertHeldItem(EntityPlayerMP player, boolean single) {
         if (player.inventory.getItemStack().isEmpty() ||
-                !network.getSecurityManager().hasPermission(Permission.INSERT, player)) {
+            !network.getSecurityManager().hasPermission(Permission.INSERT, player)) {
             return;
         }
 
@@ -216,7 +216,7 @@ public class ItemGridHandler implements IItemGridHandler {
                 return;
             }
 
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture.supplyAsync(() -> {
                 ICraftingTaskError error = task.calculate();
 
                 FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
@@ -241,6 +241,11 @@ public class ItemGridHandler implements IItemGridHandler {
                             .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
                                     task.getCalculationTime(), quantity, false), player);
                 }
+
+                return null;
+            }).exceptionally(t -> {
+                t.printStackTrace();
+                return null;
             });
         }
     }

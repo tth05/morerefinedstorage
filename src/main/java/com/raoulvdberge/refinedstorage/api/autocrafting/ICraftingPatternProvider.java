@@ -15,6 +15,20 @@ public interface ICraftingPatternProvider {
      *
      * @param world     the world
      * @param stack     the pattern stack, the implementor needs to copy it
+     * @param container unused, patterns are not bound to containers anymore; pass {@code null} here
+     * @return the crafting pattern
+     */
+    @Deprecated
+    @Nonnull
+    default ICraftingPattern create(World world, ItemStack stack, ICraftingPatternContainer container) {
+        return create(world, stack);
+    }
+
+    /**
+     * Creates a crafting pattern.
+     *
+     * @param world     the world
+     * @param stack     the pattern stack, the implementor needs to copy it
      * @return the crafting pattern
      */
     @Nonnull

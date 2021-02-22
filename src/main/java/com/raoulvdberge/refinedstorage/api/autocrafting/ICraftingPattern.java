@@ -72,14 +72,18 @@ public interface ICraftingPattern {
      *
      * @return the blacklisted items of this pattern
      */
-    NonNullList<ItemStack> getBlacklistedItems();
+    default NonNullList<ItemStack> getBlacklistedItems() {
+        return NonNullList.create();
+    }
 
     /**
      * Returns a list of fluids for which this pattern cannot be used to craft them.
      *
      * @return the blacklisted fluids of this pattern
      */
-    NonNullList<FluidStack> getBlacklistedFluids();
+    default NonNullList<FluidStack> getBlacklistedFluids() {
+        return NonNullList.create();
+    }
 
     /**
      * @return the id of the factory that creates a crafting task for this pattern, as defined in the {@link com.raoulvdberge.refinedstorage.api.autocrafting.registry.ICraftingTaskRegistry}

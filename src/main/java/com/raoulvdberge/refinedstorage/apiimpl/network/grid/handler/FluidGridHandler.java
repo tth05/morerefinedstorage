@@ -141,7 +141,7 @@ public class FluidGridHandler implements IFluidGridHandler {
                 return;
             }
 
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture.supplyAsync(() -> {
                 ICraftingTaskError error = task.calculate();
 
                 FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
@@ -166,6 +166,11 @@ public class FluidGridHandler implements IFluidGridHandler {
                             .sendTo(new MessageGridCraftingPreviewResponse(task.getPreviewStacks(), task.getId(),
                                     task.getCalculationTime(), quantity, true), player);
                 }
+
+                return null;
+            }).exceptionally(t -> {
+                t.printStackTrace();
+                return null;
             });
         }
     }
