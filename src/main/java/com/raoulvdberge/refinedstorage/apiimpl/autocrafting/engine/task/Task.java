@@ -1,7 +1,6 @@
 package com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task;
 
 import com.raoulvdberge.refinedstorage.RS;
-import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternProvider;
@@ -25,7 +24,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -482,9 +480,9 @@ public abstract class Task {
                 ICraftingPattern pattern;
                 if (!input.isFluid())
                     //TODO: add possibility for oredict components to be crafted
-                    pattern = getPattern(network.getCraftingManager(), input.getCompareableItemStack());
+                    pattern = network.getCraftingManager().getPattern(input.getCompareableItemStack(), p -> !p.equals(this.pattern));
                 else
-                    pattern = getPattern(network.getCraftingManager(), input.getFluidStack());
+                    pattern = network.getCraftingManager().getPattern(input.getFluidStack(), p -> !p.equals(this.pattern));
 
                 //add new sub task if pattern is valid and is not used recursively
                 if (pattern != null && pattern.isValid() && !recursedPatterns.contains(pattern)) {
@@ -571,54 +569,6 @@ public abstract class Task {
     @Nonnull
     public UUID getUuid() {
         return this.uuid;
-    }
-
-    /**
-     * Copy of {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager#getPattern(ItemStack)} but the
-     * pattern of this task is ignored.
-     *
-     * @param stack           the stack to get a pattern for
-     * @param craftingManager the crafting manager
-     * @return a corresponding pattern or null if none was found
-     */
-    @Nullable
-    private ICraftingPattern getPattern(@Nonnull ICraftingManager craftingManager, @Nonnull ItemStack stack) {
-        for (ICraftingPattern patternInList : craftingManager.getPatterns()) {
-            for (ItemStack output : patternInList.getOutputs()) {
-                if (API.instance().getComparer().isEqualNoQuantity(output, stack) &&
-                        !patternInList.equals(this.pattern) &&
-                        patternInList.getBlacklistedItems().stream()
-                                .noneMatch(f -> API.instance().getComparer().isEqualNoQuantity(f, stack))) {
-                    return patternInList;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Copy of {@link com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingManager#getPattern(FluidStack)} but the
-     * pattern of this task is ignored.
-     *
-     * @param stack           the stack to get a pattern for
-     * @param craftingManager the crafting manager
-     * @return a corresponding pattern or null if none was found
-     */
-    @Nullable
-    private ICraftingPattern getPattern(@Nonnull ICraftingManager craftingManager, @Nonnull FluidStack stack) {
-        for (ICraftingPattern patternInList : craftingManager.getPatterns()) {
-            for (FluidStack output : patternInList.getFluidOutputs()) {
-                if (API.instance().getComparer().isEqual(output, stack, IComparer.COMPARE_NBT) &&
-                        !patternInList.equals(this.pattern) &&
-                        patternInList.getBlacklistedFluids().stream().noneMatch(f -> API.instance().getComparer()
-                                .isEqual(f, stack, IComparer.COMPARE_NBT))) {
-                    return patternInList;
-                }
-            }
-        }
-
-        return null;
     }
 
     public void addParent(Task task) {

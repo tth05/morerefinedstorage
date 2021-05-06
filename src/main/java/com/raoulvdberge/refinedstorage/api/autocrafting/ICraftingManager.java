@@ -11,6 +11,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * The crafting manager handles the storing, updating, adding and deleting of crafting tasks in a network.
@@ -134,27 +135,59 @@ public interface ICraftingManager {
     void rebuild();
 
     /**
-     * Return a crafting pattern from an item stack.
+     * Return a crafting pattern which produces the given {@link ItemStack}.
      *
      * @param pattern the stack to get a pattern for
+     * @param flags comparison flags
+     * @param filter a filter which should return {@code false} if the given pattern should be ignored.
+     * @return the crafting pattern, or null if none is found
+     */
+    ICraftingPattern getPattern(ItemStack pattern, int flags, Predicate<ICraftingPattern> filter);
+
+    /**
+     * Return a crafting pattern which produces the given {@link ItemStack}.
+     *
+     * @param pattern the stack to get a pattern for
+     * @param flags comparison flags
      * @return the crafting pattern, or null if none is found
      */
     @Nullable
-    ICraftingPattern getPattern(ItemStack pattern, int flags);
+    default ICraftingPattern getPattern(ItemStack pattern, int flags) {
+        return getPattern(pattern, flags, p -> true);
+    }
 
+    /**
+     * @see #getPattern(ItemStack, int)
+     */
     @Nullable
     default ICraftingPattern getPattern(ItemStack pattern) {
         return getPattern(pattern, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
     }
 
     /**
-     * Return a crafting pattern from a fluid stack.
-     *
-     * @param pattern the stack to get a pattern for
-     * @return the crafting pattern, or null if none is found
+     * @see #getPattern(ItemStack, int, Predicate)
      */
     @Nullable
-    ICraftingPattern getPattern(FluidStack pattern);
+    default ICraftingPattern getPattern(ItemStack pattern, Predicate<ICraftingPattern> filter) {
+        return getPattern(pattern, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE, filter);
+    }
+
+    /**
+     * Return a crafting pattern which produces the given {@link ItemStack}.
+     *
+     * @param pattern the stack to get a pattern for
+     * @param filter a filter which should return {@code false} if the given pattern should be ignored.
+     * @return the crafting pattern, or null if none is found
+     */
+    ICraftingPattern getPattern(FluidStack pattern, Predicate<ICraftingPattern> filter);
+
+    /**
+     * @see #getPattern(FluidStack, Predicate)
+     */
+    @Nullable
+    default ICraftingPattern getPattern(FluidStack pattern) {
+        return getPattern(pattern, p -> true);
+    }
 
     /**
      * Updates the tasks in this manager.

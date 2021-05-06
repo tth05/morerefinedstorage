@@ -29,6 +29,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 public class CraftingManager implements ICraftingManager {
     private static final int THROTTLE_DELAY_MS = 3000;
@@ -462,34 +463,46 @@ public class CraftingManager implements ICraftingManager {
 
     @Nullable
     @Override
-    public ICraftingPattern getPattern(ItemStack pattern, int flags) {
-        for (ICraftingPattern patternInList : patterns) {
-            for (ItemStack output : patternInList.getOutputs()) {
-                if (API.instance().getComparer().isEqual(output, pattern, flags) &&
-                    patternInList.getBlacklistedItems().stream()
-                            .noneMatch(f -> API.instance().getComparer().isEqualNoQuantity(f, pattern))) {
-                    return patternInList;
+    public ICraftingPattern getPattern(ItemStack pattern, int flags, Predicate<ICraftingPattern> filter) {
+        //synchronized for access by crafting tasks during calculation
+        synchronized (patterns) {
+            for (ICraftingPattern patternInList : patterns) {
+                if (!filter.test(patternInList))
+                    continue;
+
+                for (ItemStack output : patternInList.getOutputs()) {
+                    if (API.instance().getComparer().isEqual(output, pattern, flags) &&
+                        patternInList.getBlacklistedItems().stream()
+                                .noneMatch(f -> API.instance().getComparer().isEqualNoQuantity(f, pattern))) {
+                        return patternInList;
+                    }
                 }
             }
-        }
 
-        return null;
+            return null;
+        }
     }
 
     @Nullable
     @Override
-    public ICraftingPattern getPattern(FluidStack pattern) {
-        for (ICraftingPattern patternInList : patterns) {
-            for (FluidStack output : patternInList.getFluidOutputs()) {
-                if (API.instance().getComparer().isEqual(output, pattern, IComparer.COMPARE_NBT) &&
-                    patternInList.getBlacklistedFluids().stream().noneMatch(f -> API.instance().getComparer()
-                            .isEqual(f, pattern, IComparer.COMPARE_NBT))) {
-                    return patternInList;
+    public ICraftingPattern getPattern(FluidStack pattern, Predicate<ICraftingPattern> filter) {
+        //synchronized for access by crafting tasks during calculation
+        synchronized (patterns) {
+            for (ICraftingPattern patternInList : patterns) {
+                if (!filter.test(patternInList))
+                    continue;
+
+                for (FluidStack output : patternInList.getFluidOutputs()) {
+                    if (API.instance().getComparer().isEqual(output, pattern, IComparer.COMPARE_NBT) &&
+                        patternInList.getBlacklistedFluids().stream().noneMatch(f -> API.instance().getComparer()
+                                .isEqual(f, pattern, IComparer.COMPARE_NBT))) {
+                        return patternInList;
+                    }
                 }
             }
-        }
 
-        return null;
+            return null;
+        }
     }
 
     @Override
@@ -504,10 +517,7 @@ public class CraftingManager implements ICraftingManager {
 
     @Override
     public Set<ICraftingPattern> getPatterns() {
-        //synchronized for access by crafting tasks during calculation
-        synchronized (patterns) {
-            return patterns;
-        }
+        return patterns;
     }
 
     @Override
