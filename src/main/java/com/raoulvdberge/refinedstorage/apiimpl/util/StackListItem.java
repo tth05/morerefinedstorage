@@ -190,7 +190,7 @@ public class StackListItem implements IStackList<ItemStack> {
             boolean isEmpty = template.isEmpty();
             Item item = template.getItem();
             NBTTagCompound originalNbt = template.getTagCompound();
-            NBTTagCompound nbt = originalNbt == null ? null : originalNbt.copy();
+            NBTTagCompound nbt = originalNbt == null || originalNbt.isEmpty() ? null : originalNbt.copy();
 
             int hashCode1;
             hashCode1 = 31 + Boolean.hashCode(isEmpty);
