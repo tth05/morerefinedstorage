@@ -333,7 +333,7 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public synchronized void track(ItemStack stack) {
+    public void track(ItemStack stack) {
         int trackedAmount = 0;
         int oldStackSize = stack.getCount();
 
@@ -351,7 +351,7 @@ public class CraftingManager implements ICraftingManager {
     }
 
     @Override
-    public synchronized void track(FluidStack stack) {
+    public void track(FluidStack stack) {
         int trackedAmount = 0;
         int oldStackSize = stack.amount;
 
