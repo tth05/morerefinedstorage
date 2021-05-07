@@ -174,6 +174,7 @@ public class NetworkNodeCrafter extends NetworkNode implements ICraftingPatternC
 
     @Override
     protected void onDirectionChanged() {
+        super.onDirectionChanged();
         if (network != null) {
             network.getCraftingManager().rebuild();
         }
