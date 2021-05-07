@@ -21,7 +21,6 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.util.UUID;
 
 public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
@@ -42,7 +41,6 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
 
     private EnumFacing direction = EnumFacing.NORTH;
     private BlockPos facingPos;
-    private WeakReference<TileEntity> facingTileEntity;
 
     // Disable throttling for the first tick.
     // This is to make sure couldUpdate is going to be correctly set.
@@ -254,15 +252,7 @@ public abstract class NetworkNode implements INetworkNode, INetworkNodeVisitor {
         if (this.facingPos == null)
             this.facingPos = this.pos.offset(getDirection());
 
-        if (RS.INSTANCE.config.cacheFacingTile) {
-            if (this.facingTileEntity == null || this.facingTileEntity.get() == null) {
-                this.facingTileEntity = new WeakReference<>(world.getTileEntity(this.facingPos));
-            }
-
-            return this.facingTileEntity.get();
-        } else {
-            return world.getTileEntity(this.facingPos);
-        }
+        return world.getTileEntity(this.facingPos);
     }
 
     public EnumFacing getDirection() {

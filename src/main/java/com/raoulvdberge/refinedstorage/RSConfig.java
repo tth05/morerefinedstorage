@@ -128,10 +128,6 @@ public class RSConfig {
     public int calculationTimeoutMs;
     //endregion
 
-    //region Misc
-    public boolean cacheFacingTile;
-    //endregion
-
     //region Categories
     private static final String ENERGY = "energy";
     private static final String CONTROLLER = "controller";
@@ -289,10 +285,6 @@ public class RSConfig {
 
         //region Autocrafting
         calculationTimeoutMs = config.getInt("calculationTimeoutMs", AUTOCRAFTING, 5000, 5000, Integer.MAX_VALUE, "The autocrafting calculation timeout in milliseconds, tasks taking longer than this to calculate (NOT execute) are cancelled to avoid server strain");
-        //endregion
-
-        //region Misc
-        cacheFacingTile = config.getBoolean("cacheFacingTile", MISC, false, "If true, the tile entity that RS blocks are facing at is cached. This will increase performance, but for example importers will take a moment before they recognize that a new tile entity is in front of them, in case the old one gets broken (it relies on GC cycles). Only recommended if performance is an issue.");
         //endregion
 
         if (config.hasChanged()) {
