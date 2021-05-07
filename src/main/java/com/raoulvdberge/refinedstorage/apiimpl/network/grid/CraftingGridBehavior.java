@@ -8,25 +8,20 @@ import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.api.util.*;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeGrid;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.NonNullList;
-import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class CraftingGridBehavior implements ICraftingGridBehavior {
 
@@ -236,58 +231,6 @@ public class CraftingGridBehavior implements ICraftingGridBehavior {
         return availableItems;
     }
 
-
-    /**
-     * @param maxIterations the max iterations that the simulation should run
-     * @param matrix        the current crafting matrix
-     * @param result        the current result
-     * @return the maximum amount of iterations that can be run with the given {@code remainder} and the final remainder
-     * after the run iterations
-     */
-    private static Pair<Integer, NonNullList<ItemStack>> simulateRemainder(int maxIterations,
-                                                                           InventoryCrafting matrix,
-                                                                           ItemStack result,
-                                                                           World world) {
-        int iterations = 0;
-
-        //contains the total final remainder, items may exceed their max stack size
-        NonNullList<ItemStack> finalRemainder = NonNullList.withSize(matrix.getSizeInventory(), ItemStack.EMPTY);
-        Set<Integer> shouldGrowSlot = new IntArraySet(matrix.getSizeInventory());
-
-        //loop until result changes
-        do {
-            iterations++;
-            NonNullList<ItemStack> remainder = CraftingManager.getRemainingItems(matrix, world);
-            for (int i = 0; i < remainder.size(); i++) {
-                ItemStack itemStack = remainder.get(i);
-                ItemStack stackInSlot = matrix.getStackInSlot(i);
-                if (itemStack.isEmpty() && stackInSlot.isEmpty())
-                    continue;
-                //if there is a remainder
-                if (!itemStack.isEmpty()) {
-                    //if the item that has remainder is stacked, then remember that remainder item
-                    if (!stackInSlot.isEmpty() && (stackInSlot.getCount() > 1 || shouldGrowSlot.contains(i))) {
-                        ItemStack finalRemainderItemStack = finalRemainder.get(i);
-                        if (finalRemainderItemStack.isEmpty()) {
-                            finalRemainder.set(i, itemStack);
-                            shouldGrowSlot.add(i);
-                        } else {
-                            finalRemainderItemStack.grow(1);
-                        }
-                        stackInSlot.shrink(1);
-                    } else {
-                        matrix.setInventorySlotContents(i, itemStack);
-                        finalRemainder.set(i, itemStack);
-                    }
-                } else {
-                    stackInSlot.shrink(1);
-                }
-            }
-        } while (API.instance().getComparer().isEqual(result, CraftingManager.findMatchingResult(matrix, world)) &&
-                iterations < maxIterations);
-
-        return Pair.of(iterations, finalRemainder);
-    }
 
     @Override
     public void onClear(IGridNetworkAware grid, EntityPlayer player) {
