@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.network.grid.GridType;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGridCraftingListener;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.item.ItemWirelessCraftingGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
@@ -19,6 +20,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.DimensionManager;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -88,15 +90,17 @@ public class WirelessCraftingGrid extends WirelessGrid {
         StackUtils.writeItems(this.matrix, 1, this.getStack().getTagCompound());
     }
 
-    public void onCrafted(final EntityPlayer player) {
+    @Override
+    public void onCrafted(final EntityPlayer player, @Nullable IStackList<ItemStack> availableItems, @Nullable IStackList<ItemStack> usedItems) {
         final INetwork network = this.getNetwork();
         if (network != null) {
             network.getNetworkItemHandler().drainEnergy(player, RS.INSTANCE.config.wirelessCraftingGridCraftUsage);
         }
 
-        API.instance().getCraftingGridBehavior().onCrafted(this, this.currentRecipe, player, null, null);
+        API.instance().getCraftingGridBehavior().onCrafted(this, this.currentRecipe, player, availableItems, usedItems);
     }
 
+    @Override
     public void onCraftedShift(final EntityPlayer player) {
         final INetwork network = this.getNetwork();
         if (network != null) {
@@ -106,6 +110,7 @@ public class WirelessCraftingGrid extends WirelessGrid {
         API.instance().getCraftingGridBehavior().onCraftedShift(this, player);
     }
 
+    @Override
     public void onRecipeTransfer(final EntityPlayer player, final ItemStack[][] recipe) {
         API.instance().getCraftingGridBehavior().onRecipeTransfer(this, player, recipe);
     }
