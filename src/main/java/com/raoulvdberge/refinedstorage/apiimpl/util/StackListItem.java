@@ -91,8 +91,8 @@ public class StackListItem implements IStackList<ItemStack> {
     @Nullable
     @Override
     public StackListEntry<ItemStack> getEntry(@Nonnull ItemStack stack, int flags) {
-        if((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
-                (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
+        if ((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
+            (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
             return stacks.get(new ItemStackWrapper(stack));
         }
 
@@ -110,7 +110,10 @@ public class StackListItem implements IStackList<ItemStack> {
     @Override
     @Nullable
     public StackListEntry<ItemStack> get(UUID id) {
-        return index.get(id).asUnmodifiable();
+        StackListEntry<ItemStack> entry = index.get(id);
+        if (entry == null)
+            return null;
+        return entry.asUnmodifiable();
     }
 
     @Override

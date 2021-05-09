@@ -99,7 +99,10 @@ public class StackListFluid implements IStackList<FluidStack> {
     @Override
     @Nullable
     public StackListEntry<FluidStack> get(UUID id) {
-        return index.get(id).asUnmodifiable();
+        StackListEntry<FluidStack> entry = index.get(id);
+        if (entry == null)
+            return null;
+        return entry.asUnmodifiable();
     }
 
     @Override
