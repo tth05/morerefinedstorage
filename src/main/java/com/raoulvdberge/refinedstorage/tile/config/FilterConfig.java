@@ -165,7 +165,7 @@ public class FilterConfig {
                 return false;
         }
 
-        return false;
+        return isBlacklistMode();
     }
 
     public boolean acceptsFluid(@Nullable FluidStack stack) {
@@ -185,7 +185,7 @@ public class FilterConfig {
                 return false;
         }
 
-        return false;
+        return isBlacklistMode();
     }
 
     public void invalidateCache() {

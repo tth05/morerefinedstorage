@@ -17,6 +17,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
@@ -93,11 +94,15 @@ public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
                 RS.INSTANCE.network
                         .sendToServer(new MessageGridProcessingTransfer(inputs, outputs, fluidInputs, fluidOutputs));
             } else {
-                RS.INSTANCE.network.sendToServer(new MessageGridTransfer(
-                        recipeLayout.getItemStacks().getGuiIngredients(),
-                        container.inventorySlots.stream().filter(s -> s.inventory instanceof InventoryCrafting)
-                                .collect(Collectors.toList())
-                ));
+                try {
+                    RS.INSTANCE.network.sendToServer(new MessageGridTransfer(
+                            recipeLayout.getItemStacks().getGuiIngredients(),
+                            container.inventorySlots.stream().filter(s -> s.inventory instanceof InventoryCrafting)
+                                    .collect(Collectors.toList())
+                    ));
+                } catch (IllegalStateException e) {
+                    player.sendMessage(new TextComponentString("Cannot transfer items, packet too large."));
+                }
             }
         }
 

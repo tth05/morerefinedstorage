@@ -5,6 +5,7 @@ import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import mezz.jei.api.gui.IGuiIngredient;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Slot;
@@ -45,7 +46,9 @@ public class MessageGridTransfer extends MessageHandlerPlayerToServer<MessageGri
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
+    public void toBytes(ByteBuf buf2) {
+        ByteBuf buf = Unpooled.buffer();
+
         buf.writeInt(slots.size());
 
         for (Slot slot : slots) {
@@ -67,6 +70,11 @@ public class MessageGridTransfer extends MessageHandlerPlayerToServer<MessageGri
                 StackUtils.writeItemStack(buf, possibleStack);
             }
         }
+
+        if (buf.writerIndex() > 32767)
+            throw new IllegalStateException();
+
+        buf2.writeBytes(buf.array());
     }
 
     @Override
