@@ -2,6 +2,8 @@ package com.raoulvdberge.refinedstorage.apiimpl.autocrafting;
 
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.registry.CraftingTaskFactory;
 import com.raoulvdberge.refinedstorage.item.ItemPattern;
@@ -33,22 +35,33 @@ public class CraftingPattern implements ICraftingPattern {
     private final NonNullList<FluidStack> fluidInputs = NonNullList.create();
     private final NonNullList<FluidStack> fluidOutputs = NonNullList.create();
 
-    //blacklisted items which this pattern cannot craft. 1x Wood -> 1x Wood (wood cannot be crafted because it gets used
-    // up in the next iteration, it doesn't multiply)
+    //Blacklisted items which this pattern cannot craft. 1x Wood -> 1x Wood (wood cannot be crafted because it gets used
+    // up in the next iteration, it doesn't multiply). This is only relevant for processing patterns (hopefully)
     private final NonNullList<ItemStack> blacklistedItems = NonNullList.create();
     private final NonNullList<FluidStack> blacklistedFluids = NonNullList.create();
 
     //cache the hash code because crafting patterns are immutable and the calculation is slow
-    private int cachedHashCode;
+    private final int cachedHashCode;
 
     public CraftingPattern(World world, ItemStack stack) {
         this.stack = stack.copy();
         this.processing = ItemPattern.isProcessing(stack);
         this.oredict = ItemPattern.isOredict(stack);
 
+        //How much of each input is in the input slots
+        IStackList<ItemStack> itemInputCounts = API.instance().createItemStackList();
+        IStackList<FluidStack> fluidInputCounts = API.instance().createFluidStackList();
+
+        //How much of each output is in the output slots
+        IStackList<ItemStack> itemOutputCounts = API.instance().createItemStackList();
+        IStackList<FluidStack> fluidOutputCounts = API.instance().createFluidStackList();
+
         if (processing) {
             for (int i = 0; i < 9; ++i) {
                 ItemStack input = ItemPattern.getInputSlot(stack, i);
+
+                if (input != null && !input.isEmpty())
+                    itemInputCounts.add(input);
 
                 if (input == null) {
                     inputs.add(NonNullList.create());
@@ -86,6 +99,7 @@ public class CraftingPattern implements ICraftingPattern {
                 if (output != null) {
                     this.valid = true; // As soon as we have one output, we are valid.
 
+                    itemOutputCounts.add(output);
                     outputs.add(output);
                 }
 
@@ -93,6 +107,7 @@ public class CraftingPattern implements ICraftingPattern {
                 if (fluidInput != null) {
                     this.valid = true;
 
+                    fluidInputCounts.add(fluidInput);
                     fluidInputs.add(fluidInput);
                 }
 
@@ -100,6 +115,7 @@ public class CraftingPattern implements ICraftingPattern {
                 if (fluidOutput != null) {
                     this.valid = true;
 
+                    fluidOutputCounts.add(fluidOutput);
                     fluidOutputs.add(fluidOutput);
                 }
             }
@@ -149,26 +165,21 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         //if any input is found in the outputs with exactly the same amount, then blacklist that output
-        for (NonNullList<ItemStack> input : this.inputs) {
-            for (ItemStack possibleItemStack : input) {
-                for (ItemStack output : this.outputs) {
-                    if (API.instance().getComparer()
-                            .isEqual(possibleItemStack, output, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE)
-                            && possibleItemStack.getCount() >= output.getCount()) {
-                        blacklistedItems.add(output);
-                    }
-                }
-            }
-        }
+        itemInputCounts.getStacks().forEach(e -> {
+            StackListEntry<ItemStack> entry = itemOutputCounts.getEntry(e.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
+            if (entry != null && e.getCount() >= entry.getCount())
+                this.blacklistedItems.add(e.getStack());
+        });
 
-        for (FluidStack fluidInput : this.fluidInputs) {
-            for (FluidStack fluidOutput : this.fluidOutputs) {
-                if (API.instance().getComparer().isEqual(fluidInput, fluidOutput, IComparer.COMPARE_NBT)
-                        && fluidInput.amount >= fluidOutput.amount) {
-                    blacklistedFluids.add(fluidOutput);
-                    return;
-                }
-            }
+        fluidInputCounts.getStacks().forEach(e -> {
+            StackListEntry<FluidStack> entry = fluidOutputCounts.getEntry(e.getStack(), IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
+            if (entry != null && e.getCount() >= entry.getCount())
+                this.blacklistedFluids.add(e.getStack());
+        });
+
+        if (!isProcessing()) {
+            this.blacklistedItems.clear();
+            this.blacklistedFluids.clear();
         }
 
         //if all items and fluids are blacklisted, then this pattern is useless
@@ -216,7 +227,7 @@ public class CraftingPattern implements ICraftingPattern {
         if (took.size() != inputs.size()) {
             throw new IllegalArgumentException(
                     "The items that are taken (" + took.size() + ") should match the inputs for this pattern (" +
-                            inputs.size() + ")");
+                    inputs.size() + ")");
         }
 
         InventoryCrafting inv = new InventoryCraftingDummy();
@@ -251,7 +262,7 @@ public class CraftingPattern implements ICraftingPattern {
         if (took.size() != inputs.size()) {
             throw new IllegalArgumentException(
                     "The items that are taken (" + took.size() + ") should match the inputs for this pattern (" +
-                            inputs.size() + ")");
+                    inputs.size() + ")");
         }
 
         InventoryCrafting inv = new InventoryCraftingDummy();
@@ -304,9 +315,9 @@ public class CraftingPattern implements ICraftingPattern {
         }
 
         if ((other.getInputs().size() != inputs.size()) ||
-                (other.getFluidInputs().size() != fluidInputs.size()) ||
-                (other.getOutputs().size() != outputs.size()) ||
-                (other.getFluidOutputs().size() != fluidOutputs.size())) {
+            (other.getFluidInputs().size() != fluidInputs.size()) ||
+            (other.getOutputs().size() != outputs.size()) ||
+            (other.getFluidOutputs().size() != fluidOutputs.size())) {
             return false;
         }
 
