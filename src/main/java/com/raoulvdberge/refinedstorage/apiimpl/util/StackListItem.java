@@ -111,6 +111,17 @@ public class StackListItem implements IStackList<ItemStack> {
         return null;
     }
 
+    @Nullable
+    @Override
+    public ItemStack get(@Nonnull ItemStack stack, int flags) {
+        StackListEntry<ItemStack> entry = getEntry(stack, flags);
+        if (entry == null)
+            return null;
+        ItemStack copy = entry.getStack().copy();
+        copy.setCount((int) Math.min(entry.getCount(), Integer.MAX_VALUE));
+        return copy;
+    }
+
     @Override
     @Nullable
     public StackListEntry<ItemStack> get(UUID id) {

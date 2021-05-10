@@ -96,6 +96,17 @@ public class StackListFluid implements IStackList<FluidStack> {
         return entry != null ? entry.asUnmodifiable() : null;
     }
 
+    @Nullable
+    @Override
+    public FluidStack get(@Nonnull FluidStack stack, int flags) {
+        StackListEntry<FluidStack> entry = getEntry(stack, flags);
+        if (entry == null)
+            return null;
+        FluidStack copy = entry.getStack().copy();
+        copy.amount = (int) Math.min(entry.getCount(), Integer.MAX_VALUE);
+        return copy;
+    }
+
     @Override
     @Nullable
     public StackListEntry<FluidStack> get(UUID id) {
