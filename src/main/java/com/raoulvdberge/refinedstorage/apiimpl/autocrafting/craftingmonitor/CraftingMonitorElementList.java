@@ -18,7 +18,10 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
             ICraftingMonitorElement existingElement = storedElements.get(element.baseElementHashCode());
             if (existingElement != null) {
                 if (existingElement instanceof CraftingMonitorElementError) {
-                    ((CraftingMonitorElementError) existingElement).mergeBases(element);
+                    if (element instanceof CraftingMonitorElementError)
+                        ((CraftingMonitorElementError) existingElement).mergeBases(((CraftingMonitorElementError) element).getBase());
+                    else
+                        ((CraftingMonitorElementError) existingElement).mergeBases(element);
                 } else if (element instanceof CraftingMonitorElementError) {
                     //merge the other way and override
                     ((CraftingMonitorElementError) element).mergeBases(existingElement);
@@ -48,8 +51,8 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     @Override
     public void sort() {
         this.elements.sort((o1, o2) -> {
-            if((!(o1 instanceof CraftingMonitorElementError) && !(o1 instanceof ICraftingMonitorElementComparable)) ||
-                    (!(o2 instanceof CraftingMonitorElementError) &&!(o2 instanceof ICraftingMonitorElementComparable)))
+            if ((!(o1 instanceof CraftingMonitorElementError) && !(o1 instanceof ICraftingMonitorElementComparable)) ||
+                (!(o2 instanceof CraftingMonitorElementError) && !(o2 instanceof ICraftingMonitorElementComparable)))
                 return 0;
 
             ICraftingMonitorElementComparable one =
@@ -82,14 +85,14 @@ public class CraftingMonitorElementList implements ICraftingMonitorElementList {
     @Override
     public void clearEmptyElements() {
         this.elements.removeIf(e -> {
-            if(!(e instanceof ICraftingMonitorElementComparable))
+            if (!(e instanceof ICraftingMonitorElementComparable))
                 return false;
 
             ICraftingMonitorElementComparable element =
                     (ICraftingMonitorElementComparable) (e instanceof CraftingMonitorElementError ?
                             ((CraftingMonitorElementError) e).getBase() : e);
             return element.getStored() < 1 && element.getCrafting() < 1 && element.getProcessing() < 1 &&
-                    element.getScheduled() < 1;
+                   element.getScheduled() < 1;
         });
     }
 
