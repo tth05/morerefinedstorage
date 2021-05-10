@@ -15,6 +15,8 @@ public class CraftingRequestInfo implements ICraftingRequestInfo {
     private ItemStack item;
     private FluidStack fluid;
 
+    private long quantity;
+
     public CraftingRequestInfo(NBTTagCompound tag) throws CraftingTaskReadException {
         if (!tag.getBoolean(NBT_FLUID)) {
             item = new ItemStack(tag.getCompoundTag(NBT_STACK));
@@ -31,12 +33,21 @@ public class CraftingRequestInfo implements ICraftingRequestInfo {
         }
     }
 
-    public CraftingRequestInfo(ItemStack item) {
+    public CraftingRequestInfo(ItemStack item, long quantity) {
+        this(quantity);
         this.item = item;
     }
 
-    public CraftingRequestInfo(FluidStack fluid) {
+    public CraftingRequestInfo(FluidStack fluid, long quantity) {
+        this(quantity);
         this.fluid = fluid;
+    }
+
+    /**
+     * @param quantity the requested quantity, not serialized to nbt
+     */
+    private CraftingRequestInfo(long quantity) {
+        this.quantity = quantity;
     }
 
     @Nullable
@@ -49,6 +60,11 @@ public class CraftingRequestInfo implements ICraftingRequestInfo {
     @Override
     public FluidStack getFluid() {
         return fluid;
+    }
+
+    @Override
+    public long getQuantity() {
+        return this.quantity;
     }
 
     @Override

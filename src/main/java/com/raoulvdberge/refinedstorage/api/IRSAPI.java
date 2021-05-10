@@ -184,7 +184,7 @@ public interface IRSAPI {
      * @param stack the stack
      * @return the request info
      */
-    ICraftingRequestInfo createCraftingRequestInfo(ItemStack stack);
+    ICraftingRequestInfo createCraftingRequestInfo(ItemStack stack, long quantity);
 
     /**
      * Creates crafting request info for a fluid.
@@ -192,7 +192,7 @@ public interface IRSAPI {
      * @param stack the stack
      * @return the request info
      */
-    ICraftingRequestInfo createCraftingRequestInfo(FluidStack stack);
+    ICraftingRequestInfo createCraftingRequestInfo(FluidStack stack, long quantity);
 
     /**
      * Creates crafting request info from NBT.

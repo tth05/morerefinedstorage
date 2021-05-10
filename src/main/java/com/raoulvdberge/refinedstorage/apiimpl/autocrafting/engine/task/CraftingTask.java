@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
@@ -44,8 +45,8 @@ public class CraftingTask extends Task {
 
     private boolean finished = false;
 
-    public CraftingTask(@Nonnull ICraftingPattern pattern, long amountNeeded) {
-        super(pattern, amountNeeded, false);
+    public CraftingTask(@Nonnull ICraftingPattern pattern, ICraftingRequestInfo requestInfo) {
+        super(pattern, requestInfo);
 
         if (pattern.isProcessing())
             throw new IllegalArgumentException("Processing pattern cannot be used for crafting task!");

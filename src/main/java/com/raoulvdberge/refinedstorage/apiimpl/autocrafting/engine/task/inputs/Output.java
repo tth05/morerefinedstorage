@@ -34,20 +34,6 @@ public class Output extends Input {
         this.completedSets = compound.getLong(NBT_COMPLETED_SETS);
     }
 
-    /**
-     * Applies the given {@code input} to this output. Basically subtracting this outputs QPC with the given QPC.
-     * Does not actually modify the QPC of this output.
-     *
-     * @param input the {@link RestockableInput} to apply
-     * @return the amount that is still left of the restockable input because the input QPC is less than the output QPC;
-     * 0 otherwise
-     */
-    public long applyRestockableInput(RestockableInput input) {
-        int fakeQuantityPerCraft = this.quantityPerCraft - input.getQuantityPerCraft();
-
-        return fakeQuantityPerCraft < 0 ? -(long) fakeQuantityPerCraft : 0;
-    }
-
     @Nonnull
     @Override
     public NBTTagCompound writeToNbt(@Nonnull NBTTagCompound compound) {
@@ -65,5 +51,12 @@ public class Output extends Input {
      */
     public long getCompletedSets() {
         return this.completedSets;
+    }
+
+    /**
+     * @return the amount of sets yet to be completed
+     */
+    public long getMissingSets() {
+        return ((long) Math.ceil(this.amountNeeded / (double) this.quantityPerCraft) - getCompletedSets());
     }
 }

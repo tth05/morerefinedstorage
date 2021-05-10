@@ -11,16 +11,21 @@ import javax.annotation.Nullable;
  */
 public interface ICraftingRequestInfo {
     /**
-     * @return the item requested, or null if no item was requested
+     * @return the item requested, or null if a fluid was requested
      */
     @Nullable
     ItemStack getItem();
 
     /**
-     * @return the fluid requested, or null if no fluid was requested
+     * @return the fluid requested, or null if an item was requested
      */
     @Nullable
     FluidStack getFluid();
+
+    /**
+     * @return the requested quantity
+     */
+    long getQuantity();
 
     /**
      * @return the written tag

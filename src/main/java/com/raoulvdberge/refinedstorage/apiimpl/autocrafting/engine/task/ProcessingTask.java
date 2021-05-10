@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPattern;
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
@@ -57,8 +58,8 @@ public class ProcessingTask extends Task {
      */
     private final List<Pair<Input, Integer>> generatedPairs = new ObjectArrayList<>(this.inputs.size());
 
-    public ProcessingTask(@Nonnull ICraftingPattern pattern, long amountNeeded, boolean isFluidRequested) {
-        super(pattern, amountNeeded, isFluidRequested);
+    public ProcessingTask(@Nonnull ICraftingPattern pattern, ICraftingRequestInfo requestInfo) {
+        super(pattern, requestInfo);
         this.hasFluidInputs = this.inputs.stream().anyMatch(Input::isFluid);
         this.hasItemInputs = this.inputs.stream().anyMatch(i -> !i.isFluid());
     }
@@ -112,7 +113,7 @@ public class ProcessingTask extends Task {
 
         //no connected machine
         if ((hasFluidInputs && container.getConnectedFluidInventory() == null) ||
-                (hasItemInputs && container.getConnectedInventory() == null)) {
+            (hasItemInputs && container.getConnectedInventory() == null)) {
             this.state = ProcessingState.MACHINE_NONE;
             network.getCraftingManager().onTaskChanged();
             return 0;
@@ -166,19 +167,23 @@ public class ProcessingTask extends Task {
         //if there's anything left and the item is an output of this processing task -> forward to parents
         Output matchingOutput = this.outputs.stream()
                 .filter(o -> !o.isFluid() &&
-                        API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
+                             API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
                 .findFirst().orElse(null);
 
         RestockableInput matchingInput = (RestockableInput) this.inputs.stream()
                 .filter(input -> input instanceof RestockableInput && !input.isFluid() &&
-                        API.instance().getComparer().isEqualNoQuantity(input.getCompareableItemStack(), stack))
+                                 API.instance().getComparer().isEqualNoQuantity(input.getCompareableItemStack(), stack))
                 .findFirst().orElse(null);
 
         long inputRemainder = stack.getCount();
         //give item to restockable input
-        if (matchingOutput != null && matchingInput != null && matchingInput.getAmountMissing() > 0 &&
-                matchingOutput.getProcessingAmount() > 0)
+        if (matchingOutput != null && matchingInput != null &&
+            matchingInput.getAmountMissing() > 0 && matchingOutput.getProcessingAmount() > 0 &&
+            //if the input has inserted everything it needs to, don't give it any more items to insert
+            matchingOutput.getMissingSets() * matchingInput.getQuantityPerCraft() != matchingInput.getProcessingAmount()
+        ) {
             inputRemainder = matchingInput.increaseItemStackAmount(stack, stack.getCount());
+        }
 
         if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
 
@@ -221,18 +226,18 @@ public class ProcessingTask extends Task {
         //if there's anything left and the item is an output of this processing task -> forward to parents
         Output matchingOutput = this.outputs.stream()
                 .filter(o -> o.isFluid() &&
-                        API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
+                             API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
                 .findFirst().orElse(null);
 
         RestockableInput matchingInput = (RestockableInput) this.inputs.stream()
                 .filter(input -> input instanceof RestockableInput && input.isFluid() &&
-                        API.instance().getComparer().isEqual(input.getFluidStack(), stack, IComparer.COMPARE_NBT))
+                                 API.instance().getComparer().isEqual(input.getFluidStack(), stack, IComparer.COMPARE_NBT))
                 .findFirst().orElse(null);
 
         long inputRemainder = stack.amount;
         //give item to restockable input
         if (matchingOutput != null && matchingInput != null && matchingInput.getAmountMissing() > 0 &&
-                matchingOutput.getProcessingAmount() > 0)
+            matchingOutput.getProcessingAmount() > 0)
             inputRemainder = matchingInput.increaseFluidStackAmount(stack.amount);
 
         if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
@@ -293,8 +298,8 @@ public class ProcessingTask extends Task {
             } else {
                 //allow for [sets - 1] full batches and then add the same calculation as above
                 trackableAmount = Math.min(trackableAmount,
-                        (insertedInputSets - 1) * output.getQuantityPerCraft() +
-                                (remainder == 0 ? output.getQuantityPerCraft() : remainder));
+                        (long) (insertedInputSets - 1) * output.getQuantityPerCraft() +
+                        (remainder == 0 ? output.getQuantityPerCraft() : remainder));
             }
 
             if (trackableAmount < 1)
@@ -314,7 +319,7 @@ public class ProcessingTask extends Task {
         } else { //floor otherwise
             output.setCompletedSets(
                     (long) Math.floor((output.getAmountNeeded() - output.getProcessingAmount()) /
-                            (double) output.getQuantityPerCraft()));
+                                      (double) output.getQuantityPerCraft()));
         }
 
         //calculate the amount of completed sets
@@ -457,7 +462,7 @@ public class ProcessingTask extends Task {
                 //noinspection DuplicatedCode
                 for (int i = 0; i < inputCounts.size(); i++) {
                     long currentInputCount = inputCounts.getLong(i);
-                    if(currentInputCount < 1) {
+                    if (currentInputCount < 1) {
                         allInputCounts.get(j).add(-1);
                         continue;
                     }

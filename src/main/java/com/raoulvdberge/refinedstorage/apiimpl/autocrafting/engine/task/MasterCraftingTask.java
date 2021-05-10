@@ -84,33 +84,52 @@ public class MasterCraftingTask implements ICraftingTask {
     private ItemStack missingPatternStack;
     private boolean halted;
 
-    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested, long quantity,
+    public MasterCraftingTask(@Nonnull INetwork network, @Nonnull ICraftingRequestInfo requested,
                               @Nonnull ICraftingPattern pattern) {
         this.network = network;
         this.info = requested;
 
         long outputPerCraft = 0;
         if (requested.getItem() != null) {
-            for (ItemStack output : pattern.getOutputs()) {
-                if (API.instance().getComparer().isEqualNoQuantity(output, requested.getItem())) {
-                    outputPerCraft += output.getCount();
-                }
+            outputPerCraft += pattern.getOutputs().stream()
+                    .filter(o -> API.instance().getComparer().isEqualNoQuantity(o, requested.getItem()))
+                    .mapToLong(ItemStack::getCount)
+                    .sum();
+            if (pattern.isProcessing()) {
+                outputPerCraft -= pattern.getInputs().stream()
+                        .filter(list -> list.stream().anyMatch(i -> API.instance().getComparer().isEqualNoQuantity(i, requested.getItem())))
+                        .mapToLong(list -> list.get(0).getCount())
+                        .sum();
             }
         } else {
-            for (FluidStack output : pattern.getFluidOutputs()) {
-                if (API.instance().getComparer().isEqual(output, requested.getFluid(), IComparer.COMPARE_NBT)) {
-                    outputPerCraft += output.amount;
-                }
+            outputPerCraft += pattern.getFluidOutputs().stream()
+                    .filter(o -> API.instance().getComparer().isEqual(o, requested.getFluid(), IComparer.COMPARE_NBT))
+                    .mapToLong(o -> o.amount)
+                    .sum();
+            if (pattern.isProcessing()) {
+                outputPerCraft -= pattern.getFluidInputs().stream()
+                        .filter(o -> API.instance().getComparer().isEqual(o, requested.getFluid(), IComparer.COMPARE_NBT))
+                        .mapToLong(o -> o.amount)
+                        .sum();
             }
         }
 
         //adjust quantity to next full output size
-        this.quantity = (quantity % outputPerCraft) == 0 ? quantity : (quantity / outputPerCraft + 1) * outputPerCraft;
+        this.quantity = (requested.getQuantity() % outputPerCraft) == 0 ?
+                requested.getQuantity() :
+                (requested.getQuantity() / outputPerCraft + 1) * outputPerCraft;
 
-        if (pattern.isProcessing())
-            tasks.add(new ProcessingTask(pattern, quantity, requested.getFluid() != null));
+        ICraftingRequestInfo requestInfo;
+        if (requested.getItem() != null)
+            requestInfo = API.instance().createCraftingRequestInfo(requested.getItem(), this.quantity);
         else
-            tasks.add(new CraftingTask(pattern, quantity));
+            requestInfo = API.instance().createCraftingRequestInfo(requested.getFluid(), this.quantity);
+
+        //create root task
+        if (pattern.isProcessing())
+            tasks.add(new ProcessingTask(pattern, requestInfo));
+        else
+            tasks.add(new CraftingTask(pattern, requestInfo));
     }
 
     public MasterCraftingTask(@Nonnull INetwork network, @Nonnull NBTTagCompound compound)
@@ -389,7 +408,7 @@ public class MasterCraftingTask implements ICraftingTask {
                     }
 
                     if (amount > 0 && (!isDurabilityInput ||
-                            itemStack.getItemDamage() <= itemStack.getMaxDamage()))
+                                       itemStack.getItemDamage() <= itemStack.getMaxDamage()))
                         network.insertItem(itemStack, amount, Action.PERFORM);
                 }
 

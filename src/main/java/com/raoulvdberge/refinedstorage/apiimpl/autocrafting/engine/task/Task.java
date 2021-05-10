@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContaine
 import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternProvider;
 import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftingMonitorElement;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
+import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
@@ -13,6 +14,8 @@ import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingTaskError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.*;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -50,8 +53,10 @@ public abstract class Task {
 
     private UUID uuid = UUID.randomUUID();
 
-    public Task(@Nonnull ICraftingPattern pattern, long amountNeeded, boolean isFluidRequested) {
+    public Task(@Nonnull ICraftingPattern pattern, ICraftingRequestInfo requestInfo) {
         this.pattern = pattern;
+
+        long amountNeeded = requestInfo.getQuantity();
 
         //merge all pattern item inputs
         for (NonNullList<ItemStack> itemStacks : pattern.getInputs()) {
@@ -101,9 +106,9 @@ public abstract class Task {
                     for (ItemStack remainder : pattern.getByproducts()) {
                         //find item in by products and check if one damage was used up. this means that damage = uses
                         if (API.instance().getComparer()
-                                .isEqual(itemStack, remainder,
-                                        IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY) &&
-                                remainder.getItemDamage() - 1 == itemStack.getItemDamage()) {
+                                    .isEqual(itemStack, remainder,
+                                            IComparer.COMPARE_NBT | IComparer.COMPARE_QUANTITY) &&
+                            remainder.getItemDamage() - 1 == itemStack.getItemDamage()) {
                             //item was found with one more damage in remainder, then it's a durability input
                             newInput = new DurabilityInput(itemStack, amountNeeded);
                             break;
@@ -154,8 +159,9 @@ public abstract class Task {
             mergeIntoList(newOutput, (List<Input>) (List<?>) this.outputs);
         }
 
-        //need later when minimum stack size is calculated
-        List<Output> ignoredOutputs = new ObjectArrayList<>();
+        //Output -> Amount that is gained or lost after each craft.
+        //Only outputs with a corresponding restockable input are contained in this map.
+        Object2LongMap<Output> restockableOutputMap = new Object2LongOpenHashMap<>();
 
         //decrease output amounts if restockable input exists
         for (Input input : this.inputs) {
@@ -165,46 +171,74 @@ public abstract class Task {
             for (Output output : this.outputs) {
                 if (API.instance().getComparer()
                         .isEqualNoQuantity(output.getCompareableItemStack(), input.getCompareableItemStack())) {
-                    ignoredOutputs.add(output);
 
-                    long remainder = output.applyRestockableInput((RestockableInput) input);
+                    long remainder = output.getQuantityPerCraft() - input.getQuantityPerCraft();
                     //input cannot be satisfied with the output, therefore the missing items have to be normally
                     // extracted or crafted.
-                    if (remainder != 0) {
+                    if (remainder < 0) {
+                        remainder = -remainder;
+
                         //decrease restockable input QPC to correct amount because some of that is now handled by a
                         // different input
                         ((RestockableInput) input).fixCounts((int) (input.getQuantityPerCraft() - remainder));
                         //add new input with remainder as quantity per craft. Amount needed is set later to the correct
                         // amount
-                        mergeIntoList(new Input(NonNullList.from(ItemStack.EMPTY,
-                                ItemHandlerHelper.copyStackWithSize(input.getCompareableItemStack(), (int) remainder)),
-                                        1),
-                                this.inputs);
+                        mergeIntoList(
+                                new Input(
+                                        NonNullList.from(
+                                                ItemStack.EMPTY,
+                                                ItemHandlerHelper.copyStackWithSize(input.getCompareableItemStack(), (int) remainder)
+                                        ),
+                                        1
+                                ),
+                                this.inputs
+                        );
+                    } else {
+                        ((RestockableInput) input).fixCounts(input.getQuantityPerCraft());
                     }
+
+                    restockableOutputMap.put(output, remainder);
 
                     break;
                 }
             }
         }
 
-        //find smallest output counts
-        int smallestOutputStackSize = Integer.MAX_VALUE;
-        int smallestOutputFluidStackSize = Integer.MAX_VALUE;
+        //find output count of requested item
+        long outputStackSize = -1;
 
         for (Output output : this.outputs) {
-            if (output.getQuantityPerCraft() < 1 || ignoredOutputs.contains(output))
+            if (output.getQuantityPerCraft() < 1)
                 continue;
 
-            if (!output.isFluid()) {
-                smallestOutputStackSize = Math.min(smallestOutputStackSize, output.getQuantityPerCraft());
+            long qpc = output.getQuantityPerCraft();
+
+            if (restockableOutputMap.containsKey(output)) {
+                long actualQpc = restockableOutputMap.getLong(output);
+                if (actualQpc < 1)
+                    continue;
+
+                qpc = actualQpc;
+            }
+
+            if (requestInfo.getFluid() != null) {
+                if (API.instance().getComparer().isEqual(requestInfo.getFluid(), output.getFluidStack(), IComparer.COMPARE_NBT)) {
+                    outputStackSize = qpc;
+                    break;
+                }
             } else {
-                smallestOutputFluidStackSize = Math.min(smallestOutputFluidStackSize, output.getQuantityPerCraft());
+                if (API.instance().getComparer().isEqualNoQuantity(requestInfo.getItem(), output.getCompareableItemStack())) {
+                    outputStackSize = qpc;
+                    break;
+                }
             }
         }
 
+        if (outputStackSize < 1)
+            throw new IllegalStateException("This pattern does not seem to create the requested item!?");
+
         //calculate actual needed amount, basically the amount of iterations that have to be run
-        this.amountNeeded = (long) Math.ceil((double) amountNeeded / (double) (isFluidRequested ?
-                smallestOutputFluidStackSize : smallestOutputStackSize));
+        this.amountNeeded = (long) Math.ceil((double) amountNeeded / (double) outputStackSize);
 
         //set correct amount for all inputs
         for (Input input : this.inputs) {
@@ -476,21 +510,25 @@ public abstract class Task {
             //if input is not satisfied -> search for patterns to craft this input
             if (input.getAmountMissing() > 0) {
 
-                //find pattern to craft more
                 ICraftingPattern pattern;
-                if (!input.isFluid())
+                ICraftingRequestInfo requestInfo;
+                //find pattern to craft more
+                if (!input.isFluid()) {
                     //TODO: add possibility for oredict components to be crafted
                     pattern = network.getCraftingManager().getPattern(input.getCompareableItemStack(), p -> !p.equals(this.pattern));
-                else
+                    requestInfo = API.instance().createCraftingRequestInfo(input.getCompareableItemStack(), input.getAmountMissing());
+                } else {
                     pattern = network.getCraftingManager().getPattern(input.getFluidStack(), p -> !p.equals(this.pattern));
+                    requestInfo = API.instance().createCraftingRequestInfo(input.getFluidStack(), input.getAmountMissing());
+                }
 
                 //add new sub task if pattern is valid and is not used recursively
                 if (pattern != null && pattern.isValid() && !recursedPatterns.contains(pattern)) {
                     Task newTask;
                     if (pattern.isProcessing())
-                        newTask = new ProcessingTask(pattern, input.getAmountMissing(), input.isFluid());
+                        newTask = new ProcessingTask(pattern, requestInfo);
                     else
-                        newTask = new CraftingTask(pattern, input.getAmountMissing());
+                        newTask = new CraftingTask(pattern, requestInfo);
 
                     HashSet<ICraftingPattern> recursedPatternsCopy = (HashSet<ICraftingPattern>) recursedPatterns.clone();
                     recursedPatternsCopy.add(pattern);

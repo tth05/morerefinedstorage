@@ -15,8 +15,8 @@ public class CraftingTaskFactory implements ICraftingTaskFactory {
 
     @Nonnull
     @Override
-    public MasterCraftingTask create(INetwork network, ICraftingRequestInfo requested, long quantity, ICraftingPattern pattern) {
-        return new MasterCraftingTask(network, requested, quantity, pattern);
+    public MasterCraftingTask create(INetwork network, ICraftingRequestInfo requested, ICraftingPattern pattern) {
+        return new MasterCraftingTask(network, requested, pattern);
     }
 
     @Override

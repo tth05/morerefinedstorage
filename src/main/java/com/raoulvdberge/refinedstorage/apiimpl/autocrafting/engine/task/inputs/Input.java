@@ -111,7 +111,7 @@ public class Input {
 
         for (int i = 0; i < this.itemStacks.size(); i++) {
             if (API.instance().getComparer().isEqualNoQuantity(stack, this.itemStacks.get(i))) {
-                long currentCount = this.currentInputCounts.get(i);
+                long currentCount = this.currentInputCounts.getLong(i);
 
                 this.currentInputCounts.set(i, currentCount + (returns < 0 ? amount : needed));
                 break;

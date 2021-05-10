@@ -263,13 +263,13 @@ public class API implements IRSAPI {
     }
 
     @Override
-    public ICraftingRequestInfo createCraftingRequestInfo(ItemStack stack) {
-        return new CraftingRequestInfo(stack);
+    public ICraftingRequestInfo createCraftingRequestInfo(ItemStack stack, long quantity) {
+        return new CraftingRequestInfo(stack, quantity);
     }
 
     @Override
-    public ICraftingRequestInfo createCraftingRequestInfo(FluidStack stack) {
-        return new CraftingRequestInfo(stack);
+    public ICraftingRequestInfo createCraftingRequestInfo(FluidStack stack, long quantity) {
+        return new CraftingRequestInfo(stack, quantity);
     }
 
     @Override

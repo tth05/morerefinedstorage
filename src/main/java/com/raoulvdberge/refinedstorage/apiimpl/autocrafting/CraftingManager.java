@@ -314,7 +314,7 @@ public class CraftingManager implements ICraftingManager {
             return null;
         }
 
-        return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
+        return factory.create(network, API.instance().createCraftingRequestInfo(stack, quantity), pattern);
     }
 
     @Nullable
@@ -330,7 +330,7 @@ public class CraftingManager implements ICraftingManager {
             return null;
         }
 
-        return factory.create(network, API.instance().createCraftingRequestInfo(stack), quantity, pattern);
+        return factory.create(network, API.instance().createCraftingRequestInfo(stack, quantity), pattern);
     }
 
     @Override
