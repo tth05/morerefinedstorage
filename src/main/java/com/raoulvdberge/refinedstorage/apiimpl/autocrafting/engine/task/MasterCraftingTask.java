@@ -93,15 +93,13 @@ public class MasterCraftingTask implements ICraftingTask {
         if (requested.getItem() != null) {
             for (ItemStack output : pattern.getOutputs()) {
                 if (API.instance().getComparer().isEqualNoQuantity(output, requested.getItem())) {
-                    outputPerCraft = output.getCount();
-                    break;
+                    outputPerCraft += output.getCount();
                 }
             }
         } else {
             for (FluidStack output : pattern.getFluidOutputs()) {
                 if (API.instance().getComparer().isEqual(output, requested.getFluid(), IComparer.COMPARE_NBT)) {
-                    outputPerCraft = output.amount;
-                    break;
+                    outputPerCraft += output.amount;
                 }
             }
         }
