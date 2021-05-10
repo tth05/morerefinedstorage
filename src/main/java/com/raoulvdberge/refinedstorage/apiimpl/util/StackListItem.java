@@ -93,7 +93,11 @@ public class StackListItem implements IStackList<ItemStack> {
     public StackListEntry<ItemStack> getEntry(@Nonnull ItemStack stack, int flags) {
         if ((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
             (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
-            return stacks.get(new ItemStackWrapper(stack));
+            StackListEntry<ItemStack> entry = stacks.get(new ItemStackWrapper(stack));
+            if (entry == null)
+                return null;
+
+            return entry.asUnmodifiable();
         }
 
         for (ItemStackWrapper key : stacksByItem.get(stack.getItem())) {
@@ -156,7 +160,7 @@ public class StackListItem implements IStackList<ItemStack> {
     @Nonnull
     @Override
     public Collection<StackListEntry<ItemStack>> getStacks() {
-        return stacks.values();
+        return Collections.unmodifiableCollection(stacks.values());
     }
 
     @Override

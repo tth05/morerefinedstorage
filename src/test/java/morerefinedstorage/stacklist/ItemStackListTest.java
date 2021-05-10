@@ -14,6 +14,9 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Collection;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -234,5 +237,43 @@ public class ItemStackListTest implements MinecraftForgeTest {
 
         assertEquals(1, list.getStacks().size());
         assertTrue(API.instance().getComparer().isEqualNoQuantity(list.getEntry(stack3, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE).getStack(), stack3));
+    }
+
+    @Test
+    @Order(12)
+    public void testGetByUUID() {
+        ItemStack stack = new ItemStack(Items.APPLE);
+
+        StackListResult<ItemStack> result = list.add(stack);
+
+        StackListEntry<ItemStack> entry = list.get(result.getId());
+
+        assertNull(list.get(new UUID(0, 25)));
+        assertNotNull(entry);
+        assertTrue(API.instance().getComparer().isEqualNoQuantity(entry.getStack(), stack));
+    }
+
+    @Test
+    @Order(13)
+    public void testEntryNotModifiable() {
+        ItemStack stack = new ItemStack(Items.APPLE);
+
+        StackListResult<ItemStack> result = list.add(stack);
+
+        StackListEntry<ItemStack> entry = list.get(result.getId());
+        assertNotNull(entry);
+        assertThrows(UnsupportedOperationException.class, () -> entry.setCount(56));
+        assertThrows(UnsupportedOperationException.class, () -> entry.grow(56));
+        assertThrows(UnsupportedOperationException.class, () -> entry.shrink(56));
+
+        StackListEntry<ItemStack> entry2 = list.getEntry(stack, IComparer.COMPARE_NBT | IComparer.COMPARE_DAMAGE);
+        assertNotNull(entry2);
+        assertThrows(UnsupportedOperationException.class, () -> entry2.setCount(56));
+        assertThrows(UnsupportedOperationException.class, () -> entry2.grow(56));
+        assertThrows(UnsupportedOperationException.class, () -> entry2.shrink(56));
+
+        Collection<StackListEntry<ItemStack>> stacks = list.getStacks();
+        assertNotNull(stacks);
+        assertThrows(UnsupportedOperationException.class, () -> stacks.add(new StackListEntry<>(stack, 2)));
     }
 }
