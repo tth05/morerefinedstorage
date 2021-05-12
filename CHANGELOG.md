@@ -1,5 +1,16 @@
 # More Refined Storage Changelog
 
+# 2.2.8
+- Fixed blacklist still not working properly
+- Fixed JEI recipe transfer sometimes kicking the player from the server
+- Fixed some crafting monitor elements not merging correctly
+- Fixed some display and calculation issues in the crafting engine
+- Fixed duplication recipes not being recognized as valid crafting patterns
+- Fixed crafting tasks not recognizing multiple stacks in the outputs during calculation
+- Fixed exception when scrolling on an empty slot in the grid
+- Fixed crafter not recognizing facing tile entity after being rotated
+- Fixed crafting grid not extracting any items
+
 # 2.2.7
 - Fixed blacklist not working in filters when multiple items are used
 - Fixed compatibility with Refined Avaritia (and maybe RSLargePatterns)
