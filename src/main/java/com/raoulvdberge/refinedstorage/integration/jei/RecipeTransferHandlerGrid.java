@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import com.raoulvdberge.refinedstorage.network.MessageGridProcessingTransfer;
 import com.raoulvdberge.refinedstorage.network.MessageGridTransfer;
+import io.netty.handler.codec.EncoderException;
 import mezz.jei.api.gui.IGuiIngredient;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.recipe.IRecipeCategory;
@@ -100,8 +101,9 @@ public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
                             container.inventorySlots.stream().filter(s -> s.inventory instanceof InventoryCrafting)
                                     .collect(Collectors.toList())
                     ));
-                } catch (IllegalStateException e) {
-                    player.sendMessage(new TextComponentString("Cannot transfer items, packet too large."));
+                } catch (EncoderException e) {
+                    if (e.getCause() instanceof IllegalStateException)
+                        player.sendMessage(new TextComponentString("Cannot transfer items, packet too large."));
                 }
             }
         }
