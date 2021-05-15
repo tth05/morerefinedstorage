@@ -6,7 +6,6 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.craftingmonitor.ICraftin
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.CraftingTaskReadException;
 import com.raoulvdberge.refinedstorage.api.autocrafting.engine.ICraftingRequestInfo;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementError;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementFluidRender;
@@ -14,6 +13,7 @@ import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.Craf
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Input;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.Output;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.task.inputs.RestockableInput;
+import com.raoulvdberge.refinedstorage.util.CraftingEngineUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -165,27 +165,22 @@ public class ProcessingTask extends Task {
      */
     public int supplyOutput(ItemStack stack, int trackedAmount) {
         //if there's anything left and the item is an output of this processing task -> forward to parents
-        Output matchingOutput = this.outputs.stream()
-                .filter(o -> !o.isFluid() &&
-                             API.instance().getComparer().isEqualNoQuantity(o.getCompareableItemStack(), stack))
-                .findFirst().orElse(null);
+        Output matchingOutput = CraftingEngineUtils.findMatchingItemOutput(this.outputs, stack);
 
-        RestockableInput matchingInput = (RestockableInput) this.inputs.stream()
-                .filter(input -> input instanceof RestockableInput && !input.isFluid() &&
-                                 API.instance().getComparer().isEqualNoQuantity(input.getCompareableItemStack(), stack))
-                .findFirst().orElse(null);
+        if (matchingOutput == null)
+            return trackedAmount;
+
+        RestockableInput matchingInput = CraftingEngineUtils.findMatchingRestockableItemInput(this.inputs, stack);
 
         long inputRemainder = stack.getCount();
         //give item to restockable input
-        if (matchingOutput != null && matchingInput != null &&
-            matchingInput.getAmountMissing() > 0 && matchingOutput.getProcessingAmount() > 0 &&
-            //if the input has inserted everything it needs to, don't give it any more items to insert
-            matchingOutput.getMissingSets() * matchingInput.getQuantityPerCraft() != matchingInput.getProcessingAmount()
-        ) {
+        //if the input has inserted everything it needs to, don't give it any more items to insert
+        if (matchingInput != null && matchingInput.getAmountMissing() > 0 && matchingOutput.getProcessingAmount() > 0 &&
+            matchingOutput.getMissingSets() * matchingInput.getQuantityPerCraft() != matchingInput.getProcessingAmount()) {
             inputRemainder = matchingInput.increaseItemStackAmount(stack, stack.getCount());
         }
 
-        if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
+        if (matchingOutput.getProcessingAmount() > 0) {
 
             int newlyTrackedAmount = 0;
 
@@ -224,23 +219,22 @@ public class ProcessingTask extends Task {
      */
     public int supplyOutput(FluidStack stack, int trackedAmount) {
         //if there's anything left and the item is an output of this processing task -> forward to parents
-        Output matchingOutput = this.outputs.stream()
-                .filter(o -> o.isFluid() &&
-                             API.instance().getComparer().isEqual(o.getFluidStack(), stack, IComparer.COMPARE_NBT))
-                .findFirst().orElse(null);
+        Output matchingOutput = CraftingEngineUtils.findMatchingFluidOutput(this.outputs, stack);
 
-        RestockableInput matchingInput = (RestockableInput) this.inputs.stream()
-                .filter(input -> input instanceof RestockableInput && input.isFluid() &&
-                                 API.instance().getComparer().isEqual(input.getFluidStack(), stack, IComparer.COMPARE_NBT))
-                .findFirst().orElse(null);
+        if (matchingOutput == null)
+            return trackedAmount;
+
+        RestockableInput matchingInput = CraftingEngineUtils.findMatchingRestockableFluidInput(this.inputs, stack);
 
         long inputRemainder = stack.amount;
-        //give item to restockable input
-        if (matchingOutput != null && matchingInput != null && matchingInput.getAmountMissing() > 0 &&
-            matchingOutput.getProcessingAmount() > 0)
+        //give fluid to restockable input
+        //if the input has inserted everything it needs to, don't give it any more fluid to insert
+        if (matchingInput != null && matchingInput.getAmountMissing() > 0 && matchingOutput.getProcessingAmount() > 0 &&
+            matchingOutput.getMissingSets() * matchingInput.getQuantityPerCraft() != matchingInput.getProcessingAmount()) {
             inputRemainder = matchingInput.increaseFluidStackAmount(stack.amount);
+        }
 
-        if (matchingOutput != null && matchingOutput.getProcessingAmount() > 0) {
+        if (matchingOutput.getProcessingAmount() > 0) {
 
             int newlyTrackedAmount = 0;
 
