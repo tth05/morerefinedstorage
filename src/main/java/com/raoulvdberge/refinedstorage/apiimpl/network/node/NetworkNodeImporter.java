@@ -24,6 +24,7 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 
@@ -105,21 +106,47 @@ public class NetworkNodeImporter extends NetworkNode implements IRSFilterConfigP
         } else if (this.config.isFilterTypeFluid() && ticks % upgrades.getSpeed() == 0) {
             IFluidHandler handler = WorldUtils.getFluidHandler(getFacingTile(), getDirection().getOpposite());
 
-            if (handler != null) {
-                FluidStack stack = handler.drain(Fluid.BUCKET_VOLUME, false);
+            if (handler == null) {
+                return;
+            }
 
-                if (stack != null && this.config.acceptsFluid(stack) && network.insertFluid(stack, (long)stack.amount, Action.SIMULATE) == null) {
-                    FluidStack toDrain = handler.drain(Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount(), false);
+            IFluidTankProperties[] properties = handler.getTankProperties();
 
-                    if (toDrain != null) {
-                        FluidStack remainder = network.insertFluidTracked(toDrain, toDrain.amount);
-                        if (remainder != null) {
-                            toDrain.amount -= remainder.amount;
-                        }
+            if (currentSlot >= properties.length)
+                currentSlot = 0;
 
-                        handler.drain(toDrain, true);
+            FluidStack stack = null;
+            int i = currentSlot;
+            for (; i < properties.length && (stack == null || stack.amount < 1 || !this.config.acceptsFluid(stack)); i++) {
+                stack = properties[i].getContents();
+
+                if (currentSlot != 0 && i == currentSlot - 1)
+                    break;
+                if (currentSlot != 0 && i == properties.length - 1)
+                    i = -1;
+            }
+
+            if (stack == null || stack.amount < 1 || !this.config.acceptsFluid(stack)) {
+                currentSlot++;
+                return;
+            }
+
+            currentSlot = i;
+
+            if (network.insertFluid(stack, (long) stack.amount, Action.SIMULATE) == null) {
+                stack.amount = Fluid.BUCKET_VOLUME * upgrades.getItemInteractCount();
+                FluidStack toDrain = handler.drain(stack, false);
+
+                if (toDrain != null) {
+                    FluidStack remainder = network.insertFluidTracked(toDrain, toDrain.amount);
+                    if (remainder != null) {
+                        toDrain.amount -= remainder.amount;
                     }
+
+                    handler.drain(toDrain, true);
                 }
+            } else {
+                currentSlot++;
             }
         }
     }
