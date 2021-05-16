@@ -44,6 +44,7 @@ import org.lwjgl.input.Mouse;
 import yalter.mousetweaks.api.MouseTweaksDisableWheelTweak;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -62,8 +63,9 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     private final TabList tabs;
 
     private boolean wasConnected;
-    private boolean canSort = true;
 
+    //UUID of the grid stack which should keep it's position after a sort. Used when holding shift/ctrl
+    private UUID lockedStackUUID;
     private int slotNumber;
 
     public GuiGrid(ContainerGrid container, IGrid grid) {
@@ -112,7 +114,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         if (searchField == null) {
             searchField = new TextFieldSearch(0, fontRenderer, sx, sy, 88 - 6);
             searchField.addListener(() -> {
-                this.canSort = true;
+                this.lockedStackUUID = null;
                 this.getView().sort();
             });
             searchField.setMode(grid.getSearchBoxMode());
@@ -134,10 +136,8 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
             processingPattern = addCheckBox(x + 7, y + getTopHeight() + (getVisibleRows() * 18) + 60,
                     t("misc.refinedstorage:processing"), TileGrid.PROCESSING_PATTERN.getValue());
 
-            boolean showOredict = true;
-            if (((NetworkNodeGrid) grid).isProcessingPattern() && ((NetworkNodeGrid) grid).getProcessingType() == FilterType.FLUIDS) {
-                showOredict = false;
-            }
+            boolean showOredict = !((NetworkNodeGrid) grid).isProcessingPattern() ||
+                                  ((NetworkNodeGrid) grid).getProcessingType() != FilterType.FLUIDS;
 
             if (showOredict) {
                 oredictPattern = addCheckBox(processingPattern.x + processingPattern.width + 5,
@@ -180,9 +180,9 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
         //force sort when shift or control is released
         if ((Keyboard.getEventKey() == Keyboard.KEY_LSHIFT || Keyboard.getEventKey() == Keyboard.KEY_RSHIFT ||
-                Keyboard.getEventKey() == Keyboard.KEY_LCONTROL || Keyboard.getEventKey() == Keyboard.KEY_RCONTROL)
-                && !Keyboard.getEventKeyState() && !this.canSort) {
-            this.canSort = true;
+             Keyboard.getEventKey() == Keyboard.KEY_LCONTROL || Keyboard.getEventKey() == Keyboard.KEY_RCONTROL)
+            && !Keyboard.getEventKeyState() && this.lockedStackUUID != null) {
+            this.lockedStackUUID = null;
             this.view.sort();
         }
     }
@@ -192,11 +192,10 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         int mouseX = Mouse.getEventX() * this.width / this.mc.displayWidth;
         int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
 
-        //prevent sorting while over slot area - helps with scrolling items
-        if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) && (isShiftKeyDown() || isCtrlKeyDown())) {
-            this.canSort = false;
-        } else if (!canSort) {
-            this.canSort = true;
+        //force sort when leaving slot area
+        if (this.lockedStackUUID != null &&
+            (!isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) || (!isShiftKeyDown() && !isCtrlKeyDown()))) {
+            this.lockedStackUUID = null;
             this.view.sort();
         }
 
@@ -226,8 +225,8 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                         new MessageGridItemInventoryScroll(hoveredSlot.getSlotIndex(), delta > 0));
             }
         } else if ((isShiftKeyDown() || isCtrlKeyDown()) &&
-                isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) &&
-                grid.getGridType() != GridType.FLUID) { //scroll from grid
+                   isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) &&
+                   grid.getGridType() != GridType.FLUID) { //scroll from grid
             RS.INSTANCE.network.sendToServer(new MessageGridItemScroll(
                     isOverSlotWithStack() ? view.getStacks().get(slotNumber).getId() : new UUID(0, 0),
                     isShiftKeyDown(), delta > 0));
@@ -345,8 +344,8 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
 
     private boolean isOverCreatePattern(int mouseX, int mouseY) {
         return grid.getGridType() == GridType.PATTERN &&
-                inBounds(172, getTopHeight() + (getVisibleRows() * 18) + 22, 16, 16, mouseX, mouseY) &&
-                ((NetworkNodeGrid) grid).canCreatePattern();
+               inBounds(172, getTopHeight() + (getVisibleRows() * 18) + 22, 16, 16, mouseX, mouseY) &&
+               ((NetworkNodeGrid) grid).canCreatePattern();
     }
 
     @Override
@@ -359,7 +358,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
             bindTexture("gui/crafting_grid.png");
         } else if (grid.getGridType() == GridType.PATTERN) {
             bindTexture("gui/pattern_grid" + (((NetworkNodeGrid) grid).isProcessingPattern() ? "_processing" : "") +
-                    ".png");
+                        ".png");
         } else {
             bindTexture("gui/grid.png");
         }
@@ -408,9 +407,14 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
 
+        this.lockedStackUUID = null;
+
         // Drawn in here for bug #1844 (https://github.com/raoulvdberge/refinedstorage/issues/1844)
         // Item tooltips can't be rendered in the foreground layer due to the X offset translation.
         if (isOverSlotWithStack()) {
+            //lock this slot
+            if ((isShiftKeyDown() || isCtrlKeyDown()) && !view.getStacks().get(slotNumber).isCraftable())
+                this.lockedStackUUID = view.getStacks().get(slotNumber).getId();
             drawGridTooltip(view.getStacks().get(slotNumber), mouseX, mouseY);
         }
     }
@@ -513,7 +517,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
     @Override
     public void mouseClicked(int mouseX, int mouseY, int clickedButton) throws IOException {
         if (Keyboard.isKeyDown(Keyboard.KEY_SPACE) && grid.isActive() && grid.getGridType() != GridType.FLUID &&
-                isOverInventory(mouseX - guiLeft, mouseY - guiTop)) {
+            isOverInventory(mouseX - guiLeft, mouseY - guiTop)) {
             RS.INSTANCE.network.sendToServer(
                     new MessageGridItemInsertInventory(isOverHotBar(mouseX - guiLeft, mouseY - guiTop)));
             return;
@@ -545,7 +549,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
             ItemStack held = player.inventory.getItemStack();
 
             if (isOverSlotArea(mouseX - guiLeft, mouseY - guiTop) && !held.isEmpty() &&
-                    (clickedButton == 0 || clickedButton == 1)) {
+                (clickedButton == 0 || clickedButton == 1)) {
                 RS.INSTANCE.network.sendToServer(
                         grid.getGridType() == GridType.FLUID ? new MessageGridFluidInsertHeld() :
                                 new MessageGridItemInsertHeld(clickedButton == 1));
@@ -561,7 +565,7 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
                                 new GuiGridCraftingSettings(this, player,
                                         stack));
                     } else if (view.canCraft() && !stack.isCraftable() && stack.getOtherId() != null &&
-                            GuiScreen.isShiftKeyDown() && GuiScreen.isCtrlKeyDown()) {
+                               GuiScreen.isShiftKeyDown() && GuiScreen.isCtrlKeyDown()) {
                         FMLCommonHandler.instance().showGuiScreen(
                                 new GuiGridCraftingSettings(this, player,
                                         view.get(stack.getOtherId())));
@@ -623,8 +627,13 @@ public class GuiGrid extends GuiBase implements IResizableDisplay {
         }
     }
 
-    public boolean canSort() {
-        return canSort;
+    public void resetLockedStackUUID() {
+        this.lockedStackUUID = null;
+    }
+
+    @Nullable
+    public UUID getLockedStackUUID() {
+        return lockedStackUUID;
     }
 
     public static List<IGridSorter> getSorters() {

@@ -31,25 +31,26 @@ public class GridViewImpl implements IGridView {
 
     @Override
     public void sort() {
-        if (!this.gui.canSort())
-            return;
-
         if (gui.getGrid().isActive()) {
             Predicate<IGridStack> activeFilters = getActiveFilters();
+
+            gui.resetLockedStackUUID();
 
             this.stacks = new ArrayList<>(map.values());
 
             this.stacks.removeIf(gridStack -> {
                 if (gui.getGrid().getViewType() != IGrid.VIEW_TYPE_CRAFTABLES &&
-                        gridStack.isCraftable() &&
-                        gridStack.getOtherId() != null &&
-                        map.containsKey(gridStack.getOtherId()))
+                    gridStack.isCraftable() &&
+                    gridStack.getOtherId() != null &&
+                    map.containsKey(gridStack.getOtherId()))
                     return true;
 
+                //check filter and remove the locked stack
                 return !activeFilters.test(gridStack);
             });
 
             this.stacks.sort(getActiveSort());
+
             this.active = true;
         } else {
             this.stacks = new ArrayList<>();
@@ -84,8 +85,8 @@ public class GridViewImpl implements IGridView {
         // We could use !map.isEmpty() here too. But if we have 2 "old" delta packets, it would rightfully ignore the first one. But this method mutates the map and would put an entry.
         // This means that on the second delta packet it would still crash because the map wouldn't be empty anymore.
         if (!stack.isCraftable() &&
-                stack.getOtherId() != null &&
-                map.containsKey(stack.getOtherId())) {
+            stack.getOtherId() != null &&
+            map.containsKey(stack.getOtherId())) {
             IGridStack craftingStack = map.get(stack.getOtherId());
 
             craftingStack.updateOtherId(stack.getId());
@@ -94,7 +95,15 @@ public class GridViewImpl implements IGridView {
 
         IGridStack existing = map.get(stack.getId());
         boolean stillExists = true;
-        boolean canSort = this.gui.canSort();
+
+        UUID lockedStackUUID = gui.getLockedStackUUID();
+        boolean lockedStackExists = map.containsKey(lockedStackUUID);
+        boolean lockedStackModified = lockedStackUUID != null &&
+                                      (lockedStackUUID.equals(stack.getId()) ||
+                                       (stack.getOtherId() != null && stack.getOtherId().equals(lockedStackUUID)));
+        if (!lockedStackModified) {
+            this.stacks.remove(map.get(lockedStackUUID));
+        }
 
         Predicate<IGridStack> activeFilters = getActiveFilters();
 
@@ -104,7 +113,7 @@ public class GridViewImpl implements IGridView {
             map.put(stack.getId(), stack);
 
             //remove craftable stack from view
-            if (canSort && !stack.isCraftable() && stack.getOtherId() != null) {
+            if (!stack.isCraftable() && stack.getOtherId() != null) {
                 IGridStack craftingStack = map.get(stack.getOtherId());
                 if (craftingStack != null)
                     stacks.remove(craftingStack);
@@ -114,8 +123,7 @@ public class GridViewImpl implements IGridView {
         } else {
             existing.grow(delta);
 
-            if (canSort || existing.getCount() < 1)
-                stacks.remove(existing);
+            stacks.remove(existing);
 
             if (existing.getCount() <= 0) {
                 map.remove(existing.getId());
@@ -123,8 +131,9 @@ public class GridViewImpl implements IGridView {
                 //add craftable stack to view
                 if (!existing.isCraftable() && existing.getOtherId() != null) {
                     IGridStack craftingStack = map.get(stack.getOtherId());
-                    if (canSort && craftingStack != null && activeFilters.test(craftingStack))
+                    if (craftingStack != null && activeFilters.test(craftingStack)) {
                         binaryInsert(craftingStack);
+                    }
                 }
 
                 stillExists = false;
@@ -133,9 +142,13 @@ public class GridViewImpl implements IGridView {
             existing.setTrackerEntry(stack.getTrackerEntry());
         }
 
-        if (canSort && stillExists && activeFilters.test(existing)) {
+        if (!lockedStackModified && stillExists && activeFilters.test(existing)) {
             binaryInsert(existing);
         }
+
+        //if we have a locked stack and it wasn't removed, add it back to the correct position
+        if (lockedStackExists && !(!stillExists && lockedStackModified))
+            indexedInsert(gui.getSlotNumber(), map.get(lockedStackUUID));
 
         this.gui.updateScrollbar();
     }
@@ -146,6 +159,12 @@ public class GridViewImpl implements IGridView {
             insertionPos = -insertionPos - 1;
         }
         stacks.add(insertionPos, stack);
+    }
+
+    private void indexedInsert(int index, IGridStack stack) {
+        index = Math.min(index, this.stacks.size());
+
+        this.stacks.add(index, stack);
     }
 
     @Override
