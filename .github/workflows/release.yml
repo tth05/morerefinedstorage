@@ -35,15 +35,9 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed blacklist still not working properly
-          - Fixed JEI recipe transfer sometimes kicking the player from the server
-          - Fixed some crafting monitor elements not merging correctly
-          - Fixed some display and calculation issues in the crafting engine
-          - Fixed duplication recipes not being recognized as valid crafting patterns
-          - Fixed crafting tasks not recognizing multiple stacks in the outputs during calculation
-          - Fixed exception when scrolling on an empty slot in the grid
-          - Fixed crafter not recognizing facing tile entity after being rotated
-          - Fixed crafting grid not extracting any items
+          - Fixed importer using FluidHandler instead of tank properties when extracting. This fixes extracting from some GregTech machines
+          - Fixed holding shift in grid sometimes hiding all items
+          - Small performance improvement when importing items while a crafting task is running
         draft: false
         prerelease: false
     - name: Upload jars to release

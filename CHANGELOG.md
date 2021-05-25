@@ -1,5 +1,10 @@
 # More Refined Storage Changelog
 
+# 2.2.9
+- Fixed importer using FluidHandler instead of tank properties when extracting. This fixes extracting from some GregTech machines
+- Fixed holding shift in grid sometimes hiding all items
+- Small performance improvement when importing items while a crafting task is running
+
 # 2.2.8
 - Fixed blacklist still not working properly
 - Fixed JEI recipe transfer sometimes kicking the player from the server
