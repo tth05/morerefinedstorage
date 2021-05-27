@@ -40,7 +40,7 @@ public class Comparer implements IComparer {
             boolean leftTagEmpty = left.getTagCompound() == null || left.getTagCompound().isEmpty();
             boolean rightTagEmpty = right.getTagCompound() == null || right.getTagCompound().isEmpty();
             if (leftTagEmpty) {
-                if (!rightTagEmpty)
+                if (!rightTagEmpty || !left.areCapsCompatible(right))
                     return false;
             } else {
                 if (!left.getTagCompound().equals(right.getTagCompound()) || !left.areCapsCompatible(right))
