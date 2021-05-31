@@ -18,6 +18,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -160,6 +161,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         ICraftingTaskError error = task.calculate();
 
         if (error == null && !task.hasMissing() && args.optBoolean(2, true)) {
+            task.setCanUpdate(true);
             node.getNetwork().getCraftingManager().add(task);
         }
 
@@ -182,6 +184,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         ICraftingTaskError error = task.calculate();
 
         if (error == null && !task.hasMissing() && args.optBoolean(2, true)) {
+            task.setCanUpdate(true);
             node.getNetwork().getCraftingManager().add(task);
         }
 
@@ -328,7 +331,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         }
 
         // Simulate extracting the item and get the amount of items that can be extracted
-        StackListResult<ItemStack> extracted = node.getNetwork().extractItem(stack, (long)count, Action.SIMULATE);
+        StackListResult<ItemStack> extracted = node.getNetwork().extractItem(stack, (long) count, Action.SIMULATE);
         if (extracted == null) {
             return new Object[]{null, "could not extract the specified item"};
         }
@@ -353,7 +356,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             remainder = ItemHandlerHelper.insertItemStacked(handler, extracted.getFixedStack(), false);
 
             if (!remainder.isEmpty()) {
-                node.getNetwork().insertItem(remainder, (long)remainder.getCount(), Action.PERFORM);
+                node.getNetwork().insertItem(remainder, (long) remainder.getCount(), Action.PERFORM);
             }
         }
 
@@ -380,11 +383,10 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             flags |= IComparer.COMPARE_NBT;
         }
         StackListEntry<ItemStack> entry = node.getNetwork().getItemStorageCache().getList().getEntry(stack, flags);
-        if(entry == null)
+        if (entry == null)
             return new Object[]{null};
 
-        entry.getStack().setCount((int) entry.getCount());
-        return new Object[]{entry.getStack()};
+        return new Object[]{serializeItemStackStackListEntry(entry)};
     }
 
     //performance
@@ -398,10 +400,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         }
 
         for (StackListEntry<ItemStack> entry : node.getNetwork().getItemStorageCache().getList().getStacks()) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("size", entry.getCount());
-            map.put("stack", entry.getStack());
-            list.add(map);
+            list.add(serializeItemStackStackListEntry(entry));
         }
 
         return new Object[]{list};
@@ -486,5 +485,20 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         }
 
         return stack;
+    }
+
+    private Map<String, Object> serializeItemStackStackListEntry(StackListEntry<ItemStack> entry) {
+        Map<String, Object> map = new HashMap<>();
+        ItemStack stack = entry.getStack();
+
+        //@Volatile: copied from OpenComputers, adjusted to allow for a long as the size. This is missing various entries
+        map.put("damage", stack.getItemDamage());
+        map.put("maxDamage", stack.getMaxDamage());
+        map.put("size", entry.getCount());
+        map.put("maxSize", stack.getMaxStackSize());
+        map.put("name", Item.REGISTRY.getNameForObject(stack.getItem()));
+        map.put("label", stack.getDisplayName());
+
+        return map;
     }
 }
