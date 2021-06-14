@@ -414,6 +414,23 @@ public class CraftingPattern implements ICraftingPattern {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "CraftingPattern{" +
+               "processing=" + processing +
+               ", oredict=" + oredict +
+               ", valid=" + valid +
+               ", recipe=" + recipe +
+               ", inputs=" + inputs +
+               ", outputs=" + outputs +
+               ", byproducts=" + byproducts +
+               ", fluidInputs=" + fluidInputs +
+               ", fluidOutputs=" + fluidOutputs +
+               ", blacklistedItems=" + blacklistedItems +
+               ", blacklistedFluids=" + blacklistedFluids +
+               '}';
+    }
+
     private static class InventoryCraftingDummy extends InventoryCrafting {
         public InventoryCraftingDummy() {
             super(new Container() {

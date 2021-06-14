@@ -1,5 +1,9 @@
 # More Refined Storage Changelog
 
+# 2.2.10
+- Fixed items with different capabilities stacking
+- Improved the OC integration
+
 # 2.2.9
 - Fixed importer using FluidHandler instead of tank properties when extracting. This fixes extracting from some GregTech machines
 - Fixed holding shift in grid sometimes hiding all items

@@ -35,9 +35,8 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed importer using FluidHandler instead of tank properties when extracting. This fixes extracting from some GregTech machines
-          - Fixed holding shift in grid sometimes hiding all items
-          - Small performance improvement when importing items while a crafting task is running
+          - Fixed items with different capabilities stacking
+          - Improved the OC integration
         draft: false
         prerelease: false
     - name: Upload jars to release

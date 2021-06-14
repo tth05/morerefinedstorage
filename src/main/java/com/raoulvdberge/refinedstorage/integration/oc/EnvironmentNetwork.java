@@ -408,11 +408,11 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
     @Callback(doc = "function():table -- Gets a list of all connected storage disks and blocks in this network.")
     public Object[] getStorages(final Context context, final Arguments args) {
-        int totalItemStored = 0;
-        int totalItemCapacity = 0;
+        long totalItemStored = 0;
+        long totalItemCapacity = 0;
 
-        int totalFluidStored = 0;
-        int totalFluidCapacity = 0;
+        long totalFluidStored = 0;
+        long totalFluidCapacity = 0;
 
         List<Map<String, Object>> devices = new ArrayList<>();
 
@@ -452,11 +452,11 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             }
         }
 
-        Map<String, Integer> itemTotals = new HashMap<>();
+        Map<String, Long> itemTotals = new HashMap<>();
         itemTotals.put("usage", totalItemStored);
         itemTotals.put("capacity", totalItemCapacity);
 
-        Map<String, Integer> fluidTotals = new HashMap<>();
+        Map<String, Long> fluidTotals = new HashMap<>();
         fluidTotals.put("usage", totalFluidStored);
         fluidTotals.put("capacity", totalFluidCapacity);
 

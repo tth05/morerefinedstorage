@@ -235,7 +235,14 @@ public abstract class Task {
         }
 
         if (outputStackSize < 1)
-            throw new IllegalStateException("This pattern does not seem to create the requested item!?");
+            throw new IllegalStateException(
+                    String.format(
+                            "This pattern does not seem to create the requested item!? outputStackSize: %d, requested: %s, my pattern: %s",
+                            outputStackSize,
+                            requestInfo.getFluid() != null ? requestInfo.getFluid().toString() : requestInfo.getItem().toString(),
+                            this.pattern
+                    )
+            );
 
         //calculate actual needed amount, basically the amount of iterations that have to be run
         this.amountNeeded = (long) Math.ceil((double) amountNeeded / (double) outputStackSize);
