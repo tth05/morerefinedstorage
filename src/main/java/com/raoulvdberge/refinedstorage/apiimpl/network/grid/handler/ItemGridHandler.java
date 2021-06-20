@@ -245,6 +245,7 @@ public class ItemGridHandler implements IItemGridHandler {
                 return null;
             }).exceptionally(t -> {
                 t.printStackTrace();
+                task.onCancelled();
                 return null;
             });
         }

@@ -281,6 +281,7 @@ public class CraftingManager implements ICraftingManager {
         this.tasksInCalculation.add(task);
         CompletableFuture.supplyAsync(task::calculate).exceptionally((t) -> {
             t.printStackTrace();
+            task.onCancelled();
             return new CraftingTaskError();
         }).thenAccept((err) -> {
             FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {

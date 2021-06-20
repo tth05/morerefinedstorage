@@ -170,6 +170,7 @@ public class FluidGridHandler implements IFluidGridHandler {
                 return null;
             }).exceptionally(t -> {
                 t.printStackTrace();
+                task.onCancelled();
                 return null;
             });
         }

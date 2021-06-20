@@ -37,6 +37,7 @@ import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_DAMAGE;
 import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_NBT;
 
 public class EnvironmentNetwork extends AbstractManagedEnvironment {
+
     protected final INetworkNode node;
 
     private static final String ERROR_NOT_CONNECTED = "not connected";
@@ -158,7 +159,14 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             throw new IllegalArgumentException("Could not create crafting task");
         }
 
-        ICraftingTaskError error = task.calculate();
+        ICraftingTaskError error;
+        try {
+            error = task.calculate();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            task.onCancelled();
+            return new Object[]{};
+        }
 
         if (error == null && !task.hasMissing() && args.optBoolean(2, true)) {
             task.setCanUpdate(true);
@@ -181,7 +189,14 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
             throw new IllegalArgumentException("Could not create crafting task");
         }
 
-        ICraftingTaskError error = task.calculate();
+        ICraftingTaskError error;
+        try {
+            error = task.calculate();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            task.onCancelled();
+            return new Object[]{};
+        }
 
         if (error == null && !task.hasMissing() && args.optBoolean(2, true)) {
             task.setCanUpdate(true);
