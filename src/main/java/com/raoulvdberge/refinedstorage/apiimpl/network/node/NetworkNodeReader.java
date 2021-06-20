@@ -2,6 +2,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReader;
+import com.raoulvdberge.refinedstorage.api.network.readerwriter.IReaderWriterChannel;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.tile.TileReader;
 import com.raoulvdberge.refinedstorage.tile.data.TileDataParameter;
@@ -49,6 +50,18 @@ public class NetworkNodeReader extends NetworkNode implements IReader, IGuiReade
 
     @Override
     public void setChannel(String channel) {
+        if (network != null) {
+            IReaderWriterChannel networkChannel = network.getReaderWriterManager().getChannel(this.channel);
+            if (networkChannel != null) {
+                networkChannel.onNodeRemoved(this);
+            }
+
+            IReaderWriterChannel newChannel = network.getReaderWriterManager().getChannel(channel);
+            if (newChannel != null) {
+                newChannel.onNodeAdded(this);
+            }
+        }
+
         this.channel = channel;
     }
 
@@ -72,7 +85,7 @@ public class NetworkNodeReader extends NetworkNode implements IReader, IGuiReade
         super.read(tag);
 
         if (tag.hasKey(NBT_CHANNEL)) {
-            channel = tag.getString(NBT_CHANNEL);
+            setChannel(tag.getString(NBT_CHANNEL));
         }
 
         if (tag.hasKey(NBT_COVERS)) {

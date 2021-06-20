@@ -52,8 +52,7 @@ public class ReaderWriterManager implements IReaderWriterManager {
         IReaderWriterChannel channel = getChannel(name);
 
         if (channel != null) {
-            channel.getReaders().forEach(reader -> reader.setChannel(""));
-            channel.getWriters().forEach(writer -> writer.setChannel(""));
+            channel.invalidate();
 
             channels.remove(name);
 

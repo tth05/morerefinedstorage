@@ -1,5 +1,6 @@
 package com.raoulvdberge.refinedstorage.api.network.readerwriter;
 
+import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import net.minecraft.nbt.NBTTagCompound;
 
 import java.util.List;
@@ -22,6 +23,18 @@ public interface IReaderWriterChannel {
      * @return a list of writers using this channel
      */
     List<IWriter> getWriters();
+
+    /**
+     * Called when a node is added to this channel
+     */
+    void onNodeAdded(INetworkNode node);
+
+    /**
+     * Called when a node is removed from this channel
+     */
+    void onNodeRemoved(INetworkNode node);
+
+    void invalidate();
 
     /**
      * Writes this channel to NBT.

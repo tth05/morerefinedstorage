@@ -6,15 +6,18 @@ import com.raoulvdberge.refinedstorage.api.network.readerwriter.*;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReaderWriterChannel implements IReaderWriterChannel {
+
     private static final String NBT_HANDLER = "Handler_%s";
 
     private final String name;
     private final INetwork network;
+
+    private final List<IWriter> cachedWriters = new ArrayList<>();
+    private final List<IReader> cachedReaders = new ArrayList<>();
 
     private final List<IReaderWriterHandler> handlers = new ArrayList<>();
 
@@ -22,6 +25,18 @@ public class ReaderWriterChannel implements IReaderWriterChannel {
         this.name = name;
         this.network = network;
         this.handlers.addAll(API.instance().getReaderWriterHandlerRegistry().all().stream().map(f -> f.create(null)).collect(Collectors.toList()));
+        this.network.getNodeGraph().addListener(() -> {
+            this.cachedReaders.clear();
+            this.cachedWriters.clear();
+
+            for (INetworkNode node : network.getNodeGraph().allActualNodes()) {
+                if (node instanceof IReader && name.equals(((IReader) node).getChannel())) {
+                    this.cachedReaders.add((IReader) node);
+                } else if (node instanceof IWriter && name.equals(((IWriter) node).getChannel())) {
+                    this.cachedWriters.add((IWriter) node);
+                }
+            }
+        });
     }
 
     @Override
@@ -30,25 +45,43 @@ public class ReaderWriterChannel implements IReaderWriterChannel {
     }
 
     @Override
-    public List<IReader> getReaders() {
-        List<IReader> list = new ArrayList<>();
-        for (INetworkNode node : network.getNodeGraph().allActualNodes()) {
-            if (node instanceof IReader && name.equals(((IReader) node).getChannel())) {
-                list.add((IReader) node);
-            }
+    public void onNodeAdded(INetworkNode node) {
+        if (node instanceof IReader) {
+            if (!this.cachedReaders.contains(node))
+                this.cachedReaders.add((IReader) node);
+        } else if (node instanceof IWriter) {
+            if (!this.cachedWriters.contains(node))
+                this.cachedWriters.add((IWriter) node);
+        } else {
+            throw new IllegalArgumentException("Not a reader or writer");
         }
-        return list;
+    }
+
+    @Override
+    public void onNodeRemoved(INetworkNode node) {
+        if (node instanceof IReader) {
+            this.cachedReaders.remove(node);
+        } else if (node instanceof IWriter) {
+            this.cachedWriters.remove(node);
+        } else {
+            throw new IllegalArgumentException("Not a reader or writer");
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        new ArrayList<>(this.cachedWriters).forEach(w -> w.setChannel(""));
+        new ArrayList<>(this.cachedReaders).forEach(r -> r.setChannel(""));
+    }
+
+    @Override
+    public List<IReader> getReaders() {
+        return this.cachedReaders;
     }
 
     @Override
     public List<IWriter> getWriters() {
-        List<IWriter> list = new ArrayList<>();
-        for (INetworkNode node : network.getNodeGraph().allActualNodes()) {
-            if (node instanceof IWriter && name.equals(((IWriter) node).getChannel())) {
-                list.add((IWriter) node);
-            }
-        }
-        return list;
+        return this.cachedWriters;
     }
 
     @Override

@@ -17,6 +17,7 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nullable;
 
 public class NetworkNodeWriter extends NetworkNode implements IWriter, IGuiReaderWriter, ICoverable {
+
     public static final String ID = "writer";
 
     private static final String NBT_CHANNEL = "Channel";
@@ -71,13 +72,18 @@ public class NetworkNodeWriter extends NetworkNode implements IWriter, IGuiReade
 
     @Override
     public void setChannel(String channel) {
-        if (network != null && channel.equals("")) {
+        if (network != null) {
             IReaderWriterChannel networkChannel = network.getReaderWriterManager().getChannel(this.channel);
-
             if (networkChannel != null) {
+                networkChannel.onNodeRemoved(this);
                 for (IReaderWriterHandler handler : networkChannel.getHandlers()) {
                     handler.onWriterDisabled(this);
                 }
+            }
+
+            IReaderWriterChannel newChannel = network.getReaderWriterManager().getChannel(channel);
+            if (newChannel != null) {
+                newChannel.onNodeAdded(this);
             }
         }
 
@@ -104,7 +110,7 @@ public class NetworkNodeWriter extends NetworkNode implements IWriter, IGuiReade
         super.read(tag);
 
         if (tag.hasKey(NBT_CHANNEL)) {
-            channel = tag.getString(NBT_CHANNEL);
+            setChannel(tag.getString(NBT_CHANNEL));
         }
 
         if (tag.hasKey(NBT_COVERS)) {
