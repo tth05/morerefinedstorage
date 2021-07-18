@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class StorageExternalItem implements IStorageExternal<ItemStack> {
+
     private final IExternalStorageContext context;
     private final Supplier<IItemHandler> handlerSupplier;
     private final boolean connectedToInterface;
@@ -123,13 +124,18 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
             return null;
         }
 
+        outer:
         for (int i = 0; i < handler.getSlots(); ++i) {
             ItemStack slot = handler.getStackInSlot(i);
 
             if (!slot.isEmpty() && API.instance().getComparer().isEqual(slot, stack, flags)) {
+                int countInSlot = slot.getCount();
                 ItemStack got = handler.extractItem(i, remaining, action == Action.SIMULATE);
 
-                if (!got.isEmpty()) {
+                //Check if some handler has a limit on how much you can extract at once
+                boolean shouldLoop = got.getCount() < remaining && got.getCount() != countInSlot;
+
+                while (!got.isEmpty()) {
                     if (received == null) {
                         received = got.copy();
                     } else {
@@ -138,9 +144,13 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
 
                     remaining -= got.getCount();
 
-                    if (remaining == 0) {
+                    if (remaining <= 0)
+                        break outer;
+
+                    if (!shouldLoop)
                         break;
-                    }
+
+                    got = handler.extractItem(i, remaining, action == Action.SIMULATE);
                 }
             }
         }
