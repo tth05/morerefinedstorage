@@ -6,7 +6,8 @@ import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import com.raoulvdberge.refinedstorage.network.MessageGridProcessingTransfer;
 import com.raoulvdberge.refinedstorage.network.MessageGridTransfer;
-import io.netty.handler.codec.EncoderException;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import mezz.jei.api.gui.IGuiIngredient;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.recipe.IRecipeCategory;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
+
     public static final long TRANSFER_SCROLL_DELAY_MS = 200;
     public static long LAST_TRANSFER;
 
@@ -95,15 +97,20 @@ public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
                 RS.INSTANCE.network
                         .sendToServer(new MessageGridProcessingTransfer(inputs, outputs, fluidInputs, fluidOutputs));
             } else {
-                try {
-                    RS.INSTANCE.network.sendToServer(new MessageGridTransfer(
-                            recipeLayout.getItemStacks().getGuiIngredients(),
-                            container.inventorySlots.stream().filter(s -> s.inventory instanceof InventoryCrafting)
-                                    .collect(Collectors.toList())
-                    ));
-                } catch (EncoderException e) {
-                    if (e.getCause() instanceof IllegalStateException)
-                        player.sendMessage(new TextComponentString("Cannot transfer items, packet too large."));
+                MessageGridTransfer message = new MessageGridTransfer(
+                        recipeLayout.getItemStacks().getGuiIngredients(),
+                        container.inventorySlots.stream().filter(s -> s.inventory instanceof InventoryCrafting)
+                                .collect(Collectors.toList())
+                );
+
+                ByteBuf buffer = Unpooled.buffer();
+                message.toBytes(buffer);
+
+                if (buffer.writerIndex() > 32767) {
+                    player.sendMessage(new TextComponentString("Cannot transfer items because the packet will be too large." +
+                                                               " This happens when transferring a recipe with lots of different possibilities (e.g. saplings)"));
+                } else {
+                    RS.INSTANCE.network.sendToServer(message);
                 }
             }
         }
