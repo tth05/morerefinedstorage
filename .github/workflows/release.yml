@@ -22,9 +22,9 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Setup forge
-      run: ./gradlew setupCiWorkspace
+      run: ./gradlew -Pnet.minecraftforge.gradle.disableUpdateChecker=true setupCiWorkspace
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew -Pnet.minecraftforge.gradle.disableUpdateChecker=true build
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -35,8 +35,10 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Fixed items with different capabilities stacking
-          - Improved the OC integration
+          - Performance improvements for reader and writer on large systems
+          - Fixed recipe transfer error message not being sent to player
+          - Fixed external storage only extracting a single stack if IItemHandler has extraction limit
+          - Fixed tasks voiding items when the calculation throws an exception
         draft: false
         prerelease: false
     - name: Upload jars to release

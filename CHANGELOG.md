@@ -1,5 +1,11 @@
 # More Refined Storage Changelog
 
+# 2.3.0
+- Performance improvements for reader and writer on large systems
+- Fixed recipe transfer error message not being sent to player
+- Fixed external storage only extracting a single stack if IItemHandler has extraction limit
+- Fixed tasks voiding items when the calculation throws an exception
+
 # 2.2.10
 - Fixed items with different capabilities stacking
 - Improved the OC integration
