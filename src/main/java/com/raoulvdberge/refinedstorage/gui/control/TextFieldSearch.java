@@ -28,11 +28,23 @@ public class TextFieldSearch extends GuiTextField {
         this.setVisible(true);
         this.setTextColor(16777215);
 
-        this.listeners.add(() -> {
-            if (IntegrationJEI.isLoaded() && (mode == IGrid.SEARCH_BOX_MODE_JEI_SYNCHRONIZED || mode == IGrid.SEARCH_BOX_MODE_JEI_SYNCHRONIZED_AUTOSELECTED)) {
-                RSJEIPlugin.INSTANCE.getRuntime().getIngredientFilter().setFilterText(getText());
-            }
-        });
+        this.listeners.add(this::updateJei);
+    }
+
+    public void updateJei() {
+        if(canSyncToJEINow()) {
+            RSJEIPlugin.INSTANCE.getRuntime().getIngredientFilter().setFilterText(getText());
+        }
+    }
+
+    private boolean canSyncToJEINow() {
+        return IGrid.doesSearchBoxModeUseJEI(this.mode) && IntegrationJEI.isLoaded();
+    }
+
+    private boolean canSyncFromJEINow() {
+        return (this.mode == IGrid.SEARCH_BOX_MODE_JEI_SYNCHRONIZED_2WAY ||
+                this.mode == IGrid.SEARCH_BOX_MODE_JEI_SYNCHRONIZED_2WAY_AUTOSELECTED)
+                && IntegrationJEI.isLoaded();
     }
 
     public void addListener(Runnable listener) {
@@ -145,5 +157,25 @@ public class TextFieldSearch extends GuiTextField {
 
         this.setCanLoseFocus(!IGrid.isSearchBoxModeWithAutoselection(mode));
         this.setFocused(IGrid.isSearchBoxModeWithAutoselection(mode));
+
+        if (canSyncFromJEINow()) {
+            setTextFromJEI();
+        }
+    }
+
+    private void setTextFromJEI() {
+        final String filterText = RSJEIPlugin.INSTANCE.getRuntime().getIngredientFilter().getFilterText();
+        if (!getText().equals(filterText)) {
+            setText(filterText);
+            listeners.forEach(Runnable::run); /* Trigger grid update */
+        }
+    }
+
+    @Override
+    public void drawTextBox() {
+        if (canSyncFromJEINow() && RSJEIPlugin.INSTANCE.getRuntime().getIngredientListOverlay().hasKeyboardFocus()) {
+            setTextFromJEI();
+        }
+        super.drawTextBox();
     }
 }
