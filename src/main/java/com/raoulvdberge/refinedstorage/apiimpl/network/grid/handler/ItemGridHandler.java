@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ItemGridHandler implements IItemGridHandler {
+
     private final INetwork network;
 
     public ItemGridHandler(INetwork network) {
@@ -109,10 +110,15 @@ public class ItemGridHandler implements IItemGridHandler {
                         took.setCount(remainder.getCount());
                     }
                 }
-                ItemStack remainder = ItemHandlerHelper.insertItemStacked(playerInventory, took.getFixedStack(), false);
+                ItemStack remainder = ItemHandlerHelper.insertItemStacked(playerInventory, took.getFixedStack(), true);
+                took.setCount(took.getCount() - remainder.getCount());
 
-                if (took.getCount() - remainder.getCount() > 0)
-                    network.extractItem(entry.getStack(), took.getCount() - remainder.getCount(), Action.PERFORM);
+                if (took.getCount() > 0) {
+                    took = network.extractItem(entry.getStack(), took.getCount(), Action.PERFORM);
+
+                    if (took != null && took.getCount() > 0)
+                        ItemHandlerHelper.insertItemStacked(playerInventory, took.getFixedStack(), false);
+                }
             }
         } else {
             took = network.extractItem(entry.getStack(), size, Action.PERFORM);
