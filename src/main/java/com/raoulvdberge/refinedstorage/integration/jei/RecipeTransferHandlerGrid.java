@@ -1,6 +1,7 @@
 package com.raoulvdberge.refinedstorage.integration.jei;
 
 import com.raoulvdberge.refinedstorage.RS;
+import com.raoulvdberge.refinedstorage.RSConfig;
 import com.raoulvdberge.refinedstorage.api.network.grid.GridType;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
@@ -106,7 +107,7 @@ public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
                 ByteBuf buffer = Unpooled.buffer();
                 message.toBytes(buffer);
 
-                if (buffer.writerIndex() > 32767) {
+                if (RS.INSTANCE.config.checkPacketSize && buffer.writerIndex() > 32767) {
                     player.sendMessage(new TextComponentString("Cannot transfer items because the packet will be too large." +
                                                                " This happens when transferring a recipe with lots of different possibilities (e.g. saplings)"));
                 } else {
