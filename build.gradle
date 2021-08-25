@@ -1,71 +1,103 @@
 buildscript {
     repositories {
         jcenter()
-        maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'maven'
+apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'maven-publish'
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'idea'
 
 version = "2.3.0"
 
 group = "refinedstorage"
-archivesBaseName = "morerefinedstorage"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+java {
+    archivesBaseName = "morerefinedstorage"
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+}
 
 minecraft {
-    version = "1.12.2-14.23.5.2847"
-    runDir = "run"
-    useDepAts = true
-    mappings = "stable_39"
+    mappings channel: 'stable', version: '39-1.12'
+    accessTransformer = file('src/main/resources/accesstransformer.cfg')
 
-    replaceIn "RS.java"
-    replace "@version@", project.version
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                test {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                test {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
 }
 
 repositories {
     maven {
-        url "http://dvs1.progwml6.com/files/maven"
+        url "https://dvs1.progwml6.com/files/maven"
     }
     maven {
-        url "http://maven.cil.li"
+        url "https://maven.cil.li"
     }
     maven {
         name = "CurseForge"
         url = "https://minecraft.curseforge.com/api/maven/"
+        metadataSources {
+            artifact()
+        }
+    }
+    maven {
+        url 'https://repo.maven.apache.org/maven2'
+        name 'Maven Central'
     }
 }
 
 dependencies {
-    deobfCompile "mezz.jei:jei_1.12.2:4.16.1.302:api"
-    runtime "mezz.jei:jei_1.12.2:4.16.1.302"
-    deobfCompile "li.cil.oc:OpenComputers:MC1.12.2-1.7.2.67:api"
-    compile "inventory-tweaks:InventoryTweaks:1.63:api"
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2855'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
+    runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
+
+    compileOnly fg.deobf("li.cil.oc:OpenComputers:MC1.12.2-1.7.2.67:api")
+    compileOnly("inventory-tweaks:InventoryTweaks:1.63:api")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", minecraft_version
 
+    setDuplicatesStrategy(DuplicatesStrategy.WARN)
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
-        expand 'version': project.version, 'mcversion': project.minecraft.version
+        expand 'version': project.version, 'mcversion': minecraft_version
     }
 
     from(sourceSets.main.resources.srcDirs) {
@@ -81,21 +113,6 @@ jar {
     include "pack.mcmeta"
 }
 
-task deobfJar(type: Jar) {
-    from sourceSets.main.output
-    classifier 'deobf'
-}
+jar.finalizedBy('reobfJar')
 
-task apiJar(type: Jar, dependsOn: 'sourceMainJava') {
-    from sourceSets.main.allSource
-    from sourceSets.main.output
-    include 'com/raoulvdberge/refinedstorage/api/**/*'
-    classifier 'api'
-}
-
-artifacts {
-    archives deobfJar
-    archives apiJar
-    archives sourceJar
-    archives jar
-}
+idea { module { inheritOutputDirs = true } }
