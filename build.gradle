@@ -48,7 +48,7 @@ java {
 
 minecraft {
     mappings channel: 'stable', version: '39-1.12'
-    accessTransformer = file('src/main/resources/accesstransformer.cfg')
+    accessTransformer = file('src/main/resources/dev_ats.cfg')
 
     runs {
         client {
@@ -126,6 +126,7 @@ processResources {
 
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+        exclude 'dev_ats.cfg'
     }
 }
 

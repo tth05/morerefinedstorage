@@ -303,12 +303,15 @@ public class MasterCraftingTask implements ICraftingTask {
         Deque<Pair<ICraftingPatternContainer, Integer>> queue = new LinkedList<>();
         ICraftingPatternContainer[] array = containers.toArray(new ICraftingPatternContainer[0]);
 
+        //Loop crafter index back to start
         if (task.getCrafterIndex() >= array.length)
             task.setCrafterIndex(0);
 
+        //Start at after the crafter we last inserted into
         for (int i = task.getCrafterIndex(); i < array.length; i++) {
             ICraftingPatternContainer filteredContainer = array[i];
 
+            //Put valid crafters into correct order
             if (filteredContainer.getCraftingUpdatesLeft() > 0 && this.ticks % filteredContainer.getUpdateInterval() == 0)
                 queue.offerLast(Pair.of(filteredContainer, i));
 
@@ -320,8 +323,8 @@ public class MasterCraftingTask implements ICraftingTask {
         }
 
         int[] actualUpdateCounts = new int[array.length];
-        Arrays.fill(actualUpdateCounts, 0);
 
+        //Distribute updates between crafters
         while (!queue.isEmpty()) {
             Pair<ICraftingPatternContainer, Integer> c = queue.pollFirst();
 
