@@ -1,6 +1,8 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+import java.nio.file.Paths
+
 buildscript {
     repositories {
-        jcenter()
         maven { url = 'https://maven.minecraftforge.net' }
         mavenCentral()
     }
@@ -14,8 +16,30 @@ apply plugin: 'maven-publish'
 apply plugin: 'idea'
 
 version = "2.3.0"
-
 group = "refinedstorage"
+
+def tokens = [VERSION: project.version]
+def included = ['com/raoulvdberge/refinedstorage/RS.java']
+
+def expandedSrc = new File(project.buildDir, 'expandedSrc')
+def srcMainJava = project.file('src/main/java').toPath()
+def includedPaths = included.collect { Paths.get(it) }
+task javaReplaceTokens(type: Copy) {
+    inputs.property 'tokens', tokens
+    from(srcMainJava) {
+        include included
+    }
+    into expandedSrc
+    filter(ReplaceTokens, beginToken: '@', endToken: '@', tokens: tokens)
+}
+
+compileJava {
+    dependsOn javaReplaceTokens
+    exclude {
+        srcMainJava.relativize(it.file.toPath()) in includedPaths
+    }
+    source expandedSrc
+}
 
 java {
     archivesBaseName = "morerefinedstorage"

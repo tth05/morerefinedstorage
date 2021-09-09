@@ -24,7 +24,7 @@ public final class RS {
     }
 
     public static final String ID = "refinedstorage";
-    public static final String VERSION = "@version@";
+    public static final String VERSION = "@VERSION@";
 
     public static final String GUI_FACTORY = "com.raoulvdberge.refinedstorage.gui.config.ModGuiFactory";
     public static final String DEPENDENCIES = "after:forge@[14.23.3.2847,);";
