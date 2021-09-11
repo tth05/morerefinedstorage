@@ -3,6 +3,7 @@ package com.raoulvdberge.refinedstorage.apiimpl.network.node;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.util.Action;
+import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage.StorageExternalItem;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerBase;
@@ -10,9 +11,9 @@ import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerProxy;
 import com.raoulvdberge.refinedstorage.inventory.item.ItemHandlerUpgrade;
 import com.raoulvdberge.refinedstorage.inventory.listener.ListenerNetworkNode;
 import com.raoulvdberge.refinedstorage.item.ItemUpgrade;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -101,7 +102,7 @@ public class NetworkNodeInterface extends NetworkNode implements IRSFilterConfig
                 if (delta > 0) {
                     final boolean actingAsStorage = isActingAsStorage();
 
-                    ItemStack result = network.extractItem(wanted, delta, this.config.getCompare(), Action.PERFORM, s -> {
+                    ItemStack result = network.extractItem(wanted, delta, this.config.getCompare() | IComparer.IGNORE_CAPABILITIES, Action.PERFORM, s -> {
                         // If we are not an interface acting as a storage, we can extract from anywhere.
                         if (!actingAsStorage) {
                             return true;

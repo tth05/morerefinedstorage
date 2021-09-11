@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class StorageDiskItem implements IStorageDisk<ItemStack> {
+
     public static final String NBT_VERSION = "Version";
     public static final String NBT_CAPACITY = "Capacity";
     public static final String NBT_ITEMS = "Items";
@@ -160,7 +161,8 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     public StackListResult<ItemStack> extract(@Nonnull ItemStack stack, long size, int flags, Action action) {
         //extract exact
         if ((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
-                (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
+            (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE &&
+            (flags & IComparer.IGNORE_CAPABILITIES) != IComparer.IGNORE_CAPABILITIES) {
             StackListItem.ItemStackWrapper wrapper = new StackListItem.ItemStackWrapper(stack);
 
             StackListEntry<ItemStack> entry = stacks.get(wrapper);

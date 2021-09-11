@@ -120,7 +120,7 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
 
                 if (stackSize > 0) {
                     ItemStack took = network.extractItem(slot, Math.min(slot.getMaxStackSize(), stackSize),
-                            this.config.getCompare(), Action.SIMULATE);
+                            this.config.getCompare() | IComparer.IGNORE_CAPABILITIES, Action.SIMULATE);
 
                     if (took.isEmpty()) {
                         if (upgrades.hasUpgrade(ItemUpgrade.TYPE_CRAFTING)) {
@@ -133,7 +133,7 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
                         int correctedStackSize = took.getCount() - remainder.getCount();
 
                         if (correctedStackSize > 0) {
-                            took = network.extractItem(slot, correctedStackSize, this.config.getCompare(), Action.PERFORM);
+                            took = network.extractItem(slot, correctedStackSize, this.config.getCompare() | IComparer.IGNORE_CAPABILITIES, Action.PERFORM);
 
                             ItemHandlerHelper.insertItem(handler, took, false);
                         }

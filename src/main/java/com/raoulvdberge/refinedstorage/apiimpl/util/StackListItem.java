@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StackListItem implements IStackList<ItemStack> {
+
     private final Map<ItemStackWrapper, StackListEntry<ItemStack>> stacks = new ConcurrentHashMap<>();
     private final Multimap<Item, ItemStackWrapper> stacksByItem = HashMultimap.create();
     private final Map<UUID, StackListEntry<ItemStack>> index = new HashMap<>();
@@ -92,7 +93,8 @@ public class StackListItem implements IStackList<ItemStack> {
     @Override
     public StackListEntry<ItemStack> getEntry(@Nonnull ItemStack stack, int flags) {
         if ((flags & IComparer.COMPARE_NBT) == IComparer.COMPARE_NBT &&
-            (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE) {
+            (flags & IComparer.COMPARE_DAMAGE) == IComparer.COMPARE_DAMAGE &&
+            (flags & IComparer.IGNORE_CAPABILITIES) != IComparer.IGNORE_CAPABILITIES) {
             StackListEntry<ItemStack> entry = stacks.get(new ItemStackWrapper(stack));
             if (entry == null)
                 return null;
@@ -199,6 +201,7 @@ public class StackListItem implements IStackList<ItemStack> {
     }
 
     public static final class ItemStackWrapper {
+
         private final int hashCode;
         private ItemStack itemStack;
 

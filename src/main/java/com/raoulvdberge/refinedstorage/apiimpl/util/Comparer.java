@@ -39,11 +39,12 @@ public class Comparer implements IComparer {
         if ((flags & COMPARE_NBT) == COMPARE_NBT) {
             boolean leftTagEmpty = left.getTagCompound() == null || left.getTagCompound().isEmpty();
             boolean rightTagEmpty = right.getTagCompound() == null || right.getTagCompound().isEmpty();
+            boolean ignoreCapabilities = (flags & IGNORE_CAPABILITIES) == IGNORE_CAPABILITIES;
             if (leftTagEmpty) {
-                if (!rightTagEmpty || !left.areCapsCompatible(right))
+                if (!rightTagEmpty || !(ignoreCapabilities || left.areCapsCompatible(right)))
                     return false;
             } else {
-                if (!left.getTagCompound().equals(right.getTagCompound()) || !left.areCapsCompatible(right))
+                if (!left.getTagCompound().equals(right.getTagCompound()) || !(ignoreCapabilities || left.areCapsCompatible(right)))
                     return false;
             }
         }
