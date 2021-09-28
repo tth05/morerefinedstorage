@@ -4,6 +4,7 @@ import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.ICoverable;
+import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.Cover;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.block.BlockCable;
@@ -17,6 +18,7 @@ import com.raoulvdberge.refinedstorage.tile.TileNode;
 import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
 import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
+import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -118,6 +120,10 @@ public class ItemWrench extends ItemBase {
         } else {
             NBTTagCompound tag = player.getHeldItemMainhand().getTagCompound();
             if (mode == WrenchMode.COPY) {
+                if (node instanceof NetworkNode) {
+                    tag.setString("redstoneMode", ((NetworkNode) node).getRedstoneMode().name());
+                }
+
                 //upgrades
                 if (node instanceof IUpgradeContainer) {
                     tag.setTag("upgrades", IUpgradeContainer.writeToNBT((IUpgradeContainer) node, new NBTTagCompound()));
@@ -130,6 +136,10 @@ public class ItemWrench extends ItemBase {
             } else if (mode == WrenchMode.PASTE && !tag.isEmpty()) {
                 TextComponentString args = new TextComponentString("");
 
+                if (node instanceof NetworkNode && tag.hasKey("redstoneMode")) {
+                    ((NetworkNode) node).setRedstoneMode(RedstoneMode.valueOf(tag.getString("redstoneMode")));
+                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("sidebutton.refinedstorage:redstone_mode"));
+                }
                 //upgrades
                 if (node instanceof IUpgradeContainer && tag.hasKey("upgrades")) {
                     boolean success = IUpgradeContainer.readFromNBT((IUpgradeContainer) node, player, tag.getCompoundTag("upgrades"));
