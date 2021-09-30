@@ -1,10 +1,12 @@
 package com.raoulvdberge.refinedstorage.item.wrench;
 
 import com.raoulvdberge.refinedstorage.RS;
+import com.raoulvdberge.refinedstorage.api.autocrafting.ICraftingPatternContainer;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.network.security.Permission;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.ICoverable;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNode;
+import com.raoulvdberge.refinedstorage.apiimpl.network.node.NetworkNodeCrafter;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.Cover;
 import com.raoulvdberge.refinedstorage.apiimpl.network.node.cover.CoverManager;
 import com.raoulvdberge.refinedstorage.block.BlockCable;
@@ -15,9 +17,9 @@ import com.raoulvdberge.refinedstorage.render.IModelRegistration;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTraceResult;
 import com.raoulvdberge.refinedstorage.render.collision.AdvancedRayTracer;
 import com.raoulvdberge.refinedstorage.tile.TileNode;
+import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.config.IRSFilterConfigProvider;
 import com.raoulvdberge.refinedstorage.tile.config.IUpgradeContainer;
-import com.raoulvdberge.refinedstorage.tile.config.FilterConfig;
 import com.raoulvdberge.refinedstorage.tile.config.RedstoneMode;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.block.Block;
@@ -47,6 +49,19 @@ public class ItemWrench extends ItemBase {
         super(new ItemInfo(RS.ID, "wrench"));
 
         setMaxStackSize(1);
+    }
+
+    public static void addDefaultMode(ItemStack stack) {
+        NBTTagCompound tag;
+        if (stack.getTagCompound() == null)
+            tag = new NBTTagCompound();
+        else
+            tag = stack.getTagCompound();
+
+        if (!tag.hasKey("mode"))
+            tag.setString("mode", WrenchMode.COVER.name());
+
+        stack.setTagCompound(tag);
     }
 
     @Override
@@ -121,7 +136,11 @@ public class ItemWrench extends ItemBase {
             NBTTagCompound tag = player.getHeldItemMainhand().getTagCompound();
             if (mode == WrenchMode.COPY) {
                 if (node instanceof NetworkNode) {
-                    tag.setString("redstoneMode", ((NetworkNode) node).getRedstoneMode().name());
+                    if (node instanceof NetworkNodeCrafter) {
+                        tag.setString("crafterMode", ((NetworkNodeCrafter) node).getCrafterMode().name());
+                    } else {
+                        tag.setString("redstoneMode", ((NetworkNode) node).getRedstoneMode().name());
+                    }
                 }
 
                 //upgrades
@@ -136,9 +155,14 @@ public class ItemWrench extends ItemBase {
             } else if (mode == WrenchMode.PASTE && !tag.isEmpty()) {
                 TextComponentString args = new TextComponentString("");
 
-                if (node instanceof NetworkNode && tag.hasKey("redstoneMode")) {
-                    ((NetworkNode) node).setRedstoneMode(RedstoneMode.valueOf(tag.getString("redstoneMode")));
-                    args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("sidebutton.refinedstorage:redstone_mode"));
+                if (node instanceof NetworkNode) {
+                    if (node instanceof NetworkNodeCrafter && tag.hasKey("crafterMode")) {
+                        ((NetworkNodeCrafter) node).setMode(ICraftingPatternContainer.CrafterMode.valueOf(tag.getString("crafterMode")));
+                        args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("sidebutton.refinedstorage:crafter_mode"));
+                    } else if (tag.hasKey("redstoneMode")) {
+                        ((NetworkNode) node).setRedstoneMode(RedstoneMode.valueOf(tag.getString("redstoneMode")));
+                        args.appendText(args.getSiblings().size() == 0 ? "" : ", ").appendSibling(new TextComponentTranslation("sidebutton.refinedstorage:redstone_mode"));
+                    }
                 }
                 //upgrades
                 if (node instanceof IUpgradeContainer && tag.hasKey("upgrades")) {
@@ -172,18 +196,5 @@ public class ItemWrench extends ItemBase {
         }
 
         return EnumActionResult.SUCCESS;
-    }
-
-    public static void addDefaultMode(ItemStack stack) {
-        NBTTagCompound tag;
-        if (stack.getTagCompound() == null)
-            tag = new NBTTagCompound();
-        else
-            tag = stack.getTagCompound();
-
-        if (!tag.hasKey("mode"))
-            tag.setString("mode", WrenchMode.COVER.name());
-
-        stack.setTagCompound(tag);
     }
 }
