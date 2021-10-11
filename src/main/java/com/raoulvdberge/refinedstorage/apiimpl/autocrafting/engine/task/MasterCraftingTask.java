@@ -404,10 +404,10 @@ public class MasterCraftingTask implements ICraftingTask {
                     long amount = 1;
 
                     if (!isDurabilityInput) {
-                        amount = input.getCurrentInputCounts().get(i);
+                        amount = input.getCurrentInputCounts().getLong(i);
                     } else { //set correct durability to item stack
                         itemStack.setItemDamage(
-                                itemStack.getMaxDamage() - input.getCurrentInputCounts().get(i).intValue() + 1);
+                                itemStack.getMaxDamage() - (int) input.getCurrentInputCounts().getLong(i) + 1);
                     }
 
                     if (amount > 0 && (!isDurabilityInput ||
@@ -416,18 +416,20 @@ public class MasterCraftingTask implements ICraftingTask {
                 }
 
                 if (input.isFluid()) {
-                    long amount = input.getCurrentInputCounts().get(0);
+                    long amount = input.getCurrentInputCounts().getLong(0);
                     if (amount > 0)
                         network.insertFluid(input.getFluidStack(), amount, Action.PERFORM);
                 }
             }
 
+            //TODO: This is wrong. A task can unlock a crafter that was locked by a different task, which shouldn't
+            // happen. Maybe a Crafter should save who it got last locked by?
             //unlock all crafters
-            if (!task.isFinished()) {
+            /*if (!task.isFinished()) {
                 for (ICraftingPatternContainer craftingPatternContainer :
                         network.getCraftingManager().getAllContainer(task.getPattern()))
                     craftingPatternContainer.unlock();
-            }
+            }*/
         }
     }
 
