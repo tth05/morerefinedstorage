@@ -1,5 +1,15 @@
 # More Refined Storage Changelog
 
+# 2.3.1
+- Add JEI two-way search mode (embeddedt)
+- Add ability to copy redstone mode for wrench
+- Fixed dupe glitch involving two external storages connected to the same block
+- Fixed item in autocrafting settings gui being extractable
+- Fixed JEI recipe transfer kicking the player sometimes
+- Fixed grid not showing any items in some very rare edge cases
+- Disabled automatic crafter unlocking (breaks crafting tasks in unwanted situations)
+- Restore compatibility with QuantumStorage and other mods
+
 # 2.3.0
 - Performance improvements for reader and writer on large systems
 - Fixed recipe transfer error message not being sent to player

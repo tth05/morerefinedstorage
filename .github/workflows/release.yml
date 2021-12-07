@@ -21,8 +21,6 @@ jobs:
         java-version: 1.8
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Setup forge
-      run: ./gradlew -Pnet.minecraftforge.gradle.disableUpdateChecker=true setupCiWorkspace
     - name: Build with Gradle
       run: ./gradlew -Pnet.minecraftforge.gradle.disableUpdateChecker=true build
     - name: Create Release
@@ -35,10 +33,14 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
           Changes in this Release
-          - Performance improvements for reader and writer on large systems
-          - Fixed recipe transfer error message not being sent to player
-          - Fixed external storage only extracting a single stack if IItemHandler has extraction limit
-          - Fixed tasks voiding items when the calculation throws an exception
+          - Add JEI two-way search mode (embeddedt)
+          - Add ability to copy redstone mode for wrench
+          - Fixed dupe glitch involving two external storages connected to the same block
+          - Fixed item in autocrafting settings gui being extractable
+          - Fixed JEI recipe transfer kicking the player sometimes
+          - Fixed grid not showing any items in some very rare edge cases
+          - Disabled automatic crafter unlocking (breaks crafting tasks in unwanted situations)
+          - Restore compatibility with QuantumStorage and other mods
         draft: false
         prerelease: false
     - name: Upload jars to release
