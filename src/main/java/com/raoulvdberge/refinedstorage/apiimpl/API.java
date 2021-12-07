@@ -24,10 +24,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskManager;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskRegistry;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSync;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageProvider;
-import com.raoulvdberge.refinedstorage.api.util.Action;
-import com.raoulvdberge.refinedstorage.api.util.IComparer;
-import com.raoulvdberge.refinedstorage.api.util.IQuantityFormatter;
-import com.raoulvdberge.refinedstorage.api.util.IStackList;
+import com.raoulvdberge.refinedstorage.api.util.*;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementList;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.craftingmonitor.CraftingMonitorElementRegistry;
 import com.raoulvdberge.refinedstorage.apiimpl.autocrafting.engine.CraftingRequestInfo;
@@ -56,6 +53,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.discovery.ASMDataTable;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
@@ -384,5 +383,31 @@ public class API implements IRSAPI {
         }
 
         return left.getNetworkNodePos().equals(rightNode.getNetworkNodePos());
+    }
+
+    @Nonnull
+    @Override
+    public IOneSixMigrationHelper getOneSixMigrationHelper() {
+        return new IOneSixMigrationHelper() {
+            @Override
+            public boolean migrateDisk(World world, ItemStack disk) {
+                return false;
+            }
+
+            @Override
+            public boolean migrateDiskInventory(World world, IItemHandlerModifiable handler) {
+                return false;
+            }
+
+            @Override
+            public boolean migratePatternInventory(IItemHandler handler) {
+                return false;
+            }
+
+            @Override
+            public boolean migratePattern(ItemStack pattern) {
+                return false;
+            }
+        };
     }
 }

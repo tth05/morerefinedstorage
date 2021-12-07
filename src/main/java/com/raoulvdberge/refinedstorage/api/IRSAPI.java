@@ -22,6 +22,7 @@ import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskRegistry;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDiskSync;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageProvider;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
+import com.raoulvdberge.refinedstorage.api.util.IOneSixMigrationHelper;
 import com.raoulvdberge.refinedstorage.api.util.IQuantityFormatter;
 import com.raoulvdberge.refinedstorage.api.util.IStackList;
 import net.minecraft.item.ItemStack;
@@ -244,4 +245,11 @@ public interface IRSAPI {
      * @return true if the two network nodes are equal, false otherwise
      */
     boolean isNetworkNodeEqual(INetworkNode left, Object right);
+
+    /**
+     * @return an implementation that does nothing
+     */
+    @Deprecated
+    @Nonnull
+    IOneSixMigrationHelper getOneSixMigrationHelper();
 }
