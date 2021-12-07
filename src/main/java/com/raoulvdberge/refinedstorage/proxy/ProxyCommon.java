@@ -52,6 +52,7 @@ import com.raoulvdberge.refinedstorage.tile.grid.WirelessFluidGrid;
 import com.raoulvdberge.refinedstorage.tile.grid.WirelessGrid;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.PortableGrid;
 import com.raoulvdberge.refinedstorage.tile.grid.portable.TilePortableGrid;
+import com.raoulvdberge.refinedstorage.util.MessageSplitter;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.Block;
@@ -174,7 +175,6 @@ public class ProxyCommon {
         RS.INSTANCE.network.registerMessage(MessageGridItemInventoryScroll.class, MessageGridItemInventoryScroll.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridPatternSlotScroll.class, MessageGridPatternSlotScroll.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridClear.class, MessageGridClear.class, id++, Side.SERVER);
-        RS.INSTANCE.network.registerMessage(MessageGridTransfer.class, MessageGridTransfer.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridSettingsUpdate.class, MessageGridSettingsUpdate.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridCraftingStart.class, MessageGridCraftingStart.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageGridPatternCreate.class, MessageGridPatternCreate.class, id++, Side.SERVER);
@@ -214,6 +214,9 @@ public class ProxyCommon {
         RS.INSTANCE.network.registerMessage(MessageGridOpen.class, MessageGridOpen.class, id++, Side.CLIENT);
         RS.INSTANCE.network.registerMessage(MessageNetworkItemOpen.class, MessageNetworkItemOpen.class, id++, Side.SERVER);
         RS.INSTANCE.network.registerMessage(MessageChangeWrenchMode.class, MessageChangeWrenchMode.class, id++, Side.SERVER);
+        RS.INSTANCE.network.registerMessage(MessageSplitter::handle, MessageSplitterPart.class, id++, Side.SERVER);
+
+        MessageSplitter.register(new MessageGridTransfer(), MessageGridTransfer.class, 0);
 
         NetworkRegistry.INSTANCE.registerGuiHandler(RS.INSTANCE, new GuiHandler());
 

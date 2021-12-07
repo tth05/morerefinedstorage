@@ -1,14 +1,12 @@
 package com.raoulvdberge.refinedstorage.integration.jei;
 
 import com.raoulvdberge.refinedstorage.RS;
-import com.raoulvdberge.refinedstorage.RSConfig;
 import com.raoulvdberge.refinedstorage.api.network.grid.GridType;
 import com.raoulvdberge.refinedstorage.api.network.grid.IGrid;
 import com.raoulvdberge.refinedstorage.container.ContainerGrid;
 import com.raoulvdberge.refinedstorage.network.MessageGridProcessingTransfer;
 import com.raoulvdberge.refinedstorage.network.MessageGridTransfer;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import com.raoulvdberge.refinedstorage.util.MessageSplitter;
 import mezz.jei.api.gui.IGuiIngredient;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.recipe.IRecipeCategory;
@@ -20,7 +18,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
@@ -98,21 +95,11 @@ public class RecipeTransferHandlerGrid implements IRecipeTransferHandler {
                 RS.INSTANCE.network
                         .sendToServer(new MessageGridProcessingTransfer(inputs, outputs, fluidInputs, fluidOutputs));
             } else {
-                MessageGridTransfer message = new MessageGridTransfer(
+                MessageSplitter.sendToServer(new MessageGridTransfer(
                         recipeLayout.getItemStacks().getGuiIngredients(),
                         container.inventorySlots.stream().filter(s -> s.inventory instanceof InventoryCrafting)
                                 .collect(Collectors.toList())
-                );
-
-                ByteBuf buffer = Unpooled.buffer();
-                message.toBytes(buffer);
-
-                if (RS.INSTANCE.config.checkPacketSize && buffer.writerIndex() > 32767) {
-                    player.sendMessage(new TextComponentString("Cannot transfer items because the packet will be too large." +
-                                                               " This happens when transferring a recipe with lots of different possibilities (e.g. saplings)"));
-                } else {
-                    RS.INSTANCE.network.sendToServer(message);
-                }
+                ));
             }
         }
 

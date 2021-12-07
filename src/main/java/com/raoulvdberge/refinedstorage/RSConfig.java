@@ -59,7 +59,6 @@ public class RSConfig {
     public int maxRowsStretch;
     public boolean largeFont;
     public boolean detailedTooltip;
-    public boolean checkPacketSize;
     //endregion
 
     //region Wireless Transmitter
@@ -219,7 +218,6 @@ public class RSConfig {
         maxRowsStretch = config.getInt("maxRowsStretch", GRID, Integer.MAX_VALUE, 3, Integer.MAX_VALUE, "The maximum amount of rows that the Grid can show when stretched");
         largeFont = config.getBoolean("largeFont", GRID, false, "Whether the Grid should use a large font for stack quantity display");
         detailedTooltip = config.getBoolean("detailedTooltip", GRID, true, "Whether the Grid should display a detailed tooltip when hovering over an item or fluid");
-        checkPacketSize = config.getBoolean("checkPacketSize", GRID, true, "Whether the grid should check for packets that are too large (32767 bytes or larger). This would normally kick you and mostly happens in larger modpacks when transferring a recipe with lots of different possibilities (e.g. saplings)");
         //endregion
 
         //region Wireless Transmitter
