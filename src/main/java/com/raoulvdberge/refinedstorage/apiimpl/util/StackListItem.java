@@ -213,6 +213,7 @@ public class StackListItem implements IStackList<ItemStack> {
             NBTTagCompound originalNbt = template.getTagCompound();
             NBTTagCompound nbt = originalNbt == null || originalNbt.isEmpty() ? null : originalNbt.copy();
 
+            //TODO: doesn't include capability NBT
             int hashCode1;
             hashCode1 = 31 + Boolean.hashCode(isEmpty);
             hashCode1 = 31 * hashCode1 + item.hashCode();

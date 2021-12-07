@@ -1,6 +1,5 @@
 package com.raoulvdberge.refinedstorage.gui;
 
-import com.google.common.collect.Queues;
 import com.raoulvdberge.refinedstorage.RS;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawer;
 import com.raoulvdberge.refinedstorage.api.render.IElementDrawers;
@@ -35,6 +34,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 
 public abstract class GuiBase extends GuiContainer {
@@ -473,7 +473,7 @@ public abstract class GuiBase extends GuiContainer {
     }
 
     public static <T> void executeLater(Class<T> clazz, Consumer<T> callback) {
-        RUNNABLES.computeIfAbsent(clazz, k -> Queues.synchronizedDeque(new ArrayDeque<>())).add(callback);
+        RUNNABLES.computeIfAbsent(clazz, k -> new ConcurrentLinkedDeque<>()).add(callback);
     }
 
     public static void executeLater(Consumer<GuiContainer> callback) {

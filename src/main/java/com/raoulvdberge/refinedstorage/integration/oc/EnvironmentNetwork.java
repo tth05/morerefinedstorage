@@ -312,10 +312,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         List<Map<String, Object>> result = new ObjectArrayList<>();
         for (StackListEntry<FluidStack> entry : node.getNetwork().getFluidStorageCache().getList().getStacks()) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("size", entry.getCount());
-            map.put("stack", entry.getStack());
-            list.add(map);
+            list.add(serializeFluidStackListEntry(entry));
         }
 
         return new Object[]{result};
@@ -502,7 +499,7 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         return stack;
     }
 
-    private Map<String, Object> serializeItemStackStackListEntry(StackListEntry<ItemStack> entry) {
+    static Map<String, Object> serializeItemStackStackListEntry(StackListEntry<ItemStack> entry) {
         Map<String, Object> map = new HashMap<>();
         ItemStack stack = entry.getStack();
 
@@ -514,6 +511,13 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
         map.put("name", Item.REGISTRY.getNameForObject(stack.getItem()));
         map.put("label", stack.getDisplayName());
 
+        return map;
+    }
+
+    static Map<String, Object> serializeFluidStackListEntry(StackListEntry<FluidStack> entry) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("size", entry.getCount());
+        map.put("stack", entry.getStack());
         return map;
     }
 }
