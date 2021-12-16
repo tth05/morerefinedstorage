@@ -639,7 +639,7 @@ public class TileController extends TileBase
     }
 
     private void updateEnergyUsage() {
-        if (!this.redstoneModeEnabled) {
+        if (!this.redstoneModeEnabled || this.type == ControllerType.CREATIVE) {
             this.lastEnergyUsage = 0;
             return;
         }
