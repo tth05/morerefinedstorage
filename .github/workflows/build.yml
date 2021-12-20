@@ -18,8 +18,10 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew -Pnet.minecraftforge.gradle.disableUpdateChecker=true build
+    - name: Rename jar
+      run: mv build/libs/morerefinedstorage-*.jar build/libs/morerefinedstorage-${GITHUB_SHA::7}.jar
     - name: Upload artifacts
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
-        name: more-refined-storage
+        name: morerefinedstorage.zip
         path: build/libs
