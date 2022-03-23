@@ -97,6 +97,7 @@ repositories {
         url 'https://repo.maven.apache.org/maven2'
         name 'Maven Central'
     }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -107,6 +108,8 @@ dependencies {
 
     compileOnly fg.deobf("li.cil.oc:OpenComputers:MC1.12.2-1.7.2.67:api")
     compileOnly("inventory-tweaks:InventoryTweaks:1.63:api")
+
+    compileOnly fg.deobf('com.github.jbredwards:Fluidlogged-API:5c18d3ff5c')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
