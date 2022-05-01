@@ -64,13 +64,10 @@ public class ExternalStorageCacheItem {
 
                 if (delta > 0) {
                     network.getItemStorageCache().add(actualStack, delta, true);
-
-                    cached.grow(delta);
                 } else {
                     network.getItemStorageCache().remove(actualStack, Math.abs(delta), true);
-
-                    cached.grow(delta);
                 }
+                cached.grow(delta);
             }
         }
 

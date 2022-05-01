@@ -31,7 +31,7 @@ public class StorageCacheFluidPortable implements IStorageCache<FluidStack> {
 
         if (portableGrid.getFluidStorage() != null) {
             for (StackListEntry<FluidStack> e : portableGrid.getFluidStorage().getEntries()) {
-                if (e != null && e.getCount() > 0) {
+                if (e.getCount() > 0) {
                     FluidStack stack = e.getStack();
                     if (stack != null) list.add(stack, e.getCount());
                 }

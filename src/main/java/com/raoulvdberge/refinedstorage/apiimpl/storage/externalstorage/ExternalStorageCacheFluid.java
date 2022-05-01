@@ -29,7 +29,10 @@ public class ExternalStorageCacheFluid {
             cache = new ArrayList<>();
 
             for (StackListEntry<FluidStack> entry : entries) {
-                cache.add(new StackListEntry<>(entry.getStack().copy(), entry.getCount()));
+                FluidStack stack = entry.getStack();
+                if (stack != null) {
+                    cache.add(new StackListEntry<>(entry.getStack().copy(), entry.getCount()));
+                }
             }
 
             return;

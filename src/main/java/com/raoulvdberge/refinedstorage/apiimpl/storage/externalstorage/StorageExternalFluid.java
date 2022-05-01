@@ -81,6 +81,8 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
             LongFluidStack longFluidStack = ((LongFluidStorage) fluidHandler).getFluidStack();
             if (longFluidStack.fluidStack != null) {
                 list.add(new StackListEntry<>(longFluidStack.fluidStack, longFluidStack.getAmount()));
+            } else {
+                list.add(new StackListEntry<>(null, 0));
             }
             return list;
         }
