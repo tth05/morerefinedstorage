@@ -1,18 +1,20 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage;
 
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
+import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ExternalStorageCacheItem {
-    private List<ItemStack> cache;
+    private List<StackListEntry<ItemStack>> cache;
 
-    public void update(INetwork network, @Nullable IItemHandler handler) {
+    public void update(INetwork network, @Nullable IItemHandler handler, List<StackListEntry<ItemStack>> entries) {
         if (handler == null) {
             return;
         }
@@ -20,62 +22,65 @@ public class ExternalStorageCacheItem {
         if (cache == null) {
             cache = new ArrayList<>();
 
-            for (int i = 0; i < handler.getSlots(); ++i) {
-                cache.add(handler.getStackInSlot(i).copy());
+            for (StackListEntry<ItemStack> entry : entries) {
+                cache.add(new StackListEntry<>(entry.getStack().copy(), entry.getCount()));
             }
 
             return;
         }
 
-        for (int i = 0; i < handler.getSlots(); ++i) {
-            ItemStack actual = handler.getStackInSlot(i);
+        for (int i = 0; i < entries.size(); i++) {
+            StackListEntry<ItemStack> actual = entries.get(i);
+            ItemStack actualStack = actual.getStack();
 
             if (i >= cache.size()) { // ENLARGED
-                if (!actual.isEmpty()) {
-                    network.getItemStorageCache().add(actual, actual.getCount(), true);
+                if (!actualStack.isEmpty()) {
+                    network.getItemStorageCache().add(actualStack, actual.getCount(), true);
 
-                    cache.add(actual.copy());
+                    cache.add(new StackListEntry<>(actualStack.copy(), actual.getCount()));
                 }
 
                 continue;
             }
 
-            ItemStack cached = cache.get(i);
+            StackListEntry<ItemStack> cached = cache.get(i);
+            ItemStack cachedStack = cached.getStack();
 
-            if (!cached.isEmpty() && actual.isEmpty()) { // REMOVED
-                network.getItemStorageCache().remove(cached, cached.getCount(), true);
+            if (!cachedStack.isEmpty() && actualStack.isEmpty()) { // REMOVED
+                network.getItemStorageCache().remove(cachedStack, cached.getCount(), true);
 
-                cache.set(i, ItemStack.EMPTY);
-            } else if (cached.isEmpty() && !actual.isEmpty()) { // ADDED
-                network.getItemStorageCache().add(actual, actual.getCount(), true);
+                cache.set(i, new StackListEntry<>(ItemStack.EMPTY, 0));
+            } else if (cachedStack.isEmpty() && !actualStack.isEmpty()) { // ADDED
+                network.getItemStorageCache().add(actualStack, actual.getCount(), true);
 
-                cache.set(i, actual.copy());
-            } else if (!API.instance().getComparer().isEqualNoQuantity(cached, actual)) { // CHANGED
-                network.getItemStorageCache().remove(cached, cached.getCount(), true);
-                network.getItemStorageCache().add(actual, actual.getCount(), true);
+                cache.set(i, new StackListEntry<>(actualStack.copy(), actual.getCount()));
+            } else if (!API.instance().getComparer().isEqualNoQuantity(cachedStack, actualStack)) { // CHANGED
+                network.getItemStorageCache().remove(cachedStack, cached.getCount(), true);
+                network.getItemStorageCache().add(actualStack, actual.getCount(), true);
 
-                cache.set(i, actual.copy());
+                cache.set(i, new StackListEntry<>(actualStack.copy(), actual.getCount()));
             } else if (cached.getCount() != actual.getCount()) { // COUNT_CHANGED
-                int delta = actual.getCount() - cached.getCount();
+                long delta = actual.getCount() - cached.getCount();
 
                 if (delta > 0) {
-                    network.getItemStorageCache().add(actual, delta, true);
+                    network.getItemStorageCache().add(actualStack, delta, true);
 
                     cached.grow(delta);
                 } else {
-                    network.getItemStorageCache().remove(actual, Math.abs(delta), true);
+                    network.getItemStorageCache().remove(actualStack, Math.abs(delta), true);
 
-                    cached.shrink(Math.abs(delta));
+                    cached.grow(delta);
                 }
             }
         }
 
-        if (cache.size() > handler.getSlots()) { // SHRUNK
+        if (cache.size() > entries.size()) { // SHRUNK
             for (int i = cache.size() - 1; i >= handler.getSlots(); --i) { // Reverse order for the remove call.
-                ItemStack cached = cache.get(i);
+                StackListEntry<ItemStack> cached = cache.get(i);
+                ItemStack cachedStack = cached.getStack();
 
-                if (!cached.isEmpty()) {
-                    network.getItemStorageCache().remove(cached, cached.getCount(), true);
+                if (!cachedStack.isEmpty()) {
+                    network.getItemStorageCache().remove(cachedStack, cached.getCount(), true);
                 }
 
                 cache.remove(i);

@@ -1,5 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage;
 
+import com.cjm721.overloaded.storage.LongItemStack;
+import com.cjm721.overloaded.storage.item.LongItemStorage;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.storage.AccessType;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageContext;
@@ -8,6 +10,7 @@ import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
+import com.raoulvdberge.refinedstorage.integration.overloaded.IntegrationOverloaded;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
@@ -44,7 +47,7 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
             return;
         }
 
-        cache.update(network, handlerSupplier.get());
+        cache.update(network, handlerSupplier.get(), (List<StackListEntry<ItemStack>>) getEntries());
     }
 
     @Override
@@ -57,6 +60,10 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
 
         long capacity = 0;
 
+        if (IntegrationOverloaded.isLoaded() && handler instanceof LongItemStorage) {
+            return Long.MAX_VALUE;
+        }
+
         for (int i = 0; i < handler.getSlots(); ++i) {
             capacity += handler.getSlotLimit(i);
         }
@@ -65,27 +72,26 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
     }
 
     @Override
-    public Collection<ItemStack> getStacks() {
+    public Collection<StackListEntry<ItemStack>> getEntries() {
         IItemHandler handler = handlerSupplier.get();
 
         if (handler == null) {
             return Collections.emptyList();
         }
 
-        List<ItemStack> stacks = new ArrayList<>();
+        List<StackListEntry<ItemStack>> list = new ArrayList<>();
 
-        for (int i = 0; i < handler.getSlots(); ++i) {
-            stacks.add(handler.getStackInSlot(i));
+        if (IntegrationOverloaded.isLoaded() && handler instanceof LongItemStorage) {
+            LongItemStorage longItemStorage = (LongItemStorage) handler;
+            LongItemStack longItemStack = longItemStorage.status();
+            list.add(new StackListEntry<>(longItemStack.getItemStack(), longItemStack.getAmount()));
+            return list;
         }
 
-        return stacks;
-    }
-
-    @Override
-    public Collection<StackListEntry<ItemStack>> getEntries() {
-        List<StackListEntry<ItemStack>> list = new ArrayList<>();
-        for (ItemStack s : getStacks())
-            list.add(new StackListEntry<>(s, s.getCount()));
+        for (int i = 0; i < handler.getSlots(); ++i) {
+            ItemStack stack = handler.getStackInSlot(i);
+            list.add(new StackListEntry<>(stack, stack.getCount()));
+        }
 
         return list;
     }

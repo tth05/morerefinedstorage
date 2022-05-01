@@ -70,11 +70,6 @@ public class StorageDiskFluid implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public Collection<FluidStack> getStacks() {
-        return stacks.values().stream().map(StackListEntry::getStack).collect(Collectors.toList());
-    }
-
-    @Override
     public Collection<StackListEntry<FluidStack>> getEntries() {
         return stacks.values();
     }

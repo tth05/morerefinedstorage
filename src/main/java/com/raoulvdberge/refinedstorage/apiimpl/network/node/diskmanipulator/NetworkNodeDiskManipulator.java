@@ -282,9 +282,11 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSFilter
         int i = 0;
 
         while (extracted == null && entries.size() > i) {
-            StackListEntry<FluidStack> stack = entries.get(i++);
-
-            extracted = storage.extract(stack.getStack(), upgrades.getItemInteractCount(), this.config.getCompare(), Action.PERFORM);
+            StackListEntry<FluidStack> entry = entries.get(i++);
+            FluidStack stack = entry.getStack();
+            if (stack != null) {
+                extracted = storage.extract(stack, upgrades.getItemInteractCount(), this.config.getCompare(), Action.PERFORM);
+            }
         }
 
         if (extracted == null) {
@@ -317,8 +319,12 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSFilter
 
         Collection<StackListEntry<FluidStack>> entries = new ObjectArrayList<>(storage.getEntries());
         for (StackListEntry<FluidStack> entry : entries) {
+            FluidStack stack = entry.getStack();
+            if (stack == null)
+                continue;
+
             StackListResult<FluidStack> extracted =
-                    storage.extract(entry.getStack(), upgrades.getItemInteractCount(), this.config.getCompare(), Action.SIMULATE);
+                    storage.extract(stack, upgrades.getItemInteractCount(), this.config.getCompare(), Action.SIMULATE);
             if (extracted == null) {
                 continue;
             }
