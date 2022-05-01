@@ -172,6 +172,10 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
             return 0;
         }
 
+        if (IntegrationOverloaded.isLoaded() && handler instanceof LongItemStorage) {
+            return ((LongItemStorage) handler).status().getAmount();
+        }
+
         int size = 0;
 
         for (int i = 0; i < handler.getSlots(); ++i) {

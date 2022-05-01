@@ -57,6 +57,10 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
 
     @Override
     public long getCapacity() {
+        if (IntegrationOverloaded.isLoaded() && handlerSupplier.get() instanceof LongFluidStorage) {
+            return Long.MAX_VALUE;
+        }
+
         IFluidTankProperties[] props = getProperties();
 
         if (props != null) {
@@ -161,6 +165,11 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
 
     @Override
     public long getStored() {
+        if (IntegrationOverloaded.isLoaded() && handlerSupplier.get() instanceof LongFluidStorage) {
+            LongFluidStorage longFluidStorage = (LongFluidStorage) handlerSupplier.get();
+            return longFluidStorage.getFluidStack().getAmount();
+        }
+
         IFluidTankProperties[] props = getProperties();
 
         if (props != null) {
