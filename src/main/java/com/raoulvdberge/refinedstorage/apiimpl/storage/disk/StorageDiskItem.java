@@ -80,11 +80,6 @@ public class StorageDiskItem implements IStorageDisk<ItemStack> {
     }
 
     @Override
-    public Collection<ItemStack> getStacks() {
-        return stacks.values().stream().map(StackListEntry::getStack).collect(Collectors.toList());
-    }
-
-    @Override
     public Collection<StackListEntry<ItemStack>> getEntries() {
         return stacks.values();
     }

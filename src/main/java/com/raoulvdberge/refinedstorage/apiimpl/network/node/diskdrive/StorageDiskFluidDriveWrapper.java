@@ -49,11 +49,6 @@ public class StorageDiskFluidDriveWrapper implements IStorageDisk<FluidStack> {
     }
 
     @Override
-    public Collection<FluidStack> getStacks() {
-        return parent.getStacks();
-    }
-
-    @Override
     public Collection<StackListEntry<FluidStack>> getEntries() {
         return parent.getEntries();
     }

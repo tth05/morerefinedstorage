@@ -49,11 +49,6 @@ public class StorageDiskItemDriveWrapper implements IStorageDisk<ItemStack> {
     }
 
     @Override
-    public Collection<ItemStack> getStacks() {
-        return parent.getStacks();
-    }
-
-    @Override
     public Collection<StackListEntry<ItemStack>> getEntries() {
         return parent.getEntries();
     }

@@ -1,5 +1,7 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage;
 
+import com.cjm721.overloaded.storage.LongFluidStack;
+import com.cjm721.overloaded.storage.fluid.LongFluidStorage;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.storage.AccessType;
 import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IExternalStorageContext;
@@ -7,6 +9,7 @@ import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExter
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.api.util.StackListResult;
+import com.raoulvdberge.refinedstorage.integration.overloaded.IntegrationOverloaded;
 import com.raoulvdberge.refinedstorage.util.StackUtils;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -49,11 +52,15 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
             return;
         }
 
-        cache.update(network, handlerSupplier.get());
+        cache.update(network, handlerSupplier.get(), (List<StackListEntry<FluidStack>>) getEntries());
     }
 
     @Override
     public long getCapacity() {
+        if (IntegrationOverloaded.isLoaded() && handlerSupplier.get() instanceof LongFluidStorage) {
+            return Long.MAX_VALUE;
+        }
+
         IFluidTankProperties[] props = getProperties();
 
         if (props != null) {
@@ -70,32 +77,37 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
     }
 
     @Override
-    public Collection<FluidStack> getStacks() {
+    public Collection<StackListEntry<FluidStack>> getEntries() {
+        List<StackListEntry<FluidStack>> list = new ArrayList<>();
+
+        IFluidHandler fluidHandler = handlerSupplier.get();
+        if (IntegrationOverloaded.isLoaded() && fluidHandler instanceof LongFluidStorage) {
+            LongFluidStack longFluidStack = ((LongFluidStorage) fluidHandler).getFluidStack();
+            if (longFluidStack.fluidStack != null) {
+                list.add(new StackListEntry<>(longFluidStack.fluidStack, longFluidStack.getAmount()));
+            } else {
+                list.add(new StackListEntry<>(null, 0));
+            }
+            return list;
+        }
+
         IFluidTankProperties[] props = getProperties();
 
         if (props != null) {
-            List<FluidStack> fluids = new ArrayList<>();
-
             for (IFluidTankProperties properties : props) {
                 FluidStack stack = properties.getContents();
 
                 if (stack != null) {
-                    fluids.add(stack);
+                    list.add(new StackListEntry<>(stack, stack.amount));
+                } else {
+                    list.add(new StackListEntry<>(null, 0));
                 }
             }
 
-            return fluids;
+            return list;
         }
 
         return Collections.emptyList();
-    }
-
-    @Override
-    public Collection<StackListEntry<FluidStack>> getEntries() {
-        List<StackListEntry<FluidStack>> list = new ArrayList<>();
-        for (FluidStack s : getStacks())
-            list.add(new StackListEntry<>(s, s.amount));
-        return list;
     }
 
     @Nullable
@@ -153,6 +165,11 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
 
     @Override
     public long getStored() {
+        if (IntegrationOverloaded.isLoaded() && handlerSupplier.get() instanceof LongFluidStorage) {
+            LongFluidStorage longFluidStorage = (LongFluidStorage) handlerSupplier.get();
+            return longFluidStorage.getFluidStack().getAmount();
+        }
+
         IFluidTankProperties[] props = getProperties();
 
         if (props != null) {

@@ -98,6 +98,12 @@ repositories {
         name 'Maven Central'
     }
     maven { url 'https://jitpack.io' }
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 dependencies {
@@ -114,6 +120,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+
+    compileOnly fg.deobf("curse.maven:overloaded-264601:2875265")
 }
 
 processResources {

@@ -56,9 +56,11 @@ public class StorageCacheFluid implements IStorageCache<FluidStack> {
                 continue;
             }
 
-            for (StackListEntry<FluidStack> stack : storage.getEntries()) {
-                if (stack != null && stack.getCount() > 0)
-                    add(stack.getStack(), stack.getCount(), true);
+            for (StackListEntry<FluidStack> entry : storage.getEntries()) {
+                if (entry.getCount() > 0) {
+                    FluidStack stack = entry.getStack();
+                    if (stack != null) add(stack, entry.getCount(), true);
+                }
             }
         }
 

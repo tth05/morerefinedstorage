@@ -60,11 +60,6 @@ public class StorageDiskFluidManipulatorWrapper implements IStorageDisk<FluidSta
     }
 
     @Override
-    public Collection<FluidStack> getStacks() {
-        return parent.getStacks();
-    }
-
-    @Override
     public Collection<StackListEntry<FluidStack>> getEntries() {
         return parent.getEntries();
     }
