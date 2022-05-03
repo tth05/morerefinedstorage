@@ -6,6 +6,7 @@ import com.raoulvdberge.refinedstorage.api.autocrafting.task.ICraftingTask;
 import com.raoulvdberge.refinedstorage.api.network.node.INetworkNode;
 import com.raoulvdberge.refinedstorage.api.storage.IStorage;
 import com.raoulvdberge.refinedstorage.api.storage.disk.IStorageDisk;
+import com.raoulvdberge.refinedstorage.api.storage.externalstorage.IStorageExternal;
 import com.raoulvdberge.refinedstorage.api.util.Action;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
@@ -32,6 +33,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_DAMAGE;
 import static com.raoulvdberge.refinedstorage.api.util.IComparer.COMPARE_NBT;
@@ -428,39 +430,49 @@ public class EnvironmentNetwork extends AbstractManagedEnvironment {
 
         List<Map<String, Object>> devices = new ArrayList<>();
 
+        Function<IStorage<?>, Long> getCapacity = (storage) -> {
+            if (storage instanceof IStorageDisk) {
+                return ((IStorageDisk<?>) storage).getCapacity();
+            } else if (storage instanceof IStorageExternal) {
+                return ((IStorageExternal<?>) storage).getCapacity();
+            }
+
+            throw new IllegalArgumentException();
+        };
+
         if (node.getNetwork() != null) {
             for (IStorage<?> s : node.getNetwork().getItemStorageCache().getStorages()) {
-                if (s instanceof IStorageDisk) {
-                    IStorageDisk<?> disk = (IStorageDisk<?>) s;
+                if (!(s instanceof IStorageDisk) && !(s instanceof IStorageExternal))
+                    continue;
 
-                    Map<String, Object> data = new HashMap<>();
+                Map<String, Object> data = new HashMap<>();
+                data.put("type", "item");
+                data.put("usage", s.getStored());
 
-                    data.put("type", "item");
-                    data.put("usage", disk.getStored());
-                    data.put("capacity", disk.getCapacity());
+                totalItemStored += s.getStored();
 
-                    totalItemStored += disk.getStored();
-                    totalItemCapacity += disk.getCapacity();
+                long capacity = getCapacity.apply(s);
 
-                    devices.add(data);
-                }
+                data.put("capacity", capacity);
+                totalItemCapacity += capacity;
+                devices.add(data);
             }
 
             for (IStorage<?> s : node.getNetwork().getFluidStorageCache().getStorages()) {
-                if (s instanceof IStorageDisk) {
-                    IStorageDisk<?> disk = (IStorageDisk<?>) s;
+                if (!(s instanceof IStorageDisk) && !(s instanceof IStorageExternal))
+                    continue;
 
-                    Map<String, Object> data = new HashMap<>();
+                Map<String, Object> data = new HashMap<>();
+                data.put("type", "fluid");
+                data.put("usage", s.getStored());
 
-                    data.put("type", "fluid");
-                    data.put("usage", disk.getStored());
-                    data.put("capacity", disk.getCapacity());
+                totalItemStored += s.getStored();
 
-                    totalFluidStored += disk.getStored();
-                    totalFluidCapacity += disk.getCapacity();
+                long capacity = getCapacity.apply(s);
 
-                    devices.add(data);
-                }
+                data.put("capacity", capacity);
+                totalItemCapacity += capacity;
+                devices.add(data);
             }
         }
 
