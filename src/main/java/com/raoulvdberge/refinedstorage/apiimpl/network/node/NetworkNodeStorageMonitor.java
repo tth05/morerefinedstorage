@@ -183,4 +183,5 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IRSFilterC
     public FilterConfig getConfig() {
         return this.config;
     }
+
 }

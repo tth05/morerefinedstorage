@@ -148,7 +148,9 @@ public class ItemWrench extends ItemBase {
                     tag.setTag("upgrades", IUpgradeContainer.writeToNBT((IUpgradeContainer) node, new NBTTagCompound()));
                 }
                 if (node instanceof IRSFilterConfigProvider) {
-                    ((IRSFilterConfigProvider) node).getConfig().writeToNBT(tag);
+                    IRSFilterConfigProvider configProvider = (IRSFilterConfigProvider) node;
+                    configProvider.getConfig().writeToNBT(tag);
+                    configProvider.writeExtraNbt(tag);
                 }
 
                 player.sendMessage(new TextComponentTranslation("misc.refinedstorage:wrench.copied"));
@@ -174,7 +176,9 @@ public class ItemWrench extends ItemBase {
                 }
 
                 if (node instanceof IRSFilterConfigProvider) {
-                    FilterConfig config = ((IRSFilterConfigProvider) node).getConfig();
+                    IRSFilterConfigProvider configProvider = (IRSFilterConfigProvider) node;
+                    configProvider.readExtraNbt(tag);
+                    FilterConfig config = configProvider.getConfig();
                     NBTTagCompound configTag = tag.getCompoundTag("config");
                     //type
                     if (config.usesFilterType() && configTag.hasKey("type")) {

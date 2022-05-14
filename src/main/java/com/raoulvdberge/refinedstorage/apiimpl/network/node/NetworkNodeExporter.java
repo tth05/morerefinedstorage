@@ -293,4 +293,5 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
     public FilterConfig getConfig() {
         return this.config;
     }
+
 }

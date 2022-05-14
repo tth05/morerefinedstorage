@@ -490,4 +490,17 @@ public class NetworkNodeDiskManipulator extends NetworkNode implements IRSFilter
     public FilterConfig getConfig() {
         return this.config;
     }
+
+    @Override
+    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
+        tag.setInteger("ioMode", this.ioMode);
+        return tag;
+    }
+
+    @Override
+    public void readExtraNbt(NBTTagCompound tag) {
+        if (tag.hasKey("ioMode")) {
+            this.ioMode = tag.getInteger("ioMode");
+        }
+    }
 }

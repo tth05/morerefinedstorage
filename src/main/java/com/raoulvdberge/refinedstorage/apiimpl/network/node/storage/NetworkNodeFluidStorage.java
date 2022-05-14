@@ -249,4 +249,17 @@ public class NetworkNodeFluidStorage extends NetworkNode implements IGuiStorage,
     public FilterConfig getConfig() {
         return this.config;
     }
+
+    @Override
+    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
+        tag.setInteger("accessType", accessType.getId());
+        return tag;
+    }
+
+    @Override
+    public void readExtraNbt(NBTTagCompound tag) {
+        if (tag.hasKey("accessType")) {
+            this.accessType = AccessTypeUtils.getAccessType(tag.getInteger("accessType"));
+        }
+    }
 }

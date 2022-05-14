@@ -233,4 +233,5 @@ public class NetworkNodeInterface extends NetworkNode implements IRSFilterConfig
     public FilterConfig getConfig() {
         return this.config;
     }
+
 }
