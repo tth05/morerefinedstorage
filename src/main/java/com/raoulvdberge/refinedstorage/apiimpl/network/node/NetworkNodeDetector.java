@@ -183,4 +183,21 @@ public class NetworkNodeDetector extends NetworkNode implements IRSFilterConfigP
     public FilterConfig getConfig() {
         return this.config;
     }
+
+    @Override
+    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
+        tag.setInteger("detectorMode", this.mode);
+        tag.setInteger("amount", this.amount);
+        return tag;
+    }
+
+    @Override
+    public void readExtraNbt(NBTTagCompound tag) {
+        if (tag.hasKey("detectorMode")) {
+            this.mode = tag.getInteger("detectorMode");
+        }
+        if (tag.hasKey("amount")) {
+            this.amount = tag.getInteger("amount");
+        }
+    }
 }

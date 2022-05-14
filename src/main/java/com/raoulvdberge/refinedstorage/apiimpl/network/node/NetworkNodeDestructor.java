@@ -291,4 +291,17 @@ public class NetworkNodeDestructor extends NetworkNode implements IRSFilterConfi
     public FilterConfig getConfig() {
         return this.config;
     }
+
+    @Override
+    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
+        tag.setBoolean("pickUpItem", this.pickupItem);
+        return tag;
+    }
+
+    @Override
+    public void readExtraNbt(NBTTagCompound tag) {
+        if (tag.hasKey("pickUpItem")) {
+            this.pickupItem = tag.getBoolean("pickUpItem");
+        }
+    }
 }

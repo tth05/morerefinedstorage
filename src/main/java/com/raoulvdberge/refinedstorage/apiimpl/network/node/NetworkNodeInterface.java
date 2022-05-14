@@ -233,4 +233,14 @@ public class NetworkNodeInterface extends NetworkNode implements IRSFilterConfig
     public FilterConfig getConfig() {
         return this.config;
     }
+
+    @Override
+    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
+        return tag;
+    }
+
+    @Override
+    public void readExtraNbt(NBTTagCompound tag) {
+        //NO OP
+    }
 }

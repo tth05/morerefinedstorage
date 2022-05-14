@@ -365,4 +365,17 @@ public class NetworkNodeConstructor extends NetworkNode implements IRSFilterConf
     public FilterConfig getConfig() {
         return this.config;
     }
+
+    @Override
+    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
+        tag.setBoolean("drop", this.drop);
+        return tag;
+    }
+
+    @Override
+    public void readExtraNbt(NBTTagCompound tag) {
+        if (tag.hasKey("drop")) {
+            this.drop = tag.getBoolean("drop");
+        }
+    }
 }
