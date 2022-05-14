@@ -184,13 +184,4 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IRSFilterC
         return this.config;
     }
 
-    @Override
-    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
-        return tag;
-    }
-
-    @Override
-    public void readExtraNbt(NBTTagCompound tag) {
-        //NO OP
-    }
 }

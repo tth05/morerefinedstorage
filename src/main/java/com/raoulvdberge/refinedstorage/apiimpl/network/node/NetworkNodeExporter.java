@@ -294,13 +294,4 @@ public class NetworkNodeExporter extends NetworkNode implements IRSFilterConfigP
         return this.config;
     }
 
-    @Override
-    public NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
-        return tag;
-    }
-
-    @Override
-    public void readExtraNbt(NBTTagCompound tag) {
-        //NO OP
-    }
 }

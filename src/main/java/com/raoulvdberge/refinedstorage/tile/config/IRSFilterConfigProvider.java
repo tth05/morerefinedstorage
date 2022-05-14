@@ -9,8 +9,12 @@ public interface IRSFilterConfigProvider {
     @Nonnull
     FilterConfig getConfig();
 
-    NBTTagCompound writeExtraNbt(NBTTagCompound tag);
+    default NBTTagCompound writeExtraNbt(NBTTagCompound tag) {
+        return tag;
+    }
 
-    void readExtraNbt(NBTTagCompound tag);
+    default void readExtraNbt(NBTTagCompound tag) {
+        //NO OP
+    }
 
 }
