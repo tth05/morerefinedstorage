@@ -1,5 +1,9 @@
 # More Refined Storage Changelog
 
+# 2.3.2
+- Fix some options not being copied by wrench
+- Add overloaded integration
+
 # 2.3.1
 - Add JEI two-way search mode (embeddedt)
 - Add ability to copy redstone mode for wrench
