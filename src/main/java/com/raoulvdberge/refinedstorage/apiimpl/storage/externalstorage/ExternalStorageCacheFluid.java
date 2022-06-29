@@ -1,23 +1,20 @@
 package com.raoulvdberge.refinedstorage.apiimpl.storage.externalstorage;
 
-import com.cjm721.overloaded.storage.LongFluidStack;
-import com.cjm721.overloaded.storage.fluid.LongFluidStorage;
 import com.raoulvdberge.refinedstorage.api.network.INetwork;
 import com.raoulvdberge.refinedstorage.api.util.IComparer;
 import com.raoulvdberge.refinedstorage.api.util.StackListEntry;
 import com.raoulvdberge.refinedstorage.apiimpl.API;
-import com.raoulvdberge.refinedstorage.integration.overloaded.IntegrationOverloaded;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 public class ExternalStorageCacheFluid {
+
+    private static final StackListEntry<FluidStack> EMPTY = new StackListEntry<>(null, 0);
+
     private List<StackListEntry<FluidStack>> cache;
 
     public void update(INetwork network, @Nullable IFluidHandler handler, List<StackListEntry<FluidStack>> entries) {
@@ -61,7 +58,7 @@ public class ExternalStorageCacheFluid {
             if (actualStack == null) { // REMOVED
                 network.getFluidStorageCache().remove(cachedStack, cached.getCount(), true);
 
-                cache.set(i, null);
+                cache.set(i, EMPTY);
             } else if (cachedStack == null) { // ADDED
                 network.getFluidStorageCache().add(actualStack, actual.getCount(), true);
 
