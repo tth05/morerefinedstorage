@@ -14,18 +14,25 @@ import java.util.List;
 public class ExternalStorageCacheItem {
     private List<StackListEntry<ItemStack>> cache;
 
+    public boolean initCache(List<StackListEntry<ItemStack>> entries) {
+        if(cache != null)
+            return false;
+
+        cache = new ArrayList<>();
+
+        for (StackListEntry<ItemStack> entry : entries) {
+            cache.add(new StackListEntry<>(entry.getStack().copy(), entry.getCount()));
+        }
+
+        return true;
+    }
+
     public void update(INetwork network, @Nullable IItemHandler handler, List<StackListEntry<ItemStack>> entries) {
         if (handler == null) {
             return;
         }
 
-        if (cache == null) {
-            cache = new ArrayList<>();
-
-            for (StackListEntry<ItemStack> entry : entries) {
-                cache.add(new StackListEntry<>(entry.getStack().copy(), entry.getCount()));
-            }
-
+        if (initCache(entries)) {
             return;
         }
 

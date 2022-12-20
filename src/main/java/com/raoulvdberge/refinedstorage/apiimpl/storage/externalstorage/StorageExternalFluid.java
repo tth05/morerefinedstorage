@@ -88,6 +88,7 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
             } else {
                 list.add(new StackListEntry<>(null, 0));
             }
+            cache.initCache(list);
             return list;
         }
 
@@ -103,7 +104,7 @@ public class StorageExternalFluid implements IStorageExternal<FluidStack> {
                     list.add(new StackListEntry<>(null, 0));
                 }
             }
-
+            cache.initCache(list);
             return list;
         }
 
