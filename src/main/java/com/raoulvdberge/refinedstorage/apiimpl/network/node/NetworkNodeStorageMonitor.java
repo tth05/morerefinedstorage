@@ -120,7 +120,7 @@ public class NetworkNodeStorageMonitor extends NetworkNode implements IRSFilterC
 
         ItemStack filter = this.config.getItemHandler().getStackInSlot(0);
 
-        int toExtract = player.isSneaking() ? 1 : 64;
+        int toExtract = player.isSneaking() ? 1 : filter.getMaxStackSize();
 
         if (!filter.isEmpty()) {
             ItemStack result = network.extractItem(filter, toExtract, this.config.getCompare(), Action.PERFORM);
