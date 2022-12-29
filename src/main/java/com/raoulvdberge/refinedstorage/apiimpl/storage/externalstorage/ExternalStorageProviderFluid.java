@@ -7,6 +7,8 @@ import com.raoulvdberge.refinedstorage.tile.TileFluidInterface;
 import com.raoulvdberge.refinedstorage.util.WorldUtils;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
@@ -21,7 +23,20 @@ public class ExternalStorageProviderFluid implements IExternalStorageProvider<Fl
     @Nonnull
     @Override
     public IStorageExternal<FluidStack> provide(IExternalStorageContext context, Supplier<TileEntity> tile, EnumFacing direction) {
-        return new StorageExternalFluid(context, () -> WorldUtils.getFluidHandler(tile.get(), direction.getOpposite()), tile.get() instanceof TileFluidInterface);
+        return new StorageExternalFluid(context, () -> {
+            World world = tile.get().getWorld();
+            if(world == null)
+                return null;
+
+            BlockPos pos = tile.get().getPos();
+
+            if(!world.isBlockLoaded(pos))
+                return null;
+
+            TileEntity currentTileEntity = world.getTileEntity(pos);
+
+            return WorldUtils.getFluidHandler(currentTileEntity, direction.getOpposite());
+        }, tile.get() instanceof TileFluidInterface);
     }
 
     @Override

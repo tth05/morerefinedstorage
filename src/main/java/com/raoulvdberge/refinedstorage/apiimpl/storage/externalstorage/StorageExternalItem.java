@@ -85,6 +85,7 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
             LongItemStorage longItemStorage = (LongItemStorage) handler;
             LongItemStack longItemStack = longItemStorage.status();
             list.add(new StackListEntry<>(longItemStack.getItemStack(), longItemStack.getAmount()));
+            cache.initCache(list);
             return list;
         }
 
@@ -92,6 +93,7 @@ public class StorageExternalItem implements IStorageExternal<ItemStack> {
             ItemStack stack = handler.getStackInSlot(i);
             list.add(new StackListEntry<>(stack, stack.getCount()));
         }
+        cache.initCache(list);
 
         return list;
     }

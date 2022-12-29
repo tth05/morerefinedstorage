@@ -17,20 +17,28 @@ public class ExternalStorageCacheFluid {
 
     private List<StackListEntry<FluidStack>> cache;
 
+    public boolean initCache(List<StackListEntry<FluidStack>> entries) {
+        if (cache != null) {
+            return false;
+        }
+
+        cache = new ArrayList<>();
+
+        for (StackListEntry<FluidStack> entry : entries) {
+            FluidStack stack = entry.getStack();
+            if (stack != null) stack = stack.copy();
+            cache.add(new StackListEntry<>(stack, entry.getCount()));
+        }
+
+        return true;
+    }
+
     public void update(INetwork network, @Nullable IFluidHandler handler, List<StackListEntry<FluidStack>> entries) {
         if (handler == null) {
             return;
         }
 
-        if (cache == null) {
-            cache = new ArrayList<>();
-
-            for (StackListEntry<FluidStack> entry : entries) {
-                FluidStack stack = entry.getStack();
-                if (stack != null) stack = stack.copy();
-                cache.add(new StackListEntry<>(stack, entry.getCount()));
-            }
-
+        if (initCache(entries)) {
             return;
         }
 
